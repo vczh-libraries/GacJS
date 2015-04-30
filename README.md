@@ -15,3 +15,4 @@ This project's priority is not very high. The first step is to re-implement GacU
     * Properties and Events.
     * POD
     * Enum
+    * Unit test for Class.js in **Class.html**.
