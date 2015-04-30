@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class</title>
+    <script src="Class.js"></script>
+    <script src="Test.js"></script>
+</head>
+<body style="font-family: 'Segoe UI'; font-size: 14px;">
+
+    <script>
+        testCase("create instance should success", function () {
+            var MyClass = Class("MyClass", {
+            });
+
+            var x = new MyClass();
+            assert(x.__Type === MyClass);
+        });
+    </script>
+
+    <script>
+        testCase("fields cannot be deleted", function () {
+            var MyClass = Class("MyClass", {
+                a: Public(0),
+                b: Public(1),
+            });
+
+            var x = new MyClass();
+            delete x.GetType;
+            delete x.a;
+            delete x.b;
+            assert(x.__Type === MyClass);
+            assert(x.a === 0);
+            assert(x.b === 1);
+        });
+    </script>
+
+    <script>
+        testCase("instances don't share fields", function () {
+            var MyClass = Class("MyClass", {
+                a: Public(0),
+                b: Public(1),
+            });
+
+            var x = new MyClass();
+            var y = new MyClass();
+            assert(x.a === 0);
+            assert(x.b === 1);
+            assert(y.a === 0);
+            assert(y.b === 1);
+
+            x.a = 2;
+            y.a = 3;
+            assert(x.a === 2);
+            assert(x.b === 1);
+            assert(y.a === 3);
+            assert(y.b === 1);
+        });
+    </script>
+
+    <script>
+        testCase("member function can access all members", function () {
+            var MyClass = Class("MyClass", {
+                value: Public(0),
+                GetValue: Public(function () {
+                    return this.value;
+                }),
+                SetValue: Public(function (newValue) {
+                    this.value = newValue;
+                }),
+            });
+
+            var x = new MyClass();
+            assert(x.value === 0);
+            assert(x.GetValue() === 0);
+
+            x.value = 1;
+            assert(x.value === 1);
+            assert(x.GetValue() === 1);
+
+            x.SetValue(2);
+            assert(x.value === 2);
+            assert(x.GetValue() === 2);
+        })
+    </script>
+
+    <script>
+        testCase("protected members are not visible from outside", function () {
+            var MyClass = Class("MyClass", {
+                value: Protected(0),
+                GetValue: Public(function () {
+                    return this.value;
+                }),
+                SetValue: Public(function (newValue) {
+                    this.value = newValue;
+                }),
+            });
+
+            var x = new MyClass();
+            assert(x.value === undefined);
+            assert(x.GetValue() === 0);
+
+            x.SetValue(2);
+            assert(x.value === undefined);
+            assert(x.GetValue() === 2);
+        })
+    </script>
+
+    <script>
+        testCase("private members are not visible from derived classes", function () {
+            var BaseClass = Class("BaseClass", {
+                privateMember: Private(1),
+                protectedMember: Protected(2),
+                publicMember: Public(3),
+
+                PrivateFunctionInternal: Private(function () {
+                    return this.privateMember;
+                }),
+
+                ProtectedFunctionInternal: Protected(function () {
+                    return this.protectedMember + this.privateMember;
+                }),
+
+                PublicFunctionInternal: Public(function () {
+                    return this.publicMember + this.protectedMember + this.privateMember;
+                }),
+
+                PrivateFunctionBase: Private(function () {
+                    return this.PrivateFunctionInternal();
+                }),
+
+                ProtectedFunctionBase: Protected(function () {
+                    return this.ProtectedFunctionInternal();
+                }),
+
+                PublicFunctionBase: Public(function () {
+                    return this.PublicFunctionInternal();
+                }),
+            });
+
+            var DerivedClass = Class("DerivedClass", BaseClass, {
+                PrivateFunction1: Public(function () {
+                    return this.PrivateFunctionBase === undefined ? 0 : this.PrivateFunctionBase();
+                }),
+
+                ProtectedFunction1: Public(function () {
+                    return this.ProtectedFunctionBase === undefined ? 0 : this.ProtectedFunctionBase();
+                }),
+
+                PublicFunction1: Public(function () {
+                    return this.PublicFunctionBase === undefined ? 0 : this.PublicFunctionBase();
+                }),
+
+                PrivateFunction2: Public(function () {
+                    return this.privateMember === undefined ? 0 : this.privateMember;
+                }),
+
+                ProtectedFunction2: Public(function () {
+                    return this.protectedMember === undefined ? 0 : this.protectedMember;
+                }),
+
+                PublicFunction2: Public(function () {
+                    return this.publicMember === undefined ? 0 : this.publicMember;
+                }),
+            });
+
+            var x = new DerivedClass();
+            assert(x.privateMember === undefined);
+            assert(x.protectedMember === undefined);
+            assert(x.publicMember === 3);
+
+            assert(x.PrivateFunctionInternal === undefined);
+            assert(x.ProtectedFunctionInternal === undefined);
+            assert(x.PublicFunctionInternal() === 6);
+
+            assert(x.PrivateFunctionBase === undefined);
+            assert(x.ProtectedFunctionBase === undefined);
+            assert(x.PublicFunctionBase() === 6);
+
+            assert(x.PrivateFunction1() === 0);
+            assert(x.ProtectedFunction1() === 3);
+            assert(x.PublicFunction1() === 6);
+
+            assert(x.PrivateFunction2() === 0);
+            assert(x.ProtectedFunction2() === 2);
+            assert(x.PublicFunction2() === 3);
+        })
+    </script>
+
+    <script>
+        testCase("deriving from a child class should success", function () {
+            var A = Class("A", {
+                DoA: Public(function (a, b) {
+                    return a + b;
+                }),
+                GetA: Public(function () {
+                    return this.__Type;
+                }),
+            });
+
+            var B = Class("B", A, {
+                DoB: Public(function (a, b) {
+                    return a - b;
+                }),
+                GetB: Public(function () {
+                    return this.__Type;
+                }),
+            });
+
+            var C = Class("C", B, {
+                DoC: Public(function (a, b) {
+                    return a * b;
+                }),
+                GetC: Public(function () {
+                    return this.__Type;
+                }),
+            });
+
+            assert(A.IsAssignableFrom(A) === true);
+            assert(A.IsAssignableFrom(B) === true);
+            assert(A.IsAssignableFrom(C) === true);
+            assert(B.IsAssignableFrom(A) === false);
+            assert(B.IsAssignableFrom(B) === true);
+            assert(B.IsAssignableFrom(C) === true);
+            assert(C.IsAssignableFrom(A) === false);
+            assert(C.IsAssignableFrom(B) === false);
+            assert(C.IsAssignableFrom(C) === true);
+
+            var x = new C();
+            assert(x.DoA(1, 2) === 3);
+            assert(x.DoB(1, 2) === -1);
+            assert(x.DoC(1, 2) === 2);
+            assert(x.GetA() === C);
+            assert(x.GetB() === C);
+            assert(x.GetC() === C);
+        });
+    </script>
+
+    <script>
+        testCase("deriving from multiple classea should success", function () {
+            var A = Class("A", {
+                DoA: Public(function (a, b) {
+                    return a + b;
+                }),
+                GetA: Public(function () {
+                    return this.__Type;
+                }),
+            });
+
+            var B = Class("B", {
+                DoB: Public(function (a, b) {
+                    return a - b;
+                }),
+                GetB: Public(function () {
+                    return this.__Type;
+                }),
+            });
+
+            var C = Class("C", A, B, {
+                DoC: Public(function (a, b) {
+                    return a * b;
+                }),
+                GetC: Public(function () {
+                    return this.__Type;
+                }),
+            });
+
+            assert(A.IsAssignableFrom(A) === true);
+            assert(A.IsAssignableFrom(B) === false);
+            assert(A.IsAssignableFrom(C) === true);
+            assert(B.IsAssignableFrom(A) === false);
+            assert(B.IsAssignableFrom(B) === true);
+            assert(B.IsAssignableFrom(C) === true);
+            assert(C.IsAssignableFrom(A) === false);
+            assert(C.IsAssignableFrom(B) === false);
+            assert(C.IsAssignableFrom(C) === true);
+
+            var x = new C();
+            assert(x.DoA(1, 2) === 3);
+            assert(x.DoB(1, 2) === -1);
+            assert(x.DoC(1, 2) === 2);
+            assert(x.GetA() === C);
+            assert(x.GetB() === C);
+            assert(x.GetC() === C);
+        });
+    </script>
+
+    <script>
+        testCase("functions should overload by argument types", function () {
+            var A = Class("A", {
+            });
+
+            var B = Class("B", A, {
+            });
+
+            var C = Class("C", A, {
+            });
+
+            var MyClass = Class("MyClass", {
+                Print: Private(function (args) {
+                    var result = "";
+                    for (var i in args) {
+                        if (i > 0) result += ", ";
+                        result += typeof (args[i]);
+                    }
+                    return result;
+                }),
+
+                Do: Public.Overload(
+                    [], function () {
+                        return "1: " + this.Print(arguments);
+                    },
+                    [Number, String, Boolean], function (a, b, c) {
+                        return "2: " + this.Print(arguments);
+                    },
+                    [Function], function (x) {
+                        return "3: " + this.Print(arguments);
+                    },
+                    [C], function (x) {
+                        return "4: " + this.Print(arguments);
+                    },
+                    [B], function (x) {
+                        return "5: " + this.Print(arguments);
+                    },
+                    [A], function (x) {
+                        return "6: " + this.Print(arguments);
+                    },
+                    [Object], function (x) {
+                        return "7: " + this.Print(arguments);
+                    }
+                ),
+            });
+
+            var a = new A();
+            var b = new B();
+            var c = new C();
+            var x = new MyClass();
+            assert(x.Do() === "1: ");
+            assert(x.Do(1, "2", true) === "2: number, string, boolean");
+            assert(x.Do(function () { }) === "3: function");
+            assert(x.Do(c) === "4: object");
+            assert(x.Do(b) === "5: object");
+            assert(x.Do(a) === "6: object");
+            assert(x.Do(null) === "7: object");
+        });
+    </script>
+
+    <script>
+        testCase("constructor should be called", function () {
+            var MyClass = Class("MyClass", {
+                value: Private(null),
+                Get: Public(function () {
+                    return this.value;
+                }),
+                __Constructor: Public.Overload(
+                    [Number], function () {
+                        this.value = "number";
+                    },
+                    [String], function () {
+                        this.value = "string";
+                    }
+                ),
+            });
+
+            var x = new MyClass(1);
+            var y = new MyClass("2");
+            assert(x.Get() === "number");
+            assert(y.Get() === "string");
+        });
+    </script>
+
+    <script>
+        testCase("constructors in base classes can be called by child class", function () {
+            var A = Class("A", {
+                value: Private(null),
+                GetA: Public(function () {
+                    return this.value;
+                }),
+                __Constructor: Public(function (x) {
+                    this.value = x;
+                })
+            });
+
+            var B = Class("B", {
+                value: Private(null),
+                GetB: Public(function () {
+                    return this.value;
+                }),
+                __Constructor: Public(function (x) {
+                    this.value = x;
+                })
+            });
+
+            var C = Class("C", A, B, {
+                Get: Public(function () {
+                    return this.GetA() + this.GetB();
+                }),
+                __Constructor: Public(function (x, y) {
+                    this.__InitBase(A, [x]);
+                    this.__InitBase(B, [y]);
+                })
+            })
+
+            var c = new C(1, 2);
+            assert(c.Get() === 3);
+        });
+    </script>
+
+    <script>
+        testCase("virtual function should be able to override in child classes", function () {
+            var A = Class("A", {
+                GetX: Protected.Virtual(function () {
+                    return "X";
+                }),
+                GetY: Protected(function () {
+                    return "Y";
+                }),
+                GetZ: Public(function () {
+                    return this.GetX() + ", " + this.GetY();
+                })
+            });
+
+            var B = Class("B", A, {
+                GetX: Protected.Override(function () {
+                    return "U";
+                }),
+                GetY: Protected.New(function () {
+                    return "V";
+                }),
+            });
+
+            var a = new A();
+            var b = new B();
+            assert(a.GetZ() === "X, Y");
+            assert(b.GetZ() === "U, Y");
+        });
+    </script>
+
+    <script>
+        testCase("new function will hide the virtual function in base classes", function () {
+            var A = Class("A", {
+                GetX: Protected.Virtual(function () {
+                    return "X";
+                }),
+                GetY: Protected.Virtual(function () {
+                    return "Y";
+                }),
+                GetZ: Protected.Virtual(function () {
+                    return "Z";
+                }),
+                GetA: Public(function () {
+                    return this.GetX() + ", " + this.GetY() + ", " + this.GetZ();
+                }),
+            });
+
+            var B = Class("B", A, {
+                GetX: Protected.Override(function () {
+                    return "U";
+                }),
+                GetY: Protected.New(function () {
+                    return "V";
+                }),
+                GetZ: Protected.NewVirtual(function () {
+                    return "W";
+                }),
+                GetB: Public(function () {
+                    return this.GetX() + ", " + this.GetY() + ", " + this.GetZ();
+                }),
+            });
+
+            var C = Class("C", B, {
+                GetX: Protected.Override(function () {
+                    return "A";
+                }),
+                GetY: Protected.New(function () {
+                    return "B";
+                }),
+                GetZ: Protected.Override(function () {
+                    return "C";
+                }),
+                GetC: Public(function () {
+                    return this.GetX() + ", " + this.GetY() + ", " + this.GetZ();
+                }),
+            });
+
+            var a = new A();
+            var b = new B();
+            var c = new C();
+            assert(a.GetA() === "X, Y, Z");
+            assert(b.GetA() === "U, Y, Z");
+            assert(b.GetB() === "U, V, W");
+            assert(c.GetA() === "A, Y, Z");
+            assert(c.GetB() === "A, V, C");
+            assert(c.GetC() === "A, B, C");
+        });
+    </script>
+
+    <script>
+        testCase("virtual functions of the same name in different base classes should be able to override in child classes", function () {
+            var A = Class("A", {
+                Get: Public.Virtual(function () {
+                    return "A";
+                }),
+                GetA: Public(function () {
+                    return this.Get();
+                }),
+            });
+
+            var B = Class("B", {
+                Get: Public.Virtual(function () {
+                    return "B";
+                }),
+                GetB: Public(function () {
+                    return this.Get();
+                }),
+            });
+
+            var C = Class("C", A, B, {
+                Get: Public.Override(function () {
+                    return "C";
+                })
+            });
+
+            var D = Class("D", C, {
+                Get: Public.Override(function () {
+                    return "D";
+                })
+            });
+
+            var a = new A();
+            var b = new B();
+            var c = new C();
+            var d = new D();
+            assert(a.GetA() === "A");
+            assert(b.GetB() === "B");
+            assert(c.GetA() === "C");
+            assert(c.GetB() === "C");
+            assert(d.GetA() === "D");
+            assert(d.GetB() === "D");
+        });
+    </script>
+
+    <script>
+        testCase("different inheriting path to the same virtual base class shares the fields", function () {
+            var A = Class("A", {
+                value: Protected(0),
+            });
+
+            var B = Class("B", Virtual(A), {
+                GetB: Public(function () {
+                    return this.value;
+                }),
+                SetB: Public(function (value) {
+                    return this.value = value;
+                }),
+            });
+
+            var C = Class("C", Virtual(A), {
+                GetC: Public(function () {
+                    return this.value;
+                }),
+                SetC: Public(function (value) {
+                    return this.value = value;
+                }),
+            });
+
+            var D = Class("D", B, C, {
+            });
+
+            var d = new D();
+            assert(d.GetB() === 0);
+            assert(d.GetC() === 0);
+
+            d.SetB(1);
+            assert(d.GetB() === 1);
+            assert(d.GetC() === 1);
+
+            d.SetC(2);
+            assert(d.GetB() === 2);
+            assert(d.GetC() === 2);
+        });
+    </script>
+
+    <script>
+        testCase("constructors of virtual base classes can only be called by the final created type if there are multiple inheriting path to the same virtual base class", function () {
+            var A = Class("A", {
+                value: Protected(0),
+                Get: Public(function () {
+                    return this.value;
+                }),
+                __Constructor:Public(function(value){
+                    this.value = value;
+                }),
+            });
+
+            var B = Class("B", Virtual(A), {
+                __Constructor: Public(function () {
+                    this.__InitBase(A, [1]);
+                })
+            });
+
+            var C = Class("C", Virtual(A), {
+                __Constructor: Public(function () {
+                    this.__InitBase(A, [2]);
+                })
+            });
+
+            var D = Class("D", B, C, {
+                __Constructor: Public(function () {
+                    this.__InitBase(B, []);
+                    this.__InitBase(A, [3]);
+                    this.__InitBase(C, []);
+                })
+            });
+
+            var a = new A(-1);
+            assert(a.Get() === -1);
+
+            var b = new B();
+            assert(b.Get() === 1);
+
+            var c = new C();
+            assert(c.Get() === 2);
+
+            var d = new D();
+            assert(d.Get() === 3);
+        });
+    </script>
+
+    <script>
+        testCase("events should be able to attach, detach and execute", function () {
+            var MyClass = Class("MyClass", {
+                Event: Public.Event(),
+            });
+
+            var x = new MyClass();
+            x.Event = undefined;
+            assert(x.Event instanceof __Event);
+
+            var values = [];
+
+            var a = x.Event.Attach(function (v) {
+                values.push("a:" + v);
+            });
+            var b = x.Event.Attach(function (v) {
+                values.push("b:" + v);
+            });
+
+            assert(a instanceof __EventHandler);
+            assert(b instanceof __EventHandler);
+
+            x.Event.Execute(1);
+            assert(values.join(", ") === "a:1, b:1");
+
+            x.Event.Detach(a);
+            x.Event.Execute(2);
+            assert(values.join(", ") === "a:1, b:1, b:2");
+
+            x.Event.Detach(b);
+            x.Event.Execute(2);
+            assert(values.join(", ") === "a:1, b:1, b:2");
+        });
+    </script>
+
+    <script>
+        testCase("properties should be able to read and write if correctly configured", function () {
+            var MyClass = Class("MyClass", {
+                a: Private(0),
+                b: Private(0),
+                c: Private(0),
+                d: Private(0),
+
+                GetA: Protected(function () { return this.a; }),
+                GetB: Protected(function () { return this.b; }),
+                GetC: Protected(function () { return this.c; }),
+                GetD: Protected(function () { return this.d; }),
+
+                SetA: Public(function (value) {
+                    this.a = value;
+                }),
+                SetB: Public(function (value) {
+                    if (this.b !== value) {
+                        this.b = value;
+                        this.BChanged.Execute();
+                    }
+                }),
+                SetC: Protected(function (value) {
+                    this.c = value;
+                }),
+                SetD: Protected(function (value) {
+                    if (this.d !== value) {
+                        this.d = value;
+                        this.DChanged.Execute();
+                    }
+                }),
+
+                BChanged: Public.Event(),
+                DChanged: Public.Event(),
+
+                A: Public.Property({
+                    readonly: true,
+                }),
+
+                B: Public.Property({
+                    readonly: true,
+                    hasEvent: true,
+                }),
+
+                C: Public.Property({
+                }),
+
+                D: Public.Property({
+                    hasEvent: true,
+                }),
+            });
+
+            var x = new MyClass();
+
+            assert(x.__Type.Description.A.Value.Readonly === true);
+            assert(x.__Type.Description.A.Value.HasEvent === false);
+            assert(x.__Type.Description.A.Value.GetterName === "GetA");
+            assert(x.__Type.Description.A.Value.SetterName === null);
+            assert(x.__Type.Description.A.Value.EventName === null);
+
+            assert(x.__Type.Description.B.Value.Readonly === true);
+            assert(x.__Type.Description.B.Value.HasEvent === true);
+            assert(x.__Type.Description.B.Value.GetterName === "GetB");
+            assert(x.__Type.Description.B.Value.SetterName === null);
+            assert(x.__Type.Description.B.Value.EventName === "BChanged");
+
+            assert(x.__Type.Description.C.Value.Readonly === false);
+            assert(x.__Type.Description.C.Value.HasEvent === false);
+            assert(x.__Type.Description.C.Value.GetterName === "GetC");
+            assert(x.__Type.Description.C.Value.SetterName === "SetC");
+            assert(x.__Type.Description.C.Value.EventName === null);
+
+            assert(x.__Type.Description.D.Value.Readonly === false);
+            assert(x.__Type.Description.D.Value.HasEvent === true);
+            assert(x.__Type.Description.D.Value.GetterName === "GetD");
+            assert(x.__Type.Description.D.Value.SetterName === "SetD");
+            assert(x.__Type.Description.D.Value.EventName === "DChanged");
+
+            var values = [];
+            x.BChanged.Attach(function () {
+                values.push("B");
+            });
+            x.DChanged.Attach(function () {
+                values.push("D");
+            });
+
+            assert(x.A === 0);
+            assert(x.B === 0);
+            assert(x.C === 0);
+            assert(x.D === 0);
+
+            x.SetA(1);
+            x.SetB(2);
+            x.C = 3;
+            x.D = 4;
+            assert(x.A === 1);
+            assert(x.B === 2);
+            assert(x.C === 3);
+            assert(x.D === 4);
+            assert(values.join(", ") === "B, D");
+        });
+    </script>
+
+    <script>
+        testCase("hidden members should be able to call inside or outside classes", function () {
+            var A = Class("A", {
+                GetX: Public(function () {
+                    return "X";
+                }),
+                GetY: Public.Virtual(function () {
+                    return "Y";
+                }),
+            });
+
+            var B = Class("B", A, {
+                GetX: Public.New(function () {
+                    return "A";
+                }),
+            });
+
+            var C = Class("C", B, {
+                GetY: Public.Override(function () {
+                    return "B";
+                }),
+
+                Get1: Public(function () {
+                    return this.GetX() + ", " + this.GetY();
+                }),
+                Get2: Public(function () {
+                    var s = this.__Dynamic(A);
+                    return s.GetX() + ", " + s.GetY();
+                }),
+                Get3: Public(function () {
+                    var s = this.__Dynamic(B);
+                    return s.GetX() + ", " + s.GetY();
+                }),
+                Get4: Public(function () {
+                    var s = this.__Static(A);
+                    return s.GetX() + ", " + s.GetY();
+                }),
+                Get5: Public(function () {
+                    var s = this.__Static(B);
+                    return s.GetX() + ", " + s.GetY();
+                }),
+            });
+
+            var c = new C();
+            assert(c.Get1() === "A, B");
+            assert(c.Get2() === "X, B");
+            assert(c.Get3() === "A, B");
+            assert(c.Get4() === "X, Y");
+            assert(c.Get5() === "A, Y");
+
+            var da = c.__Dynamic(A);
+            assert(da.GetX() === "X");
+            assert(da.GetY() === "B");
+
+            var db = c.__Dynamic(B);
+            assert(db.GetX() === "A");
+            assert(db.GetY() === "B");
+
+            var sa = c.__Static(A);
+            assert(sa.GetX() === "X");
+            assert(sa.GetY() === "Y");
+
+            var sb = c.__Static(B);
+            assert(sb.GetX() === "A");
+            assert(sb.GetY() === "Y");
+        });
+    </script>
+
+    <script>
+        testCase("cannot non-virtually inherit a class multiple times", function () {
+            try {
+                var A = Class("A", {});
+                var B = Class("B", A, {});
+                var C = Class("C", A, {});
+                var D = Class("D", B, C, {});
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"D\" cannot non-virtually inherit from type \"A\" multiple times.");
+            }
+        });
+    </script>
+
+    <script>
+        testCase("cannot inherit multiple members of the same name without defining a new one", function () {
+            try {
+                var A = Class("A", {
+                    Get: Public(function () {
+                    })
+                });
+                var B = Class("B", {
+                    Get: Public(function () {
+                    })
+                });
+                var C = Class("C", A, B, {});
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"C\" cannot inherit multiple members of the same name \"Get\" without defining a new one.");
+            }
+
+            try {
+                var A = Class("A", {
+                    Get: Protected(function () {
+                    })
+                });
+                var B = Class("B", {
+                    Get: Protected(function () {
+                    })
+                });
+                var C = Class("C", A, B, {});
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"C\" cannot inherit multiple members of the same name \"Get\" without defining a new one.");
+            }
+
+
+            var A = Class("A", {
+                Get: Private(function () {
+                })
+            });
+            var B = Class("B", {
+                Get: Private(function () {
+                })
+            });
+            var C = Class("C", A, B, {});
+        });
+    </script>
+
+    <script>
+        testCase("cannot override non-virtual functions", function () {
+            try {
+                var A = Class("A", {
+                });
+                var B = Class("B", A, {
+                    Get: Public.Override(function () { })
+                });
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"B\" cannot find virtual function \"Get\" to override.");
+            }
+
+            try {
+                var A = Class("A", {
+                    Get: Public(function () { })
+                });
+                var B = Class("B", A, {
+                    Get: Public.Override(function () { })
+                });
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"B\" cannot override non-virtual function \"Get\".");
+            }
+
+            try {
+                var A = Class("A", {
+                    Get: Public.Virtual(function () { })
+                });
+                var B = Class("B", A, {
+                    Get: Public.New(function () { })
+                });
+                var C = Class("C", B, {
+                    Get: Public.Override(function () { })
+                });
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"C\" cannot override non-virtual function \"Get\".");
+            }
+        });
+    </script>
+
+    <script>
+        testCase("cannot hide a virtual function without overriding", function () {
+            try {
+                var A = Class("A", {
+                    Get: Public.Virtual(function () { })
+                });
+                var B = Class("B", A, {
+                    Get: Public(function () { })
+                });
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"B\" cannot hide virtual function \"Get\" without overriding.");
+            }
+
+            try {
+                var A = Class("A", {
+                    Get: Public(function () { })
+                });
+                var B = Class("B", A, {
+                    Get: Public.NewVirtual(function () { })
+                });
+                var C = Class("C", B, {
+                    Get: Public(function () { })
+                });
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"C\" cannot hide virtual function \"Get\" without overriding.");
+            }
+        });
+    </script>
+
+    <script>
+        testCase("cannot hide events", function () {
+            try {
+                var A = Class("A", {
+                    Event: Public.Event(),
+                });
+                var B = Class("B", A, {
+                    Event: Public.Event(),
+                });
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"B\" cannot hide event \"Event\".");
+            }
+
+            try {
+                var A = Class("A", {
+                    Event: Public.Event(),
+                });
+                var B = Class("B", A, {
+                    Event: Public(0),
+                });
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "Type \"B\" cannot hide event \"Event\".");
+            }
+        });
+    </script>
+
+    <script>
+        testCase("all constructors should be exactly called once", function () {
+            try {
+                var A = Class("A", {
+                    __Constructor: Public(function () { })
+                });
+                var B = Class("B", A, {
+                });
+                new B();
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "The constructor of type \"A\" has never been executed.");
+            }
+
+            try {
+                var A = Class("A", {
+                    __Constructor: Public(function () { })
+                });
+                var B = Class("B", A, {
+                    __Constructor: Public(function () {
+                        this.__InitBase(A, []);
+                        this.__InitBase(A, []);
+                    })
+                });
+                new B();
+                assert(false);
+            }
+            catch (ex) {
+                assert(ex.message === "The constructor of type \"A\" has already been executed by \"B\".");
+            }
+        });
+    </script>
+
+    <script>
+        testCase("abstract class should not be new directly", function () {
+            try {
+                var MyClass = Class("MyClass", {
+                    Get: Public.Abstract(),
+                });
+
+                new MyClass();
+            }
+            catch (ex) {
+                assert(ex.message === "Cannot create instance of type \"MyClass\" because it contains an abstract function \"Get\".");
+            }
+        });
+    </script>
+
+    <script>
+        testCase("metadata should reflect the real definition", function () {
+            var A = Class("A", {
+                X1: Private(0),
+                X2: Private(function () { }),
+                Y1: Protected(0),
+                Y2: Protected(function () { }),
+                Y3: Protected.Virtual(function () { }),
+                Y4: Protected.Abstract(),
+                Z1: Public(0),
+                Z2: Public(function () { }),
+                Z3: Public.Virtual(function () { }),
+                Z4: Public.Abstract(),
+            });
+
+            assert(A.FullName === "A");
+            assert(A.BaseClasses.length === 0);
+            assert(A.FlattenedBaseClasses.length === 0);
+
+            var member = A.Description.X1;
+            assert(member instanceof __PrivateMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(member.Value === 0);
+
+            var member = A.Description.X2;
+            assert(member instanceof __PrivateMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            var member = A.Description.Y1;
+            assert(member instanceof __ProtectedMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(member.Value === 0);
+
+            var member = A.Description.Y2;
+            assert(member instanceof __ProtectedMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            var member = A.Description.Y3;
+            assert(member instanceof __ProtectedMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.VIRTUAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            var member = A.Description.Y4;
+            assert(member instanceof __ProtectedMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.ABSTRACT);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            var member = A.Description.Z1;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(member.Value === 0);
+
+            var member = A.Description.Z2;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            var member = A.Description.Z3;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.VIRTUAL);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            var member = A.Description.Z4;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === A);
+            assert(member.Virtual === __MemberBase.ABSTRACT);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 0);
+            assert(typeof member.Value === "function");
+
+            for (var i in A.FlattenedDescription) {
+                assert(A.FlattenedDescription[i] === A.Description[i]);
+            }
+
+            var B = Class("B", A, {
+                Y3: Protected.Override(function () { }),
+                Y4: Protected.Override(function () { }),
+                Z2: Public.New(function () { }),
+                Z3: Public.Override(function () { }),
+                Z4: Public.Override(function () { }),
+            });
+
+            assert(B.FullName === "B");
+            assert(B.BaseClasses.length === 1);
+            assert(B.BaseClasses[0].Type === A);
+            assert(B.BaseClasses[0].Virtual === false);
+            assert(B.FlattenedBaseClasses.length === 1);
+            assert(B.FlattenedBaseClasses[0].Type === A);
+            assert(B.FlattenedBaseClasses[0].Virtual === false);
+
+            var member = B.Description.Y3;
+            assert(member instanceof __ProtectedMember);
+            assert(member.DeclaringType === B);
+            assert(member.Virtual === __MemberBase.OVERRIDE);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 1);
+            assert(member.HiddenMembers[0] === A.Description.Y3);
+            assert(typeof member.Value === "function");
+
+            var member = B.Description.Y4;
+            assert(member instanceof __ProtectedMember);
+            assert(member.DeclaringType === B);
+            assert(member.Virtual === __MemberBase.OVERRIDE);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 1);
+            assert(member.HiddenMembers[0] === A.Description.Y4);
+            assert(typeof member.Value === "function");
+
+            var member = B.Description.Z2;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === B);
+            assert(member.Virtual === __MemberBase.NORMAL);
+            assert(member.New === true);
+            assert(member.HiddenMembers.length === 1);
+            assert(member.HiddenMembers[0] === A.Description.Z2);
+            assert(typeof member.Value === "function");
+
+            var member = B.Description.Z3;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === B);
+            assert(member.Virtual === __MemberBase.OVERRIDE);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 1);
+            assert(member.HiddenMembers[0] === A.Description.Z3);
+            assert(typeof member.Value === "function");
+
+            var member = B.Description.Z4;
+            assert(member instanceof __PublicMember);
+            assert(member.DeclaringType === B);
+            assert(member.Virtual === __MemberBase.OVERRIDE);
+            assert(member.New === false);
+            assert(member.HiddenMembers.length === 1);
+            assert(member.HiddenMembers[0] === A.Description.Z4);
+            assert(typeof member.Value === "function");
+
+            for (var i in B.FlattenedDescription) {
+                if (i === "Y3" || i === "Y4" || i === "Z2" || i === "Z3" || i === "Z4") {
+                    assert(B.FlattenedDescription[i] === B.Description[i]);
+                }
+                else {
+                    assert(B.FlattenedDescription[i] === A.Description[i]);
+                }
+            }
+        });
+    </script>
+
+    <script>
+        summaryTest();
+    </script>
+</body>
+</html>
