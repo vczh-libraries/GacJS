@@ -1,7 +1,7 @@
 # GacJS
 Running GacUI in Browsers!
 
-Some content is under development. I will keep all code compatible across browsers by only testing using latest version of IE, Firefox and Chrome. After Windows 10 releases, Edge will be included.
+Some content is under development. I will keep all code compatible across browsers by only testing the code using latest version of IE, Firefox and Chrome. After Windows 10 releases, Edge will be included.
 
 In the future, GacGen.exe can translate GacUI XML resource files to javascript codes, mapping all classes to javascript. You can just create an instance of your control class and plug it in the DOM tree at wherever you want, and the UI will appear in the web page.
 
