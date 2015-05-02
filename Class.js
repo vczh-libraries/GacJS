@@ -117,7 +117,7 @@ API:
 
     class __Struct {
         string                      FullName;               // Get the full name
-        map<string, Number>         Description;            // Get all declared members in this type
+        map<string, value>          Description;            // Get all declared members in this type
 
         static Struct               Parse(string text);     // Create a value of this type by a specified string representation
     }
@@ -1510,9 +1510,73 @@ function Flags(fullName, description) {
 function Struct(fullName, description) {
 
     function Type() {
+        var typeObject = arguments.callee;
+
+        if (arguments.length === 2) {
+            flags[itemName] = this;
+        }
+
+        // obj.__Type
+        Object.defineProperty(this, "__Type", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: typeObject,
+        });
+        // obj.__Clone
+        Object.defineProperty(this, "__Clone", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function () {
+                throw new Error("Not implemented.");
+            },
+        });
+        // obj.__Equals
+        Object.defineProperty(this, "__Equals", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                throw new Error("Not implemented.");
+            },
+        });
+        // obj.__ToString
+        Object.defineProperty(this, "__ToString", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function () {
+                throw new Error("Not implemented.");
+            },
+        });
 
         Object.seal(this);
     }
+
+    // Type.FullName
+    Object.defineProperty(Type, "FullName", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: fullName,
+    });
+    // Type.Description
+    Object.defineProperty(Type, "Description", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: description,
+    });
+    // Type.Parse
+    Object.defineProperty(Type, "Parse", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: function (text) {
+            throw new Error("Not implemented.");
+        },
+    });
 
     Type.__proto__ = __Struct.prototype;
     Type.prototype.__proto__ = Struct.prototype;
