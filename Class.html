@@ -13,6 +13,7 @@
             });
 
             var x = new MyClass();
+            assert(x instanceof Class);
             assert(x.__Type === MyClass);
         });
     </script>
@@ -587,7 +588,7 @@
                 Get: Public(function () {
                     return this.value;
                 }),
-                __Constructor:Public(function(value){
+                __Constructor: Public(function (value) {
                     this.value = value;
                 }),
             });
@@ -1223,6 +1224,139 @@
                     assert(B.FlattenedDescription[i] === A.Description[i]);
                 }
             }
+        });
+    </script>
+
+    <script>
+        testCase("create enum instance should success", function () {
+            var MyEnum = Enum("MyEnum", {
+                Spring: 0,
+                Summer: 1,
+                Autumn: 2,
+                Winter: 3,
+            });
+
+            assert(MyEnum instanceof __Enum);
+            assert(MyEnum.Flags === false);
+            assert(MyEnum.FullName === "MyEnum");
+
+            var member = MyEnum.Description.Spring;
+            assert(member instanceof Enum);
+            assert(MyEnum.Parse("Spring") === member);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 0);
+            assert(member.__Clone() === member);
+            assert(member.__Equals(MyEnum.Description.Spring) === true);
+            assert(member.__Equals(MyEnum.Description.Summer) === false);
+            assert(member.__Equals(MyEnum.Description.Autumn) === false);
+            assert(member.__Equals(MyEnum.Description.Winter) === false);
+            assert(member.__ToString() === "Spring");
+
+            var member = MyEnum.Description.Summer;
+            assert(member instanceof Enum);
+            assert(MyEnum.Parse("Summer") === member);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 1);
+            assert(member.__Clone() === member);
+            assert(member.__Equals(MyEnum.Description.Spring) === false);
+            assert(member.__Equals(MyEnum.Description.Summer) === true);
+            assert(member.__Equals(MyEnum.Description.Autumn) === false);
+            assert(member.__Equals(MyEnum.Description.Winter) === false);
+            assert(member.__ToString() === "Summer");
+
+            var member = MyEnum.Description.Autumn;
+            assert(member instanceof Enum);
+            assert(MyEnum.Parse("Autumn") === member);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 2);
+            assert(member.__Clone() === member);
+            assert(member.__Equals(MyEnum.Description.Spring) === false);
+            assert(member.__Equals(MyEnum.Description.Summer) === false);
+            assert(member.__Equals(MyEnum.Description.Autumn) === true);
+            assert(member.__Equals(MyEnum.Description.Winter) === false);
+            assert(member.__ToString() === "Autumn");
+
+            var member = MyEnum.Description.Winter;
+            assert(member instanceof Enum);
+            assert(MyEnum.Parse("Winter") === member);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 3);
+            assert(member.__Clone() === member);
+            assert(member.__Equals(MyEnum.Description.Spring) === false);
+            assert(member.__Equals(MyEnum.Description.Summer) === false);
+            assert(member.__Equals(MyEnum.Description.Autumn) === false);
+            assert(member.__Equals(MyEnum.Description.Winter) === true);
+            assert(member.__ToString() === "Winter");
+        });
+    </script>
+
+    <script>
+        testCase("create flags instance should success", function () {
+            var MyEnum = Flags("MyEnum", {
+                Spring: 0,
+                Summer: 1,
+                Autumn: 2,
+                Winter: 3,
+            });
+
+            assert(MyEnum instanceof __Enum);
+            assert(MyEnum.Flags === true);
+            assert(MyEnum.FullName === "MyEnum");
+
+            var member = MyEnum.Description.Spring;
+            assert(member instanceof Flags);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 0);
+            assert(member.__Clone().__ToString() === "Spring");
+            assert(member.__Equals(MyEnum.Description.Spring) === true);
+            assert(member.__Equals(MyEnum.Description.Summer) === false);
+            assert(member.__Equals(MyEnum.Description.Autumn) === false);
+            assert(member.__Equals(MyEnum.Description.Winter) === false);
+            assert(member.__ToString() === "Spring");
+
+            var member = MyEnum.Description.Summer;
+            assert(member instanceof Flags);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 1);
+            assert(member.__Clone().__ToString() === "Summer");
+            assert(member.__Equals(MyEnum.Description.Spring) === false);
+            assert(member.__Equals(MyEnum.Description.Summer) === true);
+            assert(member.__Equals(MyEnum.Description.Autumn) === false);
+            assert(member.__Equals(MyEnum.Description.Winter) === false);
+            assert(member.__ToString() === "Summer");
+
+            var member = MyEnum.Description.Autumn;
+            assert(member instanceof Flags);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 2);
+            assert(member.__Clone().__ToString() === "Autumn");
+            assert(member.__Equals(MyEnum.Description.Spring) === false);
+            assert(member.__Equals(MyEnum.Description.Summer) === false);
+            assert(member.__Equals(MyEnum.Description.Autumn) === true);
+            assert(member.__Equals(MyEnum.Description.Winter) === false);
+            assert(member.__ToString() === "Autumn");
+
+            var member = MyEnum.Description.Winter;
+            assert(member instanceof Flags);
+            assert(member.__Type === MyEnum);
+            assert(member.__Value === 3);
+            assert(member.__Clone().__ToString() === "Winter");
+            assert(member.__Equals(MyEnum.Description.Spring) === false);
+            assert(member.__Equals(MyEnum.Description.Summer) === false);
+            assert(member.__Equals(MyEnum.Description.Autumn) === false);
+            assert(member.__Equals(MyEnum.Description.Winter) === true);
+            assert(member.__ToString() === "Winter");
+        });
+    </script>
+
+    <script>
+        testCase("combining flags should success", function () {
+            var MyEnum = Enum("MyEnum", {
+                Spring: 0,
+                Summer: 1,
+                Autumn: 2,
+                Winter: 3,
+            });
         });
     </script>
 

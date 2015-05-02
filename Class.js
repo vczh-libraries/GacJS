@@ -1289,7 +1289,10 @@ function Enum(fullName, description) {
         enumerable: true,
         writable: false,
         value: function (text) {
-            throw new Error("Not Implemented.");
+            if (!Type.Description.hasOwnProperty(text)) {
+                throw new Error("\"" + text + "\" is not a valid string representation for type \"" + Type.FullName + "\".");
+            }
+            return Type.Description[text];
         },
     });
 
@@ -1307,7 +1310,7 @@ function Flags(fullName, description) {
         var flags = {};
 
         if (arguments.length === 2) {
-            flags[fullName] = this;
+            flags[itemName] = this;
         }
 
         // obj.__Type
@@ -1437,7 +1440,7 @@ function Flags(fullName, description) {
                 },
             });
             // obj.__Flags
-            Object.defineProperty(this, "__ToString", {
+            Object.defineProperty(this, "__Flags", {
                 configurable: false,
                 enumerable: true,
                 writable: false,
@@ -1478,7 +1481,16 @@ function Flags(fullName, description) {
         enumerable: true,
         writable: false,
         value: function (text) {
-            throw new Error("Not Implemented.");
+            var result = new Type();
+            var names = text.split('|');
+            for (var i in names) {
+                var name = names[i];
+                if (!Type.Description.hasOwnProperty(name)) {
+                    throw new Error("\"" + name + "\" is not a valid string representation for type \"" + Type.FullName + "\".");
+                }
+                result.__Add(Type.Description[name]);
+            }
+            return result;
         },
     });
 
