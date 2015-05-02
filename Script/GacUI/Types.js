@@ -35,19 +35,52 @@ Packages.Define("GacUI.Types", function () {
         y2: 0,
     });
 
-    var __PrintColor = function (color) {
+    var __Hex = "0123456789ABCDEF";
 
+    function __HexToInt(c) {
+        var i = c.charCodeAt(0);
+        if (48 <= i && i <= 57) return i - 48;
+        if (65 <= i && i <= 70) return i - 55;
+        throw new Error("\"" + c + "\" is not a valid hex number.");
+    }
+
+    function __ByteToHex(b) {
+        if (0 <= b && b <= 255) {
+            return __Hex[(b / 16) | 0] + __Hex[b % 16];
+        }
+        else {
+            throw new Error("\"" + b + "\" is out of range [0, 255].");
+        }
+    }
+
+    var __PrintColor = function () {
+        return "#" +
+            __ByteToHex(this.r) +
+            __ByteToHex(this.g) +
+            __ByteToHex(this.b) +
+            (this.a == 255 ? "" : __ByteToHex(this.a))
+        ;
     }
 
     var __ParseColor = function (text) {
+        if (text.length != 7 && text.length != 9 && text[0] != '#') {
+            throw new Error("\"" + text + "\" is not a valid string representation for type \"" + Color.FullName + "\".");
+        }
 
+        var color = new Color(
+            __HexToInt(text[1]) * 16 + __HexToInt(text[2]),
+            __HexToInt(text[3]) * 16 + __HexToInt(text[4]),
+            __HexToInt(text[5]) * 16 + __HexToInt(text[6]),
+            (text.length == 7 ? 255 : __HexToInt(text[7]) * 16 + __HexToInt(text[8]))
+            );
+        return color;
     }
 
     var Color = Struct("vl::presentation::Color", {
         r: 0,
         g: 0,
         b: 0,
-        a: 0,
+        a: 255,
     }, __PrintColor, __ParseColor);
 
     var Margin = Struct("vl::presentation::Margin", {

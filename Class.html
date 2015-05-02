@@ -1426,8 +1426,8 @@
             y.__Add(MyEnum.Description.Winter);
             y.__Remove(MyEnum.Description.Spring);
 
-            assert(x.__ToString() == "Spring|Summer");
-            assert(y.__ToString() == "Summer|Winter");
+            assert(x.__ToString() === "Spring|Summer");
+            assert(y.__ToString() === "Summer|Winter");
         });
     </script>
 
@@ -1469,40 +1469,40 @@
             point.x = 1;
             point.y = 2;
             assert(point instanceof Struct);
-            assert(point.__Type == Point);
-            assert(point.__Equals(point) == true);
-            assert(point.__Equals(new Point()) == false);
-            assert(point.__Equals({}) == false);
-            assert(point.__ToString() == "x:1 y:2");
+            assert(point.__Type === Point);
+            assert(point.__Equals(point) === true);
+            assert(point.__Equals(new Point()) === false);
+            assert(point.__Equals({}) === false);
+            assert(point.__ToString() === "x:1 y:2");
 
             var size = new Size();
             size.cx = 3;
             size.cy = 4;
             assert(size instanceof Struct);
-            assert(size.__Type == Size);
-            assert(size.__Equals(size) == true);
-            assert(size.__Equals(new Size()) == false);
-            assert(size.__Equals({}) == false);
-            assert(size.__ToString() == "cx:3 cy:4");
+            assert(size.__Type === Size);
+            assert(size.__Equals(size) === true);
+            assert(size.__Equals(new Size()) === false);
+            assert(size.__Equals({}) === false);
+            assert(size.__ToString() === "cx:3 cy:4");
 
             var rect = new Rect(new Point(10, 20), new Size(30, 40));
             assert(rect instanceof Struct);
-            assert(rect.__Type == Rect);
-            assert(rect.__Equals(rect) == true);
-            assert(rect.__Equals(new Rect()) == false);
-            assert(rect.__Equals({}) == false);
-            assert(rect.__ToString() == "point:{x:10 y:20} size:{cx:30 cy:40}");
+            assert(rect.__Type === Rect);
+            assert(rect.__Equals(rect) === true);
+            assert(rect.__Equals(new Rect()) === false);
+            assert(rect.__Equals({}) === false);
+            assert(rect.__ToString() === "point:{x:10 y:20} size:{cx:30 cy:40}");
 
             var rectPair = new RectPair({
                 a: new Rect(new Point(1, 2), new Size(3, 4)),
                 b: new Rect(new Point(10, 20), new Size(30, 40)),
             });
             assert(rectPair instanceof Struct);
-            assert(rectPair.__Type == RectPair);
-            assert(rectPair.__Equals(rectPair) == true);
-            assert(rectPair.__Equals(new RectPair()) == false);
-            assert(rectPair.__Equals({}) == false);
-            assert(rectPair.__ToString() == "a:{point:{{x:1 y:2}} size:{{cx:3 cy:4}}} b:{point:{{x:10 y:20}} size:{{cx:30 cy:40}}}");
+            assert(rectPair.__Type === RectPair);
+            assert(rectPair.__Equals(rectPair) === true);
+            assert(rectPair.__Equals(new RectPair()) === false);
+            assert(rectPair.__Equals({}) === false);
+            assert(rectPair.__ToString() === "a:{point:{{x:1 y:2}} size:{{cx:3 cy:4}}} b:{point:{{x:10 y:20}} size:{{cx:30 cy:40}}}");
         });
     </script>
 
@@ -1532,22 +1532,22 @@
             assert(point.x === 1);
             assert(point.y === 2);
             assert(point instanceof Struct);
-            assert(point.__Type == Point);
-            assert(point.__ToString() == "x:1 y:2");
+            assert(point.__Type === Point);
+            assert(point.__ToString() === "x:1 y:2");
 
             var size = Size.Parse("cx:3 cy:4");
             assert(size.cx === 3);
             assert(size.cy === 4);
             assert(size instanceof Struct);
-            assert(size.__Type == Size);
-            assert(size.__ToString() == "cx:3 cy:4");
+            assert(size.__Type === Size);
+            assert(size.__ToString() === "cx:3 cy:4");
 
             var rect = Rect.Parse("point:{x:10 y:20} size:{cx:30 cy:40}");
             var rect2 = new Rect(new Point(10, 20), new Size(30, 40));
             assert(rect instanceof Struct);
-            assert(rect.__Type == Rect);
-            assert(rect.__Equals(rect2) == true);
-            assert(rect.__ToString() == "point:{x:10 y:20} size:{cx:30 cy:40}");
+            assert(rect.__Type === Rect);
+            assert(rect.__Equals(rect2) === true);
+            assert(rect.__ToString() === "point:{x:10 y:20} size:{cx:30 cy:40}");
 
             var rectPair = RectPair.Parse("a:{point:{{x:1 y:2}} size:{{cx:3 cy:4}}} b:{point:{{x:10 y:20}} size:{{cx:30 cy:40}}}");
             var rectPair2 = new RectPair({
@@ -1555,9 +1555,9 @@
                 b: new Rect(new Point(10, 20), new Size(30, 40)),
             });
             assert(rectPair instanceof Struct);
-            assert(rectPair.__Type == RectPair);
-            assert(rectPair.__Equals(rectPair2) == true);
-            assert(rectPair.__ToString() == "a:{point:{{x:1 y:2}} size:{{cx:3 cy:4}}} b:{point:{{x:10 y:20}} size:{{cx:30 cy:40}}}");
+            assert(rectPair.__Type === RectPair);
+            assert(rectPair.__Equals(rectPair2) === true);
+            assert(rectPair.__ToString() === "a:{point:{{x:1 y:2}} size:{{cx:3 cy:4}}} b:{point:{{x:10 y:20}} size:{{cx:30 cy:40}}}");
         });
     </script>
 
@@ -1591,8 +1591,8 @@
             y.point = new Point(1, 2);
             y.size = new Size(3, 4);
 
-            assert(x.__ToString() == "point:{x:0 y:0} size:{cx:0 cy:0}");
-            assert(y.__ToString() == "point:{x:1 y:2} size:{cx:3 cy:4}");
+            assert(x.__ToString() === "point:{x:0 y:0} size:{cx:0 cy:0}");
+            assert(y.__ToString() === "point:{x:1 y:2} size:{cx:3 cy:4}");
         });
     </script>
 

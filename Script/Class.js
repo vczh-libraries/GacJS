@@ -1768,7 +1768,7 @@ function Struct(fullName, description, toString, fromString) {
                     reading = colon + 1;
                     while (true) {
                         var close = text.indexOf('}', reading);
-                        if (close == -1) {
+                        if (close === -1) {
                             throw new Error("\"" + text + "\" is not a valid string representation for type \"" + fullName + "\".");
                         }
                         reading = close + 1;
@@ -1875,6 +1875,7 @@ Object.defineProperty(Packages, "Require", {
         if (!Packages.Packages.hasOwnProperty(fullName)) {
             throw new Error("Required package \"" + fullName + "\" does not exist.");
         }
+        return Packages.Packages[fullName];
     }
 });
 Object.seal(Packages);
