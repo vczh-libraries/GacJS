@@ -135,6 +135,30 @@ API:
     Assembly.EnabledRegistering
     Assembly.Types[fullName]
     Assembly.RegisterType(type);
+
+================================================================================
+
+Internal API:
+    __EventHandler
+    __Event
+    __Property
+    __BuildOverloadingFunctions
+    __DefineDecorator
+    __DefineSubDecorator
+    __DefineOverload
+    __DefineNew
+    __DefineVirtual
+    __DefineNewVirtual
+    __DefineOverride
+    __DefineAbstract
+    __DefineEvent
+    __DefineProperty
+    __StructMemberEquals
+    __StructMemberClone
+    __StructMemberToString
+    __StructMemberParse
+    __StructEscape
+    __StructUnescape
 */
 
 ///////////////////////////////////////////////////////////////
@@ -1507,14 +1531,79 @@ function Flags(fullName, description) {
 
 ///////////////////////////////////////////////////////////////
 
+function __StructMemberEquals(a, b) {
+    if (a instanceof Enum && b instanceof Enum) {
+        return a.__Equals(b);
+    }
+    else if (a instanceof Flags && b instanceof Flags) {
+        return a.__Equals(b);
+    }
+    else if (a instanceof Struct && b instanceof Struct) {
+        return a.__Equals(b);
+    }
+    else {
+        return a === b;
+    }
+}
+
+function __StructMemberClone(a) {
+    if (a instanceof Enum || a instanceof Flags || a instanceof Struct) {
+        return a.__Clone();
+    }
+    else {
+        return a;
+    }
+}
+
+function __StructMemberToString(a) {
+    if (a instanceof Enum || a instanceof Flags || a instanceof Struct) {
+        return a.__ToString();
+    }
+    else {
+        return "" + a;
+    }
+}
+
+function __StructMemberParse(text, defaultValue) {
+    throw new Error("Not Implemented.");
+}
+
+function __StructEscape(text) {
+    if (text.indexOf(" ") == -1) {
+        return text;
+    }
+
+    var result = "";
+    for (var i in text) {
+        var c = text[i];
+        switch (c) {
+            case '{':
+                result += "{{";
+                break;
+            case '}':
+                result += "}}";
+                break;
+            default:
+                result += c;
+        }
+    }
+
+    return "{" + result + "}";
+}
+
+function __StructUnescape(text) {
+    throw new Error("Not Implemented.");
+}
+
 function Struct(fullName, description) {
 
-    function Type() {
-        var typeObject = arguments.callee;
+    var length = 0;
+    for (var i in description) {
+        length++;
+    }
 
-        if (arguments.length === 2) {
-            flags[itemName] = this;
-        }
+    function Type(proto) {
+        var typeObject = arguments.callee;
 
         // obj.__Type
         Object.defineProperty(this, "__Type", {
@@ -1529,7 +1618,11 @@ function Struct(fullName, description) {
             enumerable: true,
             writable: false,
             value: function () {
-                throw new Error("Not implemented.");
+                var proto = {};
+                for (var i in description) {
+                    proto[i] = this[i];
+                }
+                return new typeObject(proto);
             },
         });
         // obj.__Equals
@@ -1538,7 +1631,12 @@ function Struct(fullName, description) {
             enumerable: true,
             writable: false,
             value: function (obj) {
-                throw new Error("Not implemented.");
+                if (!(obj instanceof Struct)) return false;
+                if (obj.__Type != typeObject) return false;
+                for (var i in typeObject.Description) {
+                    if (!__StructMemberEquals(this[i], obj[i])) return false;
+                }
+                return true;
             },
         });
         // obj.__ToString
@@ -1547,10 +1645,40 @@ function Struct(fullName, description) {
             enumerable: true,
             writable: false,
             value: function () {
-                throw new Error("Not implemented.");
+                var result = "";
+                for (var i in typeObject.Description) {
+                    if (result !== "") {
+                        result += " ";
+                    }
+                    result += i + ":" + __StructEscape(__StructMemberToString(this[i]));
+                }
+                return result;
             },
         });
 
+        if (arguments.length == 0) {
+            for (var i in description) {
+                this[i] = __StructMemberClone(description[i]);
+            }
+        }
+        else if (arguments.length == 1 && proto.__proto__ == Object.prototype) {
+            for (var i in description) {
+                if (proto.hasOwnProperty(i)) {
+                    this[i] = __StructMemberClone(proto[i]);
+                } else {
+                    this[i] = __StructMemberClone(description[i]);
+                }
+            }
+        }
+        else {
+            if (arguments.length !== length) {
+                throw new Error("Values of each member should be provided to create struct \"" + fullName + "\".");
+            }
+            var index = 0;
+            for (var i in description) {
+                this[i] = __StructMemberClone(arguments[index++]);
+            }
+        }
         Object.seal(this);
     }
 
