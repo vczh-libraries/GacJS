@@ -1563,7 +1563,36 @@
 
     <script>
         testCase("modifying cloned struct should not affect the original one", function () {
-            emptyCase();
+            var Point = Struct("Point", {
+                x: 0,
+                y: 0,
+            });
+
+            var Size = Struct("Size", {
+                cx: 0,
+                cy: 0,
+            });
+
+            var Rect = Struct("Rect", {
+                point: new Point(),
+                size: new Size(),
+            });
+
+            var x = new Point(1, 2);
+            var y = x.__Clone();
+            y.x = 3;
+            y.y = 4;
+
+            assert(x.__ToString() === "x:1 y:2");
+            assert(y.__ToString() === "x:3 y:4");
+
+            var x = new Rect();
+            var y = x.__Clone();
+            y.point = new Point(1, 2);
+            y.size = new Size(3, 4);
+
+            assert(x.__ToString() == "point:{x:0 y:0} size:{cx:0 cy:0}");
+            assert(y.__ToString() == "point:{x:1 y:2} size:{cx:3 cy:4}");
         });
     </script>
 
