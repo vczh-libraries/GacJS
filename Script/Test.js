@@ -26,8 +26,8 @@ function testCase(name, code) {
     document.body.appendChild(div);
 
     try {
-        if (window.Assembly) {
-            Assembly.EnabledRegistering = false;
+        if (window.Packages) {
+            Packages.EnabledRegistering = false;
         }
         code();
         div.setAttribute("style", "color: green;");
@@ -45,8 +45,8 @@ function testCase(name, code) {
         }
     }
     finally {
-        if (window.Assembly) {
-            Assembly.EnabledRegistering = true;
+        if (window.Packages) {
+            Packages.EnabledRegistering = true;
         }
     }
 }

@@ -132,9 +132,18 @@ API:
 
 ================================================================================
 
-    Assembly.EnabledRegistering
-    Assembly.Types[fullName]
-    Assembly.RegisterType(type);
+    Packages.EnabledRegistering
+    Packages.Types[fullName]
+    Packages.Packages[fullName]
+    Packages.RegisterType(type);
+
+    var package = Packages.Define(fullName, function() {
+        return {
+            ExportedSymbol: value,
+        };
+    });
+
+    var package = Packages.Require(fullName);
 
 ================================================================================
 
@@ -1227,7 +1236,7 @@ function Class(fullName) {
     Type.__proto__ = __Class.prototype;
     Type.prototype.__proto__ = Class.prototype;
     Object.seal(Type);
-    Assembly.RegisterType(Type);
+    Packages.RegisterType(Type);
     return Type;
 }
 
@@ -1323,7 +1332,7 @@ function Enum(fullName, description) {
     Type.__proto__ = __Enum.prototype;
     Type.prototype.__proto__ = Enum.prototype;
     Object.seal(Type);
-    Assembly.RegisterType(Type);
+    Packages.RegisterType(Type);
     return Type;
 }
 
@@ -1525,7 +1534,7 @@ function Flags(fullName, description) {
     Type.__proto__ = __Enum.prototype;
     Type.prototype.__proto__ = Flags.prototype;
     Object.seal(Type);
-    Assembly.RegisterType(Type);
+    Packages.RegisterType(Type);
     return Type;
 }
 
@@ -1634,7 +1643,7 @@ function __StructUnescape(text) {
     return result;
 }
 
-function Struct(fullName, description) {
+function Struct(fullName, description, toString, fromString) {
 
     var length = 0;
     for (var i in description) {
@@ -1683,7 +1692,7 @@ function Struct(fullName, description) {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: function () {
+            value: toString !== undefined ? toString : function () {
                 var result = "";
                 for (var i in typeObject.Description) {
                     if (result !== "") {
@@ -1740,7 +1749,7 @@ function Struct(fullName, description) {
         configurable: false,
         enumerable: true,
         writable: false,
-        value: function (text) {
+        value: fromString !== undefined ? fromString : function (text) {
             var proto = {};
 
             var reading = 0;
@@ -1797,37 +1806,75 @@ function Struct(fullName, description) {
     Type.__proto__ = __Struct.prototype;
     Type.prototype.__proto__ = Struct.prototype;
     Object.seal(Type);
-    Assembly.RegisterType(Type);
+    Packages.RegisterType(Type);
     return Type;
 }
 
 ///////////////////////////////////////////////////////////////
 
-function Assembly() {
+function Packages() {
 }
-Object.defineProperty(Assembly, "EnabledRegistering", {
+
+Object.defineProperty(Packages, "EnabledRegistering", {
     configurable: false,
     enumerable: true,
     writable: true,
     value: true,
 });
-Object.defineProperty(Assembly, "Types", {
+Object.defineProperty(Packages, "Types", {
     configurable: false,
     enumerable: true,
     writable: false,
     value: {},
 });
-Object.defineProperty(Assembly, "RegisterType", {
+Object.defineProperty(Packages, "Packages", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: {},
+});
+Object.defineProperty(Packages, "RegisterType", {
     configurable: false,
     enumerable: true,
     writable: false,
     value: function (type) {
-        if (Assembly.EnabledRegistering) {
-            if (Assembly.Types.hasOwnProperty(type.FullName)) {
-                throw new Error("Type \"" + type.FullName + "\" has already been registered");
+        if (Packages.EnabledRegistering) {
+            if (Packages.Types.hasOwnProperty(type.FullName)) {
+                throw new Error("Type \"" + type.FullName + "\" has already been registered.");
             }
-            Assembly.Types[type.FullName] = type;
+            Packages.Types[type.FullName] = type;
         }
     }
 });
-Object.seal(Assembly);
+Object.defineProperty(Packages, "Define", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: function (fullName, constructor) {
+        var pkg= Packages.Packages[fullName];
+        if (pkg === undefined) {
+            pkg = {};
+            Packages.Packages[fullName] = pkg;
+        }
+
+        var obj = constructor();
+        for (var i in obj) {
+            if (pkg.hasOwnProperty(i)) {
+                throw new Error("Package \""+fullName+"\" has already exported symbol \""i+"\".");
+            }
+            pkg[i]=obj[i];
+        }
+        return pkg;
+    }
+});
+Object.defineProperty(Packages, "Require", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: function (fullName) {
+        if (!Packages.Packages.hasOwnProperty(fullName)) {
+            throw new Error("Required package \"" + fullName + "\" does not exist.");
+        }
+    }
+});
+Object.seal(Packages);
