@@ -1565,11 +1565,24 @@ function __StructMemberToString(a) {
 }
 
 function __StructMemberParse(text, defaultValue) {
-    throw new Error("Not Implemented.");
+    if (defaultValue instanceof Enum || defaultValue instanceof Flags || defaultValue instanceof Struct) {
+        return defaultValue.__Type.Parse(text);
+    }
+    else if (typeof defaultValue === "number") {
+        return +text;
+    }
+    else if (typeof defaultValue === "boolean") {
+        if (text === "true") return true;
+        if (text === "false") return false;
+        throw new Error("\"" + text + "\" is not a valid string representation for type \"boolean\".");
+    }
+    else {
+        return text;
+    }
 }
 
 function __StructEscape(text) {
-    if (text.indexOf(" ") == -1) {
+    if (text.indexOf(" ") === -1 && text.indexOf("{") === -1 && text.indexOf("}") === -1) {
         return text;
     }
 
@@ -1592,7 +1605,33 @@ function __StructEscape(text) {
 }
 
 function __StructUnescape(text) {
-    throw new Error("Not Implemented.");
+    if (text === "" || text[0] !== "{") {
+        return text;
+    }
+
+    var result = "";
+    for (var i = 1; i < text.length - 1; i++) {
+        var c = text[i];
+        switch (c) {
+            case '{':
+                if (text[i + 1] !== '{') {
+                    throw new Error("\"" + text + "\" is not a valid escaped struct member representation.");
+                }
+                result += "{";
+                i++;
+                break;
+            case '}':
+                if (text[i + 1] !== '}') {
+                    throw new Error("\"" + text + "\" is not a valid escaped struct member representation.");
+                }
+                result += "}";
+                i++;
+                break;
+            default:
+                result += c;
+        }
+    }
+    return result;
 }
 
 function Struct(fullName, description) {
@@ -1632,7 +1671,7 @@ function Struct(fullName, description) {
             writable: false,
             value: function (obj) {
                 if (!(obj instanceof Struct)) return false;
-                if (obj.__Type != typeObject) return false;
+                if (obj.__Type !== typeObject) return false;
                 for (var i in typeObject.Description) {
                     if (!__StructMemberEquals(this[i], obj[i])) return false;
                 }
@@ -1656,12 +1695,12 @@ function Struct(fullName, description) {
             },
         });
 
-        if (arguments.length == 0) {
+        if (arguments.length === 0) {
             for (var i in description) {
                 this[i] = __StructMemberClone(description[i]);
             }
         }
-        else if (arguments.length == 1 && proto.__proto__ == Object.prototype) {
+        else if (arguments.length === 1 && proto.__proto__ === Object.prototype) {
             for (var i in description) {
                 if (proto.hasOwnProperty(i)) {
                     this[i] = __StructMemberClone(proto[i]);
@@ -1702,7 +1741,56 @@ function Struct(fullName, description) {
         enumerable: true,
         writable: false,
         value: function (text) {
-            throw new Error("Not implemented.");
+            var proto = {};
+
+            var reading = 0;
+            while (reading < text.length) {
+                var colon = text.indexOf(':', reading);
+                if (colon === -1) {
+                    throw new Error("\"" + text + "\" is not a valid string representation for type \"" + fullName + "\".");
+                }
+
+                var key = text.substring(reading, colon);
+                if (proto.hasOwnProperty(key) || !description.hasOwnProperty(key) || colon === text.length - 1) {
+                    throw new Error("\"" + text + "\" is not a valid string representation for type \"" + fullName + "\".");
+                }
+
+                if (text[colon + 1] === '{') {
+                    reading = colon + 1;
+                    while (true) {
+                        var close = text.indexOf('}', reading);
+                        if (close == -1) {
+                            throw new Error("\"" + text + "\" is not a valid string representation for type \"" + fullName + "\".");
+                        }
+                        reading = close + 1;
+
+                        if (reading < text.length && text[reading] === '}') {
+                            reading++;
+                        } else {
+                            break;
+                        }
+                    }
+                    var value = text.substring(colon + 1, reading);
+                } else {
+                    var space = text.indexOf(' ', colon + 1);
+                    if (space === -1) space = text.length;
+                    var value = text.substring(colon + 1, space);
+                    reading = space;
+                }
+
+                proto[key] = __StructMemberParse(__StructUnescape(value), description[key]);
+
+                while (reading < text.length && text[reading] === ' ') {
+                    reading++;
+                }
+            }
+
+            for (var i in description) {
+                if (!proto.hasOwnProperty(i)) {
+                    proto[i] = description[i];
+                }
+            }
+            return new Type(proto);
         },
     });
 
