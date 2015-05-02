@@ -1382,11 +1382,13 @@ function Flags(fullName, description) {
                 writable: false,
                 value: function () {
                     var result = "";
-                    for (var i in flags) {
-                        if (result !== "") {
-                            result += "|";
+                    for (var i in typeObject.Description) {
+                        if (flags.hasOwnProperty(i)) {
+                            if (result !== "") {
+                                result += "|";
+                            }
+                            result += i;
                         }
-                        result += i;
                     }
                     return result;
                 },
@@ -1482,13 +1484,15 @@ function Flags(fullName, description) {
         writable: false,
         value: function (text) {
             var result = new Type();
-            var names = text.split('|');
-            for (var i in names) {
-                var name = names[i];
-                if (!Type.Description.hasOwnProperty(name)) {
-                    throw new Error("\"" + name + "\" is not a valid string representation for type \"" + Type.FullName + "\".");
+            if (text !== "") {
+                var names = text.split('|');
+                for (var i in names) {
+                    var name = names[i];
+                    if (!Type.Description.hasOwnProperty(name)) {
+                        throw new Error("\"" + name + "\" is not a valid string representation for type \"" + Type.FullName + "\".");
+                    }
+                    result.__Add(Type.Description[name]);
                 }
-                result.__Add(Type.Description[name]);
             }
             return result;
         },

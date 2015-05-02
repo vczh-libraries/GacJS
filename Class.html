@@ -1293,10 +1293,10 @@
     <script>
         testCase("create flags instance should success", function () {
             var MyEnum = Flags("MyEnum", {
-                Spring: 0,
-                Summer: 1,
-                Autumn: 2,
-                Winter: 3,
+                Spring: 1,
+                Summer: 2,
+                Autumn: 4,
+                Winter: 8,
             });
 
             assert(MyEnum instanceof __Enum);
@@ -1306,7 +1306,7 @@
             var member = MyEnum.Description.Spring;
             assert(member instanceof Flags);
             assert(member.__Type === MyEnum);
-            assert(member.__Value === 0);
+            assert(member.__Value === 1);
             assert(member.__Clone().__ToString() === "Spring");
             assert(member.__Equals(MyEnum.Description.Spring) === true);
             assert(member.__Equals(MyEnum.Description.Summer) === false);
@@ -1317,7 +1317,7 @@
             var member = MyEnum.Description.Summer;
             assert(member instanceof Flags);
             assert(member.__Type === MyEnum);
-            assert(member.__Value === 1);
+            assert(member.__Value === 2);
             assert(member.__Clone().__ToString() === "Summer");
             assert(member.__Equals(MyEnum.Description.Spring) === false);
             assert(member.__Equals(MyEnum.Description.Summer) === true);
@@ -1328,7 +1328,7 @@
             var member = MyEnum.Description.Autumn;
             assert(member instanceof Flags);
             assert(member.__Type === MyEnum);
-            assert(member.__Value === 2);
+            assert(member.__Value === 4);
             assert(member.__Clone().__ToString() === "Autumn");
             assert(member.__Equals(MyEnum.Description.Spring) === false);
             assert(member.__Equals(MyEnum.Description.Summer) === false);
@@ -1339,7 +1339,7 @@
             var member = MyEnum.Description.Winter;
             assert(member instanceof Flags);
             assert(member.__Type === MyEnum);
-            assert(member.__Value === 3);
+            assert(member.__Value === 8);
             assert(member.__Clone().__ToString() === "Winter");
             assert(member.__Equals(MyEnum.Description.Spring) === false);
             assert(member.__Equals(MyEnum.Description.Summer) === false);
@@ -1351,12 +1351,83 @@
 
     <script>
         testCase("combining flags should success", function () {
-            var MyEnum = Enum("MyEnum", {
-                Spring: 0,
-                Summer: 1,
-                Autumn: 2,
-                Winter: 3,
+            var MyEnum = Flags("MyEnum", {
+                Spring: 1,
+                Summer: 2,
+                Autumn: 4,
+                Winter: 8,
             });
+
+            var x = new MyEnum();
+            assert(x instanceof Flags);
+            assert(x.__Type === MyEnum);
+            assert(x.__Value === 0);
+            assert(x.__ToString() === "");
+
+            var x = new MyEnum().
+                __Add(MyEnum.Description.Spring).
+                __Add(MyEnum.Description.Summer);
+            assert(x instanceof Flags);
+            assert(x.__Type === MyEnum);
+            assert(x.__Value === 3);
+            assert(x.__ToString() === "Spring|Summer");
+
+            var x = new MyEnum().
+                __Add(MyEnum.Description.Summer).
+                __Add(MyEnum.Description.Spring);
+            assert(x instanceof Flags);
+            assert(x.__Type === MyEnum);
+            assert(x.__Value === 3);
+            assert(x.__ToString() === "Spring|Summer");
+        });
+    </script>
+
+    <script>
+        testCase("parsing flags should success", function () {
+            var MyEnum = Flags("MyEnum", {
+                Spring: 1,
+                Summer: 2,
+                Autumn: 4,
+                Winter: 8,
+            });
+
+            var x = MyEnum.Parse("");
+            assert(x instanceof Flags);
+            assert(x.__Type === MyEnum);
+            assert(x.__Value === 0);
+            assert(x.__ToString() === "");
+
+            var x = MyEnum.Parse("Spring|Summer");
+            assert(x instanceof Flags);
+            assert(x.__Type === MyEnum);
+            assert(x.__Value === 3);
+            assert(x.__ToString() === "Spring|Summer");
+
+            var x = MyEnum.Parse("Summer|Spring");
+            assert(x instanceof Flags);
+            assert(x.__Type === MyEnum);
+            assert(x.__Value === 3);
+            assert(x.__ToString() === "Spring|Summer");
+        });
+    </script>
+
+    <script>
+        testCase("modifying cloned flags should not affect the original one", function () {
+            var MyEnum = Flags("MyEnum", {
+                Spring: 1,
+                Summer: 2,
+                Autumn: 4,
+                Winter: 8,
+            });
+
+            var x = MyEnum.Parse("Spring|Summer");
+            var y = x.__Clone();
+
+            y.__Add(MyEnum.Description.Winter);
+            y.__Remove(MyEnum.Description.Spring);
+
+            assert(x.__ToString() == "Spring|Summer");
+            assert(y.__ToString() == "Summer|Winter");
         });
     </script>
 
