@@ -1,68 +1,5 @@
 /*
 API:
-    this.__Type                                 // Get the real type that creates this object.
-    this.__ScopeType                            // Get the scope type that creates this object.
-    this.__ExternalReference                    // Get the external reference of this instance, for passing the value of "this" out of the class.
-    this.__Dynamic(type)                        // Get the dynamic scope object of a base class.
-    this.__Static(type)                         // Get the static scope object of a base class.
-    this.__InitBase(type, [arguments])          // Call the constructor of the base class.
-
-    obj.__Type                                  // Get the real type that creates this object.
-    obj.__Dynamic(type)                         // Get the dynamic scope object of a base class.
-    obj.__Static(type)                          // Get the static scope object of a base class.
-    scope.__Original                            // Get the original object that creates this scope object.
-
-    handler = Event.Attach(xxx);
-    event.Detach(handler);
-    event.Execute(...);
-
-================================================================================
-
-    var type = Class(fullName, type1, Virtual(type2), ... {
-        Member: (Public|Protected|Private) (value | function),
-        Member: (Public|Protected|Private).Overload(typeList1, function1, typeList2, function2, ...);
-        Member: (Public|Protected).(New|Virtual|NewVirtual|Override) (function),
-        Member: (Public|Protected).Abstract();
-        Member: Public.Event();
-        Member: Public.Property({
-            readonly: true | false,                         // (optional), false
-            hasEvent: true | false,                         // (optional), false
-            getterName: "GetterNameToOverride",             // (optional), "GetMember"
-            setterName: "SetterNameToOverride",             // (optional), "SetMember",     implies readonly: false
-            eventName: "EventNameToOverride",               // (optional), "MemberChanged", implies hasEvent: true
-        }),
-    });
-
-    class __Class {
-        bool                        VirtualClass            // True if this type contains unoverrided abstract members
-        string                      FullName;               // Get the full name
-        map<string, __MemberBase>   Description;            // Get all declared members in this type
-        map<string, __MemberBase>   FlattenedDescription;   // Get all potentially visible members in this type
-        __BaseClass[]               BaseClasses;            // Get all direct base classes of this type
-        __BaseClass[]               FlattenedBaseClasses;   // Get all direct or indirect base classes of this type
-        map<string, __Class>        VirtuallyConstructedBy; // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
-
-        bool IsAssignableFrom(__Class childType);           // Returns true if "childType" is or inherits from "Type"
-    }
-
-================================================================================
-
-    var type = (Enum|Flags)(fullName, {
-        Member: value,
-    });
-
-    class __Enum {
-    }
-
-================================================================================
-
-    var type = Struct(fullName, {
-        Member: value,
-    });
-
-    class __Struct {
-    }
-
 ================================================================================
 
     class __BaseClass {
@@ -87,6 +24,117 @@ API:
     class __PrivateMember : __MemberBase {}
     class __ProtectedMember : __MemberBase {}
     class __PublicMember : __MemberBase {}
+
+    class __Class {
+        bool                        VirtualClass            // True if this type contains unoverrided abstract members
+        string                      FullName;               // Get the full name
+        map<string, __MemberBase>   Description;            // Get all declared members in this type
+        map<string, __MemberBase>   FlattenedDescription;   // Get all potentially visible members in this type
+        __BaseClass[]               BaseClasses;            // Get all direct base classes of this type
+        __BaseClass[]               FlattenedBaseClasses;   // Get all direct or indirect base classes of this type
+        map<string, __Class>        VirtuallyConstructedBy; // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
+
+        bool IsAssignableFrom(__Class childType);           // Returns true if "childType" is or inherits from "Type"
+    }
+
+================================================================================
+
+    this.__Type                                             // Get the real type that creates this object
+    this.__ScopeType                                        // Get the scope type that creates this object
+    this.__ExternalReference                                // Get the external reference of this instance, for passing the value of "this" out of the class
+    this.__Dynamic(type)                                    // Get the dynamic scope object of a base class
+    this.__Static(type)                                     // Get the static scope object of a base class
+    this.__InitBase(type, [arguments])                      // Call the constructor of the base class
+
+    obj.__Type                                              // Get the real type that creates this object
+    obj.__Dynamic(type)                                     // Get the dynamic scope object of a base class
+    obj.__Static(type)                                      // Get the static scope object of a base class
+    scope.__Original                                        // Get the original object that creates this scope object
+
+    handler = Event.Attach(xxx);
+    event.Detach(handler);
+    event.Execute(...);
+
+    obj instanceof Class
+
+    __Class Class(fullName, type1, Virtual(type2), ... {
+        Member: (Public|Protected|Private) (value | function),
+        Member: (Public|Protected|Private).Overload(typeList1, function1, typeList2, function2, ...);
+        Member: (Public|Protected).(New|Virtual|NewVirtual|Override) (function),
+        Member: (Public|Protected).Abstract();
+        Member: Public.Event();
+        Member: Public.Property({
+            readonly: true | false,                         // (optional), false
+            hasEvent: true | false,                         // (optional), false
+            getterName: "GetterNameToOverride",             // (optional), "GetMember"
+            setterName: "SetterNameToOverride",             // (optional), "SetMember",     implies readonly: false
+            eventName: "EventNameToOverride",               // (optional), "MemberChanged", implies hasEvent: true
+        }),
+    });
+
+    var obj = new ClassType(<constructor-arguments>);
+
+================================================================================
+
+    obj.__Type                                              // Get the real type that creates this object
+    obj.__Value                                             // Get the integral representation of this object
+    obj.__Clone()                                           // Copy the object
+    obj.__Equals(value)                                     // Test equality with another object
+    obj.__ToString()                                        // Get the string representation of this object
+
+    obj.__Add(Flags)                                        // Combine a new flag (Flags)
+    obj.__Remove(Flags)                                     // Remove a combined flag (Flags)
+    obj.__Flags                                             // Get all combined flags (Flags)
+
+    class __Enum {
+        bool                        Flags;                  // True if elements in this enum is combinable
+        string                      FullName;               // Get the full name
+        map<string, (Enum|Flags)>   Description;            // Get all declared members in this type
+
+        (Enum|Flags) Parse(string text);                    // Create a value of this type by a specified string representation
+    }
+
+    obj instanceof Enum
+    obj instanceof Flags
+
+    var obj = EnumType.Description.<ItemName>;
+
+    var obj =new FlagsType()
+        .__Add(FlagsType.Description.<ItemName>)
+        .__Add(FlagsType.Description.<ItemName>)
+        ;
+
+    __Enum (Enum|Flags)(fullName, {
+        Member: value,
+    });
+
+================================================================================
+
+    obj.__Type                                              // Get the real type that creates this object
+    obj.__Clone()                                           // Copy the object
+    obj.__Equals(value)                                     // Test equality with another object
+    obj.__ToString()                                        // Get the string representation of this object
+
+    class __Struct {
+        string                      FullName;               // Get the full name
+        map<string, Number>         Description;            // Get all declared members in this type
+
+        static Struct               Parse(string text);     // Create a value of this type by a specified string representation
+    }
+
+    obj instanceof Struct
+
+    __Struct Struct(fullName, {
+        Member: value,
+    });
+
+    var obj = new StructType();
+
+================================================================================
+
+    Assembly.EnabledRegistering
+    Assembly.Types[fullName]
+    Assembly.RegisterType(type);
 */
 
 ///////////////////////////////////////////////////////////////
@@ -271,13 +319,13 @@ function __BuildOverloadingFunctions() {
                     matched = typeof (arg) === "object";
                 }
                 else if (type instanceof __Class) {
-                    matched = arg instanceof Class && type.IsAssignableFrom(arg.GetType());
+                    matched = arg instanceof Class && type.IsAssignableFrom(arg.__Type);
                 }
                 else if (type instanceof __Enum) {
-                    matched = false;
+                    matched = (arg instanceof Enum || arg instanceof Flags) && type === arg.__Type;
                 }
                 else if (type instanceof __Struct) {
-                    matched = false;
+                    matched = arg instanceof Struct && type === arg.__Type;
                 }
                 else if (arg === undefined) {
                     matched = false;
@@ -1154,6 +1202,8 @@ function Class(fullName) {
 
     Type.__proto__ = __Class.prototype;
     Type.prototype.__proto__ = Class.prototype;
+    Object.seal(Type);
+    Assembly.RegisterType(Type);
     return Type;
 }
 
@@ -1161,11 +1211,281 @@ function Class(fullName) {
 
 function Enum(fullName, description) {
 
-    function Type() {
+    function Type(itemName, value) {
+        var typeObject = arguments.callee;
+
+        // obj.__Type
+        Object.defineProperty(this, "__Type", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: typeObject,
+        });
+        // obj.__Value
+        Object.defineProperty(this, "__Value", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: value,
+        });
+        // obj.__Clone
+        Object.defineProperty(this, "__Clone", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function () {
+                return this;
+            },
+        });
+        // obj.__Equals
+        Object.defineProperty(this, "__Equals", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                return obj instanceof Enum && obj.__Type === typeObject && obj.__Value === value;
+            },
+        });
+        // obj.__ToString
+        Object.defineProperty(this, "__ToString", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function () {
+                return itemName;
+            },
+        });
+
+        Object.seal(this);
     }
+
+    // Type.Flags
+    Object.defineProperty(Type, "Flags", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: false,
+    });
+    // Type.FullName
+    Object.defineProperty(Type, "FullName", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: fullName,
+    });
+    // Type.Description
+    Object.defineProperty(Type, "Description", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: {},
+    });
+    for (var i in description) {
+        Type.Description[i] = new Type(i, description[i]);
+    }
+    // Type.Parse
+    Object.defineProperty(Type, "Parse", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: function (text) {
+            throw new Error("Not Implemented.");
+        },
+    });
 
     Type.__proto__ = __Enum.prototype;
     Type.prototype.__proto__ = Enum.prototype;
+    Object.seal(Type);
+    Assembly.RegisterType(Type);
+    return Type;
+}
+
+function Flags(fullName, description) {
+
+    function Type(itemName, value) {
+        var typeObject = arguments.callee;
+        var flags = {};
+
+        if (arguments.length === 2) {
+            flags[fullName] = this;
+        }
+
+        // obj.__Type
+        Object.defineProperty(this, "__Type", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: typeObject,
+        });
+        // obj.__Value
+        if (arguments.length === 2) {
+            Object.defineProperty(this, "__Value", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: value,
+            });
+        }
+        else {
+            Object.defineProperty(this, "__Value", {
+                configurable: false,
+                enumerable: true,
+                get: function () {
+                    var result = 0;
+                    for (var i in flags) {
+                        result += typeObject.Description[i].__Value;
+                    }
+                    return result;
+                },
+            });
+        }
+        // obj.__Clone
+        Object.defineProperty(this, "__Clone", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function () {
+                var result = new typeObject();
+                for (var i in flags) {
+                    result = result.__Add(typeObject.Description[i]);
+                }
+                return result;
+            },
+        });
+        // obj.__Equals
+        Object.defineProperty(this, "__Equals", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                return obj instanceof Flags && obj.__Type === typeObject && obj.__Value === this.__Value;
+            },
+        });
+        // obj.__ToString
+        if (arguments.length === 2) {
+            Object.defineProperty(this, "__ToString", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: function () {
+                    return itemName;
+                },
+            });
+        }
+        else {
+            Object.defineProperty(this, "__ToString", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: function () {
+                    var result = "";
+                    for (var i in flags) {
+                        if (result !== "") {
+                            result += "|";
+                        }
+                        result += i;
+                    }
+                    return result;
+                },
+            });
+        }
+        if (arguments.length === 0) {
+            // obj.__Add
+            Object.defineProperty(this, "__Add", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: function (obj) {
+                    if (!(obj instanceof Flags) || obj.__Type !== typeObject) {
+                        throw new Error("Flags can only combine with static flags (YourFlagType.Description.FlagName) of the same type.");
+                    }
+
+                    var name = obj.__ToString();
+                    if (!typeObject.Description.hasOwnProperty(name) || typeObject.Description[name] !== obj) {
+                        throw new Error("Flags can only combine with static flags (YourFlagType.Description.FlagName) of the same type.");
+                    }
+
+                    if (flags.hasOwnProperty(name)) {
+                        throw new Error("Flag \"" + name + "\" has already been added.");
+                    }
+
+                    flags[name] = obj;
+                    return this;
+                },
+            });
+            // obj.__Remove
+            Object.defineProperty(this, "__Remove", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: function (obj) {
+                    if (!(obj instanceof Flags) || obj.__Type !== typeObject) {
+                        throw new Error("Flags can only combine with static flags (YourFlagType.Description.FlagName) of the same type.");
+                    }
+
+                    var name = obj.__ToString();
+                    if (!typeObject.Description.hasOwnProperty(name) || typeObject.Description[name] !== obj) {
+                        throw new Error("Flags can only combine with static flags (YourFlagType.Description.FlagName) of the same type.");
+                    }
+
+                    if (!flags.hasOwnProperty(name)) {
+                        throw new Error("Flag \"" + name + "\" cannot be removed.");
+                    }
+
+                    delete flags[name];
+                    return this;
+                },
+            });
+            // obj.__Flags
+            Object.defineProperty(this, "__ToString", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: flags,
+            });
+        }
+
+        Object.seal(this);
+    }
+
+    // Type.Flags
+    Object.defineProperty(Type, "Flags", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: true,
+    });
+    // Type.FullName
+    Object.defineProperty(Type, "FullName", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: fullName,
+    });
+    // Type.Description
+    Object.defineProperty(Type, "Description", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: {},
+    });
+    for (var i in description) {
+        Type.Description[i] = new Type(i, description[i]);
+    }
+    // Type.Parse
+    Object.defineProperty(Type, "Parse", {
+        configurable: false,
+        enumerable: true,
+        writable: false,
+        value: function (text) {
+            throw new Error("Not Implemented.");
+        },
+    });
+
+    Type.__proto__ = __Enum.prototype;
+    Type.prototype.__proto__ = Flags.prototype;
+    Object.seal(Type);
+    Assembly.RegisterType(Type);
     return Type;
 }
 
@@ -1174,9 +1494,44 @@ function Enum(fullName, description) {
 function Struct(fullName, description) {
 
     function Type() {
+
+        Object.seal(this);
     }
 
     Type.__proto__ = __Struct.prototype;
     Type.prototype.__proto__ = Struct.prototype;
+    Object.seal(Type);
+    Assembly.RegisterType(Type);
     return Type;
 }
+
+///////////////////////////////////////////////////////////////
+
+function Assembly() {
+}
+Object.defineProperty(Assembly, "EnabledRegistering", {
+    configurable: false,
+    enumerable: true,
+    writable: true,
+    value: true,
+});
+Object.defineProperty(Assembly, "Types", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: {},
+});
+Object.defineProperty(Assembly, "RegisterType", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: function (type) {
+        if (Assembly.EnabledRegistering) {
+            if (Assembly.Types.hasOwnProperty(type.FullName)) {
+                throw new Error("Type \"" + type.FullName + "\" has already been registered");
+            }
+            Assembly.Types[type.FullName] = type;
+        }
+    }
+});
+Object.seal(Assembly);

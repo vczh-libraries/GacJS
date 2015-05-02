@@ -26,6 +26,9 @@ function testCase(name, code) {
     document.body.appendChild(div);
 
     try {
+        if (window.Assembly) {
+            Assembly.EnabledRegistering = false;
+        }
         code();
         div.setAttribute("style", "color: green;");
         __passedCases++;
@@ -39,6 +42,11 @@ function testCase(name, code) {
             div.setAttribute("style", "color: red;");
             __failedCases++;
             code();
+        }
+    }
+    finally {
+        if (window.Assembly) {
+            Assembly.EnabledRegistering = true;
         }
     }
 }
