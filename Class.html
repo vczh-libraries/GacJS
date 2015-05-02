@@ -1064,6 +1064,7 @@
                 Z4: Public.Abstract(),
             });
 
+            assert(A instanceof __Class);
             assert(A.FullName === "A");
             assert(A.BaseClasses.length === 0);
             assert(A.FlattenedBaseClasses.length === 0);
@@ -1160,6 +1161,7 @@
                 Z4: Public.Override(function () { }),
             });
 
+            assert(B instanceof __Class);
             assert(B.FullName === "B");
             assert(B.BaseClasses.length === 1);
             assert(B.BaseClasses[0].Type === A);

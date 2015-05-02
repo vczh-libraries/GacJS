@@ -13,38 +13,60 @@ API:
     scope.__Original                            // Get the original object that creates this scope object.
 
     handler = Event.Attach(xxx);
-    Event.Detach(handler);
-    Event.Execute(...);
+    event.Detach(handler);
+    event.Execute(...);
 
-    Class(fullName, type1, Virtual(type2), ... {
+================================================================================
+
+    var type = Class(fullName, type1, Virtual(type2), ... {
         Member: (Public|Protected|Private) (value | function),
         Member: (Public|Protected|Private).Overload(typeList1, function1, typeList2, function2, ...);
         Member: (Public|Protected).(New|Virtual|NewVirtual|Override) (function),
         Member: (Public|Protected).Abstract();
         Member: Public.Event();
         Member: Public.Property({
-            readonly: true | false,             // (optional), false
-            hasEvent: true | false,             // (optional), false
-            getterName: "GetterNameToOverride", // (optional), "GetMember"
-            setterName: "SetterNameToOverride", // (optional), "SetMember",     implies readonly: false
-            eventName: "EventNameToOverride",   // (optional), "MemberChanged", implies hasEvent: true
+            readonly: true | false,                         // (optional), false
+            hasEvent: true | false,                         // (optional), false
+            getterName: "GetterNameToOverride",             // (optional), "GetMember"
+            setterName: "SetterNameToOverride",             // (optional), "SetMember",     implies readonly: false
+            eventName: "EventNameToOverride",               // (optional), "MemberChanged", implies hasEvent: true
         }),
     });
 
-    class Type {
+    class __Class {
         bool                        VirtualClass            // True if this type contains unoverrided abstract members
         string                      FullName;               // Get the full name
         map<string, __MemberBase>   Description;            // Get all declared members in this type
         map<string, __MemberBase>   FlattenedDescription;   // Get all potentially visible members in this type
         __BaseClass[]               BaseClasses;            // Get all direct base classes of this type
         __BaseClass[]               FlattenedBaseClasses;   // Get all direct or indirect base classes of this type
-        map<string, Type>           VirtuallyConstructedBy; // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
+        map<string, __Class>        VirtuallyConstructedBy; // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
 
-        bool IsAssignableFrom(Type childType);              // Returns true if "childType" is or inherits from "Type"
+        bool IsAssignableFrom(__Class childType);           // Returns true if "childType" is or inherits from "Type"
     }
 
+================================================================================
+
+    var type = (Enum|Flags)(fullName, {
+        Member: value,
+    });
+
+    class __Enum {
+    }
+
+================================================================================
+
+    var type = Struct(fullName, {
+        Member: value,
+    });
+
+    class __Struct {
+    }
+
+================================================================================
+
     class __BaseClass {
-        Type                        Type;
+        __Class                     Type;
         bool                        Virtual;
     }
 
@@ -55,17 +77,19 @@ API:
             OVERRIDE,
         }
 
-        Type            DeclaringType;
-        <VirtualType>   Virtual;
-        bool            New;
-        object          Value;
-        __MemberBase[]  HiddenMembers;
+        __Class                     DeclaringType;
+        <VirtualType>               Virtual;
+        bool                        New;
+        object                      Value;
+        __MemberBase[]              HiddenMembers;
     }
 
     class __PrivateMember : __MemberBase {}
     class __ProtectedMember : __MemberBase {}
     class __PublicMember : __MemberBase {}
 */
+
+///////////////////////////////////////////////////////////////
 
 function __BaseClass(value, virtual) {
     this.Type = value;
@@ -106,6 +130,8 @@ Object.defineProperty(__MemberBase, "OVERRIDE", {
     value: 4,
 });
 
+///////////////////////////////////////////////////////////////
+
 function __PrivateMember(value) {
     __MemberBase.call(this);
     this.Value = value;
@@ -123,6 +149,8 @@ function __PublicMember(value) {
     this.Value = value;
 }
 __PublicMember.prototype.__proto__ = __MemberBase.prototype;
+
+///////////////////////////////////////////////////////////////
 
 function __EventHandler(func) {
     this.Function = func;
@@ -173,6 +201,8 @@ function __Event() {
     Object.seal(this);
 }
 
+///////////////////////////////////////////////////////////////
+
 function __Property() {
     this.Readonly = false;
     this.HasEvent = false;
@@ -181,6 +211,23 @@ function __Property() {
     this.EventName = null;
     Object.seal(this);
 }
+
+///////////////////////////////////////////////////////////////
+
+function __Class() {
+}
+
+///////////////////////////////////////////////////////////////
+
+function __Enum() {
+}
+
+///////////////////////////////////////////////////////////////
+
+function __Struct() {
+}
+
+///////////////////////////////////////////////////////////////
 
 function __BuildOverloadingFunctions() {
     if (arguments.length % 2 !== 0) {
@@ -223,21 +270,20 @@ function __BuildOverloadingFunctions() {
                 else if (type === Object) {
                     matched = typeof (arg) === "object";
                 }
+                else if (type instanceof __Class) {
+                    matched = arg instanceof Class && type.IsAssignableFrom(arg.GetType());
+                }
+                else if (type instanceof __Enum) {
+                    matched = false;
+                }
+                else if (type instanceof __Struct) {
+                    matched = false;
+                }
                 else if (arg === undefined) {
                     matched = false;
                 }
                 else if (arg !== null) {
-                    if (type.prototype.__proto__ === Class) {
-                        if (arg instanceof Class) {
-                            matched = type.IsAssignableFrom(arg.GetType());
-                        }
-                        else {
-                            matched = false;
-                        }
-                    }
-                    else {
-                        matched = arg instanceof type;
-                    }
+                    matched = arg instanceof type;
                 }
                 if (!matched) break;
             }
@@ -363,6 +409,8 @@ function __DefineProperty(accessor) {
     });
 }
 
+///////////////////////////////////////////////////////////////
+
 function Virtual(value) {
     return new __BaseClass(value, true);
 }
@@ -393,6 +441,8 @@ __DefineAbstract(Public);
 __DefineOverride(Public);
 __DefineEvent(Public);
 __DefineProperty(Public);
+
+///////////////////////////////////////////////////////////////
 
 function Class(fullName) {
 
@@ -1102,6 +1152,31 @@ function Class(fullName) {
         }
     });
 
+    Type.__proto__ = __Class.prototype;
     Type.prototype.__proto__ = Class.prototype;
+    return Type;
+}
+
+///////////////////////////////////////////////////////////////
+
+function Enum(fullName, description) {
+
+    function Type() {
+    }
+
+    Type.__proto__ = __Enum.prototype;
+    Type.prototype.__proto__ = Enum.prototype;
+    return Type;
+}
+
+///////////////////////////////////////////////////////////////
+
+function Struct(fullName, description) {
+
+    function Type() {
+    }
+
+    Type.__proto__ = __Struct.prototype;
+    Type.prototype.__proto__ = Struct.prototype;
     return Type;
 }
