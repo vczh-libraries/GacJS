@@ -1851,7 +1851,7 @@ Object.defineProperty(Packages, "Define", {
     enumerable: true,
     writable: false,
     value: function (fullName, constructor) {
-        var pkg= Packages.Packages[fullName];
+        var pkg = Packages.Packages[fullName];
         if (pkg === undefined) {
             pkg = {};
             Packages.Packages[fullName] = pkg;
@@ -1860,9 +1860,9 @@ Object.defineProperty(Packages, "Define", {
         var obj = constructor();
         for (var i in obj) {
             if (pkg.hasOwnProperty(i)) {
-                throw new Error("Package \""+fullName+"\" has already exported symbol \""i+"\".");
+                throw new Error("Package \"" + fullName + "\" has already exported symbol \"" + i + "\".");
             }
-            pkg[i]=obj[i];
+            pkg[i] = obj[i];
         }
         return pkg;
     }
