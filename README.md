@@ -9,7 +9,7 @@ This project's priority is not very high. The first step is to re-implement GacU
 
 * **[Package.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Package.js)** : A package infrastructure. All JavaScript components in this project will be build as packages. You don't need to worry about the order -- except that **Package.js** should be the first one -- when including coupled JavaScript files in your HTML document.
 * **[Test.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Test.js)** : A very simple unit test framework, that only me will use it.
-* **[Class.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Test.js)** : An object oriented type definition library for translating Workflow script to Javascript, including
+* **[Class.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Class.js)** : An object oriented type definition library for translating Workflow script to Javascript, including
     * Inheritance and virtual inheritance.
     * Virtual, Override and New functions.
     * Private, Protected and Public functions. Which means that, inside the class all code can see private and protected members, but outside the class only public members are visible.
