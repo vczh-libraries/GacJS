@@ -13,8 +13,16 @@ API:
         };
     });
 
+    var package = Packages.Define(fullName, [dependency1, dependency2, ...], function(__injection__) {
+        eval(__injection__);
+
+        return {
+            ExportedSymbol: value,
+        };
+    });
+
     var package = Packages.Require(fullName);
-    var code = Packages.Inject(package1, package2, ...);
+    eval(Packages.Inject(package1, package2, ...));
 */
 
 ///////////////////////////////////////////////////////////////

@@ -9,36 +9,36 @@
 </head>
 <body style="font-family: 'Segoe UI'; font-size: 14px;">
     <script>
-        eval(Packages.Inject("Class", "GacUI.Types"));
+        eval(Packages.Inject("Test", "Class", "GacUI.Types"));
     </script>
 
     <script>
-        testCase("print and parse colors should success", function () {
+        TestCase("print and parse colors should success", function () {
             var c1 = Color.Parse("#000000");
-            assert(c1.r === 0);
-            assert(c1.g === 0);
-            assert(c1.b === 0);
-            assert(c1.a === 255);
-            assert(c1.__ToString() === "#000000");
+            Assert(c1.r === 0);
+            Assert(c1.g === 0);
+            Assert(c1.b === 0);
+            Assert(c1.a === 255);
+            Assert(c1.__ToString() === "#000000");
 
             var c2 = Color.Parse("#FFFFFF");
-            assert(c2.r === 255);
-            assert(c2.g === 255);
-            assert(c2.b === 255);
-            assert(c2.a === 255);
-            assert(c2.__ToString() === "#FFFFFF");
+            Assert(c2.r === 255);
+            Assert(c2.g === 255);
+            Assert(c2.b === 255);
+            Assert(c2.a === 255);
+            Assert(c2.__ToString() === "#FFFFFF");
 
             var c3 = Color.Parse("#01020304");
-            assert(c3.r === 1);
-            assert(c3.g === 2);
-            assert(c3.b === 3);
-            assert(c3.a === 4);
-            assert(c3.__ToString() === "#01020304");
+            Assert(c3.r === 1);
+            Assert(c3.g === 2);
+            Assert(c3.b === 3);
+            Assert(c3.a === 4);
+            Assert(c3.__ToString() === "#01020304");
         });
     </script>
 
     <script>
-        summaryTest();
+        SummaryTest();
     </script>
 </body>
 </html>
