@@ -51,6 +51,13 @@ Object.defineProperty(Packages, "Packages", {
     value: {},
 });
 
+Object.defineProperty(Packages, "__PackageDefinitions", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: {},
+});
+
 Object.defineProperty(Packages, "RegisterType", {
     configurable: false,
     enumerable: true,
@@ -65,6 +72,40 @@ Object.defineProperty(Packages, "RegisterType", {
     }
 });
 
+Object.defineProperty(Packages, "__PreparePackage", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: function (fullName) {
+        if (!Packages.__PackageDefinitions.hasOwnProperty(fullName)) {
+            Packages.__PackageDefinitions[fullName] = {
+                ReverseDependencies: [],
+            }
+        }
+    }
+});
+
+Object.defineProperty(Packages, "__TryLoadPackage", {
+    configurable: false,
+    enumerable: true,
+    writable: false,
+    value: function (fullName) {
+        var def = Packages.__PackageDefinitions[fullName];
+        if (def === undefined) return;
+        if (def.Loaded === undefined || def.Loaded === true) return;
+        if (def.Counter < def.RequiredCounter) return;
+
+        def.Loaded = true;
+        def.Constructor(fullName);
+        for (var i = 0; i < def.ReverseDependencies.length; i++) {
+            var name = def.ReverseDependencies[i];
+            var rdep = Packages.__PackageDefinitions[name];
+            rdep.Counter++;
+            Packages.__TryLoadPackage(name);
+        }
+    }
+});
+
 Object.defineProperty(Packages, "Define", {
     configurable: false,
     enumerable: true,
@@ -72,23 +113,43 @@ Object.defineProperty(Packages, "Define", {
     value: function () {
         var needInject = arguments.length === 3;
         var fullName = arguments[0];
-        var packages = needInject ? arguments[1] : undefined;
+        var dependencies = needInject ? arguments[1] : [];
         var constructor = needInject ? arguments[2] : arguments[1];
 
-        var pkg = Packages.Packages[fullName];
-        if (pkg === undefined) {
-            pkg = {};
-            Packages.Packages[fullName] = pkg;
+        for (var i = 0; i < dependencies.length; i++) {
+            Packages.__PreparePackage(dependencies[i]);
+        }
+        Packages.__PreparePackage(fullName);
+
+        var def = Packages.__PackageDefinitions[fullName];
+        if (def.Loaded !== undefined) {
+            throw new Error("Required package \"" + fullName + "\" already exists.");
         }
 
-        var obj = needInject ? constructor(this.Inject(packages)) : constructor();
-        for (var i in obj) {
-            if (pkg.hasOwnProperty(i)) {
-                throw new Error("Package \"" + fullName + "\" has already exported symbol \"" + i + "\".");
-            }
-            pkg[i] = obj[i];
+        for (var i = 0; i < dependencies.length; i++) {
+            var dependency = Packages.__PackageDefinitions[dependencies[i]].ReverseDependencies.push(fullName);
         }
-        return pkg;
+
+        def.Dependencies = dependencies;
+        def.Loaded = false;
+        def.Counter = 0;
+        def.RequiredCounter = dependencies.length;
+        def.Constructor = function (fullName) {
+            var pkg = {};
+            Packages.Packages[fullName] = pkg;
+
+            var obj = constructor(Packages.Inject(dependencies));
+            for (var i in obj) {
+                if (pkg.hasOwnProperty(i)) {
+                    throw new Error("Package \"" + fullName + "\" has already exported symbol \"" + i + "\".");
+                }
+                pkg[i] = obj[i];
+            }
+        }
+
+        for (var i in Packages.__PackageDefinitions) {
+            Packages.__TryLoadPackage(i);
+        }
     }
 });
 
@@ -110,9 +171,14 @@ Object.defineProperty(Packages, "Inject", {
     writable: false,
     value: function () {
         var symbols = {};
-        for (var i in arguments) {
-            var name = arguments[i];
-            var pkg = this.Require(name);
+        var names =
+            arguments.length === 1 && arguments[0] instanceof Array ?
+            arguments[0] :
+            arguments;
+
+        for (var i = 0; i < names.length; i++) {
+            var name = names[i];
+            var pkg = Packages.Require(name);
             for (var j in pkg) {
                 if (symbols.hasOwnProperty(j)) {
                     throw new Error("Duplicate name \"" + j + "\" in specified packages.");
@@ -122,9 +188,9 @@ Object.defineProperty(Packages, "Inject", {
         }
 
         var code = "";
-        for (var i in arguments) {
-            var name = arguments[i];
-            var pkg = this.Require(name);
+        for (var i in names) {
+            var name = names[i];
+            var pkg = Packages.Require(name);
             for (var j in pkg) {
                 code += "var " + j + " = Packages.Packages[" + JSON.stringify(name) + "][" + JSON.stringify(j) + "];\r\n";
             }
