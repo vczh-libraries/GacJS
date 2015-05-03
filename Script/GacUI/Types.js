@@ -1,4 +1,5 @@
-Packages.Define("GacUI.Types", function () {
+Packages.Define("GacUI.Types", ["Class"], function (__injection__) {
+    eval(__injection__);
 
     var Alignment = Enum("vl::presentation::Alignment", {
         Left: 0,

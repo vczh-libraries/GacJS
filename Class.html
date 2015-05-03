@@ -2,10 +2,14 @@
 <html>
 <head>
     <title>Class</title>
+    <script src="./Script/Package.js"></script>
     <script src="./Script/Class.js"></script>
     <script src="./Script/Test.js"></script>
 </head>
 <body style="font-family: 'Segoe UI'; font-size: 14px;">
+    <script>
+        eval(Packages.Inject("Class"));
+    </script>
 
     <script>
         testCase("create instance should success", function () {
