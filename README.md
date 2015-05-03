@@ -7,12 +7,17 @@ In the future, GacGen.exe can translate GacUI XML resource files to javascript c
 
 This project's priority is not very high. The first step is to re-implement GacUI's layout system using javascript, and then use it to develop the GacUI document generator with C++ and XML comments.
 
-* **Test.js** : A very simple unit test framework, that only me will use it.
-* **Class.js** : An object oriented type definition library for translating Workflow script to Javascript, including
+* **[Package.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Package.js)** : A package infrastructure. All JavaScript components in this project will be build as packages. You don't need to worry about the order -- except that **Package.js** should be the first one -- when including coupled JavaScript files in your HTML document.
+* **[Test.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Test.js)** : A very simple unit test framework, that only me will use it.
+* **[Class.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Test.js)** : An object oriented type definition library for translating Workflow script to Javascript, including
     * Inheritance and virtual inheritance.
     * Virtual, Override and New functions.
     * Private, Protected and Public functions. Which means that, inside the class all code can see private and protected members, but outside the class only public members are visible.
     * Properties and Events.
     * POD
     * Enum
-    * Unit test for Class.js in **Class.html**.
+    * Unit test for Class.js in **[Class.html](https://github.com/vczh-libraries/GacJS/blob/master/Class.html)**.
+* **[GacUI/Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
+* **GacUI/Layout.js**
+* **GacUI/Templates.js**
+* **GacUI/Controls.js**
