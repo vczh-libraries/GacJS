@@ -159,7 +159,16 @@ Object.defineProperty(Packages, "Require", {
     writable: false,
     value: function (fullName) {
         if (!Packages.Packages.hasOwnProperty(fullName)) {
-            throw new Error("Required package \"" + fullName + "\" does not exist.");
+            var def = Packages.__PackageDefinitions[fullName];
+            if (def === undefined) {
+                throw new Error("Required package \"" + fullName + "\" does not exist.");
+            }
+            else if (def.Loaded === undefined) {
+                throw new Error("Required package \"" + fullName + "\" has not loaded because the required javascript file has not been specified.");
+            }
+            else {
+                throw new Error("Required package \"" + fullName + "\" has not loaded because some of its dependencies is not ready.");
+            }
         }
         return Packages.Packages[fullName];
     }
