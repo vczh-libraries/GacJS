@@ -28,9 +28,7 @@ Packages.Define("Test", function () {
         document.body.appendChild(div);
 
         try {
-            if (window.Packages) {
-                Packages.EnabledRegistering = false;
-            }
+            Packages.EnabledRegistering = false;
             code();
             div.setAttribute("style", "color: green;");
             __passedCases++;
@@ -47,9 +45,7 @@ Packages.Define("Test", function () {
             }
         }
         finally {
-            if (window.Packages) {
-                Packages.EnabledRegistering = true;
-            }
+            Packages.EnabledRegistering = true;
         }
     }
 
