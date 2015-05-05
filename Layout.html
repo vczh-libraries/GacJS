@@ -20,31 +20,34 @@
             clear: both;
         }
 
+
         .TabButton {
-            display: block;
-            color: #C0C0C0;
+            box-shadow: inset 0px 1px 0px 0px #54A3F7;
+            background: linear-gradient(to bottom, #007DC1 5%, #0061A7 100%);
+            background-color: #007DC1;
+            border-radius: 3px;
+            border: 1px solid #124D77;
+            display: inline-block;
+            cursor: pointer;
+            color: #FFFFFF;
+            padding: 6px 24px;
             text-align: center;
-            text-shadow: 2px 2px 4px #000000;
-            border-radius: 5px;
-            border-left: 2px solid;
-            border-top: 2px solid;
-            border-color: #21679a;
-            background-color: #033b63;
+            text-decoration: none;
+            text-shadow: 0px 1px 0px #154682;
             margin: 4px;
-            padding: 5px;
-            width: 8em;
+            width: 6em;
+            display: block;
             float: left;
             cursor: pointer;
         }
 
-            .TabButton:hover {
-                margin: 2px 6px 6px 2px;
-                color: #FFFFFF;
-                box-shadow: 2px 2px 2px #011e33;
+            .TabButton:active {
+                background: linear-gradient(to bottom, #0061A7 5%, #007DC1 100%);
+                background-color: #0061A7;
             }
 
         .Selected.TabButton {
-            color: #FFFFFF;
+            font-weight: 700;
         }
 
             .Selected.TabButton:before {
@@ -70,12 +73,12 @@
 
         function ShowTabPage(tabPage) {
             if (currentTabPage !== null) {
-                currentTabPage.setAttribute("class", "TabPage");
-                currentTabPage.TabButton.setAttribute("class", "TabButton");
+                currentTabPage.classList.remove("Selected");
+                currentTabPage.TabButton.classList.remove("Selected");
             }
             currentTabPage = tabPage;
-            currentTabPage.setAttribute("class", "Selected TabPage");
-            currentTabPage.TabButton.setAttribute("class", "Selected TabButton");
+            currentTabPage.classList.add("Selected");
+            currentTabPage.TabButton.classList.add("Selected");
         }
 
         function CombineTabPage(tabPage, tabButton) {
@@ -87,11 +90,13 @@
         }
 
         function OnLoadBody() {
-            CombineTabPage(tabPageBounds, tabButtonBounds);
-            CombineTabPage(tabPageTable, tabButtonTable);
-            CombineTabPage(tabPageStack, tabButtonStack);
-            CombineTabPage(tabPageSideAligned, tabButtonSideAligned);
-            CombineTabPage(tabPagePartialView, tabButtonPartialView);
+            var tabButtons = tabButtonContainer.getElementsByClassName("TabButton");
+            for (var i = 0; i < tabButtons.length; i++) {
+                var tabButton = tabButtons[i];
+                var name = tabButton.id.substring(9, tabButton.id.length);
+                var tabPage = eval("tabPage" + name);
+                CombineTabPage(tabPage, tabButton);
+            }
 
             ShowTabPage(tabPageBounds);
         }
@@ -99,7 +104,7 @@
 </head>
 <body onload="javascript: OnLoadBody();">
     <div class="TabPageContainer">
-        <div class="TabButtonContainer">
+        <div class="TabButtonContainer" id="tabButtonContainer">
             <div class="TabButton" id="tabButtonBounds">Bounds</div>
             <div class="TabButton" id="tabButtonTable">Table</div>
             <div class="TabButton" id="tabButtonStack">Stack</div>
