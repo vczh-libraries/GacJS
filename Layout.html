@@ -7,8 +7,123 @@
     <script src="./Script/GacUI/Layout.js"></script>
     <script src="./Script/GacUI/Types.js"></script>
     <script src="./Script/Class.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI';
+            font-size: 14px;
+        }
+
+        .TabButtonContainer:after {
+            content: " ";
+            display: block;
+            clear: both;
+        }
+
+        .TabButton {
+            display: block;
+            color: #C0C0C0;
+            text-align: center;
+            text-shadow: 2px 2px 4px #000000;
+            border-radius: 5px;
+            border-left: 2px solid;
+            border-top: 2px solid;
+            border-color: #21679a;
+            background-color: #033b63;
+            margin: 4px;
+            padding: 5px;
+            width: 8em;
+            float: left;
+            cursor: pointer;
+        }
+
+            .TabButton:hover {
+                margin: 2px 6px 6px 2px;
+                color: #FFFFFF;
+                box-shadow: 2px 2px 2px #011e33;
+            }
+
+        .Selected.TabButton {
+            color: #FFFFFF;
+        }
+
+            .Selected.TabButton:before {
+                content: "<";
+            }
+
+            .Selected.TabButton:after {
+                content: ">";
+            }
+
+        .TabPage {
+            display: none;
+        }
+
+        .Selected.TabPage {
+            display: block;
+            border: 1px solid red;
+        }
+    </style>
+
+    <script>
+        var currentTabPage = null;
+
+        function ShowTabPage(tabPage) {
+            if (currentTabPage !== null) {
+                currentTabPage.setAttribute("class", "TabPage");
+                currentTabPage.TabButton.setAttribute("class", "TabButton");
+            }
+            currentTabPage = tabPage;
+            currentTabPage.setAttribute("class", "Selected TabPage");
+            currentTabPage.TabButton.setAttribute("class", "Selected TabButton");
+        }
+
+        function CombineTabPage(tabPage, tabButton) {
+            tabPage.TabButton = tabButton;
+            tabButton.TabPage = tabPage;
+            tabButton.addEventListener("click", function (event) {
+                ShowTabPage(event.currentTarget.TabPage);
+            });
+        }
+
+        function OnLoadBody() {
+            CombineTabPage(tabPageBounds, tabButtonBounds);
+            CombineTabPage(tabPageTable, tabButtonTable);
+            CombineTabPage(tabPageCell, tabButtonCell);
+            CombineTabPage(tabPageSideAligned, tabButtonSideAligned);
+            CombineTabPage(tabPagePartialView, tabButtonPartialView);
+
+            ShowTabPage(tabPageBounds);
+        }
+    </script>
 </head>
-<body style="font-family: 'Segoe UI'; font-size: 14px;">
+<body onload="javascript: OnLoadBody();">
+    <div class="TabPageContainer">
+        <div class="TabButtonContainer">
+            <div class="TabButton" id="tabButtonBounds">Bounds</div>
+            <div class="TabButton" id="tabButtonTable">Table</div>
+            <div class="TabButton" id="tabButtonCell">Cell</div>
+            <div class="TabButton" id="tabButtonSideAligned">SideAligned</div>
+            <div class="TabButton" id="tabButtonPartialView">PartialView</div>
+        </div>
+
+        <div class="TabPage" id="tabPageBounds">
+            Bounds
+        </div>
+        <div class="TabPage" id="tabPageTable">
+            Table
+        </div>
+        <div class="TabPage" id="tabPageCell">
+            Cell
+        </div>
+        <div class="TabPage" id="tabPageSideAligned">
+            SideAligned
+        </div>
+        <div class="TabPage" id="tabPagePartialView">
+            PartialView
+        </div>
+    </div>
+
     <script>
         eval(Packages.Inject("Test", "Class", "GacUI.Types", "GacUI.Layout"));
     </script>
