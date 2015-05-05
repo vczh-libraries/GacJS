@@ -4,12 +4,13 @@
     <title>Layout</title>
     <script src="./Script/Package.js"></script>
     <script src="./Script/Test.js"></script>
+    <script src="./Script/GacUI/Layout.js"></script>
     <script src="./Script/GacUI/Types.js"></script>
     <script src="./Script/Class.js"></script>
 </head>
 <body style="font-family: 'Segoe UI'; font-size: 14px;">
     <script>
-        eval(Packages.Inject("Test", "Class", "GacUI.Types"));
+        eval(Packages.Inject("Test", "Class", "GacUI.Types", "GacUI.Layout"));
     </script>
 
     <script>
@@ -34,6 +35,11 @@
             Assert(c3.b === 3);
             Assert(c3.a === 4);
             Assert(c3.__ToString() === "#01020304");
+        });
+    </script>
+
+    <script>
+        TestCase("layout should maintain the children relationship correctly", function () {
         });
     </script>
 
