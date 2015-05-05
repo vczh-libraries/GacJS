@@ -90,41 +90,39 @@
         }
 
         function OnLoadBody() {
-            var tabButtons = tabButtonContainer.getElementsByClassName("TabButton");
+            var tabButtons = tabPage.getElementsByClassName("TabButton");
+            var tabPages = tabPage.getElementsByClassName("TabPage");
             for (var i = 0; i < tabButtons.length; i++) {
-                var tabButton = tabButtons[i];
-                var name = tabButton.id.substring(9, tabButton.id.length);
-                var tabPage = eval("tabPage" + name);
-                CombineTabPage(tabPage, tabButton);
+                CombineTabPage(tabPages[i], tabButtons[i]);
             }
 
-            ShowTabPage(tabPageBounds);
+            ShowTabPage(tabPages[0]);
         }
     </script>
 </head>
 <body onload="javascript: OnLoadBody();">
-    <div class="TabPageContainer">
-        <div class="TabButtonContainer" id="tabButtonContainer">
-            <div class="TabButton" id="tabButtonBounds">Bounds</div>
-            <div class="TabButton" id="tabButtonTable">Table</div>
-            <div class="TabButton" id="tabButtonStack">Stack</div>
-            <div class="TabButton" id="tabButtonSideAligned">SideAligned</div>
-            <div class="TabButton" id="tabButtonPartialView">PartialView</div>
+    <div class="TabPageContainer" id="tabPage">
+        <div class="TabButtonContainer">
+            <div class="TabButton">Bounds</div>
+            <div class="TabButton">Table</div>
+            <div class="TabButton">Stack</div>
+            <div class="TabButton">SideAligned</div>
+            <div class="TabButton">PartialView</div>
         </div>
 
-        <div class="TabPage" id="tabPageBounds">
+        <div class="TabPage">
             Bounds
         </div>
-        <div class="TabPage" id="tabPageTable">
+        <div class="TabPage">
             Table
         </div>
-        <div class="TabPage" id="tabPageStack">
+        <div class="TabPage">
             Stack
         </div>
-        <div class="TabPage" id="tabPageSideAligned">
+        <div class="TabPage">
             SideAligned
         </div>
-        <div class="TabPage" id="tabPagePartialView">
+        <div class="TabPage">
             PartialView
         </div>
     </div>
