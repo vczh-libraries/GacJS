@@ -4,17 +4,13 @@ body {
     font-size: 14px;
 }
 
-.Resizer {
+.DraggableHandle {
     display: block;
     width: 10px;
     height: 10px;
     position: absolute;
     cursor: nwse-resize;
     border-radius: 5px;
-    background: red;
-    overflow: hidden;
-    text-align: center;
-    font-size: 14px;
 }
 
 .TabPage table {

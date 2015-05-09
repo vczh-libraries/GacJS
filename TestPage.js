@@ -33,7 +33,7 @@ function SetupTabControl(tabControl) {
 }
 
 /********************************************************************************
-Resizer
+Draggable Handler
 ********************************************************************************/
 
 function GetPx(px) {
@@ -78,30 +78,31 @@ function DetachMouseEvents(node, removeHandler) {
 }
 
 function InstallResizer(node) {
-    var resizer = document.createElement("div");
-    resizer.setAttribute("class", "Resizer");
-    resizer.style.right = "1px";
-    resizer.style.bottom = "1px";
-    node.appendChild(resizer);
+    var draggableHandle = document.createElement("div");
+    draggableHandle.setAttribute("class", "DraggableHandle");
+    draggableHandle.style.right = "1px";
+    draggableHandle.style.bottom = "1px";
+    draggableHandle.style.backgroundColor = "red";
+    node.appendChild(draggableHandle);
 
     var dragging = false;
     var x = 0.0;
     var y = 0.0;
 
     AttachMouseEvents(
-        resizer,
+        draggableHandle,
         function (event) {
-            if (resizer.style.right !== undefined) {
-                resizer.style.right = undefined;
-                resizer.style.bottom = undefined;
-                resizer.style.left = (node.offsetWidth - resizer.offsetWidth - 1) + "px";
-                resizer.style.top = (node.offsetHeight - resizer.offsetHeight - 1) + "px";
+            if (draggableHandle.style.right !== "") {
+                draggableHandle.style.right = "";
+                draggableHandle.style.bottom = "";
+                draggableHandle.style.left = (node.offsetWidth - draggableHandle.offsetWidth - 1) + "px";
+                draggableHandle.style.top = (node.offsetHeight - draggableHandle.offsetHeight - 1) + "px";
             }
 
             dragging = true;
             x = event.pageX;
             y = event.pageY;
-            TrackMouse(resizer);
+            TrackMouse(draggableHandle);
         },
         function (event) {
             if (dragging) {
@@ -115,8 +116,8 @@ function InstallResizer(node) {
 
                 node.style.width = width + "px";
                 node.style.height = height + "px";
-                resizer.style.left = GetPx(resizer.style.left) + dx + "px";
-                resizer.style.top = GetPx(resizer.style.top) + dy + "px";
+                draggableHandle.style.left = GetPx(draggableHandle.style.left) + dx + "px";
+                draggableHandle.style.top = GetPx(draggableHandle.style.top) + dy + "px";
 
                 x = event.pageX;
                 y = event.pageY;
@@ -124,9 +125,57 @@ function InstallResizer(node) {
         },
         function (event) {
             dragging = false;
-            UnTrackMouse(resizer);
+            UnTrackMouse(draggableHandle);
         }
     );
+}
+
+function InstallMover(node) {
+    if (node.style.left === "" || node.style.top === "") {
+        return;
+    }
+
+    var draggableHandle = document.createElement("div");
+    draggableHandle.setAttribute("class", "DraggableHandle");
+    draggableHandle.style.left = "1px";
+    draggableHandle.style.top = "1px";
+    draggableHandle.style.backgroundColor = "blue";
+    node.appendChild(draggableHandle);
+
+    var dragging = false;
+    var x = 0.0;
+    var y = 0.0;
+
+    AttachMouseEvents(
+        draggableHandle,
+        function (event) {
+            dragging = true;
+            x = event.pageX;
+            y = event.pageY;
+            TrackMouse(draggableHandle);
+        },
+        function (event) {
+            if (dragging) {
+                var dx = event.pageX - x;
+                var dy = event.pageY - y;
+
+                node.style.left = GetPx(node.style.left) + dx + "px";
+                node.style.top = GetPx(node.style.top) + dy + "px";
+
+                x = event.pageX;
+                y = event.pageY;
+            }
+        },
+        function (event) {
+            dragging = false;
+            UnTrackMouse(draggableHandle);
+        }
+    );
+}
+
+function InstallDraggableHandlers(node) {
+    InstallMover(node);
+    InstallResizer(node);
 }
 
 window.addEventListener("mousemove", function (event) {
