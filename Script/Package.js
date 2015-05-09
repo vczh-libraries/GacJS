@@ -197,6 +197,15 @@ Object.defineProperty(Packages, "Inject", {
         }
 
         var code = "";
+
+        for (var i in names) {
+            var name = names[i];
+            var pkg = Packages.Require(name);
+            for (var j in pkg) {
+                code += "if (" + j + " !== undefined) throw new Error(\"Name \\\"" + j + "\\\" already exists.\");\r\n";
+            }
+        }
+
         for (var i in names) {
             var name = names[i];
             var pkg = Packages.Require(name);
@@ -204,6 +213,7 @@ Object.defineProperty(Packages, "Inject", {
                 code += "var " + j + " = Packages.Packages[" + JSON.stringify(name) + "][" + JSON.stringify(j) + "];\r\n";
             }
         }
+
         return code;
     }
 });

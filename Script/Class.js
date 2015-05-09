@@ -35,6 +35,7 @@ API:
         map<string, __Class>        VirtuallyConstructedBy; // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
 
         bool IsAssignableFrom(__Class childType);           // Returns true if "childType" is or inherits from "Type"
+        void RequireType(Object object);                    // Throw an exception if "object" is not an instance of this class or its child classes
     }
 
 ================================================================================
@@ -92,6 +93,7 @@ API:
         map<string, (Enum|Flags)>   Description;            // Get all declared members in this type
 
         (Enum|Flags) Parse(string text);                    // Create a value of this type by a specified string representation
+        void RequireType(Object object);                    // Throw an exception if "object" is not an instance of this type
     }
 
     obj instanceof Enum
@@ -120,6 +122,7 @@ API:
         map<string, value>          Description;            // Get all declared members in this type
 
         static Struct               Parse(string text);     // Create a value of this type by a specified string representation
+        void RequireType(Object object);                    // Throw an exception if "object" is not an instance of this type
     }
 
     obj instanceof Struct
@@ -1196,6 +1199,18 @@ Packages.Define("Class", function () {
             }
         });
 
+        // Type.RequireType(obj)
+        Object.defineProperty(Type, "RequireType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                if (!(obj instanceof Class) || !Type.IsAssignableFrom(obj.__Type)) {
+                    throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
+                }
+            }
+        });
+
         Type.__proto__ = __Class.prototype;
         Type.prototype.__proto__ = Class.prototype;
         Object.seal(Type);
@@ -1279,7 +1294,7 @@ Packages.Define("Class", function () {
         for (var i in description) {
             Type.Description[i] = new Type(i, description[i]);
         }
-        // Type.Parse
+        // Type.Parse(text)
         Object.defineProperty(Type, "Parse", {
             configurable: false,
             enumerable: true,
@@ -1290,6 +1305,17 @@ Packages.Define("Class", function () {
                 }
                 return Type.Description[text];
             },
+        });
+        // Type.RequireType(obj)
+        Object.defineProperty(Type, "RequireType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                if (!(obj instanceof Enum) || !obj.__Type !== Type) {
+                    throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
+                }
+            }
         });
 
         Type.__proto__ = __Enum.prototype;
@@ -1473,7 +1499,7 @@ Packages.Define("Class", function () {
         for (var i in description) {
             Type.Description[i] = new Type(i, description[i]);
         }
-        // Type.Parse
+        // Type.Parse(text)
         Object.defineProperty(Type, "Parse", {
             configurable: false,
             enumerable: true,
@@ -1492,6 +1518,17 @@ Packages.Define("Class", function () {
                 }
                 return result;
             },
+        });
+        // Type.RequireType(obj)
+        Object.defineProperty(Type, "RequireType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                if (!(obj instanceof Enum) || !obj.__Type !== Type) {
+                    throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
+                }
+            }
         });
 
         Type.__proto__ = __Enum.prototype;
@@ -1707,7 +1744,7 @@ Packages.Define("Class", function () {
             writable: false,
             value: description,
         });
-        // Type.Parse
+        // Type.Parse(text)
         Object.defineProperty(Type, "Parse", {
             configurable: false,
             enumerable: true,
@@ -1764,6 +1801,17 @@ Packages.Define("Class", function () {
                 }
                 return new Type(proto);
             },
+        });
+        // Type.RequireType(obj)
+        Object.defineProperty(Type, "RequireType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                if (!(obj instanceof Struct) || !obj.__Type !== Type) {
+                    throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
+                }
+            }
         });
 
         Type.__proto__ = __Struct.prototype;

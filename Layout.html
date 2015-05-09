@@ -1,107 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" type="text/css" href="/TestPage.css" />
+    <script src="/TestPage.js"></script>
     <title>Layout</title>
-    <script src="./Script/Package.js"></script>
-    <script src="./Script/Test.js"></script>
-    <script src="./Script/GacUI/Layout.js"></script>
-    <script src="./Script/GacUI/Types.js"></script>
-    <script src="./Script/Class.js"></script>
 
-    <style>
-        body {
-            font-family: 'Segoe UI';
-            font-size: 14px;
-        }
-
-        .TabButtonContainer:after {
-            content: " ";
-            display: block;
-            clear: both;
-        }
-
-
-        .TabButton {
-            box-shadow: inset 0px 1px 0px 0px #54A3F7;
-            background: linear-gradient(to bottom, #007DC1 5%, #0061A7 100%);
-            background-color: #007DC1;
-            border-radius: 3px;
-            border: 1px solid #124D77;
-            display: inline-block;
-            cursor: pointer;
-            color: #FFFFFF;
-            padding: 6px 24px;
-            text-align: center;
-            text-decoration: none;
-            text-shadow: 0px 1px 0px #154682;
-            margin: 4px;
-            width: 6em;
-            display: block;
-            float: left;
-            cursor: pointer;
-        }
-
-            .TabButton:active {
-                background: linear-gradient(to bottom, #0061A7 5%, #007DC1 100%);
-                background-color: #0061A7;
-            }
-
-        .Selected.TabButton {
-            font-weight: 700;
-        }
-
-            .Selected.TabButton:before {
-                content: "<";
-            }
-
-            .Selected.TabButton:after {
-                content: ">";
-            }
-
-        .TabPage {
-            display: none;
-        }
-
-        .Selected.TabPage {
-            display: block;
-            border: 1px solid red;
-        }
-    </style>
-
-    <script>
-        var currentTabPage = null;
-
-        function ShowTabPage(tabPage) {
-            if (currentTabPage !== null) {
-                currentTabPage.classList.remove("Selected");
-                currentTabPage.TabButton.classList.remove("Selected");
-            }
-            currentTabPage = tabPage;
-            currentTabPage.classList.add("Selected");
-            currentTabPage.TabButton.classList.add("Selected");
-        }
-
-        function CombineTabPage(tabPage, tabButton) {
-            tabPage.TabButton = tabButton;
-            tabButton.TabPage = tabPage;
-            tabButton.addEventListener("click", function (event) {
-                ShowTabPage(event.currentTarget.TabPage);
-            });
-        }
-
-        function OnLoadBody() {
-            var tabButtons = tabPage.getElementsByClassName("TabButton");
-            var tabPages = tabPage.getElementsByClassName("TabPage");
-            for (var i = 0; i < tabButtons.length; i++) {
-                CombineTabPage(tabPages[i], tabButtons[i]);
-            }
-
-            ShowTabPage(tabPages[0]);
-        }
-    </script>
+    <script src="/Script/Package.js"></script>
+    <script src="/Script/Test.js"></script>
+    <script src="/Script/GacUI/Layout.js"></script>
+    <script src="/Script/GacUI/Types.js"></script>
+    <script src="/Script/Class.js"></script>
 </head>
-<body onload="javascript: OnLoadBody();">
-    <div class="TabPageContainer" id="tabPage">
+<body onload="javascript: SetupTab(tabControl);">
+    <div class="TabPageContainer" id="tabControl">
         <div class="TabButtonContainer">
             <div class="TabButton">Bounds</div>
             <div class="TabButton">Table</div>
@@ -111,7 +22,29 @@
         </div>
 
         <div class="TabPage">
-            Bounds
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <th>Result</th>
+                </tr>
+                <tr>
+                    <th>BoundsLayout 100x100</th>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>Experiment</th>
+                    <td>
+                        <div style="display: block; position: relative;">
+                            <div style="display: block; position: absolute; left: 0px; top: 0px; width: calc(100% - 2px); height: calc(100% - 2px); border: 1px solid blue; "></div>
+                            <div style="display: block; position: relative; padding-left: 10px; padding-top: 10px; padding-right: 10px; padding-bottom: 10px;">
+                                <div style="display: block; position: relative; overflow: hidden; width: 80px; height: 80px; border: 1px solid green; ">
+                                    GacUI: GPU Accelerated C++ User Interface, with WYSIWYG developing tools, XML supports, built-in data binding and MVVM features.
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
         <div class="TabPage">
             Table
