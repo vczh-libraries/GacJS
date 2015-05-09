@@ -107,9 +107,14 @@ function InstallResizer(node) {
             if (dragging) {
                 var dx = event.pageX - x;
                 var dy = event.pageY - y;
+                var width = GetPx(node.style.width) + dx;
+                var height = GetPx(node.style.height) + dy;
+                if (width < 0 || height < 0) {
+                    return;
+                }
 
-                node.style.width = GetPx(node.style.width) + dx + "px";
-                node.style.height = GetPx(node.style.height) + dy + "px";
+                node.style.width = width + "px";
+                node.style.height = height + "px";
                 resizer.style.left = GetPx(resizer.style.left) + dx + "px";
                 resizer.style.top = GetPx(resizer.style.top) + dy + "px";
 
