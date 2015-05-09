@@ -78,15 +78,9 @@ function DetachMouseEvents(node, removeHandler) {
 }
 
 function InstallResizer(node) {
-    node.style.width = "100px";
-    node.style.height = "100px";
-
     var resizer = document.createElement("div");
     resizer.setAttribute("class", "Resizer");
     node.appendChild(resizer);
-
-    var star = document.createTextNode("*");
-    resizer.appendChild(star);
 
     var dragging = false;
     var x = 0.0;
