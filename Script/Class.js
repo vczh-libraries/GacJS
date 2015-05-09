@@ -26,16 +26,16 @@ API:
     class __PublicMember : __MemberBase {}
 
     class __Class {
-        bool                        VirtualClass            // True if this type contains unoverrided abstract members
-        string                      FullName;               // Get the full name
-        map<string, __MemberBase>   Description;            // Get all declared members in this type
-        map<string, __MemberBase>   FlattenedDescription;   // Get all potentially visible members in this type
-        __BaseClass[]               BaseClasses;            // Get all direct base classes of this type
-        __BaseClass[]               FlattenedBaseClasses;   // Get all direct or indirect base classes of this type
-        map<string, __Class>        VirtuallyConstructedBy; // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
+        bool                        VirtualClass                            // True if this type contains unoverrided abstract members
+        string                      FullName;                               // Get the full name
+        map<string, __MemberBase>   Description;                            // Get all declared members in this type
+        map<string, __MemberBase>   FlattenedDescription;                   // Get all potentially visible members in this type
+        __BaseClass[]               BaseClasses;                            // Get all direct base classes of this type
+        __BaseClass[]               FlattenedBaseClasses;                   // Get all direct or indirect base classes of this type
+        map<string, __Class>        VirtuallyConstructedBy;                 // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
 
-        bool IsAssignableFrom(__Class childType);           // Returns true if "childType" is or inherits from "Type"
-        void RequireType(Object object);                    // Throw an exception if "object" is not an instance of this class or its child classes
+        bool                        IsAssignableFrom(__Class childType);    // Returns true if "childType" is or inherits from "Type"
+        void                        RequireType(Object object);             // Throw an exception if "object" is not an instance of this class or its child classes
     }
 
 ================================================================================
@@ -60,8 +60,9 @@ API:
 
     __Class Class(fullName, type1, Virtual(type2), ... {
         Member: (Public|Protected|Private) (value | function),
-        Member: (Public|Protected|Private).Overload(typeList1, function1, typeList2, function2, ...);
+        Member: ((Public|Protected)[.New]|Private).Overload(typeList1, function1, typeList2, function2, ...);
         Member: (Public|Protected).(New|Virtual|NewVirtual|Override) (function),
+        Member: ((Public|Protected)[.(New|Virtual|NewVirtual|Override)]|Private).StrongTyped (returnType, [argumentTypes], function),
         Member: (Public|Protected).Abstract();
         Member: Public.Event();
         Member: Public.Property({
@@ -77,23 +78,23 @@ API:
 
 ================================================================================
 
-    obj.__Type                                              // Get the real type that creates this object
-    obj.__Value                                             // Get the integral representation of this object
-    obj.__Clone()                                           // Copy the object
-    obj.__Equals(value)                                     // Test equality with another object
-    obj.__ToString()                                        // Get the string representation of this object
+    obj.__Type                                                  // Get the real type that creates this object
+    obj.__Value                                                 // Get the integral representation of this object
+    obj.__Clone()                                               // Copy the object
+    obj.__Equals(value)                                         // Test equality with another object
+    obj.__ToString()                                            // Get the string representation of this object
 
-    obj.__Add(Flags)                                        // Combine a new flag (Flags)
-    obj.__Remove(Flags)                                     // Remove a combined flag (Flags)
-    obj.__Flags                                             // Get all combined flags (Flags)
+    obj.__Add(Flags)                                            // Combine a new flag (Flags)
+    obj.__Remove(Flags)                                         // Remove a combined flag (Flags)
+    obj.__Flags                                                 // Get all combined flags (Flags)
 
     class __Enum {
-        bool                        Flags;                  // True if elements in this enum is combinable
-        string                      FullName;               // Get the full name
-        map<string, (Enum|Flags)>   Description;            // Get all declared members in this type
+        bool                        Flags;                      // True if elements in this enum is combinable
+        string                      FullName;                   // Get the full name
+        map<string, (Enum|Flags)>   Description;                // Get all declared members in this type
 
-        (Enum|Flags) Parse(string text);                    // Create a value of this type by a specified string representation
-        void RequireType(Object object);                    // Throw an exception if "object" is not an instance of this type
+        (Enum|Flags)                Parse(string text);         // Create a value of this type by a specified string representation
+        void                        RequireType(Object object); // Throw an exception if "object" is not an instance of this type
     }
 
     obj instanceof Enum
@@ -101,7 +102,7 @@ API:
 
     var obj = EnumType.Description.<ItemName>;
 
-    var obj =new FlagsType()
+    var obj = new FlagsType()
         .__Add(FlagsType.Description.<ItemName>)
         .__Add(FlagsType.Description.<ItemName>)
         ;
@@ -112,17 +113,17 @@ API:
 
 ================================================================================
 
-    obj.__Type                                              // Get the real type that creates this object
-    obj.__Clone()                                           // Copy the object
-    obj.__Equals(value)                                     // Test equality with another object
-    obj.__ToString()                                        // Get the string representation of this object
+    obj.__Type                                                  // Get the real type that creates this object
+    obj.__Clone()                                               // Copy the object
+    obj.__Equals(value)                                         // Test equality with another object
+    obj.__ToString()                                            // Get the string representation of this object
 
     class __Struct {
-        string                      FullName;               // Get the full name
-        map<string, value>          Description;            // Get all declared members in this type
+        string                      FullName;                   // Get the full name
+        map<string, value>          Description;                // Get all declared members in this type
 
-        static Struct               Parse(string text);     // Create a value of this type by a specified string representation
-        void RequireType(Object object);                    // Throw an exception if "object" is not an instance of this type
+        static Struct               Parse(string text);         // Create a value of this type by a specified string representation
+        void                        RequireType(Object object); // Throw an exception if "object" is not an instance of this type
     }
 
     obj instanceof Struct
@@ -132,6 +133,16 @@ API:
     });
 
     var obj = new StructType();
+
+================================================================================
+
+    class __PrimitiveType {
+        string                      FullName;
+
+        Object                      Parse(string text);
+        string                      Print(Object object);
+        void                        RequireType(Object object);
+    }
 */
 
 ///////////////////////////////////////////////////////////////
@@ -276,6 +287,78 @@ Packages.Define("Class", function () {
 
     ///////////////////////////////////////////////////////////////
 
+    function __PrimitiveType(fullName, parse, print, requireType) {
+        Object.defineProperty(this, "FullName", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: fullName,
+        });
+        Object.defineProperty(this, "Parse", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: parse,
+        });
+        Object.defineProperty(this, "Print", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: print,
+        });
+        Object.defineProperty(this, "RequireType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: requireType,
+        });
+        Object.seal(this);
+    }
+
+    var __Number = new __PrimitiveType(
+        "<number>",
+        function (text) { return +text; },
+        function (value) { return "" + value; },
+        function (value) { if (typeof value !== "number") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        );
+
+    var __String = new __PrimitiveType(
+        "<string>",
+        function (text) { return text; },
+        function (value) { return value; },
+        function (value) { if (typeof value !== "string") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        );
+
+    var __Boolean = new __PrimitiveType(
+        "<boolean>",
+        function (text) { if (text === "true") return true; if (text === "false") return false; throw new Error("\"" + text + "\" is not a valid string representation for type \"" + this.FullName + "\"."); },
+        function (value) { return "" + value; },
+        function (value) { if (typeof value !== "boolean") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        );
+
+    var __Array = new __PrimitiveType(
+        "<array>",
+        function (text) { throw new Error("Not Supported."); },
+        function (value) { throw new Error("Not Supported."); },
+        function (value) { if (!(value instanceof Array)) throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        );
+
+    var __Function = new __PrimitiveType(
+        "<function>",
+        function (text) { throw new Error("Not Supported."); },
+        function (value) { throw new Error("Not Supported."); },
+        function (value) { if (typeof value !== "function") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        );
+
+    var __Void = new __PrimitiveType(
+        "<function>",
+        function (text) { throw new Error("Not Supported."); },
+        function (value) { throw new Error("Not Supported."); },
+        function (value) { if (value !== undefined) throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        );
+
+    ///////////////////////////////////////////////////////////////
+
     function __BuildOverloadingFunctions() {
         if (arguments.length % 2 !== 0) {
             throw new Error("Arguments for Overload should be typeList1, func1, typeList2, func2, ...");
@@ -343,6 +426,26 @@ Packages.Define("Class", function () {
         }
     }
 
+    ///////////////////////////////////////////////////////////////
+
+    function __BuildStrongTypedFunction(returnType, argumentTypes, func) {
+        return function () {
+            if (argumentTypes.length !== arguments.length) {
+                throw new Error("The number of arguments does not match.");
+            }
+
+            for (var i = 0; i < argumentTypes.length; i++) {
+                argumentTypes[i].RequireType(arguments[i]);
+            }
+
+            var returnValue = func.apply(this, arguments);
+            returnType.RequireType(returnValue);
+            return returnValue;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////
+
     function __DefineDecorator(accessor, name, decorator) {
         Object.defineProperty(accessor, name, {
             configurable: false,
@@ -374,6 +477,10 @@ Packages.Define("Class", function () {
 
     function __DefineOverload(accessor) {
         __DefineSubDecorator(accessor, "Overload", __BuildOverloadingFunctions);
+    }
+
+    function __DefineStrongTyped(accessor) {
+        __DefineSubDecorator(accessor, "StrongTyped", __BuildStrongTypedFunction);
     }
 
     function __DefineNew(accessor) {
@@ -465,12 +572,10 @@ Packages.Define("Class", function () {
     function Private(value) {
         return new __PrivateMember(value);
     }
-    __DefineOverload(Private);
 
     function Protected(value) {
         return new __ProtectedMember(value);
     }
-    __DefineOverload(Protected);
     __DefineNew(Protected);
     __DefineVirtual(Protected);
     __DefineNewVirtual(Protected);
@@ -480,7 +585,6 @@ Packages.Define("Class", function () {
     function Public(value) {
         return new __PublicMember(value);
     }
-    __DefineOverload(Public);
     __DefineNew(Public);
     __DefineVirtual(Public);
     __DefineNewVirtual(Public);
@@ -488,6 +592,24 @@ Packages.Define("Class", function () {
     __DefineOverride(Public);
     __DefineEvent(Public);
     __DefineProperty(Public);
+
+    __DefineOverload(Private);
+    __DefineOverload(Protected);
+    __DefineOverload(Protected.New);
+    __DefineOverload(Public);
+    __DefineOverload(Public.New);
+
+    __DefineStrongTyped(Private);
+    __DefineStrongTyped(Protected);
+    __DefineStrongTyped(Protected.New);
+    __DefineStrongTyped(Protected.Virtual);
+    __DefineStrongTyped(Protected.NewVirtual);
+    __DefineStrongTyped(Protected.Override);
+    __DefineStrongTyped(Public);
+    __DefineStrongTyped(Public.New);
+    __DefineStrongTyped(Public.Virtual);
+    __DefineStrongTyped(Public.NewVirtual);
+    __DefineStrongTyped(Public.Override);
 
     ///////////////////////////////////////////////////////////////
 
@@ -896,7 +1018,12 @@ Packages.Define("Class", function () {
             }
             directBaseClasses[i - 1] = baseClass;
         }
+
+        var delayLoad = false;
         var description = arguments[arguments.length - 1];
+        if (typeof description === "function") {
+            delayLoad = true;
+        }
 
         function Type() {
             var typeObject = arguments.callee;
@@ -966,168 +1093,192 @@ Packages.Define("Class", function () {
             return externalReference;
         }
 
-        // set __MemberBase.DeclaringType
-        for (var name in description) {
-            if (name.substring(0, 2) === "__" && name !== "__Constructor") {
-                throw new Error("Member name cannot start with \"__\" except \"__Constructor\".");
+        var flattenedBaseClasses = null;
+        var flattenedBaseClassNames = null;
+        var flattenedDescription = null;
+        var isVirtualClass = null;
+        var virtuallyConstructedBy = {};
+
+        var loaded = false;
+        function LoadType()
+        {
+            if (loaded) return;
+            loaded = true;
+            if (delayLoad) {
+                description = description();
             }
 
-            var member = description[name];
-            member.DeclaringType = Type;
-
-            var value = member.Value;
-            if (value instanceof __Property) {
-                if (value.GetterName === null) {
-                    value.GetterName = "Get" + name;
+            // set __MemberBase.DeclaringType
+            for (var name in description) {
+                if (name.substring(0, 2) === "__" && name !== "__Constructor") {
+                    throw new Error("Member name cannot start with \"__\" except \"__Constructor\".");
                 }
-                if (!value.Readonly && value.SetterName === null) {
-                    value.SetterName = "Set" + name;
-                }
-                if (value.HasEvent && value.EventName === null) {
-                    value.EventName = name + "Changed";
-                }
-            }
-        }
 
-        // calculate Type.FlattenedBaseClasses
-        var flattenedBaseClasses = [];
-        var flattenedBaseClassNames = {};
-        function AddFlattenedBaseClass(baseClass) {
-            var existingBaseClass = flattenedBaseClassNames[baseClass.Type.FullName];
-            if (existingBaseClass === undefined) {
-                flattenedBaseClassNames[baseClass.Type.FullName] = baseClass;
-                flattenedBaseClasses.push(baseClass);
-            }
-            else {
-                if (existingBaseClass.Virtual !== true || baseClass.Virtual !== true) {
-                    throw new Error("Type \"" + fullName + "\" cannot non-virtually inherit from type \"" + baseClass.Type.FullName + "\" multiple times.");
-                }
-            }
-        }
+                var member = description[name];
+                member.DeclaringType = Type;
 
-        for (var i in directBaseClasses) {
-            var baseClass = directBaseClasses[i];
-            var baseFlattened = baseClass.Type.FlattenedBaseClasses;
-            for (var j in baseFlattened) {
-                AddFlattenedBaseClass(baseFlattened[j]);
-            }
-            AddFlattenedBaseClass(baseClass);
-        }
-
-        for (var i in flattenedBaseClasses) {
-            var virtualBaseClass = flattenedBaseClasses[i];
-            if (virtualBaseClass.Virtual === true) {
-                var firstClass = null;
-                var counter = 0;
-
-                for (var j in directBaseClasses) {
-                    var directBaseClass = directBaseClasses[j];
-                    var constructedBy = virtualBaseClass.Type.VirtuallyConstructedBy[directBaseClass.Type.FullName];
-                    if (constructedBy !== undefined) {
-                        if (firstClass === null) {
-                            firstClass = constructedBy;
-                        }
-                        counter++;
+                var value = member.Value;
+                if (value instanceof __Property) {
+                    if (value.GetterName === null) {
+                        value.GetterName = "Get" + name;
+                    }
+                    if (!value.Readonly && value.SetterName === null) {
+                        value.SetterName = "Set" + name;
+                    }
+                    if (value.HasEvent && value.EventName === null) {
+                        value.EventName = name + "Changed";
                     }
                 }
+            }
 
-                if (firstClass === null || counter > 0) {
-                    virtualBaseClass.Type.VirtuallyConstructedBy[fullName] = Type;
+            // calculate Type.FlattenedBaseClasses
+            flattenedBaseClasses = [];
+            flattenedBaseClassNames = {};
+
+            function AddFlattenedBaseClass(baseClass) {
+                var existingBaseClass = flattenedBaseClassNames[baseClass.Type.FullName];
+                if (existingBaseClass === undefined) {
+                    flattenedBaseClassNames[baseClass.Type.FullName] = baseClass;
+                    flattenedBaseClasses.push(baseClass);
                 }
                 else {
-                    virtualBaseClass.Type.VirtuallyConstructedBy[fullName] = firstClass;
+                    if (existingBaseClass.Virtual !== true || baseClass.Virtual !== true) {
+                        throw new Error("Type \"" + fullName + "\" cannot non-virtually inherit from type \"" + baseClass.Type.FullName + "\" multiple times.");
+                    }
                 }
             }
-        }
 
-        // calculate Type.FlattenedDescription
-        var flattenedDescription = Object.create(description);
-
-        for (var i in directBaseClasses) {
-            var baseClass = directBaseClasses[i];
-            var flattened = baseClass.Type.FlattenedDescription;
-            for (var name in flattened) {
-                var member = description[name];
-                var baseMember = flattened[name];
-
-                if (name === "__Constructor") {
-                    continue;
+            for (var i in directBaseClasses) {
+                var baseClass = directBaseClasses[i];
+                var baseFlattened = baseClass.Type.FlattenedBaseClasses;
+                for (var j in baseFlattened) {
+                    AddFlattenedBaseClass(baseFlattened[j]);
                 }
+                AddFlattenedBaseClass(baseClass);
+            }
 
-                if (baseMember instanceof __PrivateMember) {
-                    continue;
+            for (var i in flattenedBaseClasses) {
+                var virtualBaseClass = flattenedBaseClasses[i];
+                if (virtualBaseClass.Virtual === true) {
+                    var firstClass = null;
+                    var counter = 0;
+
+                    for (var j in directBaseClasses) {
+                        var directBaseClass = directBaseClasses[j];
+                        var constructedBy = virtualBaseClass.Type.VirtuallyConstructedBy[directBaseClass.Type.FullName];
+                        if (constructedBy !== undefined) {
+                            if (firstClass === null) {
+                                firstClass = constructedBy;
+                            }
+                            counter++;
+                        }
+                    }
+
+                    if (firstClass === null || counter > 0) {
+                        virtualBaseClass.Type.VirtuallyConstructedBy[fullName] = Type;
+                    }
+                    else {
+                        virtualBaseClass.Type.VirtuallyConstructedBy[fullName] = firstClass;
+                    }
                 }
+            }
 
-                if (member === undefined) {
-                    if (flattenedDescription[name] !== undefined) {
-                        if (flattenedBaseClassNames[baseMember.DeclaringType.FullName].Virtual === false) {
-                            throw new Error("Type \"" + fullName + "\" cannot inherit multiple members of the same name \"" + name + "\" without defining a new one.");
+            // calculate Type.FlattenedDescription
+            flattenedDescription = Object.create(description);
+
+            for (var i in directBaseClasses) {
+                var baseClass = directBaseClasses[i];
+                var flattened = baseClass.Type.FlattenedDescription;
+                for (var name in flattened) {
+                    var member = description[name];
+                    var baseMember = flattened[name];
+
+                    if (name === "__Constructor") {
+                        continue;
+                    }
+
+                    if (baseMember instanceof __PrivateMember) {
+                        continue;
+                    }
+
+                    if (member === undefined) {
+                        if (flattenedDescription[name] !== undefined) {
+                            if (flattenedBaseClassNames[baseMember.DeclaringType.FullName].Virtual === false) {
+                                throw new Error("Type \"" + fullName + "\" cannot inherit multiple members of the same name \"" + name + "\" without defining a new one.");
+                            }
+                        }
+                        else {
+                            flattenedDescription[name] = baseMember;
                         }
                     }
                     else {
-                        flattenedDescription[name] = baseMember;
+                        member.HiddenMembers.push(baseMember);
                     }
                 }
-                else {
-                    member.HiddenMembers.push(baseMember);
-                }
-            }
-        }
-
-        for (var i in description) {
-            var member = description[i];
-
-            for (var j in member.HiddenMembers) {
-                var hiddenMember = member.HiddenMembers[j];
-                if (hiddenMember.Value instanceof __Event) {
-                    throw new Error("Type \"" + fullName + "\" cannot hide event \"" + i + "\".");
-                }
             }
 
-            if (member.Virtual === __MemberBase.OVERRIDE) {
-                if (member.HiddenMembers.length === 0) {
-                    throw new Error("Type \"" + fullName + "\" cannot find virtual function \"" + i + "\" to override.");
+            for (var i in description) {
+                var member = description[i];
+
+                for (var j in member.HiddenMembers) {
+                    var hiddenMember = member.HiddenMembers[j];
+                    if (hiddenMember.Value instanceof __Event) {
+                        throw new Error("Type \"" + fullName + "\" cannot hide event \"" + i + "\".");
+                    }
+                }
+
+                if (member.Virtual === __MemberBase.OVERRIDE) {
+                    if (member.HiddenMembers.length === 0) {
+                        throw new Error("Type \"" + fullName + "\" cannot find virtual function \"" + i + "\" to override.");
+                    }
+                    else {
+                        for (var j in member.HiddenMembers) {
+                            var hiddenMember = member.HiddenMembers[j];
+                            if (hiddenMember.Virtual === __MemberBase.NORMAL) {
+                                throw new Error("Type \"" + fullName + "\" cannot override non-virtual function \"" + i + "\".");
+                            }
+                        }
+                    }
+                }
+                else if (member.New) {
+                    if (member.HiddenMembers.length === 0) {
+                        throw new Error("Type \"" + fullName + "\" cannot define a new member \"" + i + "\" without hiding anything.");
+                    }
                 }
                 else {
                     for (var j in member.HiddenMembers) {
                         var hiddenMember = member.HiddenMembers[j];
                         if (hiddenMember.Virtual === __MemberBase.NORMAL) {
-                            throw new Error("Type \"" + fullName + "\" cannot override non-virtual function \"" + i + "\".");
+                            throw new Error("Type \"" + fullName + "\" cannot hide member \"" + i + "\" without new.");
+                        }
+                        else {
+                            throw new Error("Type \"" + fullName + "\" cannot hide virtual function \"" + i + "\" without overriding.");
                         }
                     }
                 }
             }
-            else if (member.New) {
-                if (member.HiddenMembers.length === 0) {
-                    throw new Error("Type \"" + fullName + "\" cannot define a new member \"" + i + "\" without hiding anything.");
-                }
-            }
-            else {
-                for (var j in member.HiddenMembers) {
-                    var hiddenMember = member.HiddenMembers[j];
-                    if (hiddenMember.Virtual === __MemberBase.NORMAL) {
-                        throw new Error("Type \"" + fullName + "\" cannot hide member \"" + i + "\" without new.");
-                    }
-                    else {
-                        throw new Error("Type \"" + fullName + "\" cannot hide virtual function \"" + i + "\" without overriding.");
-                    }
+
+            // Type.VirtualClass
+            isVirtualClass = false;
+            for (var i in flattenedDescription) {
+                var member = flattenedDescription[i];
+                if (member.Virtual === __MemberBase.ABSTRACT) {
+                    isVirtualClass = true;
                 }
             }
         }
 
-        // Type.VirtualClass
-        var isVirtualClass = false;
-        for (var i in flattenedDescription) {
-            var member = flattenedDescription[i];
-            if (member.Virtual === __MemberBase.ABSTRACT) {
-                isVirtualClass = true;
-            }
+        if (!delayLoad) {
+            LoadType();
         }
+
         Object.defineProperty(Type, "VirtualClass", {
             configurable: false,
             enumerable: true,
-            writable: false,
-            value: isVirtualClass,
+            get: function () {
+                LoadType();
+                return isVirtualClass;
+            },
         });
 
         // Type.FullName
@@ -1142,16 +1293,20 @@ Packages.Define("Class", function () {
         Object.defineProperty(Type, "Description", {
             configurable: false,
             enumerable: true,
-            writable: false,
-            value: description,
+            get: function () {
+                LoadType();
+                return description;
+            },
         });
 
         // Type.FlattenedDescription
         Object.defineProperty(Type, "FlattenedDescription", {
             configurable: false,
             enumerable: true,
-            writable: false,
-            value: flattenedDescription,
+            get: function () {
+                LoadType();
+                return flattenedDescription;
+            },
         });
 
         // Type.BaseClasses
@@ -1166,16 +1321,20 @@ Packages.Define("Class", function () {
         Object.defineProperty(Type, "FlattenedBaseClasses", {
             configurable: false,
             enumerable: true,
-            writable: false,
-            value: flattenedBaseClasses,
+            get: function () {
+                LoadType();
+                return flattenedBaseClasses;
+            },
         });
 
         // Type.FlattenedBaseClasses
         Object.defineProperty(Type, "VirtuallyConstructedBy", {
             configurable: false,
             enumerable: true,
-            writable: false,
-            value: {},
+            get: function () {
+                LoadType();
+                return virtuallyConstructedBy;
+            },
         });
 
         // Type.IsAssignableFrom(childType)
@@ -1184,6 +1343,7 @@ Packages.Define("Class", function () {
             enumerable: true,
             writable: false,
             value: function (childType) {
+                LoadType();
                 if (childType === Type) {
                     return true;
                 }
@@ -1205,8 +1365,11 @@ Packages.Define("Class", function () {
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Class) || !Type.IsAssignableFrom(obj.__Type)) {
-                    throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
+                LoadType();
+                if (obj !== null) {
+                    if (!(obj instanceof Class) || !Type.IsAssignableFrom(obj.__Type)) {
+                        throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
+                    }
                 }
             }
         });
@@ -1312,7 +1475,7 @@ Packages.Define("Class", function () {
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Enum) || !obj.__Type !== Type) {
+                if (!(obj instanceof Enum) || obj.__Type !== Type) {
                     throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }
@@ -1525,7 +1688,7 @@ Packages.Define("Class", function () {
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Enum) || !obj.__Type !== Type) {
+                if (!(obj instanceof Enum) || obj.__Type !== Type) {
                     throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }
@@ -1650,6 +1813,39 @@ Packages.Define("Class", function () {
             length++;
         }
 
+        var descriptionTypes = {};
+        for (var i in description) {
+            var defaultValue = description[i];
+            var memberType = null;
+
+            if (defaultValue instanceof Enum || defaultValue instanceof Flags || defaultValue instanceof Struct) {
+                memberType = defaultValue.__Type;
+            }
+            else if (typeof defaultValue === "number") {
+                memberType = __Number;
+            }
+            else if (typeof defaultValue === "string") {
+                memberType = __String;
+            }
+            else if (typeof defaultValue === "boolean") {
+                memberType = __Boolean;
+            }
+            else if (typeof defaultValue === "function") {
+                memberType = __Function;
+            }
+            else if (defaultValue instanceof Array) {
+                memberType = __Array;
+            }
+            else if (defaultValue instanceof Class) {
+                throw new Error("The default value of field \"" + i + "\" in type \"" + fullName + "\" cannot be an instanceof of a class.");
+            }
+            else {
+                throw new Error("Cannot recognize the type of the  default value of field \"" + i + "\" in type \"" + fullName + "\".");
+            }
+
+            descriptionTypes[i] = memberType;
+        }
+
         function Type(proto) {
             var typeObject = arguments.callee;
 
@@ -1703,6 +1899,26 @@ Packages.Define("Class", function () {
                     return result;
                 },
             });
+
+            var members = {};
+            for (var i in description) {
+                (function () {
+                    var memberName = i;
+                    var memberType = descriptionTypes[i];
+
+                    Object.defineProperty(this, memberName, {
+                        configurable: false,
+                        enumerable: true,
+                        get: function () {
+                            return members[memberName];
+                        },
+                        set: function (value) {
+                            memberType.RequireType(value);
+                            members[memberName] = value;
+                        },
+                    });
+                }).apply(this, []);
+            }
 
             if (arguments.length === 0) {
                 for (var i in description) {
@@ -1808,7 +2024,7 @@ Packages.Define("Class", function () {
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Struct) || !obj.__Type !== Type) {
+                if (!(obj instanceof Struct) || obj.__Type !== Type) {
                     throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }
@@ -1834,6 +2050,14 @@ Packages.Define("Class", function () {
         __Class: __Class,
         __Enum: __Enum,
         __Struct: __Struct,
+        __PrimitiveType: __PrimitiveType,
+
+        __Number: __Number,
+        __Boolean: __Boolean,
+        __String: __String,
+        __Array: __Array,
+        __Function: __Function,
+        __Void: __Void,
 
         Class: Class,
         Enum: Enum,

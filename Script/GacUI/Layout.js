@@ -15,220 +15,217 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
     GuiGraphicsComposition
     ********************************************************************************/
 
-    var Layout = Class(FQN("Graphics"), {
+    var Layout = Class(FQN("Graphics"), function () {
+        return {
+            boundsElement: Protected(null),
+            containerElement: Protected(null),
 
-        boundsElement: Protected(null),
-        containerElement: Protected(null),
+            GetBoundsElement: Public(function () {
+                return this.boundsElement;
+            }),
+            BoundsElement: Public.Property({}),
 
-        GetBoundsElement: Public(function () {
-            return this.boundsElement;
-        }),
-        BoundsElement: Public.Property({}),
+            GetContainerElement: Public(function () {
+                return this.containerElement;
+            }),
+            ContainerElement: Public.Property({}),
 
-        GetContainerElement: Public(function () {
-            return this.containerElement;
-        }),
-        ContainerElement: Public.Property({}),
+            __Constructor: Public(function () {
+            }),
 
-        __Constructor: Public(function () {
-        }),
+            //////////////////////////////////////////////////////
 
-        //////////////////////////////////////////////////////
+            parent: Protected(null),
+            children: Protected([]),
 
-        parent: Protected(null),
-        children: Protected([]),
+            GetParent: Public.StrongTyped(Layout, [], function () {
+                return this.parent;
+            }),
+            internal_SetParent: Public.StrongTyped(__Void, [Layout], function (value) {
+                this.parent = value;
+            }),
+            Parent: Public.Property({ readonly: true }),
 
-        GetParent: Public(function () {
-            return this.parent;
-        }),
-        internal_SetParent: Public(function (value) {
-            this.parent = value;
-        }),
-        Parent: Public.Property({ readonly: true }),
+            GetChildren: Public(function () {
+                return this.children;
+            }),
+            Children: Public.Property({ readonly: true }),
 
-        GetChildren: Public(function () {
-            return this.children;
-        }),
-        Children: Public.Property({ readonly: true }),
+            AddChild: Public.StrongTyped(__Boolean, [Layout], function (child) {
+                if (this.children.indexOf(child) !== -1) {
+                    return false;
+                }
+                this.children.push(child);
+                child.internal_SetParent(this.__ExternalReference);
+                return true;
+            }),
+            InsertChild: Public.StrongTyped(__Boolean, [__Number, Layout], function (index, child) {
+                if (this.children.indexOf(child) !== -1) {
+                    return false;
+                }
+                if (index < 0 || index > this.children.length) {
+                    return false;
+                }
+                this.children.splice(index, 0, child);
+                child.internal_SetParent(this.__ExternalReference);
+                return true;
+            }),
+            RemoveChild: Public.StrongTyped(__Boolean, [Layout], function (child) {
+                var index = this.children.indexOf(child);
+                if (index === -1) {
+                    return false;
+                }
+                this.children.splice(index, 1);
+                child.internal_SetParent(null);
+                return true;
+            }),
+            MoveChild: Public.StrongTyped(__Boolean, [Layout, __Number], function (child, newIndex) {
+                if (newIndex < 0 || newIndex >= this.children.length) {
+                    return false;
+                }
+                var index = this.children.indexOf(child);
+                if (index === -1) {
+                    return false;
+                }
+                this.children.splice(index, 1);
+                this.children.splice(newIndex, 0, child);
+                return true;
+            }),
 
-        AddChild: Public(function (child) {
-            Layout.RequireType(child);
-            if (this.children.indexOf(child) !== -1) {
-                return false;
-            }
-            this.children.push(child);
-            child.internal_SetParent(this.__ExternalReference);
-            return true;
-        }),
-        InsertChild: Public(function (index, child) {
-            Layout.RequireType(child);
-            if (this.children.indexOf(child) !== -1) {
-                return false;
-            }
-            if (index < 0 || index > this.children.length) {
-                return false;
-            }
-            this.children.splice(index, 0, child);
-            child.internal_SetParent(this.__ExternalReference);
-            return true;
-        }),
-        RemoveChild: Public(function (child) {
-            Layout.RequireType(child);
-            var index = this.children.indexOf(child);
-            if (index === -1) {
-                return false;
-            }
-            this.children.splice(index, 1);
-            child.internal_SetParent(null);
-            return true;
-        }),
-        MoveChild: Public(function (child, newIndex) {
-            Layout.RequireType(child);
-            if (newIndex < 0 || newIndex >= this.children.length) {
-                return false;
-            }
-            var index = this.children.indexOf(child);
-            if (index === -1) {
-                return false;
-            }
-            this.children.splice(index, 1);
-            this.children.splice(newIndex, 0, child);
-            return true;
-        }),
+            GetOwnedElement: Public.StrongTyped(IElement, [], function () {
+                throw new Error("Not Implemented.");
+            }),
+            SetOwnedElement: Public.StrongTyped(__Void, [IElement], function (value) {
+                throw new Error("Not Implemented.");
+            }),
+            OwnedElement: Public.Property({}),
 
-        GetOwnedElement: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        SetOwnedElement: Public(function (value) {
-            throw new Error("Not Implemented.");
-        }),
-        OwnedElement: Public.Property({}),
+            //////////////////////////////////////////////////////
 
-        //////////////////////////////////////////////////////
+            UpdateStyle: Protected.Virtual(function () {
+                throw new Error("Not Implemented.");
+            }),
 
-        UpdateStyle: Protected.Virtual(function () {
-            throw new Error("Not Implemented.");
-        }),
+            visible: Protected(true),
+            GetVisible: Public(function () {
+                return this.visible;
+            }),
+            SetVisible: Public(function (value) {
+                this.visible = value;
+                this.UpdateStyle();
+            }),
+            Visible: Public.Property({}),
 
-        visible: Protected(true),
-        GetVisible: Public(function () {
-            return this.visible;
-        }),
-        SetVisible: Public(function (value) {
-            this.visible = value;
-            this.UpdateStyle();
-        }),
-        Visible: Public.Property({}),
+            minSizeLimitation: Protected(MinSizeLimitation.NoLimit),
+            GetMinSizeLimitation: Public(function () {
+                return this.minSizeLimitation;
+            }),
+            SetMinSizeLimitation: Public(function (value) {
+                this.minSizeLimitation = value;
+                this.UpdateStyle();
+            }),
+            MinSizeLimitation: Public.Property({}),
 
-        minSizeLimitation: Protected(MinSizeLimitation.NoLimit),
-        GetMinSizeLimitation: Public(function () {
-            return this.minSizeLimitation;
-        }),
-        SetMinSizeLimitation: Public(function (value) {
-            this.minSizeLimitation = value;
-            this.UpdateStyle();
-        }),
-        MinSizeLimitation: Public.Property({}),
+            margin: Protected(new Margin(-1, -1, -1, -1)),
+            GetMargin: Public(function () {
+                return this.margin;
+            }),
+            SetMargin: Public(function (value) {
+                this.margin = value;
+                this.UpdateStyle();
+            }),
+            Margin: Public.Property({}),
 
-        margin: Protected(new Margin(-1, -1, -1, -1)),
-        GetMargin: Public(function () {
-            return this.margin;
-        }),
-        SetMargin: Public(function (value) {
-            this.margin = value;
-            this.UpdateStyle();
-        }),
-        Margin: Public.Property({}),
+            internalMargin: Protected(new Margin(-1, -1, -1, -1)),
+            GetInternalMargin: Public(function () {
+                return this.internalMargin;
+            }),
+            SetInternalMargin: Public(function (value) {
+                this.internalMargin = value;
+                this.UpdateStyle();
+            }),
+            InternalMargin: Public.Property({}),
 
-        internalMargin: Protected(new Margin(-1, -1, -1, -1)),
-        GetInternalMargin: Public(function () {
-            return this.internalMargin;
-        }),
-        SetInternalMargin: Public(function (value) {
-            this.internalMargin = value;
-            this.UpdateStyle();
-        }),
-        InternalMargin: Public.Property({}),
+            preferredMinSize: Public(new Size(0, 0)),
+            GetPreferredMinSize: Public(function () {
+                return this.preferredMinSize;
+            }),
+            SetPreferredMinSize: Public(function (value) {
+                this.preferredMinSize = value;
+                this.UpdateStyle();
+            }),
+            PreferredMinSize: Public.Property({}),
 
-        preferredMinSize: Public(new Size(0, 0)),
-        GetPreferredMinSize: Public(function () {
-            return this.preferredMinSize;
-        }),
-        SetPreferredMinSize: Public(function (value) {
-            this.preferredMinSize = value;
-            this.UpdateStyle();
-        }),
-        PreferredMinSize: Public.Property({}),
+            //////////////////////////////////////////////////////
 
-        //////////////////////////////////////////////////////
+            GetClientArea: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            ClientArea: Public.Property({}),
 
-        GetClientArea: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        ClientArea: Public.Property({}),
+            ForceCalculateSizeImmediately: Public(function () {
+            }),
 
-        ForceCalculateSizeImmediately: Public(function () {
-        }),
+            GetMinPreferredClientSize: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            MinPreferredClientSize: Public.Property({}),
 
-        GetMinPreferredClientSize: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        MinPreferredClientSize: Public.Property({}),
+            GetPreferredBounds: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            PreferredBounds: Public.Property({}),
 
-        GetPreferredBounds: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        PreferredBounds: Public.Property({}),
+            GetBounds: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
 
-        GetBounds: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
+            GetGlobalBounds: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            GlobalBounds: Public.Property({ readonly: true }),
 
-        GetGlobalBounds: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        GlobalBounds: Public.Property({ readonly: true }),
+            //////////////////////////////////////////////////////
 
-        //////////////////////////////////////////////////////
+            GetAssociatedCursor: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            SetAssociatedCursor: Public(function (value) {
+                throw new Error("Not Implemented.");
+            }),
+            AssociatedCursor: Public.Property({}),
 
-        GetAssociatedCursor: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        SetAssociatedCursor: Public(function (value) {
-            throw new Error("Not Implemented.");
-        }),
-        AssociatedCursor: Public.Property({}),
+            GetAssociatedControl: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            SetAssociatedControl: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            AssociatedControl: Public.Property({}),
 
-        GetAssociatedControl: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        SetAssociatedControl: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        AssociatedControl: Public.Property({}),
+            GetAssociatedHitTestResult: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            SetAssociatedHitTestResult: Public(function (value) {
+                throw new Error("Not Implemented.");
+            }),
+            AssociatedHitTestResult: Public.Property({}),
 
-        GetAssociatedHitTestResult: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        SetAssociatedHitTestResult: Public(function (value) {
-            throw new Error("Not Implemented.");
-        }),
-        AssociatedHitTestResult: Public.Property({}),
+            GetRelatedControl: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            RelatedControl: Public.Property({ readonly: true }),
 
-        GetRelatedControl: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        RelatedControl: Public.Property({ readonly: true }),
+            GetRelatedControlHost: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            RelatedControlHost: Public.Property({ readonly: true }),
 
-        GetRelatedControlHost: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        RelatedControlHost: Public.Property({ readonly: true }),
-
-        GetRelatedCursor: Public(function () {
-            throw new Error("Not Implemented.");
-        }),
-        RelatedCursor: Public.Property({ readonly: true }),
+            GetRelatedCursor: Public(function () {
+                throw new Error("Not Implemented.");
+            }),
+            RelatedCursor: Public.Property({ readonly: true }),
+        };
     });
 
     /********************************************************************************
