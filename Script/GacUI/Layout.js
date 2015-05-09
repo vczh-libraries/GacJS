@@ -16,7 +16,28 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types"], function (__injection_
     ********************************************************************************/
 
     var Layout = Class(FQN("Graphics"), {
+
+        boundsElement: Protected(null),
+        containerElement: Protected(null),
+
+        GetBoundsElement: Public(function () {
+            return this.boundsElement;
+        }),
+        BoundsElement: Public.Property({}),
+
+        GetContainerElement: Public(function () {
+            return this.containerElement;
+        }),
+        ContainerElement: Public.Property({}),
+
+        __Constructor: Public(function () {
+        }),
+
+        //////////////////////////////////////////////////////
+
         parent: Protected(null),
+        children: Protected([]),
+
         GetParent: Public(function () {
             return this.parent;
         }),
@@ -26,27 +47,59 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types"], function (__injection_
         Parent: Public.Property({ readonly: true }),
 
         GetChildren: Public(function () {
-            throw new Error("Not Implemented.");
+            return this.children;
         }),
         Children: Public.Property({ readonly: true }),
 
         AddChild: Public(function (child) {
-            throw new Error("Not Implemented.");
+            Layout.RequireType(child);
+            if (this.children.indexOf(child) !== -1) {
+                return false;
+            }
+            this.children.push(child);
+            child.internal_SetParent(this.__ExternalReference);
+            return true;
         }),
         InsertChild: Public(function (index, child) {
-            throw new Error("Not Implemented.");
+            Layout.RequireType(child);
+            if (this.children.indexOf(child) !== -1) {
+                return false;
+            }
+            if (index < 0 || index > this.children.length) {
+                return false;
+            }
+            this.children.splice(index, 0, child);
+            child.internal_SetParent(this.__ExternalReference);
+            return true;
         }),
         RemoveChild: Public(function (child) {
-            throw new Error("Not Implemented.");
+            Layout.RequireType(child);
+            var index = this.children.indexOf(child);
+            if (index === -1) {
+                return false;
+            }
+            this.children.splice(index, 1);
+            child.internal_SetParent(null);
+            return true;
         }),
         MoveChild: Public(function (child, newIndex) {
-            throw new Error("Not Implemented.");
+            Layout.RequireType(child);
+            if (newIndex < 0 || newIndex >= this.children.length) {
+                return false;
+            }
+            var index = this.children.indexOf(child);
+            if (index === -1) {
+                return false;
+            }
+            this.children.splice(index, 1);
+            this.children.splice(newIndex, 0, child);
+            return true;
         }),
 
         GetOwnedElement: Public(function () {
             throw new Error("Not Implemented.");
         }),
-        GetOwnedElement: Public(function (value) {
+        SetOwnedElement: Public(function (value) {
             throw new Error("Not Implemented.");
         }),
         OwnedElement: Public.Property({}),

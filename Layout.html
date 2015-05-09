@@ -158,6 +158,63 @@
 
     <script>
         TestCase("layout should maintain the children relationship correctly", function () {
+            var a = new Layout();
+            var b = new Layout();
+            var c = new Layout();
+            var d = new Layout();
+
+            Assert(a.Parent === null);
+            Assert(b.Parent === null);
+            Assert(c.Parent === null);
+            Assert(d.Parent === null);
+            Assert(a.Children.length === 0);
+
+            a.AddChild(b);
+            a.AddChild(c);
+            a.AddChild(d);
+
+            Assert(a.Parent === null);
+            Assert(b.Parent === a);
+            Assert(c.Parent === a);
+            Assert(d.Parent === a);
+            Assert(a.Children.length === 3);
+            Assert(a.Children[0] === b);
+            Assert(a.Children[1] === c);
+            Assert(a.Children[2] === d);
+
+            a.RemoveChild(b);
+            a.RemoveChild(c);
+
+            Assert(a.Parent === null);
+            Assert(b.Parent === null);
+            Assert(c.Parent === null);
+            Assert(d.Parent === a);
+            Assert(a.Children.length === 1);
+            Assert(a.Children[0] === d);
+
+            a.InsertChild(1, b);
+            a.InsertChild(1, c);
+
+            Assert(a.Parent === null);
+            Assert(b.Parent === a);
+            Assert(c.Parent === a);
+            Assert(d.Parent === a);
+            Assert(a.Children.length === 3);
+            Assert(a.Children[0] === d);
+            Assert(a.Children[1] === c);
+            Assert(a.Children[2] === b);
+
+            a.MoveChild(b, 0);
+            a.MoveChild(c, 1);
+
+            Assert(a.Parent === null);
+            Assert(b.Parent === a);
+            Assert(c.Parent === a);
+            Assert(d.Parent === a);
+            Assert(a.Children.length === 3);
+            Assert(a.Children[0] === b);
+            Assert(a.Children[1] === c);
+            Assert(a.Children[2] === d);
         });
     </script>
 
