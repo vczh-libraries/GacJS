@@ -11,7 +11,7 @@
     <script src="/Script/GacUI/Types.js"></script>
     <script src="/Script/Class.js"></script>
 </head>
-<body onload="javascript: SetupTab(tabControl);">
+<body onload="javascript: SetupTabControl(tabControl);">
     <div class="TabPageContainer" id="tabControl">
         <div class="TabButtonContainer">
             <div class="TabButton">Bounds</div>
@@ -34,10 +34,10 @@
                 <tr>
                     <th>Experiment</th>
                     <td>
-                        <div style="display: block; position: relative;">
+                        <div id="box_Experiment" style="display: block; position: relative;">
                             <div style="display: block; position: absolute; left: 0px; top: 0px; width: calc(100% - 2px); height: calc(100% - 2px); border: 1px solid blue; "></div>
                             <div style="display: block; position: relative; padding-left: 10px; padding-top: 10px; padding-right: 10px; padding-bottom: 10px;">
-                                <div style="display: block; position: relative; overflow: hidden; width: 80px; height: 80px; border: 1px solid green; ">
+                                <div style="display: block; position: relative; overflow: hidden; width: calc(100% - 2px); height: calc(100% - 2px); border: 1px solid green; ">
                                     GacUI: GPU Accelerated C++ User Interface, with WYSIWYG developing tools, XML supports, built-in data binding and MVVM features.
                                 </div>
                             </div>
@@ -59,6 +59,10 @@
             PartialView
         </div>
     </div>
+
+    <script>
+        InstallResizer(box_Experiment);
+    </script>
 
     <script>
         eval(Packages.Inject("Test", "Class", "GacUI.Types", "GacUI.Layout"));

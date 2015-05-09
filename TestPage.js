@@ -1,3 +1,7 @@
+/********************************************************************************
+TabControl
+********************************************************************************/
+
 var currentTabPage = null;
 
 function ShowTabPage(tabPage) {
@@ -18,7 +22,7 @@ function CombineTabPage(tabPage, tabButton) {
     });
 }
 
-function SetupTab(tabControl) {
+function SetupTabControl(tabControl) {
     var tabButtons = tabControl.getElementsByClassName("TabButton");
     var tabPages = tabControl.getElementsByClassName("TabPage");
     for (var i = 0; i < tabButtons.length; i++) {
@@ -27,3 +31,102 @@ function SetupTab(tabControl) {
 
     ShowTabPage(tabPages[0]);
 }
+
+/********************************************************************************
+Resizer
+********************************************************************************/
+
+function GetPx(px) {
+    return +px.substr(0, px.length - 2);
+}
+
+var bodyOnMouseMove = null;
+var bodyOnMouseUp = null;
+
+function TrackMouse(node) {
+    bodyOnMouseMove = node.data_onMouseMove;
+    bodyOnMouseUp = node.data_onMouseUp;
+    DetachMouseEvents(node, false);
+}
+
+function UnTrackMouse(node) {
+    AttachMouseEvents(node);
+    bodyOnMouseMove = null;
+    bodyOnMouseUp = null;
+}
+
+function AttachMouseEvents(node, onMouseDown, onMouseMove, onMouseUp) {
+    if (onMouseDown) node.data_onMouseDown = onMouseDown;
+    if (onMouseMove) node.data_onMouseMove = onMouseMove;
+    if (onMouseUp) node.data_onMouseUp = onMouseUp;
+
+    node.addEventListener("mousedown", node.data_onMouseDown, false);
+    node.addEventListener("mousemove", node.data_onMouseMove, false);
+    node.addEventListener("mouseup", node.data_onMouseUp, false);
+}
+
+function DetachMouseEvents(node, removeHandler) {
+    node.removeEventListener("mousedown", node.data_onMouseDown, false);
+    node.removeEventListener("mousemove", node.data_onMouseMove, false);
+    node.removeEventListener("mouseup", node.data_onMouseUp, false);
+
+    if (removeHandler) {
+        node.data_onMouseDown = undefined;
+        node.data_onMouseMove = undefined;
+        node.data_onMouseUp = undefined;
+    }
+}
+
+function InstallResizer(node) {
+    node.style.width = "100px";
+    node.style.height = "100px";
+
+    var resizer = document.createElement("div");
+    resizer.setAttribute("class", "Resizer");
+    node.appendChild(resizer);
+
+    var star = document.createTextNode("*");
+    resizer.appendChild(star);
+
+    var dragging = false;
+    var x = 0.0;
+    var y = 0.0;
+
+    AttachMouseEvents(
+        resizer,
+        function (event) {
+            dragging = true;
+            x = event.pageX;
+            y = event.pageY;
+            TrackMouse(resizer);
+        },
+        function (event) {
+            if (dragging) {
+                var dx = event.pageX - x;
+                var dy = event.pageY - y;
+
+                node.style.width = GetPx(node.style.width) + dx + "px";
+                node.style.height = GetPx(node.style.height) + dy + "px";
+
+                x = event.pageX;
+                y = event.pageY;
+            }
+        },
+        function (event) {
+            dragging = false;
+            UnTrackMouse(resizer);
+        }
+    );
+}
+
+window.addEventListener("mousemove", function (event) {
+    if (bodyOnMouseMove) {
+        bodyOnMouseMove(event);
+    }
+}, false);
+
+window.addEventListener("mouseup", function (event) {
+    if (bodyOnMouseUp) {
+        bodyOnMouseUp(event);
+    }
+}, false);

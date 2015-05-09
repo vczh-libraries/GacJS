@@ -1,80 +1,94 @@
 
-        body {
-            font-family: 'Segoe UI';
-            font-size: 14px;
-        }
+body {
+    font-family: 'Segoe UI';
+    font-size: 14px;
+}
 
-        .TabPage table {
-            margin: 10px;
-            border-left: 1px solid gray;
-            border-top: 1px solid gray;
-            border-spacing: 0px;
-            border-collapse: separate;
-        }
+.Resizer {
+    display: block;
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    cursor: nwse-resize;
+    border: 1px solid red;
+    overflow: hidden;
+    text-align: center;
+    font-size: 14px;
+}
 
-        .TabPage th {
-            text-align: left;
-            padding: 10px;
-            border-right: 1px solid gray;
-            border-bottom: 1px solid gray;
-        }
+.TabPage table {
+    margin: 10px;
+    border-left: 1px solid gray;
+    border-top: 1px solid gray;
+    border-spacing: 0px;
+    border-collapse: separate;
+}
 
-        .TabPage td {
-            text-align: left;
-            padding: 10px;
-            border-right: 1px solid gray;
-            border-bottom: 1px solid gray;
-        }
+.TabPage th {
+    text-align: left;
+    padding: 10px;
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
 
-        .TabButtonContainer:after {
-            content: " ";
-            display: block;
-            clear: both;
-        }
+.TabPage td {
+    text-align: left;
+    padding: 10px;
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
+
+.TabButtonContainer:after {
+    content: " ";
+    display: block;
+    clear: both;
+}
 
 
-        .TabButton {
-            box-shadow: inset 0px 1px 0px 0px #54A3F7;
-            background: linear-gradient(to bottom, #007DC1 5%, #0061A7 100%);
-            background-color: #007DC1;
-            border-radius: 3px;
-            border: 1px solid #124D77;
-            display: inline-block;
-            cursor: pointer;
-            color: #FFFFFF;
-            padding: 6px 24px;
-            text-align: center;
-            text-decoration: none;
-            text-shadow: 0px 1px 0px #154682;
-            margin: 4px;
-            width: 6em;
-            display: block;
-            float: left;
-            cursor: pointer;
-        }
+.TabButton {
+    box-shadow: inset 0px 1px 0px 0px #54A3F7;
+    background: linear-gradient(to bottom, #007DC1 5%, #0061A7 100%);
+    background-color: #007DC1;
+    border-radius: 3px;
+    border: 1px solid #124D77;
+    display: inline-block;
+    cursor: pointer;
+    color: #FFFFFF;
+    padding: 6px 24px;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 0px 1px 0px #154682;
+    margin: 4px;
+    width: 6em;
+    display: block;
+    float: left;
+    cursor: pointer;
+}
 
-            .TabButton:active {
-                background: linear-gradient(to bottom, #0061A7 5%, #007DC1 100%);
-                background-color: #0061A7;
-            }
+    .TabButton:active {
+        background: linear-gradient(to bottom, #0061A7 5%, #007DC1 100%);
+        background-color: #0061A7;
+    }
 
-        .Selected.TabButton {
-            font-weight: 700;
-        }
+.Selected.TabButton {
+    font-weight: 700;
+}
 
-            .Selected.TabButton:before {
-                content: "<";
-            }
+    .Selected.TabButton:before {
+        content: "<";
+    }
 
-            .Selected.TabButton:after {
-                content: ">";
-            }
+    .Selected.TabButton:after {
+        content: ">";
+    }
 
-        .TabPage {
-            display: none;
-        }
+.TabPage {
+    display: none;
+}
 
-        .Selected.TabPage {
-            display: block;
-            border: 1px solid red;
-        }
+.Selected.TabPage {
+    display: block;
+    border: 1px solid red;
+}
