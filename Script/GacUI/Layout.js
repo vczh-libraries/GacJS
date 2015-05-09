@@ -1,8 +1,8 @@
-Packages.Define("GacUI.Layout", ["Class", "GacUI.Types"], function (__injection__) {
+Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], function (__injection__) {
     eval(__injection__);
 
     function FQN(name) {
-        return "vl::presentation::composition::Gui" + name + "Composition";
+        return "vl::presentation::compositions::Gui" + name + "Composition";
     }
 
     var MinSizeLimitation = Enum("vl::presentation::compositions::GuiGraphicsComposition::MinSizeLimitation", {
