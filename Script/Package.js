@@ -145,6 +145,13 @@ Object.defineProperty(Packages, "Define", {
                 }
                 pkg[i] = obj[i];
             }
+
+            for (var i in pkg) {
+                var symbol = pkg[i];
+                if (symbol.__ForceLoad !== undefined) {
+                    symbol.__ForceLoad();
+                }
+            }
         }
 
         for (var i in Packages.__PackageDefinitions) {

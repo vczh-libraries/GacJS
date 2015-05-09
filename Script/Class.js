@@ -1100,8 +1100,7 @@ Packages.Define("Class", function () {
         var virtuallyConstructedBy = {};
 
         var loaded = false;
-        function LoadType()
-        {
+        function LoadType() {
             if (loaded) return;
             loaded = true;
             if (delayLoad) {
@@ -1268,18 +1267,19 @@ Packages.Define("Class", function () {
             }
         }
 
-        if (!delayLoad) {
+        if (delayLoad) {
+            Object.defineProperty(Type, "__ForceLoad", {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: function () {
+                    LoadType();
+                },
+            });
+        }
+        else {
             LoadType();
         }
-
-        Object.defineProperty(Type, "VirtualClass", {
-            configurable: false,
-            enumerable: true,
-            get: function () {
-                LoadType();
-                return isVirtualClass;
-            },
-        });
 
         // Type.FullName
         Object.defineProperty(Type, "FullName", {
