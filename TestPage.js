@@ -80,6 +80,8 @@ function DetachMouseEvents(node, removeHandler) {
 function InstallResizer(node) {
     var resizer = document.createElement("div");
     resizer.setAttribute("class", "Resizer");
+    resizer.style.right = "1px";
+    resizer.style.bottom = "1px";
     node.appendChild(resizer);
 
     var dragging = false;
@@ -89,6 +91,13 @@ function InstallResizer(node) {
     AttachMouseEvents(
         resizer,
         function (event) {
+            if (resizer.style.right !== undefined) {
+                resizer.style.right = undefined;
+                resizer.style.bottom = undefined;
+                resizer.style.left = (node.offsetWidth - resizer.offsetWidth - 1) + "px";
+                resizer.style.top = (node.offsetHeight - resizer.offsetHeight - 1) + "px";
+            }
+
             dragging = true;
             x = event.pageX;
             y = event.pageY;
@@ -101,6 +110,8 @@ function InstallResizer(node) {
 
                 node.style.width = GetPx(node.style.width) + dx + "px";
                 node.style.height = GetPx(node.style.height) + dy + "px";
+                resizer.style.left = GetPx(resizer.style.left) + dx + "px";
+                resizer.style.top = GetPx(resizer.style.top) + dy + "px";
 
                 x = event.pageX;
                 y = event.pageY;

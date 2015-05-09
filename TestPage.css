@@ -6,13 +6,10 @@ body {
 
 .Resizer {
     display: block;
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     position: absolute;
-    right: 1px;
-    bottom: 1px;
     cursor: nwse-resize;
-    border: 1px solid red;
     border-radius: 5px;
     background: red;
     overflow: hidden;
