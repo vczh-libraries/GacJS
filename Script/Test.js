@@ -94,7 +94,7 @@ Packages.Define("Test", function () {
         }
         {
             var div = document.createElement("div");
-            div.setAttribute("style", "claer: both");
+            div.setAttribute("style", "clear: both");
             container.appendChild(div);
         }
         document.body.appendChild(container);
