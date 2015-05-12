@@ -127,7 +127,7 @@ Object.defineProperty(Packages, "Define", {
         }
 
         for (var i = 0; i < dependencies.length; i++) {
-            var dependency = Packages.__PackageDefinitions[dependencies[i]].ReverseDependencies.push(fullName);
+            Packages.__PackageDefinitions[dependencies[i]].ReverseDependencies.push(fullName);
         }
 
         def.Dependencies = dependencies;
@@ -151,6 +151,13 @@ Object.defineProperty(Packages, "Define", {
                 if (symbol.__ForceLoad !== undefined) {
                     symbol.__ForceLoad();
                 }
+            }
+        }
+
+        for (var i = 0; i < dependencies.length; i++) {
+            var dependency = Packages.__PackageDefinitions[dependencies[i]];
+            if (dependency.Loaded === true) {
+                def.Counter++;
             }
         }
 
