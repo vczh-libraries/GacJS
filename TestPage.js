@@ -194,6 +194,109 @@ window.addEventListener("mouseup", function (event) {
 Layout Embedder
 ********************************************************************************/
 
+// This function is enhanced and modified to my coding style from
+// https://github.com/marcj/css-element-queries/
+function AttachResizeEvent(element, callback) {
+
+    if (element.gacjs_ResizeEventHandlers === undefined) {
+        element.gacjs_ResizeEventHandlers = [];
+
+        function SetStyle(element, forContainer) {
+            element.style.position = "absolute";
+            element.style.left = "0";
+            element.style.top = "0";
+
+            if (forContainer) {
+                element.style.right = "0";
+                element.style.bottom = "0";
+                element.style.overflow = "scroll";
+                element.style.zIndex = "-1";
+                element.style.visibility = "hidden";
+            }
+            else {
+                element.style.width = "200%";
+                element.style.height = "200%";
+            }
+
+        }
+
+        var expand = document.createElement("div");
+        SetStyle(expand, true);
+
+        var expandChild = document.createElement("div");
+        SetStyle(expandChild, false);
+
+        var shrink = document.createElement("div");
+        SetStyle(shrink, true);
+
+        var shrinkChild = document.createElement("div");
+        SetStyle(shrinkChild, false);
+
+        expand.appendChild(expandChild);
+        shrink.appendChild(shrinkChild);
+
+        element.appendChild(expand);
+        element.appendChild(shrink);
+
+        element.gacjs_ResizeExpand = expand;
+        element.gacjs_ResizeShrink = shrink;
+
+        var lastWidth = null;
+        var lastHeight = null;
+
+        function Reset() {
+            expandChild.style.width = expand.offsetWidth + 10 + "px";
+            expandChild.style.height = expand.offsetHeight + 10 + "px";
+            expand.scrollLeft = expand.scrollWidth;
+            expand.scrollTop = expand.scrollHeight;
+            shrink.scrollLeft = shrink.scrollWidth;
+            shrink.scrollTop = shrink.scrollHeight;
+            lastWidth = element.offsetWidth;
+            lastHeight = element.offsetHeight;
+        }
+
+        Reset();
+
+        function RaiseEvent() {
+            for (var i = 0; i < element.gacjs_ResizeEventHandlers; i++) {
+                element.gacjs_ResizeEventHandlers[i].call(this);
+            }
+        }
+
+        expand.addEventListener("scroll", function (event) {
+            if (element.offsetWidth > lastWidth || element.offsetHeight > lastHeight) {
+                changed();
+            }
+            Reset();
+        }, false);
+
+        shrink.addEventListener("scroll", function (event) {
+            if (element.offsetWidth < lastWidth || element.offsetHeight < lastHeight) {
+                changed();
+            }
+            Reset();
+        }, false);
+    }
+    element.gacjs_ResizeEventHandlers.push(callback);
+}
+
+function DetachResizeEvent(element, callback) {
+    if (element.gacjs_ResizeEventHandlers !== undefined) {
+        var index = element.gacjs_ResizeEventHandlers.indexOf(callback);
+        if (index !== -1) {
+            element.gacjs_ResizeEventHandlers.splice(index, 1);
+        }
+
+        if (element.gacjs_ResizeEventHandlers.length === 0) {
+            element.removeChild(element.gacjs_ResizeExpand);
+            element.removeChild(element.gacjs_ResizeShrink);
+            delete element.gacjs_ResizeEventHandlers;
+            delete element.gacjs_ResizeExpand;
+            delete element.gacjs_ResizeShrink;
+        }
+    }
+}
+
 function CreateLayoutEmbedder(layout) {
     var div = document.createElement("div");
     div.style.display = "block";
@@ -209,12 +312,11 @@ function CreateLayoutEmbedder(layout) {
     child.style.top = "10px";
     child.style.width = "100px";
     child.style.height = "100px";
+    InstallDraggableHandlers(div);
 
-    div.addEventListener("resize", function (event) {
+    AttachResizeEvent(div, function () {
         child.style.width = (GetPx(div.style.width) - 20) + "px";
         child.style.height = (GetPx(div.style.height) - 20) + "px";
-    }, false);
-
-    InstallDraggableHandlers(div);
+    });
     return div;
 }
