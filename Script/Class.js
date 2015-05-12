@@ -621,7 +621,12 @@ Packages.Define("Class", function () {
             var internalReference = {};
 
             // this.__ScopeType
-            internalReference.__ScopeType = typeObject;
+            Object.defineProperty(internalReference, "__ScopeType", {
+                configurable: false,
+                enumerable: false,
+                writable: false,
+                value: typeObject,
+            });
 
             for (var name in description) {
                 var member = description[name];
@@ -707,7 +712,7 @@ Packages.Define("Class", function () {
                             }
                         }
                         else if (member instanceof __PublicMember) {
-                            CopyReferencableMember(target, source, memberName, member, true);
+                            CopyReferencableMember(target, source, memberName, member, false);
                         }
                     })();
                 }
@@ -848,7 +853,7 @@ Packages.Define("Class", function () {
                             var memberName = i;
                             var member = flattened[memberName];
                             if (member instanceof __PublicMember || (isInternal && member instanceof __ProtectedMember)) {
-                                ref = accumulated[type.FullName];
+                                var ref = accumulated[type.FullName];
 
                                 if (isDynamic) {
                                     var prop = Object.getOwnPropertyDescriptor(ref, memberName);
@@ -1049,8 +1054,19 @@ Packages.Define("Class", function () {
             var externalReference = {};
 
             // copy all public member fields to externalReference
-            for (var i in accumulated) {
-                var ref = accumulated[i];
+            var accumulatedCopyOrder = [typeObject];
+            for (var i = 0; i < accumulatedCopyOrder.length; i++) {
+                var type = accumulatedCopyOrder[i];
+                var baseClasses = type.BaseClasses;
+                for (var j = 0; j < baseClasses.length; j++) {
+                    var baseClass = baseClasses[j].Type;
+                    if (accumulatedCopyOrder.indexOf(baseClass) === -1) {
+                        accumulatedCopyOrder.push(baseClass);
+                    }
+                }
+            }
+            for (var i = 0; i < accumulatedCopyOrder.length; i++) {
+                var ref = accumulated[accumulatedCopyOrder[i].FullName];
                 CopyReferencableMembers(
                     externalReference,
                     ref,
