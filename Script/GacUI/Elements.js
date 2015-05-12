@@ -23,10 +23,18 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
         htmlElement: Protected(null),
         color: Protected(new Color()),
-        shape: Protected(ElementShape.Rectangle),
+        shape: Protected(ElementShape.Description.Rectangle),
 
         UpdateStyle: Protected(function () {
-            this.htmlElement.borderColor = this.color.__ToString();
+            this.htmlElement.style.borderColor = this.color.__ToString();
+            switch (this.shape) {
+                case ElementShape.Description.Rectangle:
+                    this.htmlElement.style.borderRadius = "";
+                    break;
+                case ElementShape.Description.Ellipse:
+                    this.htmlElement.style.borderRadius = "50%";
+                    break;
+            }
         }),
 
         gacjs_InstallElement: Public.Override(function (graphElement) {
@@ -206,7 +214,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Color: Public.Property({}),
 
-        shape: Protected(ElementShape.Rectangle),
+        shape: Protected(ElementShape.Description.Rectangle),
         GetShape: Public(function () {
             return this.shape;
         }),
@@ -269,7 +277,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.UpdateStyle();
         }),
 
-        shape: Protected(ElementShape.Rectangle),
+        shape: Protected(ElementShape.Description.Rectangle),
         GetShape: Public(function () {
             return this.shape;
         }),
