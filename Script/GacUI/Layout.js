@@ -17,24 +17,88 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
 
     var Layout = Class(FQN("Graphics"), function () {
         return {
-            boundsElement: Protected(null),
-            containerElement: Protected(null),
+            boundsHtmlElement: Protected(null),
+            graphHtmlElement: Protected(null),
+            containerHtmlElement: Protected(null),
 
-            GetBoundsElement: Public(function () {
-                return this.boundsElement;
+            GetBoundsHtmlElement: Public(function () {
+                return this.boundsHtmlElement;
             }),
-            BoundsElement: Public.Property({}),
+            BoundsHtmlElement: Public.Property({}),
 
-            GetContainerElement: Public(function () {
-                return this.containerElement;
+            GetGraphHtmlElement: Public(function () {
+                return this.graphHtmlElement;
             }),
-            ContainerElement: Public.Property({}),
+            GraphHtmlElement: Public.Property({}),
+
+            GetContainerHtmlElement: Public(function () {
+                return this.containerHtmlElement;
+            }),
+            ContainerHtmlElement: Public.Property({}),
 
             __Constructor: Public(function () {
             }),
 
             //////////////////////////////////////////////////////
 
+            visible: Protected(true),
+            minSizeLimitation: Protected(MinSizeLimitation.NoLimit),
+            margin: Protected(new Margin(-1, -1, -1, -1)),
+            internalMargin: Protected(new Margin(-1, -1, -1, -1)),
+            preferredMinSize: Public(new Size(0, 0)),
+
+            UpdateStyle: Protected.Virtual(function () {
+                throw new Error("Not Implemented.");
+            }),
+
+            GetVisible: Public(function () {
+                return this.visible;
+            }),
+            SetVisible: Public(function (value) {
+                this.visible = value;
+                this.UpdateStyle();
+            }),
+            Visible: Public.Property({}),
+
+            GetMinSizeLimitation: Public(function () {
+                return this.minSizeLimitation;
+            }),
+            SetMinSizeLimitation: Public(function (value) {
+                this.minSizeLimitation = value;
+                this.UpdateStyle();
+            }),
+            MinSizeLimitation: Public.Property({}),
+
+            GetMargin: Public(function () {
+                return this.margin;
+            }),
+            SetMargin: Public(function (value) {
+                this.margin = value;
+                this.UpdateStyle();
+            }),
+            Margin: Public.Property({}),
+
+            GetInternalMargin: Public(function () {
+                return this.internalMargin;
+            }),
+            SetInternalMargin: Public(function (value) {
+                this.internalMargin = value;
+                this.UpdateStyle();
+            }),
+            InternalMargin: Public.Property({}),
+
+            GetPreferredMinSize: Public(function () {
+                return this.preferredMinSize;
+            }),
+            SetPreferredMinSize: Public(function (value) {
+                this.preferredMinSize = value;
+                this.UpdateStyle();
+            }),
+            PreferredMinSize: Public.Property({}),
+
+            //////////////////////////////////////////////////////
+
+            element: Protected(null),
             parent: Protected(null),
             children: Protected([]),
 
@@ -93,68 +157,12 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
             }),
 
             GetOwnedElement: Public.StrongTyped(IElement, [], function () {
-                throw new Error("Not Implemented.");
+                return this.element;
             }),
             SetOwnedElement: Public.StrongTyped(__Void, [IElement], function (value) {
-                throw new Error("Not Implemented.");
+                this.element = value;
             }),
             OwnedElement: Public.Property({}),
-
-            //////////////////////////////////////////////////////
-
-            UpdateStyle: Protected.Virtual(function () {
-                throw new Error("Not Implemented.");
-            }),
-
-            visible: Protected(true),
-            GetVisible: Public(function () {
-                return this.visible;
-            }),
-            SetVisible: Public(function (value) {
-                this.visible = value;
-                this.UpdateStyle();
-            }),
-            Visible: Public.Property({}),
-
-            minSizeLimitation: Protected(MinSizeLimitation.NoLimit),
-            GetMinSizeLimitation: Public(function () {
-                return this.minSizeLimitation;
-            }),
-            SetMinSizeLimitation: Public(function (value) {
-                this.minSizeLimitation = value;
-                this.UpdateStyle();
-            }),
-            MinSizeLimitation: Public.Property({}),
-
-            margin: Protected(new Margin(-1, -1, -1, -1)),
-            GetMargin: Public(function () {
-                return this.margin;
-            }),
-            SetMargin: Public(function (value) {
-                this.margin = value;
-                this.UpdateStyle();
-            }),
-            Margin: Public.Property({}),
-
-            internalMargin: Protected(new Margin(-1, -1, -1, -1)),
-            GetInternalMargin: Public(function () {
-                return this.internalMargin;
-            }),
-            SetInternalMargin: Public(function (value) {
-                this.internalMargin = value;
-                this.UpdateStyle();
-            }),
-            InternalMargin: Public.Property({}),
-
-            preferredMinSize: Public(new Size(0, 0)),
-            GetPreferredMinSize: Public(function () {
-                return this.preferredMinSize;
-            }),
-            SetPreferredMinSize: Public(function (value) {
-                this.preferredMinSize = value;
-                this.UpdateStyle();
-            }),
-            PreferredMinSize: Public.Property({}),
 
             //////////////////////////////////////////////////////
 

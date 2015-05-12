@@ -189,3 +189,32 @@ window.addEventListener("mouseup", function (event) {
         bodyOnMouseUp(event);
     }
 }, false);
+
+/********************************************************************************
+Layout Embedder
+********************************************************************************/
+
+function CreateLayoutEmbedder(layout) {
+    var div = document.createElement("div");
+    div.style.display = "block";
+    div.style.position = "relative";
+    div.style.width = "120px";
+    div.style.height = "120px";
+    div.style.border = "1px solid blue";
+
+    var child = layout.BoundsHtmlElement;
+    div.appendChild(child);
+
+    child.style.left = "10px";
+    child.style.top = "10px";
+    child.style.width = "100px";
+    child.style.height = "100px";
+
+    div.addEventListener("resize", function (event) {
+        child.style.width = (GetPx(div.style.width) - 20) + "px";
+        child.style.height = (GetPx(div.style.height) - 20) + "px";
+    });
+
+    InstallDraggableHandlers(div);
+    return div;
+}

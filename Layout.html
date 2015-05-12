@@ -13,6 +13,10 @@
     <script src="/Script/Class.js"></script>
 </head>
 <body onload="javascript: SetupTabControl(tabControl);">
+    <script>
+        eval(Packages.Inject("Test", "Class", "GacUI.Types", "GacUI.Elements", "GacUI.Layout"));
+    </script>
+
     <div class="TabPageContainer" id="tabControl">
         <div class="TabButtonContainer">
             <div class="TabButton">Elements</div>
@@ -30,8 +34,12 @@
                     <th>Result</th>
                 </tr>
                 <tr>
-                    <th>BoundsLayout 100x100</th>
-                    <td></td>
+                    <th>SolidBorder (Rectangle)</th>
+                    <td id="cell_Elements_SolidBorder_Rectangle"></td>
+                </tr>
+                <tr>
+                    <th>SolidBorder (Ellipse)</th>
+                    <td id="cell_Elements_SolidBorder_Ellipse"></td>
                 </tr>
                 <tr>
                     <th>Experiment</th>
@@ -48,29 +56,64 @@
                 </tr>
             </table>
         </div>
+        <script>
+            function create_Elements_SolidBorder_Rectangle() {
+                var element = new SolidBorder();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Shape = ElementShape.Rectangle;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_SolidBorder_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder_Rectangle()));
+
+            function create_Elements_SolidBorder_Ellipse() {
+                var element = new SolidBorder();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Shape = ElementShape.Ellipse;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder_Ellipse()));
+        </script>
+
         <div class="TabPage">
             Bounds
         </div>
+        <script>
+        </script>
+
         <div class="TabPage">
             Table
         </div>
+        <script>
+        </script>
+
         <div class="TabPage">
             Stack
         </div>
+        <script>
+        </script>
+
         <div class="TabPage">
             SideAligned
         </div>
+        <script>
+        </script>
+
         <div class="TabPage">
             PartialView
         </div>
+        <script>
+        </script>
+
     </div>
 
     <script>
         InstallDraggableHandlers(box_Experiment);
-    </script>
-
-    <script>
-        eval(Packages.Inject("Test", "Class", "GacUI.Types", "GacUI.Elements", "GacUI.Layout"));
     </script>
 
     <script>
