@@ -22,7 +22,7 @@ API:
     });
 
     var package = Packages.Require(fullName);
-    eval(Packages.Inject(package1, package2, ...));
+    eval(Packages.Inject([package1, package2, ...], forceInject));
 */
 
 ///////////////////////////////////////////////////////////////
@@ -192,12 +192,8 @@ Object.defineProperty(Packages, "Inject", {
     configurable: false,
     enumerable: true,
     writable: false,
-    value: function () {
+    value: function (names, forceInject) {
         var symbols = {};
-        var names =
-            arguments.length === 1 && arguments[0] instanceof Array ?
-            arguments[0] :
-            arguments;
 
         for (var i = 0; i < names.length; i++) {
             var name = names[i];
@@ -212,11 +208,13 @@ Object.defineProperty(Packages, "Inject", {
 
         var code = "";
 
-        for (var i in names) {
-            var name = names[i];
-            var pkg = Packages.Require(name);
-            for (var j in pkg) {
-                code += "if (" + j + " !== undefined) throw new Error(\"Name \\\"" + j + "\\\" already exists.\");\r\n";
+        if (!forceInject) {
+            for (var i in names) {
+                var name = names[i];
+                var pkg = Packages.Require(name);
+                for (var j in pkg) {
+                    code += "if (" + j + " !== undefined) throw new Error(\"Name \\\"" + j + "\\\" already exists.\");\r\n";
+                }
             }
         }
 

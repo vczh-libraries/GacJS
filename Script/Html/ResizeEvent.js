@@ -10,14 +10,14 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
     eval(__injection__);
 
     var windowLoaded = false;
-    var accumulatedParentChangedEvent = [];
+    var accumulatedParentChangedEvents = [];
 
     window.addEventListener("load", function (event) {
         windowLoaded = true;
-        for (var i = 0; i < accumulatedParentChangedEvent.length; i++) {
-            accumulatedParentChangedEvent[i]();
+        for (var i = 0; i < accumulatedParentChangedEvents.length; i++) {
+            accumulatedParentChangedEvents[i]();
         }
-        accumulatedParentChangedEvent = [];
+        accumulatedParentChangedEvents = [];
     }, false);
 
     function AttachParentChangedEvent(element, callback) {
@@ -39,12 +39,12 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
 
             var observer = new MutationObserver(function (records) {
                 if (records.filter(Filter).length > 0) {
-                    if (windowLoaded) {
+                    if (windowLoaded === true) {
                         RaiseEvent();
                     }
                     else {
-                        if (accumulatedParentChangedEvent.indexOf(callback) === -1) {
-                            accumulatedParentChangedEvent.push(callback);
+                        if (accumulatedParentChangedEvents.indexOf(callback) === -1) {
+                            accumulatedParentChangedEvents.push(callback);
                         }
                     }
                 }
@@ -55,9 +55,11 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
     }
 
     function DetachParentChangedEvent(element, callback) {
-        var index = accumulatedParentChangedEvent.indexOf(callback);
-        if (index !== -1) {
-            accumulatedParentChangedEvent.splice(index, 1);
+        if (windowLoaded === false) {
+            var index = accumulatedParentChangedEvents.indexOf(callback);
+            if (index !== -1) {
+                accumulatedParentChangedEvents.splice(index, 1);
+            }
         }
 
         DetachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {

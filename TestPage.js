@@ -1,10 +1,12 @@
-eval(Packages.Inject(
-    "Test",
-    "Class",
-    "Html.ResizeEvent",
-    "GacUI.Types",
-    "GacUI.Elements",
-    "GacUI.Layout")
+eval(
+    Packages.Inject([
+        "Test",
+        "Class",
+        "Html.ResizeEvent",
+        "GacUI.Types",
+        "GacUI.Elements",
+        "GacUI.Layout"],
+        true)
     );
 
 /********************************************************************************
