@@ -18,6 +18,8 @@ This project's priority is not very high. The first step is to re-implement GacU
     * Enum
     * Unit test for Class.js in **[Class.html](https://github.com/vczh-libraries/GacJS/blob/master/Class.html)**.
 * **Razor.js**
+* **[Html/Events.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Events.js)** : A general custom event framework.
+* **[Html/ResizeEvent.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/ResizeEvent.js)** : ParentChanged and Resize custom event that works on every elements.
 * **[GacUI/Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
 * **[GacUI/Elements.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements.js)** : GacUI Predefined Graphic Elements.
 * **[GacUI/Layout.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout.js)** : GacUI Predefined Layout Components.
