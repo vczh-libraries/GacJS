@@ -9,6 +9,17 @@ API:
 Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
     eval(__injection__);
 
+    var windowLoaded = false;
+    var accumulatedParentChangedEvent = [];
+
+    window.addEventListener("load", function (event) {
+        windowLoaded = true;
+        for (var i = 0; i < accumulatedParentChangedEvent.length; i++) {
+            accumulatedParentChangedEvent[i]();
+        }
+        accumulatedParentChangedEvent = [];
+    }, false);
+
     function AttachParentChangedEvent(element, callback) {
         AttachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {
 
@@ -28,7 +39,14 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
 
             var observer = new MutationObserver(function (records) {
                 if (records.filter(Filter).length > 0) {
-                    RaiseEvent();
+                    if (windowLoaded) {
+                        RaiseEvent();
+                    }
+                    else {
+                        if (accumulatedParentChangedEvent.indexOf(callback) === -1) {
+                            accumulatedParentChangedEvent.push(callback);
+                        }
+                    }
                 }
             });
             observer.observe(document.body, { childList: true, subtree: true });
@@ -37,6 +55,11 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
     }
 
     function DetachParentChangedEvent(element, callback) {
+        var index = accumulatedParentChangedEvent.indexOf(callback);
+        if (index !== -1) {
+            accumulatedParentChangedEvent.splice(index, 1);
+        }
+
         DetachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {
             element.gacjs_BodySubTreeObserver.disconnect();
             delete element.gacjs_BodySubTreeObserver;

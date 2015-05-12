@@ -13,7 +13,7 @@
     <script src="/Script/GacUI/Types.js"></script>
     <script src="/Script/Class.js"></script>
 </head>
-<body onload="javascript: SetupTabControl(tabControl);">
+<body>
     <script src="/TestPage.js"></script>
 
     <div class="TabPageContainer" id="tabControl">
@@ -112,6 +112,7 @@
     </div>
 
     <script>
+        SetupTabControl(tabControl);
         InstallDraggableHandlers(box_Experiment);
     </script>
 
