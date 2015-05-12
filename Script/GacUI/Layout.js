@@ -37,6 +37,17 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
             ContainerHtmlElement: Public.Property({}),
 
             __Constructor: Public(function () {
+                this.boundsHtmlElement = document.createElement("div");
+                this.boundsHtmlElement.style.display = "block";
+                this.boundsHtmlElement.style.position = "absolute";
+
+                this.graphHtmlElement = document.createElement("div");
+                this.boundsHtmlElement.appendChild(this.graphHtmlElement);
+                this.graphHtmlElement.style.display = "block";
+                this.graphHtmlElement.style.position = "relative";
+                this.graphHtmlElement.style.width = "100%";
+                this.graphHtmlElement.style.height = "100%";
+                this.graphHtmlElement.style.overflow = "hidden";
             }),
 
             //////////////////////////////////////////////////////
@@ -105,7 +116,7 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
             GetParent: Public.StrongTyped(Layout, [], function () {
                 return this.parent;
             }),
-            internal_SetParent: Public.StrongTyped(__Void, [Layout], function (value) {
+            gacjs_SetParent: Public.StrongTyped(__Void, [Layout], function (value) {
                 this.parent = value;
             }),
             Parent: Public.Property({ readonly: true }),
@@ -120,7 +131,7 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
                     return false;
                 }
                 this.children.push(child);
-                child.internal_SetParent(this.__ExternalReference);
+                child.gacjs_SetParent(this.__ExternalReference);
                 return true;
             }),
             InsertChild: Public.StrongTyped(__Boolean, [__Number, Layout], function (index, child) {
@@ -131,7 +142,7 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
                     return false;
                 }
                 this.children.splice(index, 0, child);
-                child.internal_SetParent(this.__ExternalReference);
+                child.gacjs_SetParent(this.__ExternalReference);
                 return true;
             }),
             RemoveChild: Public.StrongTyped(__Boolean, [Layout], function (child) {
@@ -140,7 +151,7 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
                     return false;
                 }
                 this.children.splice(index, 1);
-                child.internal_SetParent(null);
+                child.gacjs_SetParent(null);
                 return true;
             }),
             MoveChild: Public.StrongTyped(__Boolean, [Layout, __Number], function (child, newIndex) {
@@ -160,7 +171,13 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
                 return this.element;
             }),
             SetOwnedElement: Public.StrongTyped(__Void, [IElement], function (value) {
+                if (this.element !== null) {
+                    this.element.gacjs_UninstallElement(this.graphHtmlElement);
+                }
                 this.element = value;
+                if (this.element !== null) {
+                    this.element.gacjs_InstallElement(this.graphHtmlElement);
+                }
             }),
             OwnedElement: Public.Property({}),
 

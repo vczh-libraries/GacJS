@@ -707,7 +707,7 @@ Packages.Define("Class", function () {
                             }
                         }
                         else if (member instanceof __PublicMember) {
-                            CopyReferencableMember(target, source, memberName, member, false);
+                            CopyReferencableMember(target, source, memberName, member, true);
                         }
                     })();
                 }

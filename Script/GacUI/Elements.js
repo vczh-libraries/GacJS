@@ -6,6 +6,8 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
     }
 
     var IElement = Class("vl::presentation::elements::IGuiGraphicsElement", {
+        gacjs_InstallElement: Public.Abstract(),
+        gacjs_UninstallElement: Public.Abstract(),
     });
 
     var ElementShape = Enum("vl::presentation::elements::ElementShape", {
@@ -19,11 +21,33 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var SolidBorder = Class(FQN("SolidBorder"), IElement, {
 
+        htmlElement: Protected(null),
+        color: Protected(new Color()),
+        shape: Protected(ElementShape.Rectangle),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            this.htmlElement.borderColor = this.color.__ToString();
         }),
 
-        color: Protected(new Color()),
+        gacjs_InstallElement: Public.Override(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Override(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "calc(100% - 2px)";
+            this.htmlElement.style.height = "calc(100% - 2px)";
+            this.htmlElement.style.borderStyle = "solid";
+            this.htmlElement.style.borderWidth = "1px";
+            this.UpdateStyle();
+        }),
+
         GetColor: Public(function () {
             return this.color;
         }),
@@ -33,7 +57,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Color: Public.Property({}),
 
-        shape: Protected(ElementShape.Rectangle),
         GetShape: Public(function () {
             return this.shape;
         }),
@@ -448,6 +471,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     return {
         IElement: IElement,
+        ElementShape: ElementShape,
         SolidBorder: SolidBorder,
         RoundBorder: RoundBorder,
         ThreeDBorder: ThreeDBorder,

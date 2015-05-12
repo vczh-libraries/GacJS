@@ -213,7 +213,7 @@ function CreateLayoutEmbedder(layout) {
     div.addEventListener("resize", function (event) {
         child.style.width = (GetPx(div.style.width) - 20) + "px";
         child.style.height = (GetPx(div.style.height) - 20) + "px";
-    });
+    }, false);
 
     InstallDraggableHandlers(div);
     return div;
