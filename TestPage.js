@@ -209,6 +209,8 @@ function CreateLayoutEmbedder(layout) {
     var div = document.createElement("div");
     div.style.display = "block";
     div.style.position = "relative";
+    div.style.minWidth = "30px";
+    div.style.minHeight = "30px";
     div.style.width = "120px";
     div.style.height = "120px";
     div.style.border = "1px solid blue";
