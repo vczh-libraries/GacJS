@@ -11,11 +11,35 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
 
     function AttachParentChangedEvent(element, callback) {
         AttachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {
+
+            function Filter(record) {
+                for (var i = 0; i < record.addedNodes.length; i++) {
+                    if (record.addedNodes[i] === element) {
+                        return true;
+                    }
+                }
+                for (var i = 0; i < record.removedNodes.length; i++) {
+                    if (record.removedNodes[i] === element) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            var observer = new MutationObserver(function (records) {
+                if (records.filter(Filter).length > 0) {
+                    RaiseEvent();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            element.gacjs_BodySubTreeObserver = observer;
         });
     }
 
     function DetachParentChangedEvent(element, callback) {
         DetachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {
+            element.gacjs_BodySubTreeObserver.disconnect();
+            delete element.gacjs_BodySubTreeObserver;
         });
     }
 

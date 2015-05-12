@@ -220,12 +220,12 @@ function CreateLayoutEmbedder(layout) {
     child.style.height = "100px";
     InstallDraggableHandlers(div);
 
-    div.addEventListener("click", function (event) {
+    AttachParentChangedEvent(div, function () {
         AttachResizeEvent(div, function () {
             child.style.width = (GetPx(div.style.width) - 20) + "px";
             child.style.height = (GetPx(div.style.height) - 20) + "px";
         });
-        div.removeEventListener("click", arguments.callee, false);
+        DetachParentChangedEvent(div, arguments.callee);
     }, false);
     return div;
 }
