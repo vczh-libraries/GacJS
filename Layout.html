@@ -41,8 +41,48 @@
                     <td id="cell_Elements_SolidBorder_Ellipse"></td>
                 </tr>
                 <tr>
+                    <th>3DBorder</th>
+                    <td id="cell_Elements_3DBorder"></td>
+                </tr>
+                <tr>
+                    <th>3DSplitter</th>
+                    <td id="cell_Elements_3DSplitter"></td>
+                </tr>
+                <tr>
                     <th>RoundBorder</th>
                     <td id="cell_Elements_RoundBorder"></td>
+                </tr>
+                <tr>
+                    <th>SolidBackground (Rectangle)</th>
+                    <td id="cell_Elements_SolidBackground_Rectangle"></td>
+                </tr>
+                <tr>
+                    <th>SolidBackground (Ellipse)</th>
+                    <td id="cell_Elements_SolidBackground_Ellipse"></td>
+                </tr>
+                <tr>
+                    <th>GradientBackground</th>
+                    <td id="cell_Elements_GradientBackground"></td>
+                </tr>
+                <tr>
+                    <th>SolidLabel</th>
+                    <td id="cell_Elements_SolidLabel"></td>
+                </tr>
+                <tr>
+                    <th>ImageFrame</th>
+                    <td id="cell_Elements_ImageFrame"></td>
+                </tr>
+                <tr>
+                    <th>Polygon</th>
+                    <td id="cell_Elements_Polygon"></td>
+                </tr>
+                <tr>
+                    <th>ColorizedText</th>
+                    <td id="cell_Elements_ColorizedText"></td>
+                </tr>
+                <tr>
+                    <th>Document</th>
+                    <td id="cell_Elements_Document"></td>
                 </tr>
                 <tr>
                     <th>Experiment</th>
@@ -92,6 +132,28 @@
                 return layout;
             }
             cell_Elements_RoundBorder.appendChild(CreateLayoutEmbedder(create_Elements_RoundBorder()));
+
+            function create_Elements_SolidBackground_Rectangle() {
+                var element = new SolidBackground();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Shape = ElementShape.Description.Rectangle;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_SolidBackground_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground_Rectangle()));
+
+            function create_Elements_SolidBackground_Ellipse() {
+                var element = new SolidBackground();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Shape = ElementShape.Description.Ellipse;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_SolidBackground_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground_Ellipse()));
         </script>
 
         <div class="TabPage">

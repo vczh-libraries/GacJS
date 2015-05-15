@@ -222,25 +222,53 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var SolidBackground = Class(FQN("SolidBackground"), IElement, {
 
+        htmlElement: Protected(null),
+        color: Protected(new Color()),
+        shape: Protected(ElementShape.Description.Rectangle),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            this.htmlElement.style.backgroundColor = this.color.__ToString();
+            switch (this.shape) {
+                case ElementShape.Description.Rectangle:
+                    this.htmlElement.style.borderRadius = "";
+                    break;
+                case ElementShape.Description.Ellipse:
+                    this.htmlElement.style.borderRadius = "50%";
+                    break;
+            }
         }),
 
-        color: Protected(new Color()),
-        GetColor: Public(function () {
+        gacjs_InstallElement: Public.Override(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Override(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.htmlElement.style.backgroundStyle = "solid";
+            this.UpdateStyle();
+        }),
+
+        GetColor: Public.StrongTyped(Color, [], function () {
             return this.color;
         }),
-        SetColor: Public(function (value) {
+        SetColor: Public.StrongTyped(__Void, [Color], function (value) {
             this.color = value;
             this.UpdateStyle();
         }),
         Color: Public.Property({}),
 
-        shape: Protected(ElementShape.Description.Rectangle),
-        GetShape: Public(function () {
+        GetShape: Public.StrongTyped(ElementShape, [], function () {
             return this.shape;
         }),
-        SetShape: Public(function (value) {
+        SetShape: Public.StrongTyped(__Void, [ElementShape], function (value) {
             this.shape = value;
             this.UpdateStyle();
         }),
