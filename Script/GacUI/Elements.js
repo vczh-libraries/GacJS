@@ -288,50 +288,94 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var GradientBackground = Class(FQN("GradientBackground"), IElement, {
 
+        color1: Protected(new Color()),
+        color2: Protected(new Color()),
+        direction: Protected(GradientBackgroundrDirection.Description.Horizontal),
+        shape: Protected(ElementShape.Description.Rectangle),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            var colorStop1 = this.color1.__ToString();
+            var colorStop2 = this.color2.__ToString();
+            switch (this.direction) {
+                case GradientBackgroundrDirection.Description.Horizontal:
+                    var side = "right";
+                    break;
+                case GradientBackgroundrDirection.Description.Vertical:
+                    var side = "bottom";
+                    break;
+                case GradientBackgroundrDirection.Description.Slash:
+                    var side = "left bottom";
+                    break;
+                case GradientBackgroundrDirection.Description.Backslash:
+                    var side = "right bottom";
+                    break;
+            }
+            this.htmlElement.style.background = "linear-gradient(to " + side + ", " + colorStop1 + " 0%, " + colorStop2 + " 100%)";
+            switch (this.shape) {
+                case ElementShape.Description.Rectangle:
+                    this.htmlElement.style.borderRadius = "";
+                    break;
+                case ElementShape.Description.Ellipse:
+                    this.htmlElement.style.borderRadius = "50%";
+                    break;
+            }
         }),
 
-        color1: Protected(new Color()),
-        GetColor1: Public(function () {
+        gacjs_InstallElement: Public.Override(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Override(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.htmlElement.style.backgroundStyle = "solid";
+            this.UpdateStyle();
+        }),
+
+        GetColor1: Public.StrongTyped(Color, [], function () {
             return this.color1;
         }),
-        SetColor1: Public(function (value) {
+        SetColor1: Public.StrongTyped(__Void, [Color], function (value) {
             this.color1 = value;
             this.UpdateStyle();
         }),
         Color1: Public.Property({}),
 
-        color2: Protected(new Color()),
-        GetColor2: Public(function () {
+        GetColor2: Public.StrongTyped(Color, [], function () {
             return this.color2;
         }),
-        SetColor2: Public(function (value) {
+        SetColor2: Public.StrongTyped(__Void, [Color], function (value) {
             this.color2 = value;
             this.UpdateStyle();
         }),
         Color2: Public.Property({}),
 
-        SetColors: Public(function (value1, value2) {
+        SetColors: Public.StrongTyped(__Void, [Color, Color], function (value1, value2) {
             this.color1 = value1;
             this.color2 = value2;
             this.UpdateStyle();
         }),
 
-        direction: Protected(GradientBackgroundrDirection.Horizontal),
-        GetDirection: Public(function () {
+        GetDirection: Public.StrongTyped(GradientBackgroundrDirection, [], function () {
             return this.direction;
         }),
-        SetDirection: Public(function (value) {
+        SetDirection: Public.StrongTyped(__Void, [GradientBackgroundrDirection], function (value) {
             this.direction = value;
             this.UpdateStyle();
         }),
+        Direction: Public.Property({}),
 
-        shape: Protected(ElementShape.Description.Rectangle),
-        GetShape: Public(function () {
+        GetShape: Public.StrongTyped(ElementShape, [], function () {
             return this.shape;
         }),
-        SetShape: Public(function (value) {
+        SetShape: Public.StrongTyped(__Void, [ElementShape], function (value) {
             this.shape = value;
             this.UpdateStyle();
         }),

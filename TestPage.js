@@ -214,6 +214,8 @@ function CreateLayoutEmbedder(layout) {
     div.style.width = "120px";
     div.style.height = "120px";
     div.style.border = "1px solid blue";
+    div.style.float = "left";
+    div.style.margin = "10px 10px 10px 10px";
 
     var child = layout.BoundsHtmlElement;
     div.appendChild(child);

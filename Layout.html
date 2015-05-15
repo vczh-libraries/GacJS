@@ -31,60 +31,56 @@
                 <tr>
                     <th>Description</th>
                     <th>Result</th>
+                    <th>Description</th>
+                    <th>Result</th>
+                    <th>Description</th>
+                    <th>Result</th>
                 </tr>
                 <tr>
                     <th>SolidBorder (Rectangle)</th>
                     <td id="cell_Elements_SolidBorder_Rectangle"></td>
-                </tr>
-                <tr>
-                    <th>SolidBorder (Ellipse)</th>
-                    <td id="cell_Elements_SolidBorder_Ellipse"></td>
-                </tr>
-                <tr>
-                    <th>3DBorder</th>
-                    <td id="cell_Elements_3DBorder"></td>
-                </tr>
-                <tr>
-                    <th>3DSplitter</th>
-                    <td id="cell_Elements_3DSplitter"></td>
-                </tr>
-                <tr>
-                    <th>RoundBorder</th>
-                    <td id="cell_Elements_RoundBorder"></td>
-                </tr>
-                <tr>
                     <th>SolidBackground (Rectangle)</th>
                     <td id="cell_Elements_SolidBackground_Rectangle"></td>
-                </tr>
-                <tr>
-                    <th>SolidBackground (Ellipse)</th>
-                    <td id="cell_Elements_SolidBackground_Ellipse"></td>
-                </tr>
-                <tr>
-                    <th>GradientBackground</th>
-                    <td id="cell_Elements_GradientBackground"></td>
-                </tr>
-                <tr>
                     <th>SolidLabel</th>
                     <td id="cell_Elements_SolidLabel"></td>
                 </tr>
                 <tr>
+                    <th>SolidBorder (Ellipse)</th>
+                    <td id="cell_Elements_SolidBorder_Ellipse"></td>
+                    <th>SolidBackground (Ellipse)</th>
+                    <td id="cell_Elements_SolidBackground_Ellipse"></td>
                     <th>ImageFrame</th>
                     <td id="cell_Elements_ImageFrame"></td>
                 </tr>
                 <tr>
+                    <th>3DBorder</th>
+                    <td id="cell_Elements_3DBorder"></td>
+                    <th>GradientBackground (Horizontal)</th>
+                    <td id="cell_Elements_GradientBackground_Horizontal"></td>
                     <th>Polygon</th>
                     <td id="cell_Elements_Polygon"></td>
                 </tr>
                 <tr>
+                    <th>3DSplitter (Horizontal)</th>
+                    <td id="cell_Elements_3DSplitter_Horizontal"></td>
+                    <th>GradientBackground (Vertical)</th>
+                    <td id="cell_Elements_GradientBackground_Vertical"></td>
                     <th>ColorizedText</th>
                     <td id="cell_Elements_ColorizedText"></td>
                 </tr>
                 <tr>
+                    <th>3DSplitter (Vertical)</th>
+                    <td id="cell_Elements_3DSplitter_Vertical"></td>
+                    <th>GradientBackground (Slash)</th>
+                    <td id="cell_Elements_GradientBackground_Slash"></td>
                     <th>Document</th>
                     <td id="cell_Elements_Document"></td>
                 </tr>
                 <tr>
+                    <th>RoundBorder</th>
+                    <td id="cell_Elements_RoundBorder"></td>
+                    <th>GradientBackground (Backslash)</th>
+                    <td id="cell_Elements_GradientBackground_Backslash"></td>
                     <th>Experiment</th>
                     <td>
                         <div id="box_Experiment" style="display: block; position: relative; left: 0px; top: 0px; width: 100px; height: 100px; min-width: 50px; min-height: 50px;">
@@ -100,27 +96,31 @@
             </table>
         </div>
         <script>
-            function create_Elements_SolidBorder_Rectangle() {
+            function create_Elements_SolidBorder(shape) {
                 var element = new SolidBorder();
                 element.Color = new Color(0, 128, 0, 255);
-                element.Shape = ElementShape.Description.Rectangle;
+                element.Shape = shape;
 
                 var layout = new Layout();
                 layout.OwnedElement = element;
                 return layout;
             }
-            cell_Elements_SolidBorder_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder_Rectangle()));
+            cell_Elements_SolidBorder_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Rectangle)));
+            cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Ellipse)));
 
-            function create_Elements_SolidBorder_Ellipse() {
-                var element = new SolidBorder();
+            function create_Elements_SolidBackground(shape) {
+                var element = new SolidBackground();
                 element.Color = new Color(0, 128, 0, 255);
-                element.Shape = ElementShape.Description.Ellipse;
+                element.Shape = shape;
 
                 var layout = new Layout();
                 layout.OwnedElement = element;
                 return layout;
             }
-            cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder_Ellipse()));
+            cell_Elements_SolidBackground_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Rectangle)));
+            cell_Elements_SolidBackground_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Ellipse)));
+
+            ////////////////////////////////////////////////////////////////////////////////////////
 
             function create_Elements_RoundBorder() {
                 var element = new RoundBorder();
@@ -133,27 +133,26 @@
             }
             cell_Elements_RoundBorder.appendChild(CreateLayoutEmbedder(create_Elements_RoundBorder()));
 
-            function create_Elements_SolidBackground_Rectangle() {
-                var element = new SolidBackground();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Shape = ElementShape.Description.Rectangle;
+            ////////////////////////////////////////////////////////////////////////////////////////
+
+            function create_Elements_GradientBackground(direction, shape) {
+                var element = new GradientBackground();
+                element.SetColors(new Color(0, 128, 0, 255), new Color(0, 0, 128, 255));
+                element.Direction = direction;
+                element.Shape = shape;
 
                 var layout = new Layout();
                 layout.OwnedElement = element;
                 return layout;
             }
-            cell_Elements_SolidBackground_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground_Rectangle()));
-
-            function create_Elements_SolidBackground_Ellipse() {
-                var element = new SolidBackground();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Shape = ElementShape.Description.Ellipse;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-            cell_Elements_SolidBackground_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground_Ellipse()));
+            cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Rectangle)));
+            cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Ellipse)));
+            cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Rectangle)));
+            cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Ellipse)));
+            cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Rectangle)));
+            cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Ellipse)));
+            cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Rectangle)));
+            cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Ellipse)));
         </script>
 
         <div class="TabPage">

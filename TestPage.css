@@ -30,9 +30,14 @@ body {
 
 .TabPage td {
     text-align: left;
-    padding: 10px;
     border-right: 1px solid gray;
     border-bottom: 1px solid gray;
+}
+
+.TabPage td:after {
+    content: " ";
+    display: block;
+    clear: both;
 }
 
 .TabButtonContainer:after {
