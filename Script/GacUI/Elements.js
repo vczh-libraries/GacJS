@@ -181,41 +181,44 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var ThreeDSplitter = Class(FQN("3DSplitter"), IElement, {
 
+        splitterHtmlElement: Protected(null),
         color1: Protected(new Color()),
         color2: Protected(new Color()),
         direction: Protected(ThreeDSplitterDirection.Description.Horizontal),
 
         UpdateStyle: Protected(function () {
-            this.htmlElement.style.borderLeftColor = this.color1.__ToString();
-            this.htmlElement.style.borderTopColor = this.color1.__ToString();
-            this.htmlElement.style.borderRightColor = this.color2.__ToString();
-            this.htmlElement.style.borderBottomColor = this.color2.__ToString();
+            this.splitterHtmlElement.style.borderLeftColor = this.color1.__ToString();
+            this.splitterHtmlElement.style.borderTopColor = this.color1.__ToString();
+            this.splitterHtmlElement.style.borderRightColor = this.color2.__ToString();
+            this.splitterHtmlElement.style.borderBottomColor = this.color2.__ToString();
             switch (this.direction) {
                 case ThreeDSplitterDirection.Description.Horizontal:
-                    this.htmlElement.style.width = "calc(100% - 2px)";
-                    this.htmlElement.style.height = "0";
-                    this.htmlElement.style.marginLeft = "0";
-                    this.htmlElement.style.marginRight = "0";
-                    this.htmlElement.style.marginTop = "calc(50% - 1px)";
-                    this.htmlElement.style.marginBottom = "calc(50% - 1px)";
+                    this.htmlElement.style.flexDirection = "column";
+                    this.splitterHtmlElement.style.width = "calc(100% - 2px)";
+                    this.splitterHtmlElement.style.height = "0";
                     break;
                 case ThreeDSplitterDirection.Description.Vertical:
-                    this.htmlElement.style.width = "0";
-                    this.htmlElement.style.height = "calc(100% - 2px)";
-                    this.htmlElement.style.marginLeft = "calc(50% - 1px)";
-                    this.htmlElement.style.marginRight = "calc(50% - 1px)";
-                    this.htmlElement.style.marginTop = "0";
-                    this.htmlElement.style.marginBottom = "0";
+                    this.htmlElement.style.flexDirection = "row";
+                    this.splitterHtmlElement.style.width = "0";
+                    this.splitterHtmlElement.style.height = "calc(100% - 2px)";
                     break;
             }
         }),
 
         __Constructor: Public(function () {
             this.htmlElement = document.createElement("div");
-            this.htmlElement.style.display = "block";
+            this.htmlElement.style.display = "flex";
+            this.htmlElement.style.justifyContent = "center";
             this.htmlElement.style.position = "relative";
-            this.htmlElement.style.borderStyle = "solid";
-            this.htmlElement.style.borderWidth = "1px";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+
+            this.splitterHtmlElement = document.createElement("div");
+            this.splitterHtmlElement.style.display = "block";
+            this.splitterHtmlElement.style.position = "relative";
+            this.splitterHtmlElement.style.borderStyle = "solid";
+            this.splitterHtmlElement.style.borderWidth = "1px";
+            this.htmlElement.appendChild(this.splitterHtmlElement);
             this.UpdateStyle();
         }),
 
