@@ -6,8 +6,16 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
     }
 
     var IElement = Class("vl::presentation::elements::IGuiGraphicsElement", {
-        gacjs_InstallElement: Public.Abstract(),
-        gacjs_UninstallElement: Public.Abstract(),
+
+        htmlElement: Protected(null),
+
+        gacjs_InstallElement: Public.Virtual(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Virtual(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
     });
 
     var ElementShape = Enum("vl::presentation::elements::ElementShape", {
@@ -21,7 +29,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var SolidBorder = Class(FQN("SolidBorder"), IElement, {
 
-        htmlElement: Protected(null),
         color: Protected(new Color()),
         shape: Protected(ElementShape.Description.Rectangle),
 
@@ -35,14 +42,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
                     this.htmlElement.style.borderRadius = "50%";
                     break;
             }
-        }),
-
-        gacjs_InstallElement: Public.Override(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Override(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
         }),
 
         __Constructor: Public(function () {
@@ -81,21 +80,12 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var RoundBorder = Class(FQN("RoundBorder"), IElement, {
 
-        htmlElement: Protected(null),
         color: Protected(new Color()),
         radius: Protected(0.0),
 
         UpdateStyle: Protected(function () {
             this.htmlElement.style.borderColor = this.color.__ToString();
             this.htmlElement.style.borderRadius = this.radius + "px";
-        }),
-
-        gacjs_InstallElement: Public.Override(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Override(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
         }),
 
         __Constructor: Public(function () {
@@ -134,7 +124,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var ThreeDBorder = Class(FQN("3DBorder"), IElement, {
 
-        HtmlElement: Protected(null),
         color1: Protected(new Color()),
         color2: Protected(new Color()),
 
@@ -143,14 +132,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.htmlElement.style.borderTopColor = this.color1.__ToString();
             this.htmlElement.style.borderRightColor = this.color2.__ToString();
             this.htmlElement.style.borderBottomColor = this.color2.__ToString();
-        }),
-
-        gacjs_InstallElement: Public.Override(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Override(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
         }),
 
         __Constructor: Public(function () {
@@ -200,7 +181,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var ThreeDSplitter = Class(FQN("3DSplitter"), IElement, {
 
-        htmlElement: Protected(null),
         color1: Protected(new Color()),
         color2: Protected(new Color()),
         direction: Protected(ThreeDSplitterDirection.Description.Horizontal),
@@ -228,14 +208,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
                     this.htmlElement.style.marginBottom = "0";
                     break;
             }
-        }),
-
-        gacjs_InstallElement: Public.Override(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Override(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
         }),
 
         __Constructor: Public(function () {
@@ -287,7 +259,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var SolidBackground = Class(FQN("SolidBackground"), IElement, {
 
-        htmlElement: Protected(null),
         color: Protected(new Color()),
         shape: Protected(ElementShape.Description.Rectangle),
 
@@ -301,14 +272,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
                     this.htmlElement.style.borderRadius = "50%";
                     break;
             }
-        }),
-
-        gacjs_InstallElement: Public.Override(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Override(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
         }),
 
         __Constructor: Public(function () {
@@ -386,14 +349,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             }
         }),
 
-        gacjs_InstallElement: Public.Override(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Override(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
-        }),
-
         __Constructor: Public(function () {
             this.htmlElement = document.createElement("div");
             this.htmlElement.style.display = "block";
@@ -453,11 +408,28 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var SolidLabel = Class(FQN("SolidLabel"), IElement, {
 
+        color: Protected(new Color()),
+        font: Protected(new FontProperties()),
+        horizontalAlignment: Protected(Alignment.Description.Left),
+        verticalAlignment: Protected(Alignment.Description.Top),
+        wrapLine: Protected(false),
+        ellipse: Protected(false),
+        multiline: Protected(false),
+        wrapLineHeightCalculation: Protected(false),
+
         UpdateStyle: Protected(function () {
             throw new Error("Not Implemented.");
         }),
 
-        color: Protected(new Color()),
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.UpdateStyle();
+        }),
+
         GetColor: Public(function () {
             return this.color;
         }),
@@ -467,7 +439,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Color: Public.Property({}),
 
-        font: Protected(new FontProperties()),
         GetFont: Public(function () {
             return this.font;
         }),
@@ -477,7 +448,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Font: Public.Property({}),
 
-        horizontalAlignment: Protected(Alignment.Left),
         GetHorizontalAlignment: Public(function () {
             return this.horizontalAlignment;
         }),
@@ -487,7 +457,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         HorizontalAlignment: Public.Property({}),
 
-        verticalAlignment: Protected(Alignment.Top),
         GetVerticalAlignment: Public(function () {
             return this.verticalAlignment;
         }),
@@ -503,7 +472,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.UpdateStyle();
         }),
 
-        wrapLine: Protected(false),
         GetWrapLine: Public(function () {
             return this.wrapLine;
         }),
@@ -513,7 +481,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         WrapLine: Public.Property({}),
 
-        ellipse: Protected(false),
         GetEllipse: Public(function () {
             return this.ellipse;
         }),
@@ -523,7 +490,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Ellipse: Public.Property({}),
 
-        multiline: Protected(false),
         GetMultiline: Public(function () {
             return this.multiline;
         }),
@@ -533,7 +499,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Multiline: Public.Property({}),
 
-        wrapLineHeightCalculation: Protected(false),
         GetWrapLineHeightCalculation: Public(function () {
             return this.wrapLineHeightCalculation;
         }),
@@ -550,11 +515,25 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var ImageFrameElement = Class(FQN("ImageFrame"), IElement, {
 
+        image: Protected(""),
+        horizontalAlignment: Protected(Alignment.Description.Left),
+        verticalAlignment: Protected(Alignment.Description.Top),
+        stretch: Protected(false),
+        enabled: Protected(false),
+
         UpdateStyle: Protected(function () {
             throw new Error("Not Implemented.");
         }),
 
-        image: Protected(""),
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.UpdateStyle();
+        }),
+
         GetImage: Public(function () {
             return this.image;
         }),
@@ -564,7 +543,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Image: Public.Property({}),
 
-        horizontalAlignment: Protected(Alignment.Left),
         GetHorizontalAlignment: Public(function () {
             return this.horizontalAlignment;
         }),
@@ -574,7 +552,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         HorizontalAlignment: Public.Property({}),
 
-        verticalAlignment: Protected(Alignment.Top),
         GetVerticalAlignment: Public(function () {
             return this.verticalAlignment;
         }),
@@ -590,7 +567,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.UpdateStyle();
         }),
 
-        stretch: Protected(false),
         GetStretch: Public(function () {
             return this.stretch;
         }),
@@ -600,7 +576,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
         Stretch: Public.Property({}),
 
-        enabled: Protected(false),
         GetEnabled: Public(function () {
             return this.enabled;
         }),
@@ -616,6 +591,15 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
     ********************************************************************************/
 
     var PolygonElement = Class(FQN("Polygon"), IElement, {
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.UpdateStyle();
+        }),
     });
 
     /********************************************************************************
@@ -623,6 +607,15 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
     ********************************************************************************/
 
     var ColorizedTextElement = Class(FQN("ColorizedText"), IElement, {
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.UpdateStyle();
+        }),
     });
 
     /********************************************************************************
@@ -630,6 +623,15 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
     ********************************************************************************/
 
     var DocumentElement = Class(FQN("Document"), IElement, {
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "100%";
+            this.htmlElement.style.height = "100%";
+            this.UpdateStyle();
+        }),
     });
 
     /********************************************************************************
