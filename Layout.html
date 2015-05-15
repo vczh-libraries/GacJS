@@ -135,6 +135,30 @@
 
             ////////////////////////////////////////////////////////////////////////////////////////
 
+            function create_Elements_3DBorder() {
+                var element = new ThreeDBorder();
+                element.SetColors(new Color(0, 255, 0, 255), new Color(0, 64, 0, 255));
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_3DBorder.appendChild(CreateLayoutEmbedder(create_Elements_3DBorder()));
+
+            function create_Elements_3DSplitter(direction) {
+                var element = new ThreeDSplitter();
+                element.SetColors(new Color(0, 255, 0, 255), new Color(0, 64, 0, 255));
+                element.Direction = direction;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_3DSplitter_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Horizontal)));
+            cell_Elements_3DSplitter_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Vertical)));
+
+            ////////////////////////////////////////////////////////////////////////////////////////
+
             function create_Elements_GradientBackground(direction, shape) {
                 var element = new GradientBackground();
                 element.SetColors(new Color(0, 128, 0, 255), new Color(0, 0, 128, 255));

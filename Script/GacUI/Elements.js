@@ -134,31 +134,55 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var ThreeDBorder = Class(FQN("3DBorder"), IElement, {
 
+        HtmlElement: Protected(null),
+        color1: Protected(new Color()),
+        color2: Protected(new Color()),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            this.htmlElement.style.borderLeftColor = this.color1.__ToString();
+            this.htmlElement.style.borderTopColor = this.color1.__ToString();
+            this.htmlElement.style.borderRightColor = this.color2.__ToString();
+            this.htmlElement.style.borderBottomColor = this.color2.__ToString();
         }),
 
-        color1: Protected(new Color()),
-        GetColor1: Public(function () {
+        gacjs_InstallElement: Public.Override(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Override(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "calc(100% - 2px)";
+            this.htmlElement.style.height = "calc(100% - 2px)";
+            this.htmlElement.style.borderStyle = "solid";
+            this.htmlElement.style.borderWidth = "1px";
+            this.UpdateStyle();
+        }),
+
+        GetColor1: Public.StrongTyped(Color, [], function () {
             return this.color1;
         }),
-        SetColor1: Public(function (value) {
+        SetColor1: Public.StrongTyped(__Void, [Color], function (value) {
             this.color1 = value;
             this.UpdateStyle();
         }),
         Color1: Public.Property({}),
 
-        color2: Protected(new Color()),
-        GetColor2: Public(function () {
+        GetColor2: Public.StrongTyped(Color, [], function () {
             return this.color2;
         }),
-        SetColor2: Public(function (value) {
+        SetColor2: Public.StrongTyped(__Void, [Color], function (value) {
             this.color2 = value;
             this.UpdateStyle();
         }),
         Color2: Public.Property({}),
 
-        SetColors: Public(function (value1, value2) {
+        SetColors: Public.StrongTyped(__Void, [Color, Color], function (value1, value2) {
             this.color1 = value1;
             this.color2 = value2;
             this.UpdateStyle();
@@ -176,44 +200,85 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var ThreeDSplitter = Class(FQN("3DSplitter"), IElement, {
 
+        htmlElement: Protected(null),
+        color1: Protected(new Color()),
+        color2: Protected(new Color()),
+        direction: Protected(ThreeDSplitterDirection.Description.Horizontal),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            this.htmlElement.style.borderLeftColor = this.color1.__ToString();
+            this.htmlElement.style.borderTopColor = this.color1.__ToString();
+            this.htmlElement.style.borderRightColor = this.color2.__ToString();
+            this.htmlElement.style.borderBottomColor = this.color2.__ToString();
+            switch (this.direction) {
+                case ThreeDSplitterDirection.Description.Horizontal:
+                    this.htmlElement.style.width = "calc(100% - 2px)";
+                    this.htmlElement.style.height = "0";
+                    this.htmlElement.style.marginLeft = "0";
+                    this.htmlElement.style.marginRight = "0";
+                    this.htmlElement.style.marginTop = "calc(50% - 1px)";
+                    this.htmlElement.style.marginBottom = "calc(50% - 1px)";
+                    break;
+                case ThreeDSplitterDirection.Description.Vertical:
+                    this.htmlElement.style.width = "0";
+                    this.htmlElement.style.height = "calc(100% - 2px)";
+                    this.htmlElement.style.marginLeft = "calc(50% - 1px)";
+                    this.htmlElement.style.marginRight = "calc(50% - 1px)";
+                    this.htmlElement.style.marginTop = "0";
+                    this.htmlElement.style.marginBottom = "0";
+                    break;
+            }
         }),
 
-        color1: Protected(new Color()),
-        GetColor1: Public(function () {
+        gacjs_InstallElement: Public.Override(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Override(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.borderStyle = "solid";
+            this.htmlElement.style.borderWidth = "1px";
+            this.UpdateStyle();
+        }),
+
+        GetColor1: Public.StrongTyped(Color, [], function () {
             return this.color1;
         }),
-        SetColor1: Public(function (value) {
+        SetColor1: Public.StrongTyped(__Void, [Color], function (value) {
             this.color1 = value;
             this.UpdateStyle();
         }),
         Color1: Public.Property({}),
 
-        color2: Protected(new Color()),
-        GetColor2: Public(function () {
+        GetColor2: Public.StrongTyped(Color, [], function () {
             return this.color2;
         }),
-        SetColor2: Public(function (value) {
+        SetColor2: Public.StrongTyped(__Void, [Color], function (value) {
             this.color2 = value;
             this.UpdateStyle();
         }),
         Color2: Public.Property({}),
 
-        SetColors: Public(function (value1, value2) {
+        SetColors: Public.StrongTyped(__Void, [Color, Color], function (value1, value2) {
             this.color1 = value1;
             this.color2 = value2;
             this.UpdateStyle();
         }),
 
-        direction: Protected(ThreeDSplitterDirection.Horizontal),
-        GetDirection: Public(function () {
+        GetDirection: Public.StrongTyped(ThreeDSplitterDirection, [], function () {
             return this.direction;
         }),
-        SetDirection: Public(function (value) {
+        SetDirection: Public.StrongTyped(__Void, [ThreeDSplitterDirection], function (value) {
             this.direction = value;
             this.UpdateStyle();
         }),
+        Direction: Public.Property({}),
     });
 
     /********************************************************************************
