@@ -56,19 +56,19 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.UpdateStyle();
         }),
 
-        GetColor: Public(function () {
+        GetColor: Public.StrongTyped(Color, [], function () {
             return this.color;
         }),
-        SetColor: Public(function (value) {
+        SetColor: Public.StrongTyped(__Void, [Color], function (value) {
             this.color = value;
             this.UpdateStyle();
         }),
         Color: Public.Property({}),
 
-        GetShape: Public(function () {
+        GetShape: Public.StrongTyped(ElementShape, [], function () {
             return this.shape;
         }),
-        SetShape: Public(function (value) {
+        SetShape: Public.StrongTyped(__Void, [ElementShape], function (value) {
             this.shape = value;
             this.UpdateStyle();
         }),
@@ -81,25 +81,47 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
     var RoundBorder = Class(FQN("RoundBorder"), IElement, {
 
+        htmlElement: Protected(null),
+        color: Protected(new Color()),
+        radius: Protected(0.0),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            this.htmlElement.style.borderColor = this.color.__ToString();
+            this.htmlElement.style.borderRadius = this.radius + "px";
         }),
 
-        color: Protected(new Color()),
-        GetColor: Public(function () {
+        gacjs_InstallElement: Public.Override(function (graphElement) {
+            graphElement.appendChild(this.htmlElement);
+        }),
+
+        gacjs_UninstallElement: Public.Override(function (graphElement) {
+            grapyElement.removeChild(this.htmlElement);
+        }),
+
+        __Constructor: Public(function () {
+            this.htmlElement = document.createElement("div");
+            this.htmlElement.style.display = "block";
+            this.htmlElement.style.position = "relative";
+            this.htmlElement.style.width = "calc(100% - 2px)";
+            this.htmlElement.style.height = "calc(100% - 2px)";
+            this.htmlElement.style.borderStyle = "solid";
+            this.htmlElement.style.borderWidth = "1px";
+            this.UpdateStyle();
+        }),
+
+        GetColor: Public.StrongTyped(Color, [], function () {
             return this.color;
         }),
-        SetColor: Public(function (value) {
+        SetColor: Public.StrongTyped(__Void, [Color], function (value) {
             this.color = value;
             this.UpdateStyle();
         }),
         Color: Public.Property({}),
 
-        radius: Protected(0.0),
-        GetRadius: Public(function () {
+        GetRadius: Public.StrongTyped(__Number, [], function () {
             return this.radius;
         }),
-        SetRadius: Public(function (value) {
+        SetRadius: Public.StrongTyped(__Void, [__Number], function (value) {
             this.radius = value;
             this.UpdateStyle();
         }),

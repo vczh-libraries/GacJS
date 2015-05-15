@@ -41,6 +41,10 @@
                     <td id="cell_Elements_SolidBorder_Ellipse"></td>
                 </tr>
                 <tr>
+                    <th>RoundBorder</th>
+                    <td id="cell_Elements_RoundBorder"></td>
+                </tr>
+                <tr>
                     <th>Experiment</th>
                     <td>
                         <div id="box_Experiment" style="display: block; position: relative; left: 0px; top: 0px; width: 100px; height: 100px; min-width: 50px; min-height: 50px;">
@@ -77,6 +81,17 @@
                 return layout;
             }
             cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder_Ellipse()));
+
+            function create_Elements_RoundBorder() {
+                var element = new RoundBorder();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Radius = 10;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            cell_Elements_RoundBorder.appendChild(CreateLayoutEmbedder(create_Elements_RoundBorder()));
         </script>
 
         <div class="TabPage">
