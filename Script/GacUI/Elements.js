@@ -413,6 +413,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
         color: Protected(new Color()),
         font: Protected(new FontProperties()),
+        text: Protected(""),
         horizontalAlignment: Protected(Alignment.Description.Left),
         verticalAlignment: Protected(Alignment.Description.Top),
         wrapLine: Protected(false),
@@ -420,16 +421,95 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         multiline: Protected(false),
         wrapLineHeightCalculation: Protected(false),
 
+        textHtmlElement:Protected(null),
+        textHtmlNode: Protected(null),
+
+        UpdateStyleInternal: Protected(function (textElement, textNode) {
+            textNode.textContent = this.text;
+
+            textElement.style.color = this.color.__ToString();
+            textElement.style.fontFamily = "'" + this.font.fontFamily + "'";
+            textElement.style.fontSize = this.font.size + "px";
+            textElement.style.fontWeight = (this.font.bold ? "bold" : "normal");
+            textElement.style.fontStyle = (this.font.italic ? "italic" : "normal");
+            textElement.style.textDecoration = (this.font.underline ? "underline" : "");
+        }),
+
         UpdateStyle: Protected(function () {
-            throw new Error("Not Implemented.");
+            switch(this.horizontalAlignment)
+            {
+                case Alignment.Description.Left:
+                    this.htmlElement.style.gridColumns = "0px auto 1fr";
+                    this.htmlElement.style.msGridColumns = "0px auto 1fr";
+                    break;
+                case Alignment.Description.Right:
+                    this.htmlElement.style.gridColumns = "1fr auto 0px";
+                    this.htmlElement.style.msGridColumns = "1fr auto 0px";
+                    break;
+                default:
+                    this.htmlElement.style.gridColumns = "1fr auto 1fr";
+                    this.htmlElement.style.msGridColumns = "1fr auto 1fr";
+                    break;
+            }
+
+            switch (this.verticalAlignment) {
+                case Alignment.Description.Top:
+                    this.htmlElement.style.gridRows = "0px auto 1fr";
+                    this.htmlElement.style.msGridRows = "0px auto 1fr";
+                    break;
+                case Alignment.Description.Bottom:
+                    this.htmlElement.style.gridRows = "1fr auto 0px";
+                    this.htmlElement.style.msGridRows = "1fr auto 0px";
+                    break;
+                default:
+                    this.htmlElement.style.gridRows = "1fr auto 1fr";
+                    this.htmlElement.style.msGridRows = "1fr auto 1fr";
+                    break;
+            }
+
+            this.htmlElement.style.color = this.color.__ToString();
+            this.htmlElement.style.textDecoration = (this.font.strikeline ? "line-through" : "");
+            this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode);
+        }),
+
+        CreateTextElement:Protected(function(){
+            var node = document.createElement("div");
+            node.style.display = "block";
+            node.style.position = "relative";
+            node.style.width = "100%";
+            node.style.height = "100%";
+            return node;
+        }),
+
+        CreateTextNode: Protected(function () {
+            var node = document.createTextNode("");
+            return node;
         }),
 
         __Constructor: Public(function () {
             this.htmlElement = document.createElement("div");
-            this.htmlElement.style.display = "block";
+            this.htmlElement.style.display = "grid";
+            this.htmlElement.style.display = "-ms-grid";
             this.htmlElement.style.position = "relative";
             this.htmlElement.style.width = "100%";
             this.htmlElement.style.height = "100%";
+
+            this.htmlElement.style.gridRows = "1fr auto 1fr";
+            this.htmlElement.style.msGridRows = "1fr auto 1fr";
+
+            this.htmlElement.style.gridColumns = "1fr auto 1fr";
+            this.htmlElement.style.msGridColumns = "1fr auto 1fr";
+
+            this.textHtmlElement = this.CreateTextElement();
+            this.textHtmlElement.style.gridRow = "2";
+            this.textHtmlElement.style.msGridRow = "2";
+            this.textHtmlElement.style.gridColumn = "2";
+            this.textHtmlElement.style.msGridColumn = "2";
+
+            this.textHtmlNode = this.CreateTextNode();
+
+            this.textHtmlElement.appendChild(this.textHtmlNode);
+            this.htmlElement.appendChild(this.textHtmlElement);
             this.UpdateStyle();
         }),
 
@@ -450,6 +530,15 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.UpdateStyle();
         }),
         Font: Public.Property({}),
+
+        GetText: Public(function () {
+            return this.text;
+        }),
+        SetText: Public(function (value) {
+            this.text = value;
+            this.UpdateStyle();
+        }),
+        Text: Public.Property({}),
 
         GetHorizontalAlignment: Public(function () {
             return this.horizontalAlignment;

@@ -205,25 +205,31 @@ window.addEventListener("mouseup", function (event) {
 Layout Embedder
 ********************************************************************************/
 
-function CreateLayoutEmbedder(layout) {
+function CreateLayoutEmbedder(layout, rows, columns) {
+    if (rows === undefined) rows = 1;
+    if (columns === undefined) columns = 1;
+
     var div = document.createElement("div");
     div.style.display = "block";
     div.style.position = "relative";
-    div.style.minWidth = "30px";
-    div.style.minHeight = "30px";
-    div.style.width = "120px";
-    div.style.height = "120px";
+    div.style.minWidth = (20 + columns * 10) + "px";
+    div.style.minHeight = (20 + rows * 10) + "px";
+    div.style.width = (20 + columns * 100) + "px";
+    div.style.height = (20 + rows * 100) + "px";
     div.style.border = "1px solid blue";
     div.style.float = "left";
     div.style.margin = "10px 10px 10px 10px";
 
     var child = layout.BoundsHtmlElement;
+    if (child === undefined) {
+        child = layout;
+    }
     div.appendChild(child);
 
     child.style.left = "10px";
     child.style.top = "10px";
-    child.style.width = "100px";
-    child.style.height = "100px";
+    child.style.width = (columns * 100) + "px";
+    child.style.height = (rows * 100) + "px";
     InstallDraggableHandlers(div);
 
     AttachParentChangedEvent(div, function () {

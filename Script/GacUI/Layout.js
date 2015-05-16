@@ -38,6 +38,7 @@ Packages.Define("GacUI.Layout", ["Class", "GacUI.Types", "GacUI.Elements"], func
 
             __Constructor: Public(function () {
                 this.boundsHtmlElement = document.createElement("div");
+                this.boundsHtmlElement.gacjs_Layout = this.__ExternalReference;
                 this.boundsHtmlElement.style.display = "block";
                 this.boundsHtmlElement.style.position = "absolute";
 

@@ -42,7 +42,19 @@
                     <th>SolidBackground (Rectangle)</th>
                     <td id="cell_Elements_SolidBackground_Rectangle"></td>
                     <th>SolidLabel</th>
-                    <td id="cell_Elements_SolidLabel"></td>
+                    <td id="cell_Elements_SolidLabel">
+                        <div id="cell_Elements_SolidLabel_Alignments" style="display:-ms-grid;-ms-grid-columns:1fr 1fr 1fr;-ms-grid-rows:1fr 1fr 1fr; position:absolute;">
+                            <div id="cell_elements_SolidLabel_LT" style="-ms-grid-row: 1; -ms-grid-column: 1;"></div>
+                            <div id="cell_elements_SolidLabel_CT" style="-ms-grid-row: 1; -ms-grid-column: 2;"></div>
+                            <div id="cell_elements_SolidLabel_RT" style="-ms-grid-row: 1; -ms-grid-column: 3;"></div>
+                            <div id="cell_elements_SolidLabel_LC" style="-ms-grid-row: 2; -ms-grid-column: 1;"></div>
+                            <div id="cell_elements_SolidLabel_CC" style="-ms-grid-row: 2; -ms-grid-column: 2;"></div>
+                            <div id="cell_elements_SolidLabel_RC" style="-ms-grid-row: 2; -ms-grid-column: 3;"></div>
+                            <div id="cell_elements_SolidLabel_LB" style="-ms-grid-row: 3; -ms-grid-column: 1;"></div>
+                            <div id="cell_elements_SolidLabel_CB" style="-ms-grid-row: 3; -ms-grid-column: 2;"></div>
+                            <div id="cell_elements_SolidLabel_RB" style="-ms-grid-row: 3; -ms-grid-column: 3;"></div>
+                        </div>
+                    </td>
                 </tr>
                 <tr>
                     <th>SolidBorder (Ellipse)</th>
@@ -177,6 +189,36 @@
             cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Ellipse)));
             cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Rectangle)));
             cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Ellipse)));
+
+            ////////////////////////////////////////////////////////////////////////////////////////
+
+            function create_Elements_SolidLabelAlignment(text, horizontalAlignment, verticalAlignment) {
+                var element = new SolidLabel();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Font = new FontProperties("Segoe UI", 18, true, true, true, true, true, false);
+                element.Text = text;
+                element.HorizontalAlignment = horizontalAlignment;
+                element.VerticalAlignment = verticalAlignment;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+
+                var div = layout.BoundsHtmlElement;
+                div.style.position = "relative";
+                div.style.width = "100%";
+                div.style.height = "100%";
+                return div;
+            }
+            cell_elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
+            cell_elements_SolidLabel_CT.appendChild(create_Elements_SolidLabelAlignment("CT", Alignment.Description.Center, Alignment.Description.Top));
+            cell_elements_SolidLabel_RT.appendChild(create_Elements_SolidLabelAlignment("RT", Alignment.Description.Right, Alignment.Description.Top));
+            cell_elements_SolidLabel_LC.appendChild(create_Elements_SolidLabelAlignment("LC", Alignment.Description.Left, Alignment.Description.Center));
+            cell_elements_SolidLabel_CC.appendChild(create_Elements_SolidLabelAlignment("CC", Alignment.Description.Center, Alignment.Description.Center));
+            cell_elements_SolidLabel_RC.appendChild(create_Elements_SolidLabelAlignment("RC", Alignment.Description.Right, Alignment.Description.Center));
+            cell_elements_SolidLabel_LB.appendChild(create_Elements_SolidLabelAlignment("LB", Alignment.Description.Left, Alignment.Description.Bottom));
+            cell_elements_SolidLabel_CB.appendChild(create_Elements_SolidLabelAlignment("CB", Alignment.Description.Center, Alignment.Description.Bottom));
+            cell_elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
+            cell_Elements_SolidLabel.appendChild(CreateLayoutEmbedder(cell_Elements_SolidLabel_Alignments, 3, 3));
         </script>
 
         <div class="TabPage">
