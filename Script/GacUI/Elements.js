@@ -446,6 +446,8 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             textElement.style.fontWeight = (this.font.bold ? "bold" : "normal");
             textElement.style.fontStyle = (this.font.italic ? "italic" : "normal");
             textElement.style.textDecoration = (this.font.underline ? "underline" : "");
+            textElement.style.wordWrap = (this.wrapLine ? "break-word" : "");
+            textElement.style.textOverflow = (this.Ellipse ? "ellipsis" : "");
         }),
 
         UpdateStyle: Protected(function () {

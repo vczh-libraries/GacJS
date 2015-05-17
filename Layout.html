@@ -123,6 +123,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             cell_Elements_SolidBorder_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Rectangle)));
             cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Ellipse)));
 
@@ -135,6 +136,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             cell_Elements_SolidBackground_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Rectangle)));
             cell_Elements_SolidBackground_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Ellipse)));
 
@@ -149,6 +151,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             cell_Elements_RoundBorder.appendChild(CreateLayoutEmbedder(create_Elements_RoundBorder()));
 
             ////////////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +164,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             cell_Elements_3DBorder.appendChild(CreateLayoutEmbedder(create_Elements_3DBorder()));
 
             function create_Elements_3DSplitter(direction) {
@@ -172,6 +176,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             cell_Elements_3DSplitter_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Horizontal)));
             cell_Elements_3DSplitter_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Vertical)));
 
@@ -187,6 +192,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Rectangle)));
             cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Ellipse)));
             cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Rectangle)));
@@ -216,6 +222,7 @@
                 div.style.bottom = "0";
                 return div;
             }
+
             function create_Elements_SolidLabel(text, wrapLine, ellipse, multiline, wrapLineHeightCalculation) {
                 var element = new SolidLabel();
                 element.Color = new Color(0, 128, 0, 255);
@@ -232,6 +239,7 @@
                 layout.OwnedElement = element;
                 return layout;
             }
+
             div_Elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
             div_Elements_SolidLabel_CT.appendChild(create_Elements_SolidLabelAlignment("CT", Alignment.Description.Center, Alignment.Description.Top));
             div_Elements_SolidLabel_RT.appendChild(create_Elements_SolidLabelAlignment("RT", Alignment.Description.Right, Alignment.Description.Top));
@@ -242,8 +250,15 @@
             div_Elements_SolidLabel_CB.appendChild(create_Elements_SolidLabelAlignment("CB", Alignment.Description.Center, Alignment.Description.Bottom));
             div_Elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
             cell_Elements_SolidLabel_Alignments.appendChild(CreateLayoutEmbedder(div_Elements_SolidLabel_Alignments, 3, 3));
+
             cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Single\r\nline", false, false, false, false)));
             cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Multi\r\nline", false, false, true, false)));
+
+            cell_Elements_SolidLabel_WrapLine.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence", false, false, false, false)));
+            cell_Elements_SolidLabel_WrapLine.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence", true, false, false, false)));
+
+            cell_Elements_SolidLabel_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence that cannot be display in this small box", false, true, false, false)));
+            cell_Elements_SolidLabel_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence that cannot be display in this small box", true, true, false, false)));
         </script>
 
         <div class="TabPage">
@@ -280,7 +295,6 @@
 
     <script>
         SetupTabControl(tabControl);
-        InstallDraggableHandlers(box_Experiment);
     </script>
 
     <script>
