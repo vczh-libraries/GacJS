@@ -230,17 +230,12 @@ function CreateLayoutEmbedder(layout, rows, columns) {
     if (child === undefined) {
         child = layout;
     }
+    child.style.position = "relative";
+    child.style.width = "calc(100% - 20px)";
+    child.style.height = "calc(100% - 20px)";
+    child.style.margin = "10px 10px 10px 10px";
     div.appendChild(child);
 
-    child.style.left = "10px";
-    child.style.top = "10px";
-    child.style.width = (columns * 100) + "px";
-    child.style.height = (rows * 100) + "px";
     InstallDraggableHandlers(div);
-
-    DetectResize(div, function () {
-        child.style.width = (GetPx(div.style.width) - 20) + "px";
-        child.style.height = (GetPx(div.style.height) - 20) + "px";
-    });
     return div;
 }
