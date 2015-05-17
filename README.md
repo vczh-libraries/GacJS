@@ -35,7 +35,7 @@ Running test pages is very simple, just follow the steps:
    * **[ResizeEvent.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/ResizeEvent.js)** : ConnectionToBodyChanged and Resize custom event that works on every elements.
 * **[GacUI/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI)** : GacUI in Browsers!.
    * **[Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
-   * **[Elements/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI/Elements)** : GacUI Predefined Graphic Elements. Test page: **[Layout.html](https://github.com/vczh-libraries/GacJS/blob/master/Layout.html)**.
+   * **[Elements/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI/Elements)** : GacUI Predefined Graphic Elements. Test page: **[Element.html](https://github.com/vczh-libraries/GacJS/blob/master/Element.html)**.
       * **[Interface.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/Interface.js)**
       * **[Basic.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/Basic.js)**
       * **[ColorizedText.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/ColorizedText.js)**
