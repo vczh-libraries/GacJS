@@ -19,57 +19,9 @@
     <script src="./Script/GacUI/Elements/Document.js"></script>
     <script src="./Script/GacUI/Types.js"></script>
     <script src="./Script/Class.js"></script>
+    <script src="./TestPage.js"></script>
 </head>
 <body>
-    <script src="./TestPage.js"></script>
-
-    <div class="TabControl" id="tabMain">
-        <div class="TabButtonContainer">
-            <div class="TabButton">Bounds</div>
-            <div class="TabButton">Table</div>
-            <div class="TabButton">Stack</div>
-            <div class="TabButton">SideAligned</div>
-            <div class="TabButton">PartialView</div>
-        </div>
-
-        <div class="TabPageContainer">
-            <div class="TabPage">
-                Bounds
-            </div>
-            <script>
-            </script>
-
-            <div class="TabPage">
-                Table
-            </div>
-            <script>
-            </script>
-
-            <div class="TabPage">
-                Stack
-            </div>
-            <script>
-            </script>
-
-            <div class="TabPage">
-                SideAligned
-            </div>
-            <script>
-            </script>
-
-            <div class="TabPage">
-                PartialView
-            </div>
-            <script>
-            </script>
-        </div>
-
-    </div>
-
-    <script>
-        SetupTabControl(tabMain);
-    </script>
-
     <script>
         TestCase("layout should maintain the children relationship correctly", function () {
             var a = new Layout();
@@ -134,6 +86,53 @@
 
     <script>
         SummaryTest();
+    </script>
+
+    <div class="TabControl" id="tabMain">
+        <div class="TabButtonContainer">
+            <div class="TabButton">Bounds</div>
+            <div class="TabButton">Table</div>
+            <div class="TabButton">Stack</div>
+            <div class="TabButton">SideAligned</div>
+            <div class="TabButton">PartialView</div>
+        </div>
+
+        <div class="TabPageContainer">
+            <div class="TabPage">
+                Bounds
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Table
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Stack
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                SideAligned
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                PartialView
+            </div>
+            <script>
+            </script>
+        </div>
+
+    </div>
+
+    <script>
+        SetupTabControl(tabMain);
     </script>
 </body>
 </html>

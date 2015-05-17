@@ -40,11 +40,11 @@ body {
     border-bottom: 1px solid gray;
 }
 
-.TabPage td:after {
-    content: " ";
-    display: block;
-    clear: both;
-}
+    .TabPage td:after {
+        content: " ";
+        display: block;
+        clear: both;
+    }
 
 .TabButtonContainer:after {
     content: " ";
@@ -90,11 +90,21 @@ body {
         content: ">";
     }
 
+.TabPageContainer {
+    display: block;
+    position: relative;
+}
+
 .TabPage {
-    display: none;
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    visibility: hidden;
 }
 
 .Selected.TabPage {
-    display: block;
+    visibility: visible;
     border: 1px solid red;
 }

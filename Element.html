@@ -19,9 +19,37 @@
     <script src="./Script/GacUI/Elements/Document.js"></script>
     <script src="./Script/GacUI/Types.js"></script>
     <script src="./Script/Class.js"></script>
+    <script src="./TestPage.js"></script>
 </head>
 <body>
-    <script src="./TestPage.js"></script>
+    <script>
+        TestCase("print and parse colors should success", function () {
+            var c1 = Color.Parse("#000000");
+            Assert(c1.r === 0);
+            Assert(c1.g === 0);
+            Assert(c1.b === 0);
+            Assert(c1.a === 255);
+            Assert(c1.__ToString() === "#000000");
+
+            var c2 = Color.Parse("#FFFFFF");
+            Assert(c2.r === 255);
+            Assert(c2.g === 255);
+            Assert(c2.b === 255);
+            Assert(c2.a === 255);
+            Assert(c2.__ToString() === "#FFFFFF");
+
+            var c3 = Color.Parse("#01020304");
+            Assert(c3.r === 1);
+            Assert(c3.g === 2);
+            Assert(c3.b === 3);
+            Assert(c3.a === 4);
+            Assert(c3.__ToString() === "#01020304");
+        });
+    </script>
+
+    <script>
+        SummaryTest();
+    </script>
 
     <div class="TabControl" id="tabElements">
         <div class="TabButtonContainer">
@@ -379,35 +407,6 @@
 
     <script>
         SetupTabControl(tabElements);
-    </script>
-
-    <script>
-        TestCase("print and parse colors should success", function () {
-            var c1 = Color.Parse("#000000");
-            Assert(c1.r === 0);
-            Assert(c1.g === 0);
-            Assert(c1.b === 0);
-            Assert(c1.a === 255);
-            Assert(c1.__ToString() === "#000000");
-
-            var c2 = Color.Parse("#FFFFFF");
-            Assert(c2.r === 255);
-            Assert(c2.g === 255);
-            Assert(c2.b === 255);
-            Assert(c2.a === 255);
-            Assert(c2.__ToString() === "#FFFFFF");
-
-            var c3 = Color.Parse("#01020304");
-            Assert(c3.r === 1);
-            Assert(c3.g === 2);
-            Assert(c3.b === 3);
-            Assert(c3.a === 4);
-            Assert(c3.__ToString() === "#01020304");
-        });
-    </script>
-
-    <script>
-        SummaryTest();
     </script>
 </body>
 </html>
