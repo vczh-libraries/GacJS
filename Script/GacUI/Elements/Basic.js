@@ -1,4 +1,4 @@
-Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEvent","GacUI.Elements.Interface"], function (__injection__) {
+Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEvent", "GacUI.Elements.Interface"], function (__injection__) {
     eval(__injection__);
 
     function FQN(name) {
@@ -480,10 +480,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.UpdateStyleInternal(this.referenceHtmlElement, this.referenceHtmlNode, false);
         }),
 
-        ReferenceTextElement_OnResize: Protected(function () {
-        }),
-
-        HtmlElement_OnResize: Protected(function () {
+        UpdateDisplaySize: Protected(function () {
             var referenceWidth = this.referenceHtmlElement.offsetWidth;
             var displayWidth = this.htmlElement.offsetWidth;
             if (this.wrapLine || this.ellipse) {
@@ -495,6 +492,14 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             if (this.textHtmlElement.style.width !== width) {
                 this.textHtmlElement.style.width = width;
             }
+        }),
+
+        ReferenceTextElement_OnResize: Protected(function () {
+            this.UpdateDisplaySize();
+        }),
+
+        HtmlElement_OnResize: Protected(function () {
+            this.UpdateDisplaySize();
         }),
 
         __Constructor: Public(function () {
