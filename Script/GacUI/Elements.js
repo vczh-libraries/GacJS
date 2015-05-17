@@ -478,7 +478,9 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
         }),
 
         ReferenceTextElement_OnResize: Protected(function () {
+        }),
 
+        HtmlElement_OnResize: Protected(function () {
         }),
 
         CreateTextElement: Protected(function () {
@@ -517,16 +519,19 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
             this.referenceHtmlElement.style.left = "0";
             this.referenceHtmlElement.style.top = "0";
 
-            var self = this;
-            DetectResize(this.referenceHtmlElement, function () {
-                self.ReferenceTextElement_OnResize();
-            });
-
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
             this.verticalHtmlFlexElement.appendChild(this.referenceHtmlElement);
             this.htmlElement = this.horizontalHtmlFlexElement;
             this.UpdateStyle();
+
+            var self = this;
+            DetectResize(this.referenceHtmlElement, function () {
+                self.ReferenceTextElement_OnResize();
+            });
+            DetectResize(this.htmlElement, function () {
+                self.HtmlElement_OnResize();
+            });
         }),
 
         GetColor: Public(function () {
