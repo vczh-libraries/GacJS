@@ -19,19 +19,19 @@ eval(
 TabControl
 ********************************************************************************/
 
-var currentTabPage = null;
-
 function ShowTabPage(tabPage) {
+    var currentTabPage = tabPage.TabControl.CurrentTabPage;
     if (currentTabPage !== null) {
         currentTabPage.classList.remove("Selected");
         currentTabPage.TabButton.classList.remove("Selected");
     }
-    currentTabPage = tabPage;
-    currentTabPage.classList.add("Selected");
-    currentTabPage.TabButton.classList.add("Selected");
+    tabPage.TabControl.CurrentTabPage = tabPage;
+    tabPage.classList.add("Selected");
+    tabPage.TabButton.classList.add("Selected");
 }
 
-function CombineTabPage(tabPage, tabButton) {
+function CombineTabPage(tabControl, tabPage, tabButton) {
+    tabPage.TabControl = tabControl;
     tabPage.TabButton = tabButton;
     tabButton.TabPage = tabPage;
     tabButton.addEventListener("click", function (event) {
@@ -40,10 +40,24 @@ function CombineTabPage(tabPage, tabButton) {
 }
 
 function SetupTabControl(tabControl) {
-    var tabButtons = tabControl.getElementsByClassName("TabButton");
-    var tabPages = tabControl.getElementsByClassName("TabPage");
+
+    function DirectChild(parent,className){
+        var result = [];
+        var childNodes = parent.childNodes;
+        for (var i = 0; i < childNodes.length; i++) {
+            var childNode = childNodes[i];
+            if (childNode.className === className) {
+                result.push(childNode);
+            }
+        }
+        return result;
+    }
+
+    tabControl.CurrentTabPage = null;
+    var tabButtons = DirectChild(DirectChild(tabControl, "TabButtonContainer")[0], "TabButton");
+    var tabPages = DirectChild(DirectChild(tabControl, "TabPageContainer")[0], "TabPage");
     for (var i = 0; i < tabButtons.length; i++) {
-        CombineTabPage(tabPages[i], tabButtons[i]);
+        CombineTabPage(tabControl, tabPages[i], tabButtons[i]);
     }
 
     ShowTabPage(tabPages[0]);

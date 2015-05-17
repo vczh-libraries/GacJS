@@ -23,7 +23,7 @@
 <body>
     <script src="./TestPage.js"></script>
 
-    <div class="TabPageContainer" id="tabControl">
+    <div class="TabControl" id="tabMain">
         <div class="TabButtonContainer">
             <div class="TabButton">Elements</div>
             <div class="TabButton">Bounds</div>
@@ -33,323 +33,399 @@
             <div class="TabButton">PartialView</div>
         </div>
 
-        <div class="TabPage">
-            <table>
-                <tr>
-                    <th>Description</th>
-                    <th>Result</th>
-                    <th>Description</th>
-                    <th>Result</th>
-                    <th>Description</th>
-                    <th>Result</th>
-                </tr>
-                <tr>
-                    <th>SolidBorder (Rectangle)</th>
-                    <td id="cell_Elements_SolidBorder_Rectangle"></td>
-                    <th>SolidBackground (Rectangle)</th>
-                    <td id="cell_Elements_SolidBackground_Rectangle"></td>
-                    <th>SolidLabel (Alignments)</th>
-                    <td id="cell_Elements_SolidLabel_Alignments">
-                        <div id="div_Elements_SolidLabel_Alignments" style="display:flex;flex-direction:column; position:absolute;">
-                            <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="div_Elements_SolidLabel_LT" style="position: relative; flex-grow: 1"></div>
-                                <div id="div_Elements_SolidLabel_CT" style="position: relative; flex-grow: 1"></div>
-                                <div id="div_Elements_SolidLabel_RT" style="position: relative; flex-grow: 1"></div>
-                            </div>
-                            <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="div_Elements_SolidLabel_LC" style="position: relative; flex-grow: 1"></div>
-                                <div id="div_Elements_SolidLabel_CC" style="position: relative; flex-grow: 1"></div>
-                                <div id="div_Elements_SolidLabel_RC" style="position: relative; flex-grow: 1"></div>
-                            </div>
-                            <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="div_Elements_SolidLabel_LB" style="position: relative; flex-grow: 1"></div>
-                                <div id="div_Elements_SolidLabel_CB" style="position: relative; flex-grow: 1"></div>
-                                <div id="div_Elements_SolidLabel_RB" style="position: relative; flex-grow: 1"></div>
-                            </div>
+        <div class="TabPageContainer">
+            <div class="TabPage">
+                <div class="TabControl" id="tabElements">
+                    <div class="TabButtonContainer">
+                        <div class="TabButton">Borders</div>
+                        <div class="TabButton">Backgrounds</div>
+                        <div class="TabButton">3D</div>
+                        <div class="TabButton">Gradient</div>
+                        <div class="TabButton">Label</div>
+                        <div class="TabButton">Others</div>
+                    </div>
+
+                    <div class="TabPageContainer">
+                        <div class="TabPage">
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tr>
+                                    <th>SolidBorder (Rectangle)</th>
+                                    <td id="cell_Elements_SolidBorder_Rectangle"></td>
+                                </tr>
+                                <tr>
+                                    <th>SolidBorder (Ellipse)</th>
+                                    <td id="cell_Elements_SolidBorder_Ellipse"></td>
+                                </tr>
+                                <tr>
+                                    <th>RoundBorder</th>
+                                    <td id="cell_Elements_RoundBorder"></td>
+                                </tr>
+                            </table>
                         </div>
-                        <div style="clear:both"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <th>SolidBorder (Ellipse)</th>
-                    <td id="cell_Elements_SolidBorder_Ellipse"></td>
-                    <th>SolidBackground (Ellipse)</th>
-                    <td id="cell_Elements_SolidBackground_Ellipse"></td>
-                    <td rowspan="3" colspan="2">
-                        <table>
-                            <tr>
-                                <th colspan="2">Height: false</th>
-                                <th>WrapLine: false</th>
-                                <th>WrapLine: true</th>
-                            </tr>
-                            <tr>
-                                <th rowspan="2">Ellipse: false</th>
-                                <th>Singleline</th>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap"></td>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap"></td>
-                            </tr>
-                            <tr>
-                                <th>Multilineline</th>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap"></td>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap"></td>
-                            </tr>
-                            <tr>
-                                <th rowspan="2">Ellipse: true</th>
-                                <th>Singleline</th>
-                                <td id="cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap"></td>
-                                <td id="cell_Elements_SolidLabel_Ellipse_Singleline_Wrap"></td>
-                            </tr>
-                            <tr>
-                                <th>Multilineline</th>
-                                <td id="cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap"></td>
-                                <td id="cell_Elements_SolidLabel_Ellipse_Multiline_Wrap"></td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <th>3DBorder</th>
-                    <td id="cell_Elements_3DBorder"></td>
-                    <th>GradientBackground (Horizontal)</th>
-                    <td id="cell_Elements_GradientBackground_Horizontal"></td>
-                </tr>
-                <tr>
-                    <th>3DSplitter (Horizontal)</th>
-                    <td id="cell_Elements_3DSplitter_Horizontal"></td>
-                    <th>GradientBackground (Vertical)</th>
-                    <td id="cell_Elements_GradientBackground_Vertical"></td>
-                </tr>
-                <tr>
-                    <th>3DSplitter (Vertical)</th>
-                    <td id="cell_Elements_3DSplitter_Vertical"></td>
-                    <th>GradientBackground (Slash)</th>
-                    <td id="cell_Elements_GradientBackground_Slash"></td>
-                    <td colspan="2">
-                        <table>
-                            <tr>
-                                <th>Height: true</th>
-                                <th>WrapLine: false</th>
-                                <th>WrapLine: true</th>
-                            </tr>
-                            <tr>
-                                <th>Singleline</th>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height"></td>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height"></td>
-                            </tr>
-                            <tr>
-                                <th>Multiline</th>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height"></td>
-                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height"></td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <th>RoundBorder</th>
-                    <td id="cell_Elements_RoundBorder"></td>
-                    <th>GradientBackground (Backslash)</th>
-                    <td id="cell_Elements_GradientBackground_Backslash"></td>
-                    <th>ImageFrame</th>
-                    <td id="cell_Elements_ImageFrame"></td>
-                </tr>
-                <tr>
-                    <th>Polygon</th>
-                    <td id="cell_Elements_Polygon"></td>
-                    <th>ColorizedText</th>
-                    <td id="cell_Elements_ColorizedText"></td>
-                    <th>Document</th>
-                    <td id="cell_Elements_Document"></td>
-                </tr>
-            </table>
+                        <script>
+                            function create_Elements_SolidBorder(shape) {
+                                var element = new SolidBorder();
+                                element.Color = new Color(0, 128, 0, 255);
+                                element.Shape = shape;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            cell_Elements_SolidBorder_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Rectangle)));
+                            cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Ellipse)));
+
+                            ////////////////////////////////////////////////////////////////////////////////////////
+
+                            function create_Elements_RoundBorder() {
+                                var element = new RoundBorder();
+                                element.Color = new Color(0, 128, 0, 255);
+                                element.Radius = 10;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            cell_Elements_RoundBorder.appendChild(CreateLayoutEmbedder(create_Elements_RoundBorder()));
+                        </script>
+
+                        <div class="TabPage">
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tr>
+                                    <th>SolidBackground (Rectangle)</th>
+                                    <td id="cell_Elements_SolidBackground_Rectangle"></td>
+                                </tr>
+                                <tr>
+                                    <th>SolidBackground (Ellipse)</th>
+                                    <td id="cell_Elements_SolidBackground_Ellipse"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <script>
+                            function create_Elements_SolidBackground(shape) {
+                                var element = new SolidBackground();
+                                element.Color = new Color(0, 128, 0, 255);
+                                element.Shape = shape;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            cell_Elements_SolidBackground_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Rectangle)));
+                            cell_Elements_SolidBackground_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Ellipse)));
+                        </script>
+
+                        <div class="TabPage">
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tr>
+                                    <th>3DBorder</th>
+                                    <td id="cell_Elements_3DBorder"></td>
+                                </tr>
+                                <tr>
+                                    <th>3DSplitter (Horizontal)</th>
+                                    <td id="cell_Elements_3DSplitter_Horizontal"></td>
+                                </tr>
+                                <tr>
+                                    <th>3DSplitter (Vertical)</th>
+                                    <td id="cell_Elements_3DSplitter_Vertical"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <script>
+                            function create_Elements_3DBorder() {
+                                var element = new ThreeDBorder();
+                                element.SetColors(new Color(0, 255, 0, 255), new Color(0, 64, 0, 255));
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            cell_Elements_3DBorder.appendChild(CreateLayoutEmbedder(create_Elements_3DBorder()));
+
+                            function create_Elements_3DSplitter(direction) {
+                                var element = new ThreeDSplitter();
+                                element.SetColors(new Color(0, 255, 0, 255), new Color(0, 64, 0, 255));
+                                element.Direction = direction;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            cell_Elements_3DSplitter_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Horizontal)));
+                            cell_Elements_3DSplitter_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Vertical)));
+                        </script>
+
+                        <div class="TabPage">
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tr>
+                                    <th>GradientBackground (Horizontal)</th>
+                                    <td id="cell_Elements_GradientBackground_Horizontal"></td>
+                                </tr>
+                                <tr>
+                                    <th>GradientBackground (Vertical)</th>
+                                    <td id="cell_Elements_GradientBackground_Vertical"></td>
+                                </tr>
+                                <tr>
+                                    <th>GradientBackground (Slash)</th>
+                                    <td id="cell_Elements_GradientBackground_Slash"></td>
+                                </tr>
+                                <tr>
+                                    <th>GradientBackground (Backslash)</th>
+                                    <td id="cell_Elements_GradientBackground_Backslash"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <script>
+                            function create_Elements_GradientBackground(direction, shape) {
+                                var element = new GradientBackground();
+                                element.SetColors(new Color(0, 128, 0, 255), new Color(0, 0, 128, 255));
+                                element.Direction = direction;
+                                element.Shape = shape;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Rectangle)));
+                            cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Ellipse)));
+                            cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Rectangle)));
+                            cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Ellipse)));
+                            cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Rectangle)));
+                            cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Ellipse)));
+                            cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Rectangle)));
+                            cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Ellipse)));
+                        </script>
+
+                        <div class="TabPage">
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tr>
+                                    <th>SolidLabel (Alignments)</th>
+                                    <td id="cell_Elements_SolidLabel_Alignments">
+                                        <div id="div_Elements_SolidLabel_Alignments" style="display:flex;flex-direction:column; position:absolute;">
+                                            <div style="display:flex;flex-direction:row;flex-grow:1;">
+                                                <div id="div_Elements_SolidLabel_LT" style="position: relative; flex-grow: 1"></div>
+                                                <div id="div_Elements_SolidLabel_CT" style="position: relative; flex-grow: 1"></div>
+                                                <div id="div_Elements_SolidLabel_RT" style="position: relative; flex-grow: 1"></div>
+                                            </div>
+                                            <div style="display:flex;flex-direction:row;flex-grow:1;">
+                                                <div id="div_Elements_SolidLabel_LC" style="position: relative; flex-grow: 1"></div>
+                                                <div id="div_Elements_SolidLabel_CC" style="position: relative; flex-grow: 1"></div>
+                                                <div id="div_Elements_SolidLabel_RC" style="position: relative; flex-grow: 1"></div>
+                                            </div>
+                                            <div style="display:flex;flex-direction:row;flex-grow:1;">
+                                                <div id="div_Elements_SolidLabel_LB" style="position: relative; flex-grow: 1"></div>
+                                                <div id="div_Elements_SolidLabel_CB" style="position: relative; flex-grow: 1"></div>
+                                                <div id="div_Elements_SolidLabel_RB" style="position: relative; flex-grow: 1"></div>
+                                            </div>
+                                        </div>
+                                        <div style="clear:both"></div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table>
+                                <tr>
+                                    <th colspan="2">Height: false</th>
+                                    <th>WrapLine: false</th>
+                                    <th>WrapLine: true</th>
+                                </tr>
+                                <tr>
+                                    <th rowspan="2">Ellipse: false</th>
+                                    <th>Singleline</th>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap"></td>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap"></td>
+                                </tr>
+                                <tr>
+                                    <th>Multilineline</th>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap"></td>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap"></td>
+                                </tr>
+                                <tr>
+                                    <th rowspan="2">Ellipse: true</th>
+                                    <th>Singleline</th>
+                                    <td id="cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap"></td>
+                                    <td id="cell_Elements_SolidLabel_Ellipse_Singleline_Wrap"></td>
+                                </tr>
+                                <tr>
+                                    <th>Multilineline</th>
+                                    <td id="cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap"></td>
+                                    <td id="cell_Elements_SolidLabel_Ellipse_Multiline_Wrap"></td>
+                                </tr>
+                            </table>
+                            <table>
+                                <tr>
+                                    <th>Height: true</th>
+                                    <th>WrapLine: false</th>
+                                    <th>WrapLine: true</th>
+                                </tr>
+                                <tr>
+                                    <th>Singleline</th>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height"></td>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height"></td>
+                                </tr>
+                                <tr>
+                                    <th>Multiline</th>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height"></td>
+                                    <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <script>
+                            function create_Elements_SolidLabelAlignment(text, horizontalAlignment, verticalAlignment) {
+                                var element = new SolidLabel();
+                                element.Color = new Color(0, 128, 0, 255);
+                                element.Font = new FontProperties("Segoe UI", 18, true, true, true, true, true, false);
+                                element.Text = text;
+                                element.HorizontalAlignment = horizontalAlignment;
+                                element.VerticalAlignment = verticalAlignment;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+
+                                var div = layout.BoundsHtmlElement;
+                                div.style.left = "0";
+                                div.style.top = "0";
+                                div.style.right = "0";
+                                div.style.bottom = "0";
+                                return div;
+                            }
+
+                            function create_Elements_SolidLabel(text, wrapLine, ellipse, multiline, wrapLineHeightCalculation) {
+                                var element = new SolidLabel();
+                                element.Color = new Color(0, 128, 0, 255);
+                                element.Font = new FontProperties("Segoe UI", 18, false, false, false, false, true, false);
+                                element.Text = text;
+                                element.HorizontalAlignment = Alignment.Description.Center;
+                                element.VerticalAlignment = Alignment.Description.Center;
+                                element.WrapLine = wrapLine;
+                                element.Ellipse = ellipse;
+                                element.Multiline = multiline;
+                                element.WrapLineHeightCalculation = wrapLineHeightCalculation;
+
+                                var layout = new Layout();
+                                layout.OwnedElement = element;
+                                return layout;
+                            }
+
+                            div_Elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
+                            div_Elements_SolidLabel_CT.appendChild(create_Elements_SolidLabelAlignment("CT", Alignment.Description.Center, Alignment.Description.Top));
+                            div_Elements_SolidLabel_RT.appendChild(create_Elements_SolidLabelAlignment("RT", Alignment.Description.Right, Alignment.Description.Top));
+                            div_Elements_SolidLabel_LC.appendChild(create_Elements_SolidLabelAlignment("LC", Alignment.Description.Left, Alignment.Description.Center));
+                            div_Elements_SolidLabel_CC.appendChild(create_Elements_SolidLabelAlignment("CC", Alignment.Description.Center, Alignment.Description.Center));
+                            div_Elements_SolidLabel_RC.appendChild(create_Elements_SolidLabelAlignment("RC", Alignment.Description.Right, Alignment.Description.Center));
+                            div_Elements_SolidLabel_LB.appendChild(create_Elements_SolidLabelAlignment("LB", Alignment.Description.Left, Alignment.Description.Bottom));
+                            div_Elements_SolidLabel_CB.appendChild(create_Elements_SolidLabelAlignment("CB", Alignment.Description.Center, Alignment.Description.Bottom));
+                            div_Elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
+                            cell_Elements_SolidLabel_Alignments.appendChild(CreateLayoutEmbedder(div_Elements_SolidLabel_Alignments, 3, 3));
+
+                            cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, false)));
+                            cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, false)));
+                            cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, false)));
+                            cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, false)));
+
+                            cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, false, false)));
+                            cell_Elements_SolidLabel_Ellipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
+                            cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
+                            cell_Elements_SolidLabel_Ellipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
+
+                            cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, true)));
+                            cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, true)));
+                            cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, true)));
+                            cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, true)));
+                        </script>
+
+                        <div class="TabPage">
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Result</th>
+                                </tr>
+                                <tr>
+                                    <th>ImageFrame</th>
+                                    <td id="cell_Elements_ImageFrame"></td>
+                                </tr>
+                                <tr>
+                                    <th>Polygon</th>
+                                    <td id="cell_Elements_Polygon"></td>
+                                </tr>
+                                <tr>
+                                    <th>ColorizedText</th>
+                                    <td id="cell_Elements_ColorizedText"></td>
+                                </tr>
+                                <tr>
+                                    <th>Document</th>
+                                    <td id="cell_Elements_Document"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <script>
+                        </script>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="TabPage">
+                Bounds
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Table
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Stack
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                SideAligned
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                PartialView
+            </div>
+            <script>
+            </script>
         </div>
-        <script>
-            function create_Elements_SolidBorder(shape) {
-                var element = new SolidBorder();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Shape = shape;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            cell_Elements_SolidBorder_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Rectangle)));
-            cell_Elements_SolidBorder_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBorder(ElementShape.Description.Ellipse)));
-
-            function create_Elements_SolidBackground(shape) {
-                var element = new SolidBackground();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Shape = shape;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            cell_Elements_SolidBackground_Rectangle.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Rectangle)));
-            cell_Elements_SolidBackground_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidBackground(ElementShape.Description.Ellipse)));
-
-            ////////////////////////////////////////////////////////////////////////////////////////
-
-            function create_Elements_RoundBorder() {
-                var element = new RoundBorder();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Radius = 10;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            cell_Elements_RoundBorder.appendChild(CreateLayoutEmbedder(create_Elements_RoundBorder()));
-
-            ////////////////////////////////////////////////////////////////////////////////////////
-
-            function create_Elements_3DBorder() {
-                var element = new ThreeDBorder();
-                element.SetColors(new Color(0, 255, 0, 255), new Color(0, 64, 0, 255));
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            cell_Elements_3DBorder.appendChild(CreateLayoutEmbedder(create_Elements_3DBorder()));
-
-            function create_Elements_3DSplitter(direction) {
-                var element = new ThreeDSplitter();
-                element.SetColors(new Color(0, 255, 0, 255), new Color(0, 64, 0, 255));
-                element.Direction = direction;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            cell_Elements_3DSplitter_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Horizontal)));
-            cell_Elements_3DSplitter_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_3DSplitter(ThreeDSplitterDirection.Description.Vertical)));
-
-            ////////////////////////////////////////////////////////////////////////////////////////
-
-            function create_Elements_GradientBackground(direction, shape) {
-                var element = new GradientBackground();
-                element.SetColors(new Color(0, 128, 0, 255), new Color(0, 0, 128, 255));
-                element.Direction = direction;
-                element.Shape = shape;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Rectangle)));
-            cell_Elements_GradientBackground_Horizontal.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Horizontal, ElementShape.Description.Ellipse)));
-            cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Rectangle)));
-            cell_Elements_GradientBackground_Vertical.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Vertical, ElementShape.Description.Ellipse)));
-            cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Rectangle)));
-            cell_Elements_GradientBackground_Slash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Slash, ElementShape.Description.Ellipse)));
-            cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Rectangle)));
-            cell_Elements_GradientBackground_Backslash.appendChild(CreateLayoutEmbedder(create_Elements_GradientBackground(GradientBackgroundrDirection.Description.Backslash, ElementShape.Description.Ellipse)));
-
-            ////////////////////////////////////////////////////////////////////////////////////////
-
-            function create_Elements_SolidLabelAlignment(text, horizontalAlignment, verticalAlignment) {
-                var element = new SolidLabel();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Font = new FontProperties("Segoe UI", 18, true, true, true, true, true, false);
-                element.Text = text;
-                element.HorizontalAlignment = horizontalAlignment;
-                element.VerticalAlignment = verticalAlignment;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-
-                var div = layout.BoundsHtmlElement;
-                div.style.left = "0";
-                div.style.top = "0";
-                div.style.right = "0";
-                div.style.bottom = "0";
-                return div;
-            }
-
-            function create_Elements_SolidLabel(text, wrapLine, ellipse, multiline, wrapLineHeightCalculation) {
-                var element = new SolidLabel();
-                element.Color = new Color(0, 128, 0, 255);
-                element.Font = new FontProperties("Segoe UI", 18, false, false, false, false, true, false);
-                element.Text = text;
-                element.HorizontalAlignment = Alignment.Description.Center;
-                element.VerticalAlignment = Alignment.Description.Center;
-                element.WrapLine = wrapLine;
-                element.Ellipse = ellipse;
-                element.Multiline = multiline;
-                element.WrapLineHeightCalculation = wrapLineHeightCalculation;
-
-                var layout = new Layout();
-                layout.OwnedElement = element;
-                return layout;
-            }
-
-            div_Elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
-            div_Elements_SolidLabel_CT.appendChild(create_Elements_SolidLabelAlignment("CT", Alignment.Description.Center, Alignment.Description.Top));
-            div_Elements_SolidLabel_RT.appendChild(create_Elements_SolidLabelAlignment("RT", Alignment.Description.Right, Alignment.Description.Top));
-            div_Elements_SolidLabel_LC.appendChild(create_Elements_SolidLabelAlignment("LC", Alignment.Description.Left, Alignment.Description.Center));
-            div_Elements_SolidLabel_CC.appendChild(create_Elements_SolidLabelAlignment("CC", Alignment.Description.Center, Alignment.Description.Center));
-            div_Elements_SolidLabel_RC.appendChild(create_Elements_SolidLabelAlignment("RC", Alignment.Description.Right, Alignment.Description.Center));
-            div_Elements_SolidLabel_LB.appendChild(create_Elements_SolidLabelAlignment("LB", Alignment.Description.Left, Alignment.Description.Bottom));
-            div_Elements_SolidLabel_CB.appendChild(create_Elements_SolidLabelAlignment("CB", Alignment.Description.Center, Alignment.Description.Bottom));
-            div_Elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
-            cell_Elements_SolidLabel_Alignments.appendChild(CreateLayoutEmbedder(div_Elements_SolidLabel_Alignments, 3, 3));
-
-            cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, false)));
-            cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, false)));
-            cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, false)));
-            cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, false)));
-
-            cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, false, false)));
-            cell_Elements_SolidLabel_Ellipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
-            cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
-            cell_Elements_SolidLabel_Ellipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
-
-            cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, true)));
-            cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, true)));
-            cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, true)));
-            cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, true)));
-        </script>
-
-        <div class="TabPage">
-            Bounds
-        </div>
-        <script>
-        </script>
-
-        <div class="TabPage">
-            Table
-        </div>
-        <script>
-        </script>
-
-        <div class="TabPage">
-            Stack
-        </div>
-        <script>
-        </script>
-
-        <div class="TabPage">
-            SideAligned
-        </div>
-        <script>
-        </script>
-
-        <div class="TabPage">
-            PartialView
-        </div>
-        <script>
-        </script>
 
     </div>
 
     <script>
-        SetupTabControl(tabControl);
+        SetupTabControl(tabMain);
+        SetupTabControl(tabElements);
     </script>
 
     <script>
