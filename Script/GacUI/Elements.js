@@ -424,10 +424,21 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         horizontalHtmlFlexElement: Protected(null),
         verticalHtmlFlexElement: Protected(null),
         textHtmlElement: Protected(null),
-        textHtmlNode: Protected(null),
 
-        UpdateStyleInternal: Protected(function (textElement, textNode) {
-            textNode.textContent = this.text;
+        UpdateStyleInternal: Protected(function (textElement) {
+            this.textHtmlElement.innerHTML = "";
+            if (this.multiline) {
+                var lines = this.text.split(/\r?\n/);
+                for (var i = 0; i < lines.length; i++) {
+                    if (i > 0) {
+                        this.textHtmlElement.appendChild(document.createElement("br"));
+                    }
+                    textElement.appendChild(document.createTextNode(lines[i]));
+                }
+            }
+            else {
+                textElement.appendChild(document.createTextNode(this.text));
+            }
 
             textElement.style.color = this.color.__ToString();
             textElement.style.fontFamily = "'" + this.font.fontFamily + "'";
@@ -464,7 +475,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
             this.htmlElement.style.color = this.color.__ToString();
             this.htmlElement.style.textDecoration = (this.font.strikeline ? "line-through" : "");
-            this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode);
+            this.UpdateStyleInternal(this.textHtmlElement);
         }),
 
         CreateTextElement: Protected(function () {
@@ -490,11 +501,9 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.verticalHtmlFlexElement.style.flexDirection = "column";
 
             this.textHtmlElement = this.CreateTextElement();
-            this.textHtmlNode = this.CreateTextNode();
 
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
-            this.textHtmlElement.appendChild(this.textHtmlNode);
             this.htmlElement = this.horizontalHtmlFlexElement;
             this.UpdateStyle();
         }),
