@@ -9,7 +9,7 @@ Packages.Define("GacUI.Layout.Table", ["Class", "GacUI.Types", "GacUI.Layout.Bas
     GuiTableComposition
     ********************************************************************************/
 
-    var TableLayout = Class(FQN("Table"), SiteLayout, {
+    var TableLayout = Class(FQN("Table"), BoundsLayout, {
     });
 
     /********************************************************************************

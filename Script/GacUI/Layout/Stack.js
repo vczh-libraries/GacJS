@@ -9,7 +9,7 @@ Packages.Define("GacUI.Layout.Stack", ["Class", "GacUI.Types", "GacUI.Layout.Bas
     GuiStackComposition
     ********************************************************************************/
 
-    var StackLayout = Class(FQN("Stack"), SiteLayout, {
+    var StackLayout = Class(FQN("Stack"), BoundsLayout, {
     });
 
     /********************************************************************************

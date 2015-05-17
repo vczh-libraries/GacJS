@@ -49,6 +49,7 @@ API:
         map<string, __Class>        VirtuallyConstructedBy;                 // If type of "key" virtually inherits this type, than this type can only be constructed by "value"
 
         bool                        IsAssignableFrom(__Class childType);    // Returns true if "childType" is or inherits from "Type"
+        bool                        TestType(Object object);                // Returns false if "object" is not an instance of this class or its child classes
         void                        RequireType(Object object);             // Throw an exception if "object" is not an instance of this class or its child classes
     }
 
@@ -108,6 +109,7 @@ API:
         map<string, (Enum|Flags)>   Description;                // Get all declared members in this type
 
         (Enum|Flags)                Parse(string text);         // Create a value of this type by a specified string representation
+        bool                        TestType(Object object);    // Returns false if "object" is not an instance of this type
         void                        RequireType(Object object); // Throw an exception if "object" is not an instance of this type
     }
 
@@ -137,6 +139,7 @@ API:
         map<string, value>          Description;                // Get all declared members in this type
 
         static Struct               Parse(string text);         // Create a value of this type by a specified string representation
+        bool                        TestType(Object object);    // Returns false if "object" is not an instance of this type
         void                        RequireType(Object object); // Throw an exception if "object" is not an instance of this type
     }
 
@@ -155,6 +158,7 @@ API:
 
         Object                      Parse(string text);
         string                      Print(Object object);
+        bool                        TestType(Object object);
         void                        RequireType(Object object);
     }
 */
@@ -319,7 +323,7 @@ Packages.Define("Class", function () {
 
     ///////////////////////////////////////////////////////////////
 
-    function __PrimitiveType(fullName, parse, print, requireType) {
+    function __PrimitiveType(fullName, parse, print, testType) {
         Object.defineProperty(this, "FullName", {
             configurable: false,
             enumerable: true,
@@ -338,11 +342,21 @@ Packages.Define("Class", function () {
             writable: false,
             value: print,
         });
+        Object.defineProperty(this, "TestType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: testType,
+        });
         Object.defineProperty(this, "RequireType", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: requireType,
+            value: function (value) {
+                if (!this.TestType(value)) {
+                    throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\".");
+                }
+            },
         });
         Object.seal(this);
     }
@@ -351,42 +365,42 @@ Packages.Define("Class", function () {
         "<number>",
         function (text) { return +text; },
         function (value) { return "" + value; },
-        function (value) { if (typeof value !== "number") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        function (value) { return typeof value === "number"; }
         );
 
     var __String = new __PrimitiveType(
         "<string>",
         function (text) { return text; },
         function (value) { return value; },
-        function (value) { if (typeof value !== "string") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        function (value) { return typeof value === "string" }
         );
 
     var __Boolean = new __PrimitiveType(
         "<boolean>",
         function (text) { if (text === "true") return true; if (text === "false") return false; throw new Error("\"" + text + "\" is not a valid string representation for type \"" + this.FullName + "\"."); },
         function (value) { return "" + value; },
-        function (value) { if (typeof value !== "boolean") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        function (value) { return typeof value === "boolean"; }
         );
 
     var __Array = new __PrimitiveType(
         "<array>",
         function (text) { throw new Error("Not Supported."); },
         function (value) { throw new Error("Not Supported."); },
-        function (value) { if (!(value instanceof Array)) throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        function (value) { return value instanceof Array; }
         );
 
     var __Function = new __PrimitiveType(
         "<function>",
         function (text) { throw new Error("Not Supported."); },
         function (value) { throw new Error("Not Supported."); },
-        function (value) { if (typeof value !== "function") throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        function (value) { return typeof value === "function"; }
         );
 
     var __Void = new __PrimitiveType(
         "<function>",
         function (text) { throw new Error("Not Supported."); },
         function (value) { throw new Error("Not Supported."); },
-        function (value) { if (value !== undefined) throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\"."); }
+        function (value) { return value === undefined; }
         );
 
     ///////////////////////////////////////////////////////////////
@@ -1407,17 +1421,25 @@ Packages.Define("Class", function () {
             }
         });
 
+        // Type.TestType(obj)
+        Object.defineProperty(Type, "TestType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                LoadType();
+                return obj === null || (obj instanceof Class && Type.IsAssignableFrom(obj.__Type));
+            }
+        });
+
         // Type.RequireType(obj)
         Object.defineProperty(Type, "RequireType", {
             configurable: false,
             enumerable: true,
             writable: false,
             value: function (obj) {
-                LoadType();
-                if (obj !== null) {
-                    if (!(obj instanceof Class) || !Type.IsAssignableFrom(obj.__Type)) {
-                        throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
-                    }
+                if (!this.TestType(obj)) {
+                    throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }
         });
@@ -1517,13 +1539,22 @@ Packages.Define("Class", function () {
                 return Type.Description[text];
             },
         });
+        // Type.TestType(obj)
+        Object.defineProperty(Type, "TestType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                return obj instanceof Enum && obj.__Type === Type;
+            }
+        });
         // Type.RequireType(obj)
         Object.defineProperty(Type, "RequireType", {
             configurable: false,
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Enum) || obj.__Type !== Type) {
+                if (!this.TestType(obj)) {
                     throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }
@@ -1730,13 +1761,22 @@ Packages.Define("Class", function () {
                 return result;
             },
         });
+        // Type.TestType(obj)
+        Object.defineProperty(Type, "TestType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                return obj instanceof Flags && obj.__Type === Type;
+            }
+        });
         // Type.RequireType(obj)
         Object.defineProperty(Type, "RequireType", {
             configurable: false,
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Enum) || obj.__Type !== Type) {
+                if (!this.TestType(obj)) {
                     throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }
@@ -2066,13 +2106,22 @@ Packages.Define("Class", function () {
                 return new Type(proto);
             },
         });
+        // Type.TestType(obj)
+        Object.defineProperty(Type, "TestType", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (obj) {
+                return obj instanceof Struct && obj.__Type === Type;
+            }
+        });
         // Type.RequireType(obj)
         Object.defineProperty(Type, "RequireType", {
             configurable: false,
             enumerable: true,
             writable: false,
             value: function (obj) {
-                if (!(obj instanceof Struct) || obj.__Type !== Type) {
+                if (!this.TestType(obj)) {
                     throw new Error("The specified object's type is not compatible with \"" + Type.FullName + "\".");
                 }
             }

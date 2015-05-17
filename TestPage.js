@@ -9,7 +9,6 @@ eval(
         "GacUI.Elements.ColorizedText",
         "GacUI.Elements.Document",
         "GacUI.Layout.Basic",
-        "GacUI.Layout.Bounds",
         "GacUI.Layout.Stack",
         "GacUI.Layout.Table",
         "GacUI.Layout.Misc"],
