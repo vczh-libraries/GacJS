@@ -4,8 +4,11 @@ eval(
         "Class",
         "Html.ResizeEvent",
         "GacUI.Types",
-        "GacUI.Elements",
-        "GacUI.Layout"],
+        "GacUI.Elements.Interface",
+        "GacUI.Elements.Basic",
+        "GacUI.Elements.ColorizedText",
+        "GacUI.Elements.Document",
+        "GacUI.Layout.Basic"],
         true)
     );
 

@@ -1,22 +1,9 @@
-Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], function (__injection__) {
+Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEvent","GacUI.Elements.Interface"], function (__injection__) {
     eval(__injection__);
 
     function FQN(name) {
         return "vl::presentation::elements::Gui" + name + "Element";
     }
-
-    var IElement = Class("vl::presentation::elements::IGuiGraphicsElement", {
-
-        htmlElement: Protected(null),
-
-        gacjs_InstallElement: Public.Virtual(function (graphElement) {
-            graphElement.appendChild(this.htmlElement);
-        }),
-
-        gacjs_UninstallElement: Public.Virtual(function (graphElement) {
-            grapyElement.removeChild(this.htmlElement);
-        }),
-    });
 
     var ElementShape = Enum("vl::presentation::elements::ElementShape", {
         Rectangle: 0,
@@ -731,43 +718,10 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
     });
 
     /********************************************************************************
-    ColorizedText
-    ********************************************************************************/
-
-    var ColorizedTextElement = Class(FQN("ColorizedText"), IElement, {
-
-        __Constructor: Public(function () {
-            this.htmlElement = document.createElement("div");
-            this.htmlElement.style.display = "block";
-            this.htmlElement.style.position = "relative";
-            this.htmlElement.style.width = "100%";
-            this.htmlElement.style.height = "100%";
-            this.UpdateStyle();
-        }),
-    });
-
-    /********************************************************************************
-    Polygon
-    ********************************************************************************/
-
-    var DocumentElement = Class(FQN("Document"), IElement, {
-
-        __Constructor: Public(function () {
-            this.htmlElement = document.createElement("div");
-            this.htmlElement.style.display = "block";
-            this.htmlElement.style.position = "relative";
-            this.htmlElement.style.width = "100%";
-            this.htmlElement.style.height = "100%";
-            this.UpdateStyle();
-        }),
-    });
-
-    /********************************************************************************
     Package
     ********************************************************************************/
 
     return {
-        IElement: IElement,
         ElementShape: ElementShape,
         SolidBorder: SolidBorder,
         RoundBorder: RoundBorder,
@@ -780,7 +734,5 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
         SolidLabel: SolidLabel,
         ImageFrameElement: ImageFrameElement,
         PolygonElement: PolygonElement,
-        ColorizedTextElement: ColorizedTextElement,
-        DocumentElement: DocumentElement,
     }
 });
