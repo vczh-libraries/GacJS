@@ -514,7 +514,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
 
             this.referenceHtmlElement = document.createElement("div");
             this.referenceHtmlElement.style.display = "block";
-            this.referenceHtmlElement.style.position = "absolute";
+            this.referenceHtmlElement.style.position = "fixed";
             this.referenceHtmlElement.style.visibility = "hidden";
             this.referenceHtmlElement.style.left = "0";
             this.referenceHtmlElement.style.top = "0";
