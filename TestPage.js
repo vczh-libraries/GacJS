@@ -106,8 +106,8 @@ function InstallResizer(node) {
             if (draggableHandle.style.right !== "") {
                 draggableHandle.style.right = "";
                 draggableHandle.style.bottom = "";
-                draggableHandle.style.left = (node.offsetWidth - draggableHandle.offsetWidth - 1) + "px";
-                draggableHandle.style.top = (node.offsetHeight - draggableHandle.offsetHeight - 1) + "px";
+                draggableHandle.style.left = (node.offsetWidth - draggableHandle.offsetWidth - 3) + "px";
+                draggableHandle.style.top = (node.offsetHeight - draggableHandle.offsetHeight - 3) + "px";
             }
 
             dragging = true;

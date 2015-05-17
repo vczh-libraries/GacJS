@@ -481,18 +481,17 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
         }),
 
         HtmlElement_OnResize: Protected(function () {
-        }),
-
-        CreateTextElement: Protected(function () {
-            var node = document.createElement("div");
-            node.style.display = "block";
-            node.style.position = "relative";
-            return node;
-        }),
-
-        CreateTextNode: Protected(function () {
-            var node = document.createTextNode("");
-            return node;
+            var referenceWidth = this.referenceHtmlElement.offsetWidth;
+            var displayWidth = this.htmlElement.offsetWidth;
+            if (this.wrapLine || this.ellipse) {
+                var width = Math.min(referenceWidth, displayWidth) + "px";
+            }
+            else {
+                var width = referenceWidth + "px";
+            }
+            if (this.textHtmlElement.style.width !== width) {
+                this.textHtmlElement.style.width = width;
+            }
         }),
 
         __Constructor: Public(function () {
@@ -507,17 +506,20 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
             this.verticalHtmlFlexElement.style.display = "flex";
             this.verticalHtmlFlexElement.style.flexDirection = "column";
 
-            this.textHtmlElement = this.CreateTextElement();
-            this.textHtmlNode = this.CreateTextNode();
+            this.textHtmlElement = document.createElement("div");
+            this.textHtmlElement.style.display = "block";
+            this.textHtmlElement.style.position = "relative";
+            this.textHtmlNode = document.createTextNode("");
             this.textHtmlElement.appendChild(this.textHtmlNode);
 
-            this.referenceHtmlElement = this.CreateTextElement();
-            this.referenceHtmlNode = this.CreateTextNode();
-            this.referenceHtmlElement.appendChild(this.referenceHtmlNode);
+            this.referenceHtmlElement = document.createElement("div");
+            this.referenceHtmlElement.style.display = "block";
             this.referenceHtmlElement.style.position = "absolute";
             this.referenceHtmlElement.style.visibility = "hidden";
             this.referenceHtmlElement.style.left = "0";
             this.referenceHtmlElement.style.top = "0";
+            this.referenceHtmlNode = document.createTextNode("");
+            this.referenceHtmlElement.appendChild(this.referenceHtmlNode);
 
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
