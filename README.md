@@ -14,7 +14,7 @@ This project's priority is not very high. The first step is to re-implement GacU
 Running test pages is very simple, just follow the steps:
 * Clone this repo to your disk.
 * Create a web site on the cloned folder using IIS.
-* Launch http://127.0.0.1:<port> according to your configuration.
+* Launch http://127.0.0.1:< port > according to your configuration.
 
 ### Content
 
