@@ -2,6 +2,20 @@
 API:
 ================================================================================
 
+    class __EventHandler {
+        object                      Function;
+    }
+
+    class __Event {
+        __EventHandler              Attach(object function);
+        void                        Detach(function);
+        void                        Execute(...);
+        bool                        ContainsHandler(__EventHandler handler);
+        bool                        IsEmpty();
+    }
+
+================================================================================
+
     class __BaseClass {
         __Class                     Type;
         bool                        Virtual;
@@ -253,6 +267,24 @@ Packages.Define("Class", function () {
                 for (var i in handlers) {
                     handlers[i].Function.apply(null, arguments);
                 }
+            }
+        });
+
+        Object.defineProperty(this, "ContainsHandler", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function (handler) {
+                return handlers.indexOf(handler) !== -1;
+            }
+        });
+
+        Object.defineProperty(this, "IsEmpty", {
+            configurable: false,
+            enumerable: true,
+            writable: false,
+            value: function () {
+                return handlers.length === 0;
             }
         });
 

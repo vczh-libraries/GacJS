@@ -6,22 +6,11 @@ API:
     DetachResizeEvent(element, callback);
 */
 
-Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
+Packages.Define("Html.ResizeEvent", ["Html.Events","Html.RunAfterWindowLoaded"], function (__injection__) {
     eval(__injection__);
 
-    var windowLoaded = false;
-    var accumulatedParentChangedEvents = [];
-
-    window.addEventListener("load", function (event) {
-        windowLoaded = true;
-        for (var i = 0; i < accumulatedParentChangedEvents.length; i++) {
-            accumulatedParentChangedEvents[i]();
-        }
-        accumulatedParentChangedEvents = [];
-    }, false);
-
     function AttachParentChangedEvent(element, callback) {
-        AttachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {
+        return AttachGeneralEvent(element, "ParentChanged", callback, function (eventContainer) {
 
             function Filter(record) {
                 for (var i = 0; i < record.addedNodes.length; i++) {
@@ -38,15 +27,12 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
             }
 
             var observer = new MutationObserver(function (records) {
+                function ExecuteEvent() {
+                    eventContainer.Execute();
+                }
+
                 if (records.filter(Filter).length > 0) {
-                    if (windowLoaded === true) {
-                        RaiseEvent();
-                    }
-                    else {
-                        if (accumulatedParentChangedEvents.indexOf(callback) === -1) {
-                            accumulatedParentChangedEvents.push(callback);
-                        }
-                    }
+                    RunAfterWindowLoaded(ExecuteEvent);
                 }
             });
             observer.observe(document.body, { childList: true, subtree: true });
@@ -54,15 +40,8 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
         });
     }
 
-    function DetachParentChangedEvent(element, callback) {
-        if (windowLoaded === false) {
-            var index = accumulatedParentChangedEvents.indexOf(callback);
-            if (index !== -1) {
-                accumulatedParentChangedEvents.splice(index, 1);
-            }
-        }
-
-        DetachGeneralEvent(element, "ParentChanged", callback, function (RaiseEvent) {
+    function DetachParentChangedEvent(element, handler) {
+        return DetachGeneralEvent(element, "ParentChanged", handler, function () {
             element.gacjs_BodySubTreeObserver.disconnect();
             delete element.gacjs_BodySubTreeObserver;
         });
@@ -71,7 +50,7 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
     // This function is enhanced and modified to my coding style from
     // https://github.com/marcj/css-element-queries/
     function AttachResizeEvent(element, callback) {
-        AttachGeneralEvent(element, "Resize", callback, function (RaiseEvent) {
+        return AttachGeneralEvent(element, "Resize", callback, function (eventContainer) {
 
             function SetStyle(element, forContainer) {
                 element.style.position = "absolute";
@@ -131,22 +110,22 @@ Packages.Define("Html.ResizeEvent", ["Html.Events"], function (__injection__) {
 
             expand.addEventListener("scroll", function (event) {
                 if (element.offsetWidth > lastWidth || element.offsetHeight > lastHeight) {
-                    RaiseEvent();
+                    eventContainer.Execute();
                 }
                 Reset();
             }, false);
 
             shrink.addEventListener("scroll", function (event) {
                 if (element.offsetWidth < lastWidth || element.offsetHeight < lastHeight) {
-                    RaiseEvent();
+                    eventContainer.Execute();
                 }
                 Reset();
             }, false);
         });
     }
 
-    function DetachResizeEvent(element, callback) {
-        DetachGeneralEvent(element, "Resize", callback, function (RaiseEvent) {
+    function DetachResizeEvent(element, handler) {
+        return DetachGeneralEvent(element, "Resize", handler, function () {
             element.removeChild(element.gacjs_ResizeExpand);
             element.removeChild(element.gacjs_ResizeShrink);
             delete element.gacjs_ResizeExpand;

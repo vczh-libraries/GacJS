@@ -232,12 +232,12 @@ function CreateLayoutEmbedder(layout, rows, columns) {
     child.style.height = (rows * 100) + "px";
     InstallDraggableHandlers(div);
 
-    AttachParentChangedEvent(div, function () {
+    var handler = AttachParentChangedEvent(div, function () {
         AttachResizeEvent(div, function () {
             child.style.width = (GetPx(div.style.width) - 20) + "px";
             child.style.height = (GetPx(div.style.height) - 20) + "px";
         });
-        DetachParentChangedEvent(div, arguments.callee);
+        DetachParentChangedEvent(div, handler);
     }, false);
     return div;
 }

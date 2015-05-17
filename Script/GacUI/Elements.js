@@ -424,20 +424,14 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         horizontalHtmlFlexElement: Protected(null),
         verticalHtmlFlexElement: Protected(null),
         textHtmlElement: Protected(null),
+        textHtmlNode: Protected(null),
 
-        UpdateStyleInternal: Protected(function (textElement) {
-            this.textHtmlElement.innerHTML = "";
+        UpdateStyleInternal: Protected(function (textElement, textNode) {
             if (this.multiline) {
-                var lines = this.text.split(/\r?\n/);
-                for (var i = 0; i < lines.length; i++) {
-                    if (i > 0) {
-                        this.textHtmlElement.appendChild(document.createElement("br"));
-                    }
-                    textElement.appendChild(document.createTextNode(lines[i]));
-                }
+                textNode.textContent = this.text;
             }
             else {
-                textElement.appendChild(document.createTextNode(this.text));
+                textNode.textContent = this.text.replace(/\r?\n/, " ");
             }
 
             textElement.style.color = this.color.__ToString();
@@ -446,7 +440,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             textElement.style.fontWeight = (this.font.bold ? "bold" : "normal");
             textElement.style.fontStyle = (this.font.italic ? "italic" : "normal");
             textElement.style.textDecoration = (this.font.underline ? "underline" : "");
-            textElement.style.wordWrap = (this.wrapLine ? "break-word" : "");
+            textElement.style.whiteSpace = (this.wrapLine ? "pre-wrap" : "pre");
             textElement.style.textOverflow = (this.Ellipse ? "ellipsis" : "");
         }),
 
@@ -477,7 +471,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
             this.htmlElement.style.color = this.color.__ToString();
             this.htmlElement.style.textDecoration = (this.font.strikeline ? "line-through" : "");
-            this.UpdateStyleInternal(this.textHtmlElement);
+            this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode);
         }),
 
         CreateTextElement: Protected(function () {
@@ -494,18 +488,22 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
         __Constructor: Public(function () {
             this.horizontalHtmlFlexElement = document.createElement("div");
+            this.horizontalHtmlFlexElement.style.position = "relative";
             this.horizontalHtmlFlexElement.style.display = "flex";
             this.horizontalHtmlFlexElement.style.flexDirection = "row";
             this.horizontalHtmlFlexElement.style.height = "100%";
 
             this.verticalHtmlFlexElement = document.createElement("div");
+            this.verticalHtmlFlexElement.style.position = "relative";
             this.verticalHtmlFlexElement.style.display = "flex";
             this.verticalHtmlFlexElement.style.flexDirection = "column";
 
             this.textHtmlElement = this.CreateTextElement();
+            this.textHtmlNode = this.CreateTextNode();
 
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
+            this.textHtmlElement.appendChild(this.textHtmlNode);
             this.htmlElement = this.horizontalHtmlFlexElement;
             this.UpdateStyle();
         }),
