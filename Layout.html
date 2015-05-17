@@ -78,7 +78,10 @@
                     <th>GradientBackground (Horizontal)</th>
                     <td id="cell_Elements_GradientBackground_Horizontal"></td>
                     <th>SolidLabel (WrapLine)</th>
-                    <td id="cell_Elements_SolidLabel_WrapLine"></td>
+                    <td>
+                        <div class="LineDiv" id="cell_Elements_SolidLabel_WrapLine_Singleline"></div>
+                        <div class="LineDiv" id="cell_Elements_SolidLabel_WrapLine_Multiline"></div>
+                    </td>
                 </tr>
                 <tr>
                     <th>3DSplitter (Horizontal)</th>
@@ -86,7 +89,10 @@
                     <th>GradientBackground (Vertical)</th>
                     <td id="cell_Elements_GradientBackground_Vertical"></td>
                     <th>SolidLabel (Ellipse)</th>
-                    <td id="cell_Elements_SolidLabel_Ellipse"></td>
+                    <td>
+                        <div class="LineDiv" id="cell_Elements_SolidLabel_Ellipse_Singleline"></div>
+                        <div class="LineDiv" id="cell_Elements_SolidLabel_Ellipse_Multiline"></div>
+                    </td>
                 </tr>
                 <tr>
                     <th>3DSplitter (Vertical)</th>
@@ -255,11 +261,15 @@
             cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Single\r\nline", false, false, false, false)));
             cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Multi\r\nline", false, false, true, false)));
 
-            cell_Elements_SolidLabel_WrapLine.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence", false, false, false, false)));
-            cell_Elements_SolidLabel_WrapLine.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence", true, false, false, false)));
+            cell_Elements_SolidLabel_WrapLine_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, false)));
+            cell_Elements_SolidLabel_WrapLine_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, false)));
+            cell_Elements_SolidLabel_WrapLine_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, false)));
+            cell_Elements_SolidLabel_WrapLine_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, false)));
 
-            cell_Elements_SolidLabel_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence that cannot be display in this small box", false, true, false, false)));
-            cell_Elements_SolidLabel_Ellipse.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence that cannot be display in this small box", true, true, false, false)));
+            cell_Elements_SolidLabel_Ellipse_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, false, false)));
+            cell_Elements_SolidLabel_Ellipse_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
+            cell_Elements_SolidLabel_Ellipse_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
+            cell_Elements_SolidLabel_Ellipse_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
         </script>
 
         <div class="TabPage">

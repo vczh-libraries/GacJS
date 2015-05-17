@@ -4,6 +4,12 @@ body {
     font-size: 14px;
 }
 
+.LineDiv:after {
+    content: " ";
+    display: block;
+    clear: both;
+}
+
 .DraggableHandle {
     display: block;
     width: 10px;

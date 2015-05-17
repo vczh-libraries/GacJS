@@ -443,7 +443,6 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
             textElement.style.fontStyle = (this.font.italic ? "italic" : "normal");
             textElement.style.textDecoration = (this.font.underline ? "underline" : "");
             textElement.style.whiteSpace = (this.wrapLine ? "pre-wrap" : "pre");
-            textElement.style.textOverflow = (this.Ellipse ? "ellipsis" : "");
         }),
 
         UpdateStyle: Protected(function () {
@@ -473,6 +472,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
 
             this.htmlElement.style.color = this.color.__ToString();
             this.htmlElement.style.textDecoration = (this.font.strikeline ? "line-through" : "");
+            this.textHtmlElement.style.textOverflow = (this.Ellipse ? "ellipsis" : "");
             this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode);
             this.UpdateStyleInternal(this.referenceHtmlElement, this.referenceHtmlNode);
         }),
@@ -509,6 +509,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
             this.textHtmlElement = document.createElement("div");
             this.textHtmlElement.style.display = "block";
             this.textHtmlElement.style.position = "relative";
+            this.textHtmlElement.style.overflow = "hidden";
             this.textHtmlNode = document.createTextNode("");
             this.textHtmlElement.appendChild(this.textHtmlNode);
 
