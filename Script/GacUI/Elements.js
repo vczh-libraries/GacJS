@@ -421,7 +421,9 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         multiline: Protected(false),
         wrapLineHeightCalculation: Protected(false),
 
-        textHtmlElement:Protected(null),
+        horizontalHtmlFlexElement: Protected(null),
+        verticalHtmlFlexElement: Protected(null),
+        textHtmlElement: Protected(null),
         textHtmlNode: Protected(null),
 
         UpdateStyleInternal: Protected(function (textElement, textNode) {
@@ -436,34 +438,27 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
 
         UpdateStyle: Protected(function () {
-            switch(this.horizontalAlignment)
-            {
+            switch (this.horizontalAlignment) {
                 case Alignment.Description.Left:
-                    this.htmlElement.style.gridColumns = "0px auto 1fr";
-                    this.htmlElement.style.msGridColumns = "0px auto 1fr";
+                    this.horizontalHtmlFlexElement.style.justifyContent = "flex-start";
                     break;
                 case Alignment.Description.Right:
-                    this.htmlElement.style.gridColumns = "1fr auto 0px";
-                    this.htmlElement.style.msGridColumns = "1fr auto 0px";
+                    this.horizontalHtmlFlexElement.style.justifyContent = "flex-end";
                     break;
                 default:
-                    this.htmlElement.style.gridColumns = "1fr auto 1fr";
-                    this.htmlElement.style.msGridColumns = "1fr auto 1fr";
+                    this.horizontalHtmlFlexElement.style.justifyContent = "center";
                     break;
             }
 
             switch (this.verticalAlignment) {
                 case Alignment.Description.Top:
-                    this.htmlElement.style.gridRows = "0px auto 1fr";
-                    this.htmlElement.style.msGridRows = "0px auto 1fr";
+                    this.verticalHtmlFlexElement.style.justifyContent = "flex-start";
                     break;
                 case Alignment.Description.Bottom:
-                    this.htmlElement.style.gridRows = "1fr auto 0px";
-                    this.htmlElement.style.msGridRows = "1fr auto 0px";
+                    this.verticalHtmlFlexElement.style.justifyContent = "flex-end";
                     break;
                 default:
-                    this.htmlElement.style.gridRows = "1fr auto 1fr";
-                    this.htmlElement.style.msGridRows = "1fr auto 1fr";
+                    this.verticalHtmlFlexElement.style.justifyContent = "center";
                     break;
             }
 
@@ -472,12 +467,10 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode);
         }),
 
-        CreateTextElement:Protected(function(){
+        CreateTextElement: Protected(function () {
             var node = document.createElement("div");
             node.style.display = "block";
             node.style.position = "relative";
-            node.style.width = "100%";
-            node.style.height = "100%";
             return node;
         }),
 
@@ -487,29 +480,22 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         }),
 
         __Constructor: Public(function () {
-            this.htmlElement = document.createElement("div");
-            this.htmlElement.style.display = "grid";
-            this.htmlElement.style.display = "-ms-grid";
-            this.htmlElement.style.position = "relative";
-            this.htmlElement.style.width = "100%";
-            this.htmlElement.style.height = "100%";
+            this.horizontalHtmlFlexElement = document.createElement("div");
+            this.horizontalHtmlFlexElement.style.display = "flex";
+            this.horizontalHtmlFlexElement.style.flexDirection = "row";
+            this.horizontalHtmlFlexElement.style.height = "100%";
 
-            this.htmlElement.style.gridRows = "1fr auto 1fr";
-            this.htmlElement.style.msGridRows = "1fr auto 1fr";
-
-            this.htmlElement.style.gridColumns = "1fr auto 1fr";
-            this.htmlElement.style.msGridColumns = "1fr auto 1fr";
+            this.verticalHtmlFlexElement = document.createElement("div");
+            this.verticalHtmlFlexElement.style.display = "flex";
+            this.verticalHtmlFlexElement.style.flexDirection = "column";
 
             this.textHtmlElement = this.CreateTextElement();
-            this.textHtmlElement.style.gridRow = "2";
-            this.textHtmlElement.style.msGridRow = "2";
-            this.textHtmlElement.style.gridColumn = "2";
-            this.textHtmlElement.style.msGridColumn = "2";
-
             this.textHtmlNode = this.CreateTextNode();
 
+            this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
+            this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
             this.textHtmlElement.appendChild(this.textHtmlNode);
-            this.htmlElement.appendChild(this.textHtmlElement);
+            this.htmlElement = this.horizontalHtmlFlexElement;
             this.UpdateStyle();
         }),
 
