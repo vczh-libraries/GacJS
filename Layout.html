@@ -72,7 +72,7 @@
                     <td rowspan="3" colspan="2">
                         <table>
                             <tr>
-                                <th colspan="2"></th>
+                                <th colspan="2">Height: false</th>
                                 <th>WrapLine: false</th>
                                 <th>WrapLine: true</th>
                             </tr>
@@ -118,8 +118,25 @@
                     <td id="cell_Elements_3DSplitter_Vertical"></td>
                     <th>GradientBackground (Slash)</th>
                     <td id="cell_Elements_GradientBackground_Slash"></td>
-                    <th>SolidLabel (Height)</th>
-                    <td id="cell_Elements_SolidLabel_Height"></td>
+                    <td colspan="2">
+                        <table>
+                            <tr>
+                                <th>Height: true</th>
+                                <th>WrapLine: false</th>
+                                <th>WrapLine: true</th>
+                            </tr>
+                            <tr>
+                                <th>Singleline</th>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height"></td>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height"></td>
+                            </tr>
+                            <tr>
+                                <th>Multiline</th>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height"></td>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height"></td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
                 <tr>
                     <th>RoundBorder</th>
@@ -286,6 +303,11 @@
             cell_Elements_SolidLabel_Ellipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
             cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
             cell_Elements_SolidLabel_Ellipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
+
+            cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, true)));
+            cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, true)));
+            cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, true)));
+            cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, true)));
         </script>
 
         <div class="TabPage">
