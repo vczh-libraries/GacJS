@@ -270,78 +270,6 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
     });
 
     /********************************************************************************
-    GuiBoundsComposition
-    ********************************************************************************/
-
-    var BoundsLayout = Class(FQN("Bounds"), Layout, {
-
-        UpdateStyle: Protected.Override(function () {
-            this.__Dynamic(Layout).UpdateStyle();
-            throw new Error("Not Implemented.");
-        }),
-
-        bounds: Protected(new Rect()),
-
-        SetBounds: Public(function (value) {
-            this.bounds = value;
-            this.UpdateStyle();
-        }),
-        Bounds: Public.Property({}),
-
-        alignmentToParent: Protected(new Margin(-1, -1, -1, -1)),
-        GetAlignmentToParent: Public(function () {
-            return this.alignmentToParent;
-        }),
-        SetAlignmentToParent: Public(function (value) {
-            this.alignmentToParent = value;
-            this.UpdateStyle();
-        }),
-        AlignmentToParent: Public.Property({}),
-    });
-
-    /********************************************************************************
-    GuiStackComposition
-    ********************************************************************************/
-
-    var StackLayout = Class(FQN("Stack"), SiteLayout, {
-    });
-
-    /********************************************************************************
-    GuiStackItemComposition
-    ********************************************************************************/
-
-    var StackItemLayout = Class(FQN("StackItem"), SiteLayout, {
-    });
-
-    /********************************************************************************
-    GuiTableComposition
-    ********************************************************************************/
-
-    var TableLayout = Class(FQN("Table"), SiteLayout, {
-    });
-
-    /********************************************************************************
-    GuiCellComposition
-    ********************************************************************************/
-
-    var CellLayout = Class(FQN("Cell"), SiteLayout, {
-    });
-
-    /********************************************************************************
-    GuiSideAlignedComposition
-    ********************************************************************************/
-
-    var SideAlignedLayout = Class(FQN("SideAligned"), SiteLayout, {
-    });
-
-    /********************************************************************************
-    GuiPartialViewComposition
-    ********************************************************************************/
-
-    var PartialViewLayout = Class(FQN("PartialView"), SiteLayout, {
-    });
-
-    /********************************************************************************
     Package
     ********************************************************************************/
 
@@ -349,12 +277,5 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
         Layout: Layout,
         SiteLayout: SiteLayout,
         WindowLayout: WindowLayout,
-        BoundsLayout: BoundsLayout,
-        StackLayout: StackLayout,
-        StackItemLayout: StackItemLayout,
-        TableLayout: TableLayout,
-        CellLayout: CellLayout,
-        SideAlignedLayout: SideAlignedLayout,
-        PartialViewLayout: PartialViewLayout,
     }
 });
