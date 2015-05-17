@@ -55,9 +55,9 @@
                                 <div id="cell_elements_SolidLabel_RC" style="flex-grow:1"></div>
                             </div>
                             <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="cell_elements_SolidLabel_LB" style="display:block; flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_CB" style="display:block; flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_RB" style="display:block; flex-grow:1"></div>
+                                <div id="cell_elements_SolidLabel_LB" style="flex-grow:1"></div>
+                                <div id="cell_elements_SolidLabel_CB" style="flex-grow:1"></div>
+                                <div id="cell_elements_SolidLabel_RB" style="flex-grow:1"></div>
                             </div>
                         </div>
                     </td>
@@ -210,9 +210,10 @@
                 layout.OwnedElement = element;
 
                 var div = layout.BoundsHtmlElement;
-                div.style.position = "relative";
-                div.style.width = "100%";
-                div.style.height = "100%";
+                div.style.left = "0";
+                div.style.top = "0";
+                div.style.right = "0";
+                div.style.bottom = "0";
                 return div;
             }
             cell_elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
