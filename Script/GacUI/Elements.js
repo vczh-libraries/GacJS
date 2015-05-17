@@ -484,7 +484,7 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], 
             var referenceWidth = this.referenceHtmlElement.offsetWidth;
             var displayWidth = this.htmlElement.offsetWidth;
             if (this.wrapLine || this.ellipse) {
-                var width = Math.min(referenceWidth, displayWidth) + "px";
+                var width = (Math.min(referenceWidth, displayWidth) + 1) + "px";
             }
             else {
                 var width = referenceWidth + "px";
