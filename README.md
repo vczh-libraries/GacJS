@@ -18,11 +18,22 @@ This project's priority is not very high. The first step is to re-implement GacU
     * Enum
     * Unit test for Class.js in **[Class.html](https://github.com/vczh-libraries/GacJS/blob/master/Class.html)**.
 * **Razor.js**
-* **[Html/Events.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Events.js)** : A general custom event framework.
-* **[Html/RunAfterWindowLoaded.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/RunAfterWindowLoaded.js)** : Execute a function. If window is not loaded then delay the execution.
-* **[Html/ResizeEvent.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/ResizeEvent.js)** : ConnectionToBodyChanged and Resize custom event that works on every elements.
-* **[GacUI/Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
-* **[GacUI/Elements.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements.js)** : GacUI Predefined Graphic Elements.
-* **[GacUI/Layout.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout.js)** : GacUI Predefined Layout Components.
-* **GacUI/Templates.js**
-* **GacUI/Controls.js**
+* **[Html/](https://github.com/vczh-libraries/GacJS/tree/master/Script/Html)** : HTML related packages.
+   * **[Events.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Events.js)** : A general custom event framework.
+   * **[RunAfterWindowLoaded.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/RunAfterWindowLoaded.js)** : Execute a function. If window is not loaded then delay the execution.
+   * **[ResizeEvent.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/ResizeEvent.js)** : ConnectionToBodyChanged and Resize custom event that works on every elements.
+* **[GacUI/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI)** : GacUI in Browsers!.
+   * **[Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
+   * **[Elements/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI/Elements)** : GacUI Predefined Graphic Elements.
+      * **[Interface.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/Interface.js)**
+      * **[Basic.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/Basic.js)**
+      * **[ColorizedText.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/ColorizedText.js)**
+      * **[Document.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Elements/Document.js)**
+   * **[GacUI/Layout/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI/Layout)** : GacUI Predefined Layout Components.
+      * **[Basic.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout/Basic.js)**
+      * **[Bounds.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout/Bounds.js)**
+      * **[Stack.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout/Stack.js)**
+      * **[Table.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout/Table.js)**
+      * **[Misc.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Layout/Misc.js)**
+   * **Templates.js**
+   * **Controls.js**
