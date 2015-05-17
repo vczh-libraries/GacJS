@@ -6,22 +6,38 @@ API:
     DetachResizeEvent(element, callback);
 */
 
-Packages.Define("Html.ResizeEvent", ["Html.Events","Html.RunAfterWindowLoaded"], function (__injection__) {
+Packages.Define("Html.ResizeEvent", ["Html.Events", "Html.RunAfterWindowLoaded"], function (__injection__) {
     eval(__injection__);
 
-    function AttachParentChangedEvent(element, callback) {
-        return AttachGeneralEvent(element, "ParentChanged", callback, function (eventContainer) {
+    function AttachConnectionToBodyChangedEvent(element, callback) {
+        return AttachGeneralEvent(element, "ConnectionToBodyChanged", callback, function (eventContainer) {
 
-            function Filter(record) {
-                for (var i = 0; i < record.addedNodes.length; i++) {
-                    if (record.addedNodes[i] === element) {
+            function ElementListContainsElement(records, element) {
+                for (var i = 0; i < records.length; i++) {
+                    if (records[i] === element) {
                         return true;
                     }
                 }
-                for (var i = 0; i < record.removedNodes.length; i++) {
-                    if (record.removedNodes[i] === element) {
+                return false;
+            }
+
+            function RecordContainsElement(record, element) {
+                if (ElementListContainsElement(record.addedNodes, element)) {
+                    return true;
+                }
+                if (ElementListContainsElement(record.removedNodes, element)) {
+                    return true;
+                }
+                return false;
+            }
+
+            function RecordContainsParentLine(record) {
+                var current = element;
+                while (current !== null) {
+                    if (RecordContainsElement(record, current)) {
                         return true;
                     }
+                    current = current.parentElement;
                 }
                 return false;
             }
@@ -31,7 +47,7 @@ Packages.Define("Html.ResizeEvent", ["Html.Events","Html.RunAfterWindowLoaded"],
                     eventContainer.Execute();
                 }
 
-                if (records.filter(Filter).length > 0) {
+                if (records.filter(RecordContainsParentLine).length > 0) {
                     RunAfterWindowLoaded(ExecuteEvent);
                 }
             });
@@ -40,8 +56,8 @@ Packages.Define("Html.ResizeEvent", ["Html.Events","Html.RunAfterWindowLoaded"],
         });
     }
 
-    function DetachParentChangedEvent(element, handler) {
-        return DetachGeneralEvent(element, "ParentChanged", handler, function () {
+    function DetachConnectionToBodyChangedEvent(element, handler) {
+        return DetachGeneralEvent(element, "ConnectionToBodyChanged", handler, function () {
             element.gacjs_BodySubTreeObserver.disconnect();
             delete element.gacjs_BodySubTreeObserver;
         });
@@ -133,10 +149,19 @@ Packages.Define("Html.ResizeEvent", ["Html.Events","Html.RunAfterWindowLoaded"],
         });
     }
 
+    function DetectResize(element, callback) {
+        var handler = AttachConnectionToBodyChangedEvent(element, function () {
+            AttachResizeEvent(element, callback);
+            DetachConnectionToBodyChangedEvent(element, handler);
+            callback();
+        }, false);
+    }
+
     return {
-        AttachParentChangedEvent: AttachParentChangedEvent,
-        DetachParentChangedEvent: DetachParentChangedEvent,
+        AttachConnectionToBodyChangedEvent: AttachConnectionToBodyChangedEvent,
+        DetachConnectionToBodyChangedEvent: DetachConnectionToBodyChangedEvent,
         AttachResizeEvent: AttachResizeEvent,
         DetachResizeEvent: DetachResizeEvent,
+        DetectResize: DetectResize,
     }
 });

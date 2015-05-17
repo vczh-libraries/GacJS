@@ -1,4 +1,4 @@
-Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injection__) {
+Packages.Define("GacUI.Elements", ["Class", "GacUI.Types", "Html.ResizeEvent"], function (__injection__) {
     eval(__injection__);
 
     function FQN(name) {
@@ -425,6 +425,8 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
         verticalHtmlFlexElement: Protected(null),
         textHtmlElement: Protected(null),
         textHtmlNode: Protected(null),
+        referenceHtmlElement: Protected(null),
+        referenceHtmlNode: Protected(null),
 
         UpdateStyleInternal: Protected(function (textElement, textNode) {
             if (this.multiline) {
@@ -472,6 +474,11 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
             this.htmlElement.style.color = this.color.__ToString();
             this.htmlElement.style.textDecoration = (this.font.strikeline ? "line-through" : "");
             this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode);
+            this.UpdateStyleInternal(this.referenceHtmlElement, this.referenceHtmlNode);
+        }),
+
+        ReferenceTextElement_OnResize: Protected(function () {
+
         }),
 
         CreateTextElement: Protected(function () {
@@ -500,10 +507,24 @@ Packages.Define("GacUI.Elements", ["Class", "GacUI.Types"], function (__injectio
 
             this.textHtmlElement = this.CreateTextElement();
             this.textHtmlNode = this.CreateTextNode();
+            this.textHtmlElement.appendChild(this.textHtmlNode);
+
+            this.referenceHtmlElement = this.CreateTextElement();
+            this.referenceHtmlNode = this.CreateTextNode();
+            this.referenceHtmlElement.appendChild(this.referenceHtmlNode);
+            this.referenceHtmlElement.style.position = "absolute";
+            this.referenceHtmlElement.style.visibility = "hidden";
+            this.referenceHtmlElement.style.left = "0";
+            this.referenceHtmlElement.style.top = "0";
+
+            var self = this;
+            DetectResize(this.referenceHtmlElement, function () {
+                self.ReferenceTextElement_OnResize();
+            });
 
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
-            this.textHtmlElement.appendChild(this.textHtmlNode);
+            this.verticalHtmlFlexElement.appendChild(this.referenceHtmlElement);
             this.htmlElement = this.horizontalHtmlFlexElement;
             this.UpdateStyle();
         }),
