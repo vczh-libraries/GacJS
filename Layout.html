@@ -41,25 +41,26 @@
                     <td id="cell_Elements_SolidBorder_Rectangle"></td>
                     <th>SolidBackground (Rectangle)</th>
                     <td id="cell_Elements_SolidBackground_Rectangle"></td>
-                    <th>SolidLabel</th>
-                    <td id="cell_Elements_SolidLabel">
-                        <div id="cell_Elements_SolidLabel_Alignments" style="display:flex;flex-direction:column; position:absolute;">
+                    <th>SolidLabel (Alignments)</th>
+                    <td id="cell_Elements_SolidLabel_Alignments">
+                        <div id="div_Elements_SolidLabel_Alignments" style="display:flex;flex-direction:column; position:absolute;">
                             <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="cell_elements_SolidLabel_LT" style="flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_CT" style="flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_RT" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_LT" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_CT" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_RT" style="flex-grow:1"></div>
                             </div>
                             <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="cell_elements_SolidLabel_LC" style="flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_CC" style="flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_RC" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_LC" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_CC" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_RC" style="flex-grow:1"></div>
                             </div>
                             <div style="display:flex;flex-direction:row;flex-grow:1;">
-                                <div id="cell_elements_SolidLabel_LB" style="flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_CB" style="flex-grow:1"></div>
-                                <div id="cell_elements_SolidLabel_RB" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_LB" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_CB" style="flex-grow:1"></div>
+                                <div id="div_Elements_SolidLabel_RB" style="flex-grow:1"></div>
                             </div>
                         </div>
+                        <div style="clear:both"></div>
                     </td>
                 </tr>
                 <tr>
@@ -67,49 +68,48 @@
                     <td id="cell_Elements_SolidBorder_Ellipse"></td>
                     <th>SolidBackground (Ellipse)</th>
                     <td id="cell_Elements_SolidBackground_Ellipse"></td>
-                    <th>ImageFrame</th>
-                    <td id="cell_Elements_ImageFrame"></td>
+                    <th>SolidLabel (Multiline)</th>
+                    <td id="cell_Elements_SolidLabel_Multiline"></td>
                 </tr>
                 <tr>
                     <th>3DBorder</th>
                     <td id="cell_Elements_3DBorder"></td>
                     <th>GradientBackground (Horizontal)</th>
                     <td id="cell_Elements_GradientBackground_Horizontal"></td>
-                    <th>Polygon</th>
-                    <td id="cell_Elements_Polygon"></td>
+                    <th>SolidLabel (WrapLine)</th>
+                    <td id="cell_Elements_SolidLabel_WrapLine"></td>
                 </tr>
                 <tr>
                     <th>3DSplitter (Horizontal)</th>
                     <td id="cell_Elements_3DSplitter_Horizontal"></td>
                     <th>GradientBackground (Vertical)</th>
                     <td id="cell_Elements_GradientBackground_Vertical"></td>
-                    <th>ColorizedText</th>
-                    <td id="cell_Elements_ColorizedText"></td>
+                    <th>SolidLabel (Ellipse)</th>
+                    <td id="cell_Elements_SolidLabel_Ellipse"></td>
                 </tr>
                 <tr>
                     <th>3DSplitter (Vertical)</th>
                     <td id="cell_Elements_3DSplitter_Vertical"></td>
                     <th>GradientBackground (Slash)</th>
                     <td id="cell_Elements_GradientBackground_Slash"></td>
-                    <th>Document</th>
-                    <td id="cell_Elements_Document"></td>
+                    <th>SolidLabel (Height)</th>
+                    <td id="cell_Elements_SolidLabel_Height"></td>
                 </tr>
                 <tr>
                     <th>RoundBorder</th>
                     <td id="cell_Elements_RoundBorder"></td>
                     <th>GradientBackground (Backslash)</th>
                     <td id="cell_Elements_GradientBackground_Backslash"></td>
-                    <th>Experiment</th>
-                    <td>
-                        <div id="box_Experiment" style="display: block; position: relative; left: 0px; top: 0px; width: 100px; height: 100px; min-width: 50px; min-height: 50px;">
-                            <div style="display: block; position: absolute; left: 0px; top: 0px; width: calc(100% - 2px); height: calc(100% - 2px); border: 1px solid blue; "></div>
-                            <div style="display: block; position: relative; width: calc(100% - 20px); height: calc(100% - 20px); padding-left: 10px; padding-top: 10px; padding-right: 10px; padding-bottom: 10px;">
-                                <div style="display: block; position: relative; overflow: hidden; width: calc(100% - 2px); height: calc(100% - 2px); border: 1px solid green; ">
-                                    GacUI: GPU Accelerated C++ User Interface, with WYSIWYG developing tools, XML supports, built-in data binding and MVVM features.
-                                </div>
-                            </div>
-                        </div>
-                    </td>
+                    <th>ImageFrame</th>
+                    <td id="cell_Elements_ImageFrame"></td>
+                </tr>
+                <tr>
+                    <th>Polygon</th>
+                    <td id="cell_Elements_Polygon"></td>
+                    <th>ColorizedText</th>
+                    <td id="cell_Elements_ColorizedText"></td>
+                    <th>Document</th>
+                    <td id="cell_Elements_Document"></td>
                 </tr>
             </table>
         </div>
@@ -216,16 +216,34 @@
                 div.style.bottom = "0";
                 return div;
             }
-            cell_elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
-            cell_elements_SolidLabel_CT.appendChild(create_Elements_SolidLabelAlignment("CT", Alignment.Description.Center, Alignment.Description.Top));
-            cell_elements_SolidLabel_RT.appendChild(create_Elements_SolidLabelAlignment("RT", Alignment.Description.Right, Alignment.Description.Top));
-            cell_elements_SolidLabel_LC.appendChild(create_Elements_SolidLabelAlignment("LC", Alignment.Description.Left, Alignment.Description.Center));
-            cell_elements_SolidLabel_CC.appendChild(create_Elements_SolidLabelAlignment("CC", Alignment.Description.Center, Alignment.Description.Center));
-            cell_elements_SolidLabel_RC.appendChild(create_Elements_SolidLabelAlignment("RC", Alignment.Description.Right, Alignment.Description.Center));
-            cell_elements_SolidLabel_LB.appendChild(create_Elements_SolidLabelAlignment("LB", Alignment.Description.Left, Alignment.Description.Bottom));
-            cell_elements_SolidLabel_CB.appendChild(create_Elements_SolidLabelAlignment("CB", Alignment.Description.Center, Alignment.Description.Bottom));
-            cell_elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
-            cell_Elements_SolidLabel.appendChild(CreateLayoutEmbedder(cell_Elements_SolidLabel_Alignments, 3, 3));
+            function create_Elements_SolidLabel(text, wrapLine, ellipse, multiline, wrapLineHeightCalculation) {
+                var element = new SolidLabel();
+                element.Color = new Color(0, 128, 0, 255);
+                element.Font = new FontProperties("Segoe UI", 18, false, false, false, false, true, false);
+                element.Text = text;
+                element.HorizontalAlignment = Alignment.Description.Center;
+                element.VerticalAlignment = Alignment.Description.Center;
+                element.WrapLine = wrapLine;
+                element.Ellipse = ellipse;
+                element.Multiline = multiline;
+                element.WrapLineHeightCalculation = wrapLineHeightCalculation;
+
+                var layout = new Layout();
+                layout.OwnedElement = element;
+                return layout;
+            }
+            div_Elements_SolidLabel_LT.appendChild(create_Elements_SolidLabelAlignment("LT", Alignment.Description.Left, Alignment.Description.Top));
+            div_Elements_SolidLabel_CT.appendChild(create_Elements_SolidLabelAlignment("CT", Alignment.Description.Center, Alignment.Description.Top));
+            div_Elements_SolidLabel_RT.appendChild(create_Elements_SolidLabelAlignment("RT", Alignment.Description.Right, Alignment.Description.Top));
+            div_Elements_SolidLabel_LC.appendChild(create_Elements_SolidLabelAlignment("LC", Alignment.Description.Left, Alignment.Description.Center));
+            div_Elements_SolidLabel_CC.appendChild(create_Elements_SolidLabelAlignment("CC", Alignment.Description.Center, Alignment.Description.Center));
+            div_Elements_SolidLabel_RC.appendChild(create_Elements_SolidLabelAlignment("RC", Alignment.Description.Right, Alignment.Description.Center));
+            div_Elements_SolidLabel_LB.appendChild(create_Elements_SolidLabelAlignment("LB", Alignment.Description.Left, Alignment.Description.Bottom));
+            div_Elements_SolidLabel_CB.appendChild(create_Elements_SolidLabelAlignment("CB", Alignment.Description.Center, Alignment.Description.Bottom));
+            div_Elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
+            cell_Elements_SolidLabel_Alignments.appendChild(CreateLayoutEmbedder(div_Elements_SolidLabel_Alignments, 3, 3));
+            cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Single\r\nline", false, false, false, false)));
+            cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Multi\r\nline", false, false, true, false)));
         </script>
 
         <div class="TabPage">
