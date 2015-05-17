@@ -69,30 +69,50 @@
                     <td id="cell_Elements_SolidBorder_Ellipse"></td>
                     <th>SolidBackground (Ellipse)</th>
                     <td id="cell_Elements_SolidBackground_Ellipse"></td>
-                    <th>SolidLabel (Multiline)</th>
-                    <td id="cell_Elements_SolidLabel_Multiline"></td>
+                    <td rowspan="3" colspan="2">
+                        <table>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th>WrapLine: false</th>
+                                <th>WrapLine: true</th>
+                            </tr>
+                            <tr>
+                                <th rowspan="2">Ellipse: false</th>
+                                <th>Singleline</th>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap"></td>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap"></td>
+                            </tr>
+                            <tr>
+                                <th>Multilineline</th>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap"></td>
+                                <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap"></td>
+                            </tr>
+                            <tr>
+                                <th rowspan="2">Ellipse: true</th>
+                                <th>Singleline</th>
+                                <td id="cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap"></td>
+                                <td id="cell_Elements_SolidLabel_Ellipse_Singleline_Wrap"></td>
+                            </tr>
+                            <tr>
+                                <th>Multilineline</th>
+                                <td id="cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap"></td>
+                                <td id="cell_Elements_SolidLabel_Ellipse_Multiline_Wrap"></td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
                 <tr>
                     <th>3DBorder</th>
                     <td id="cell_Elements_3DBorder"></td>
                     <th>GradientBackground (Horizontal)</th>
                     <td id="cell_Elements_GradientBackground_Horizontal"></td>
-                    <th>SolidLabel (WrapLine)</th>
-                    <td>
-                        <div class="LineDiv" id="cell_Elements_SolidLabel_WrapLine_Singleline"></div>
-                        <div class="LineDiv" id="cell_Elements_SolidLabel_WrapLine_Multiline"></div>
-                    </td>
                 </tr>
                 <tr>
                     <th>3DSplitter (Horizontal)</th>
                     <td id="cell_Elements_3DSplitter_Horizontal"></td>
                     <th>GradientBackground (Vertical)</th>
                     <td id="cell_Elements_GradientBackground_Vertical"></td>
-                    <th>SolidLabel (Ellipse)</th>
-                    <td>
-                        <div class="LineDiv" id="cell_Elements_SolidLabel_Ellipse_Singleline"></div>
-                        <div class="LineDiv" id="cell_Elements_SolidLabel_Ellipse_Multiline"></div>
-                    </td>
                 </tr>
                 <tr>
                     <th>3DSplitter (Vertical)</th>
@@ -258,18 +278,15 @@
             div_Elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
             cell_Elements_SolidLabel_Alignments.appendChild(CreateLayoutEmbedder(div_Elements_SolidLabel_Alignments, 3, 3));
 
-            cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Single\r\nline", false, false, false, false)));
-            cell_Elements_SolidLabel_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("Multi\r\nline", false, false, true, false)));
+            cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, false)));
+            cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, false)));
+            cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, false)));
+            cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, false)));
 
-            cell_Elements_SolidLabel_WrapLine_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, false)));
-            cell_Elements_SolidLabel_WrapLine_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, false)));
-            cell_Elements_SolidLabel_WrapLine_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, false)));
-            cell_Elements_SolidLabel_WrapLine_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, false)));
-
-            cell_Elements_SolidLabel_Ellipse_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, false, false)));
-            cell_Elements_SolidLabel_Ellipse_Singleline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
-            cell_Elements_SolidLabel_Ellipse_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
-            cell_Elements_SolidLabel_Ellipse_Multiline.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
+            cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, false, false)));
+            cell_Elements_SolidLabel_Ellipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
+            cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
+            cell_Elements_SolidLabel_Ellipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
         </script>
 
         <div class="TabPage">
