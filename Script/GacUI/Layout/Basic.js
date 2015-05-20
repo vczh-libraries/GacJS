@@ -63,6 +63,25 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
                 return !minSizeLimitation.__Equals(MinSizeLimitation.Description.NoLimit);
             }),
 
+            UpdateMinSize: Protected(function () {
+                var minSize = null;
+                if (this.element !== null && this.NeedMinSizeNotify(this.minSizeLimitation)) {
+                    minSize = this.element.gacjs_GetMinSize();
+                }
+                else {
+                    minSize = new Size(0, 0);
+                }
+
+                if (minSize.cx >= 0 && minSize.cy >= 0) {
+                    this.boundsHtmlElement.style.minWidth = minSize.cx + "px";
+                    this.boundsHtmlElement.style.minHeight = minSize.cy + "px";
+                }
+                else {
+                    this.boundsHtmlElement.style.minWidth = "";
+                    this.boundsHtmlElement.style.minHeight = "";
+                }
+            }),
+
             UpdateStyle: Protected.Virtual(function () {
                 // throw new Error("Not Implemented.");
             }),
@@ -82,7 +101,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
                 return this.minSizeLimitation;
             }),
             SetMinSizeLimitation: Public(function (value) {
-                if (this.minSizeLimitation !== value) {
+                if (!this.minSizeLimitation.__Equals(value)) {
                     var oldValue = this.minSizeLimitation;
                     this.minSizeLimitation = value;
 
@@ -91,6 +110,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
                         var newNotify = this.NeedMinSizeNotify(value);
                         if (oldNotify !== newNotify) {
                             this.element.gacjs_EnableMinSizeNotify(newNotify);
+                            this.UpdateMinSize();
                         }
                     }
                 }
@@ -185,11 +205,19 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
                 return true;
             }),
 
+            elementMinSizeChangedHandler: Protected(null),
+
+            element_OnMinSizeChanged: Protected(function () {
+                this.UpdateMinSize();
+            }),
+
             GetOwnedElement: Public.StrongTyped(IElement, [], function () {
                 return this.element;
             }),
             SetOwnedElement: Public.StrongTyped(__Void, [IElement], function (value) {
                 if (this.element !== null) {
+                    this.element.gacjs_MinSizeChanged.Detach(this.elementMinSizeChangedHandler);
+                    this.elementMinSizeChangedHandler = null;
                     this.element.gacjs_EnableMinSizeNotify(false);
                     this.element.gacjs_UninstallElement(this.graphHtmlElement);
                 }
@@ -197,7 +225,13 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
                 if (this.element !== null) {
                     this.element.gacjs_InstallElement(this.graphHtmlElement);
                     this.element.gacjs_EnableMinSizeNotify(this.NeedMinSizeNotify(this.minSizeLimitation));
+
+                    var self = this;
+                    this.elementMinSizeChangedHandler = this.element.gacjs_MinSizeChanged.Attach(function () {
+                        self.element_OnMinSizeChanged();
+                    });
                 }
+                this.UpdateMinSize();
             }),
             OwnedElement: Public.Property({}),
 

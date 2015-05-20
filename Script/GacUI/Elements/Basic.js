@@ -439,7 +439,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
 
         UpdateMinSizeMeasuringState: Protected(function () {
             var newMeasuringMinSize = this.enabledMinSizeNotify && !this.ellipse && (!this.wrapLine || this.wrapLineHeightCalculation);
-            if (this.measuringMinSize != newMeasuringMinSize) {
+            if (this.measuringMinSize !== newMeasuringMinSize) {
                 this.measuringMinSize = newMeasuringMinSize;
 
             }
