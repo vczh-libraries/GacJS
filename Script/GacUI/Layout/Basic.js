@@ -59,9 +59,15 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             internalMargin: Protected(new Margin(-1, -1, -1, -1)),
             preferredMinSize: Public(new Size(0, 0)),
 
+            NeedMinSizeNotify: Protected(function (minSizeLimitation) {
+                return !minSizeLimitation.__Equals(MinSizeLimitation.Description.NoLimit);
+            }),
+
             UpdateStyle: Protected.Virtual(function () {
                 // throw new Error("Not Implemented.");
             }),
+
+            //////////////////////////////////////////////////////
 
             GetVisible: Public(function () {
                 return this.visible;
@@ -76,7 +82,18 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
                 return this.minSizeLimitation;
             }),
             SetMinSizeLimitation: Public(function (value) {
-                this.minSizeLimitation = value;
+                if (this.minSizeLimitation !== value) {
+                    var oldValue = this.minSizeLimitation;
+                    this.minSizeLimitation = value;
+
+                    if (this.element !== null) {
+                        var oldNotify = this.NeedMinSizeNotify(oldValue);
+                        var newNotify = this.NeedMinSizeNotify(value);
+                        if (oldNotify !== newNotify) {
+                            this.element.gacjs_EnableMinSizeNotify(newNotify);
+                        }
+                    }
+                }
                 this.UpdateStyle();
             }),
             MinSizeLimitation: Public.Property({}),
@@ -173,11 +190,13 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             }),
             SetOwnedElement: Public.StrongTyped(__Void, [IElement], function (value) {
                 if (this.element !== null) {
+                    this.element.gacjs_EnableMinSizeNotify(false);
                     this.element.gacjs_UninstallElement(this.graphHtmlElement);
                 }
                 this.element = value;
                 if (this.element !== null) {
                     this.element.gacjs_InstallElement(this.graphHtmlElement);
+                    this.element.gacjs_EnableMinSizeNotify(this.NeedMinSizeNotify(this.minSizeLimitation));
                 }
             }),
             OwnedElement: Public.Property({}),
