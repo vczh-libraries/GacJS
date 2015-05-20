@@ -41,7 +41,7 @@ function CombineTabPage(tabControl, tabPage, tabButton) {
 
 function SetupTabControl(tabControl) {
 
-    function DirectChild(parent,className){
+    function DirectChild(parent, className) {
         var result = [];
         var childNodes = parent.childNodes;
         for (var i = 0; i < childNodes.length; i++) {
@@ -108,7 +108,7 @@ function DetachMouseEvents(node, removeHandler) {
     }
 }
 
-function InstallResizer(node) {
+function InstallResizer(node, resizeCallback) {
     var draggableHandle = document.createElement("div");
     draggableHandle.setAttribute("class", "DraggableHandle");
     draggableHandle.style.right = "1px";
@@ -139,16 +139,19 @@ function InstallResizer(node) {
             if (dragging) {
                 var dx = event.pageX - x;
                 var dy = event.pageY - y;
-                var width = GetPx(node.style.width) + dx;
-                var height = GetPx(node.style.height) + dy;
+                var left = GetPx(draggableHandle.style.left);
+                var top = GetPx(draggableHandle.style.top);
+                var width = left + draggableHandle.offsetWidth + 1 + dx;
+                var height = top + draggableHandle.offsetHeight + 1 + dy;
                 if (width < 0 || height < 0) {
                     return;
                 }
 
-                node.style.width = width + "px";
-                node.style.height = height + "px";
-                draggableHandle.style.left = GetPx(draggableHandle.style.left) + dx + "px";
-                draggableHandle.style.top = GetPx(draggableHandle.style.top) + dy + "px";
+                node.style.minWidth = width + "px";
+                node.style.minHeight = height + "px";
+                draggableHandle.style.left = left + dx + "px";
+                draggableHandle.style.top = top + dy + "px";
+                resizeCallback(width, height);
 
                 x = event.pageX;
                 y = event.pageY;
@@ -204,9 +207,9 @@ function InstallMover(node) {
     );
 }
 
-function InstallDraggableHandlers(node) {
+function InstallDraggableHandlers(node, resizeCallback) {
     InstallMover(node);
-    InstallResizer(node);
+    InstallResizer(node, resizeCallback);
 }
 
 window.addEventListener("mousemove", function (event) {
@@ -232,10 +235,6 @@ function CreateLayoutEmbedder(layout, rows, columns) {
     var div = document.createElement("div");
     div.style.display = "block";
     div.style.position = "relative";
-    div.style.minWidth = (20 + columns * 10) + "px";
-    div.style.minHeight = (20 + rows * 10) + "px";
-    div.style.width = (20 + columns * 100) + "px";
-    div.style.height = (20 + rows * 100) + "px";
     div.style.border = "1px solid blue";
     div.style.float = "left";
     div.style.margin = "10px 10px 10px 10px";
@@ -245,11 +244,14 @@ function CreateLayoutEmbedder(layout, rows, columns) {
         child = layout;
     }
     child.style.position = "relative";
-    child.style.width = "calc(100% - 20px)";
-    child.style.height = "calc(100% - 20px)";
+    child.style.width = (columns * 100) + "px";
+    child.style.height = (rows * 100) + "px";
     child.style.margin = "10px 10px 10px 10px";
     div.appendChild(child);
 
-    InstallDraggableHandlers(div);
+    InstallDraggableHandlers(div, function (width, height) {
+        child.style.width = (width - 20) + "px";
+        child.style.height = (height - 20) + "px";
+    });
     return div;
 }
