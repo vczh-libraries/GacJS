@@ -416,6 +416,8 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
 
         enabledMinSizeNotify: Protected(false),
         measuringMinSize: Protected(false),
+        measuringHtmlElementSizeChanged: Protected(false),
+        suppressMeasuringHtmlElementSizeChanged: Protected(false),
 
         UpdateMinSize: Protected(function () {
             var x = 0;
@@ -445,7 +447,6 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             else {
                 this.measuringHtmlElement.style.width = "0";
             }
-            this.UpdateMinSize();
         }),
 
         UpdateStyleInternal: Protected(function (textElement, forDisplay) {
@@ -485,6 +486,8 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
         }),
 
         UpdateStyle: Protected(function () {
+            this.suppressMeasuringHtmlElementSizeChanged = true;
+
             switch (this.horizontalAlignment) {
                 case Alignment.Description.Left:
                     this.horizontalHtmlFlexElement.style.justifyContent = "flex-start";
@@ -515,6 +518,21 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.UpdateStyleInternal(this.referenceHtmlElement, false);
             this.UpdateStyleInternal(this.measuringHtmlElement, false);
             this.UpdateMinSizeMeasuringState();
+
+            this.suppressMeasuringHtmlElementSizeChanged = false;
+            if (this.measuringHtmlElementSizeChanged) {
+                this.UpdateMinSize();
+                this.measuringHtmlElementSizeChanged = false;
+            }
+        }),
+
+        measuringHtmlElement_OnResize: Protected(function () {
+            if (!this.suppressMeasuringHtmlElementSizeChanged) {
+                this.UpdateMinSize();
+            }
+            else {
+                this.measuringHtmlElementSizeChanged = true;
+            }
         }),
 
         HtmlElement_OnResize: Protected(function () {
@@ -528,7 +546,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             }
             if (this.textHtmlElement.style.width !== width) {
                 this.textHtmlElement.style.width = width;
-                this.UpdateMinSize();
+                this.UpdateMinSizeMeasuringState();
             }
         }),
 
@@ -578,7 +596,9 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             var self = this;
             DetectResize(this.htmlElement, function () {
                 self.HtmlElement_OnResize();
-                self.UpdateMinSize();
+            });
+            DetectResize(this.measuringHtmlElement, function () {
+                self.measuringHtmlElement_OnResize();
             });
         }),
 
