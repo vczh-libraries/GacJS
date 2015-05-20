@@ -350,20 +350,22 @@
                 div_Elements_SolidLabel_RB.appendChild(create_Elements_SolidLabelAlignment("RB", Alignment.Description.Right, Alignment.Description.Bottom));
                 cell_Elements_SolidLabel_Alignments.appendChild(CreateLayoutEmbedder(div_Elements_SolidLabel_Alignments, 3, 3));
 
-                cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, false)));
-                cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, false)));
-                cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, false)));
-                cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, false)));
+                var text = "This is a very long sentence\r\nthat cannot be display in this small box";
 
-                cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, false, false)));
-                cell_Elements_SolidLabel_Ellipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, false, false)));
-                cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", false, true, true, false)));
-                cell_Elements_SolidLabel_Ellipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long sentence\r\nthat cannot be display in this small box", true, true, true, false)));
+                cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, false, false, false, false)));
+                cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, true, false, false, false)));
+                cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, false, false, true, false)));
+                cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, true, false, true, false)));
 
-                cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, false, true)));
-                cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, false, true)));
-                cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", false, false, true, true)));
-                cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel("This is a very long\r\nsentence", true, false, true, true)));
+                cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, false, true, false, false)));
+                cell_Elements_SolidLabel_Ellipse_Singleline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, true, true, false, false)));
+                cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, false, true, true, false)));
+                cell_Elements_SolidLabel_Ellipse_Multiline_Wrap.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, true, true, true, false)));
+
+                cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, false, false, false, true)));
+                cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, true, false, false, true)));
+                cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, false, false, true, true)));
+                cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height.appendChild(CreateLayoutEmbedder(create_Elements_SolidLabel(text, true, false, true, true)));
             </script>
 
             <div class="TabPage">
