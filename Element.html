@@ -266,47 +266,35 @@
                 </table>
                 <table>
                     <tr>
-                        <th colspan="2">Height: false</th>
-                        <th>WrapLine: false</th>
-                        <th>WrapLine: true</th>
+                        <th colspan="2"></th>
+                        <th>Ellipse: false</th>
+                        <th>Ellipse: true</th>
+                        <th>Height && !Ellipse</th>
                     </tr>
                     <tr>
-                        <th rowspan="2">Ellipse: false</th>
-                        <th>Singleline</th>
+                        <th rowspan="2">Multiline: false</th>
+                        <th>WrapLine: false</th>
                         <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap"></td>
-                        <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap"></td>
-                    </tr>
-                    <tr>
-                        <th>Multilineline</th>
-                        <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap"></td>
-                        <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap"></td>
-                    </tr>
-                    <tr>
-                        <th rowspan="2">Ellipse: true</th>
-                        <th>Singleline</th>
                         <td id="cell_Elements_SolidLabel_Ellipse_Singleline_NoWrap"></td>
-                        <td id="cell_Elements_SolidLabel_Ellipse_Singleline_Wrap"></td>
-                    </tr>
-                    <tr>
-                        <th>Multilineline</th>
-                        <td id="cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap"></td>
-                        <td id="cell_Elements_SolidLabel_Ellipse_Multiline_Wrap"></td>
-                    </tr>
-                </table>
-                <table>
-                    <tr>
-                        <th>Height: true</th>
-                        <th>WrapLine: false</th>
-                        <th>WrapLine: true</th>
-                    </tr>
-                    <tr>
-                        <th>Singleline</th>
                         <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_NoWrap_Height"></td>
+                    </tr>
+                    <tr>
+                        <th>WrapLine: true</th>
+                        <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap"></td>
+                        <td id="cell_Elements_SolidLabel_Ellipse_Singleline_Wrap"></td>
                         <td id="cell_Elements_SolidLabel_NoEllipse_Singleline_Wrap_Height"></td>
                     </tr>
                     <tr>
-                        <th>Multiline</th>
+                        <th rowspan="2">Multiline: true</th>
+                        <th>WrapLine: false</th>
+                        <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap"></td>
+                        <td id="cell_Elements_SolidLabel_Ellipse_Multiline_NoWrap"></td>
                         <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_NoWrap_Height"></td>
+                    </tr>
+                    <tr>
+                        <th>WrapLine: true</th>
+                        <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap"></td>
+                        <td id="cell_Elements_SolidLabel_Ellipse_Multiline_Wrap"></td>
                         <td id="cell_Elements_SolidLabel_NoEllipse_Multiline_Wrap_Height"></td>
                     </tr>
                 </table>
@@ -345,6 +333,7 @@
 
                     var layout = new Layout();
                     layout.OwnedElement = element;
+                    layout.MinSizeLimitation = MinSizeLimitation.Description.LimitToElement;
                     return layout;
                 }
 

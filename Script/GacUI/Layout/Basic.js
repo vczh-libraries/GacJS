@@ -54,13 +54,13 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             //////////////////////////////////////////////////////
 
             visible: Protected(true),
-            minSizeLimitation: Protected(MinSizeLimitation.NoLimit),
+            minSizeLimitation: Protected(MinSizeLimitation.Description.NoLimit),
             margin: Protected(new Margin(-1, -1, -1, -1)),
             internalMargin: Protected(new Margin(-1, -1, -1, -1)),
             preferredMinSize: Public(new Size(0, 0)),
 
             UpdateStyle: Protected.Virtual(function () {
-                throw new Error("Not Implemented.");
+                // throw new Error("Not Implemented.");
             }),
 
             GetVisible: Public(function () {
@@ -304,6 +304,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
     ********************************************************************************/
 
     return {
+        MinSizeLimitation: MinSizeLimitation,
         Layout: Layout,
         SiteLayout: SiteLayout,
         WindowLayout: WindowLayout,
