@@ -1179,6 +1179,20 @@ Packages.Define("Class", function () {
                 member.DeclaringType = Type;
 
                 var value = member.Value;
+                if (value !== null &&
+                    value !== undefined &&
+                    typeof value != "function" &&
+                    typeof value != "number" &&
+                    typeof value != "string" &&
+                    typeof value != "boolean" &&
+                    !(value instanceof Struct) &&
+                    !(value instanceof Enum) &&
+                    !(value instanceof Flags) &&
+                    !(value instanceof __Event) &&
+                    !(value instanceof __Property)) {
+                    throw new Error("Default value of fields can only be null, undefined, function, number, string, boolean, struct, enum and flags.");
+                }
+
                 if (value instanceof __Property) {
                     if (value.GetterName === null) {
                         value.GetterName = "Get" + name;

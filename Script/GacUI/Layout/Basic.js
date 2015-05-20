@@ -37,6 +37,8 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             ContainerHtmlElement: Public.Property({}),
 
             __Constructor: Public(function () {
+                this.children = [];
+
                 this.boundsHtmlElement = document.createElement("div");
                 this.boundsHtmlElement.gacjs_Layout = this.__ExternalReference;
                 this.boundsHtmlElement.style.display = "block";
@@ -142,7 +144,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
 
             element: Protected(null),
             parent: Protected(null),
-            children: Protected([]),
+            children: Protected(null),
 
             GetParent: Public.StrongTyped(Layout, [], function () {
                 return this.parent;
