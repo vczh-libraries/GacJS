@@ -418,7 +418,23 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
         measuringMinSize: Protected(false),
 
         UpdateMinSize: Protected(function () {
-            this.minSize = new Size(this.measuringHtmlElement.offsetWidth, this.measuringHtmlElement.offsetHeight);
+            var x = 0;
+            var y = 0;
+            if (this.measuringMinSize) {
+                x = this.measuringHtmlElement.offsetWidth;
+                y = this.measuringHtmlElement.offsetHeight;
+            }
+
+            var updated = false;
+            if (this.minSize.cx !== x || this.minSize.cy !== y) {
+                this.minSize.cx = x;
+                this.minSize.cy = y;
+                updated = true;
+            }
+
+            if (updated) {
+                this.gacjs_MinSizeChanged.Execute();
+            }
         }),
 
         UpdateMinSizeMeasuringState: Protected(function () {
@@ -426,14 +442,15 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             if (this.measuringMinSize != newMeasuringMinSize) {
                 this.measuringMinSize = newMeasuringMinSize;
 
-                if (this.measuringMinSize) {
-                    this.UpdateMinSize();
-                }
-                else {
-                    this.minSize = new Size(0, 0);
-                }
-                this.gacjs_MinSizeChanged.Execute();
             }
+
+            if (this.measuringMinSize) {
+                this.measuringHtmlElement.style.width = this.textHtmlElement.style.width;
+            }
+            else {
+                this.measuringHtmlElement.style.width = "0";
+            }
+            this.UpdateMinSize();
         }),
 
         UpdateStyleInternal: Protected(function (textElement, forDisplay) {
@@ -519,13 +536,6 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             }
         }),
 
-        ReferenceTextElement_OnResize: Protected(function () {
-        }),
-
-        MeasuringTextElement_OnResize: Protected(function () {
-            this.UpdateMinSize();
-        }),
-
         gacjs_EnableMinSizeNotify: Public.Override.StrongTyped(__Void, [__Boolean], function (enabled) {
             this.enabledMinSizeNotify = enabled;
             this.UpdateMinSizeMeasuringState();
@@ -571,12 +581,6 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             var self = this;
             DetectResize(this.htmlElement, function () {
                 self.HtmlElement_OnResize();
-            });
-            DetectResize(this.referenceHtmlElement, function () {
-                self.ReferenceTextElement_OnResize();
-            });
-            DetectResize(this.measuringHtmlElement, function () {
-                self.MeasuringTextElement_OnResize();
             });
         }),
 
