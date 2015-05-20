@@ -425,14 +425,9 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
                 y = this.measuringHtmlElement.offsetHeight;
             }
 
-            var updated = false;
             if (this.minSize.cx !== x || this.minSize.cy !== y) {
                 this.minSize.cx = x;
                 this.minSize.cy = y;
-                updated = true;
-            }
-
-            if (updated) {
                 this.gacjs_MinSizeChanged.Execute();
             }
         }),
@@ -533,6 +528,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             }
             if (this.textHtmlElement.style.width !== width) {
                 this.textHtmlElement.style.width = width;
+                this.UpdateMinSize();
             }
         }),
 
@@ -575,12 +571,14 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);
             this.verticalHtmlFlexElement.appendChild(this.referenceHtmlElement);
+            this.verticalHtmlFlexElement.appendChild(this.measuringHtmlElement);
             this.htmlElement = this.horizontalHtmlFlexElement;
             this.UpdateStyle();
 
             var self = this;
             DetectResize(this.htmlElement, function () {
                 self.HtmlElement_OnResize();
+                self.UpdateMinSize();
             });
         }),
 

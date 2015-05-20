@@ -64,15 +64,8 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             }),
 
             UpdateMinSize: Protected(function () {
-                var minSize = null;
                 if (this.element !== null && this.NeedMinSizeNotify(this.minSizeLimitation)) {
-                    minSize = this.element.gacjs_GetMinSize();
-                }
-                else {
-                    minSize = new Size(0, 0);
-                }
-
-                if (minSize.cx >= 0 && minSize.cy >= 0) {
+                    var minSize = this.element.gacjs_GetMinSize();
                     this.boundsHtmlElement.style.minWidth = minSize.cx + "px";
                     this.boundsHtmlElement.style.minHeight = minSize.cy + "px";
                 }

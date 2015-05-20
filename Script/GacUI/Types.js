@@ -25,8 +25,8 @@ Packages.Define("GacUI.Types", ["Class"], function (__injection__) {
     });
 
     var Size = Struct("vl::presentation::Size", {
-        x: 0,
-        y: 0,
+        cx: 0,
+        cy: 0,
     });
 
     var Rect = Struct("vl::presentation::Rect", {
