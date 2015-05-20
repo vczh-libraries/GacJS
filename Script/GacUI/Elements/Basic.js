@@ -417,13 +417,17 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
         enabledMinSizeNotify: Protected(false),
         measuringMinSize: Protected(false),
 
+        UpdateMinSize: Protected(function () {
+            this.minSize = new Size(this.measuringHtmlElement.offsetWidth, this.measuringHtmlElement.offsetHeight);
+        }),
+
         UpdateMinSizeMeasuringState: Protected(function () {
             var newMeasuringMinSize = this.enabledMinSizeNotify && !this.ellipse && (!this.wrapLine || this.wrapLineHeightCalculation);
             if (this.measuringMinSize != newMeasuringMinSize) {
                 this.measuringMinSize = newMeasuringMinSize;
 
                 if (this.measuringMinSize) {
-                    this.minSize = new Size(this.measuringHtmlElement.offsetWidth, this.measuringHtmlElement.offsetHeight);
+                    this.UpdateMinSize();
                 }
                 else {
                     this.minSize = new Size(0, 0);
@@ -501,9 +505,6 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.UpdateMinSizeMeasuringState();
         }),
 
-        ReferenceTextElement_OnResize: Protected(function () {
-        }),
-
         HtmlElement_OnResize: Protected(function () {
             var referenceWidth = this.referenceHtmlElement.offsetWidth;
             var displayWidth = this.htmlElement.offsetWidth;
@@ -516,6 +517,13 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             if (this.textHtmlElement.style.width !== width) {
                 this.textHtmlElement.style.width = width;
             }
+        }),
+
+        ReferenceTextElement_OnResize: Protected(function () {
+        }),
+
+        MeasuringTextElement_OnResize: Protected(function () {
+            this.UpdateMinSize();
         }),
 
         gacjs_EnableMinSizeNotify: Public.Override.StrongTyped(__Void, [__Boolean], function (enabled) {
@@ -561,11 +569,14 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.UpdateStyle();
 
             var self = this;
+            DetectResize(this.htmlElement, function () {
+                self.HtmlElement_OnResize();
+            });
             DetectResize(this.referenceHtmlElement, function () {
                 self.ReferenceTextElement_OnResize();
             });
-            DetectResize(this.htmlElement, function () {
-                self.HtmlElement_OnResize();
+            DetectResize(this.measuringHtmlElement, function () {
+                self.MeasuringTextElement_OnResize();
             });
         }),
 
