@@ -412,8 +412,27 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
         verticalHtmlFlexElement: Protected(null),
         textHtmlElement: Protected(null),
         referenceHtmlElement: Protected(null),
+        measuringHtmlElement: Protected(null),
 
-        UpdateStyleInternal: Protected(function (textElement, textNode, forDisplay) {
+        enabledMinSizeNotify: Protected(false),
+        measuringMinSize: Protected(false),
+
+        UpdateMinSizeMeasuringState: Protected(function () {
+            var newMeasuringMinSize = this.enabledMinSizeNotify && !this.ellipse && (!this.wrapLine || this.wrapLineHeightCalculation);
+            if (this.measuringMinSize != newMeasuringMinSize) {
+                this.measuringMinSize = newMeasuringMinSize;
+
+                if (this.measuringMinSize) {
+                    this.minSize = new Size(this.measuringHtmlElement.offsetWidth, this.measuringHtmlElement.offsetHeight);
+                }
+                else {
+                    this.minSize = new Size(0, 0);
+                }
+                this.gacjs_MinSizeChanged.Execute();
+            }
+        }),
+
+        UpdateStyleInternal: Protected(function (textElement, forDisplay) {
             textElement.innerHTML = "";
             if (this.multiline) {
                 if (this.ellipse && !this.wrapLine) {
@@ -476,11 +495,16 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
 
             this.htmlElement.style.color = this.color.__ToString();
             this.htmlElement.style.textDecoration = (this.font.strikeline ? "line-through" : "");
-            this.UpdateStyleInternal(this.textHtmlElement, this.textHtmlNode, true);
-            this.UpdateStyleInternal(this.referenceHtmlElement, this.referenceHtmlNode, false);
+            this.UpdateStyleInternal(this.textHtmlElement, true);
+            this.UpdateStyleInternal(this.referenceHtmlElement, false);
+            this.UpdateStyleInternal(this.measuringHtmlElement, false);
+            this.UpdateMinSizeMeasuringState();
         }),
 
-        UpdateDisplaySize: Protected(function () {
+        ReferenceTextElement_OnResize: Protected(function () {
+        }),
+
+        HtmlElement_OnResize: Protected(function () {
             var referenceWidth = this.referenceHtmlElement.offsetWidth;
             var displayWidth = this.htmlElement.offsetWidth;
             if (this.wrapLine || this.ellipse) {
@@ -494,12 +518,9 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             }
         }),
 
-        ReferenceTextElement_OnResize: Protected(function () {
-            this.UpdateDisplaySize();
-        }),
-
-        HtmlElement_OnResize: Protected(function () {
-            this.UpdateDisplaySize();
+        gacjs_EnableMinSizeNotify: Public.Override.StrongTyped(__Void, [__Boolean], function (enabled) {
+            this.enabledMinSizeNotify = enabled;
+            this.UpdateMinSizeMeasuringState();
         }),
 
         __Constructor: Public(function () {
@@ -525,6 +546,13 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.referenceHtmlElement.style.visibility = "hidden";
             this.referenceHtmlElement.style.left = "0";
             this.referenceHtmlElement.style.top = "0";
+
+            this.measuringHtmlElement = document.createElement("div");
+            this.measuringHtmlElement.style.display = "block";
+            this.measuringHtmlElement.style.position = "fixed";
+            this.measuringHtmlElement.style.visibility = "hidden";
+            this.measuringHtmlElement.style.left = "0";
+            this.measuringHtmlElement.style.top = "0";
 
             this.horizontalHtmlFlexElement.appendChild(this.verticalHtmlFlexElement);
             this.verticalHtmlFlexElement.appendChild(this.textHtmlElement);

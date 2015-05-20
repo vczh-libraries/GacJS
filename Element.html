@@ -333,7 +333,9 @@
 
                     var layout = new Layout();
                     layout.OwnedElement = element;
-                    layout.MinSizeLimitation = MinSizeLimitation.Description.LimitToElement;
+                    if (wrapLineHeightCalculation) {
+                        layout.MinSizeLimitation = MinSizeLimitation.Description.LimitToElement;
+                    }
                     return layout;
                 }
 
