@@ -423,13 +423,14 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             var x = 0;
             var y = 0;
             if (this.measuringMinSize) {
-                x = this.measuringHtmlElement.offsetWidth;
+                if (!this.wrapLine) {
+                    x = this.measuringHtmlElement.offsetWidth;
+                }
                 y = this.measuringHtmlElement.offsetHeight;
             }
 
             if (this.minSize.cx !== x || this.minSize.cy !== y) {
-                this.minSize.cx = x;
-                this.minSize.cy = y;
+                this.minSize = new Size(x, y);
                 this.gacjs_MinSizeChanged.Execute();
             }
         }),
