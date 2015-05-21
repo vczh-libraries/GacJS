@@ -61,7 +61,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     eval(__injection__);
 
     var INativationController = Class("<Html.Navigation>::INavigationController", {
-        subController: Private(nul),
+        subController: Private(null),
 
         OnSubControllerInstalled: Protected.Abstract(),
         OnSubControllerUninstalled: Protected.Abstract(),
