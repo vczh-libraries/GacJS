@@ -99,7 +99,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     }
 
     function BuildNavigationPath(arguments) {
-
+        throw new Error("Not Implemented.");
     }
 
     function NavigateTo(path) {
