@@ -51,6 +51,9 @@ API:
             returns /Demo/HelloWorld/Source/main.cpp
             because DemoControler::DemoName has a default value "HelloWorld"
 
+    [[type, values], [type, values],  ...] ParseNavigationPath(string path);
+        reverted BuildNavigationPath
+
     void NavigateTo(string path);
         navigate to http://localhost:80/#<hashFlag><path>
 
@@ -342,6 +345,11 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         throw new Error("Not Implemented.");
     }
 
+    function ParseNavigationPath(path) {
+        EnsureInitialized();
+        throw new Error("Not Implemented.");
+    }
+
     function NavigateTo(path) {
         EnsureInitialized();
         throw new Error("Not Implemented.");
@@ -372,6 +380,8 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         INativationController: INativationController,
         InitializeNavigation: InitializeNavigation,
         RegisterNavigationPath: RegisterNavigationPath,
+        BuildNavigationPath: BuildNavigationPath,
+        ParseNavigationPath: ParseNavigationPath,
         NavigateTo: NavigateTo,
         StartNavigation: StartNavigation,
     }
