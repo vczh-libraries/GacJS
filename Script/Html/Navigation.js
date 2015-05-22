@@ -309,12 +309,12 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             hash = hash.substring(1, hash.length);
         }
         if (hash.length > hashFlag.length) {
-            if (hash.substring(0, hashFlag.length+1) === hashFlag+"/") {
-                var path = hash.substring(hashFlag.length+1, hash.length);
+            if (hash.substring(0, hashFlag.length + 1) === hashFlag + "/") {
+                var path = hash.substring(hashFlag.length + 1, hash.length);
                 return NavigateTo(path);
             }
         }
-        throw new Error("Failed to navigate by hash \"# + hash + "\".");
+        throw new Error("Failed to navigate by hash \"#" + hash + "\".");
     }
 
     /********************************************************************************
