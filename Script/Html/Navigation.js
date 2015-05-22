@@ -181,7 +181,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             return handler;
         }),
 
-        ArrayIndex: Public.StrongTyped(PatternHandler, [], function () {
+        ArrayIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
             if (this.patternIndex.hasOwnProperty("+")) {
                 throw new Error("Argument index has already been assigned.");
             }
@@ -243,10 +243,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
         Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
             var storage = callback.nav_GetStorage();
-            if (storage.array === true) {
+            if (storage.lastHandler) {
                 this.Execute(null, storage, callback);
             }
-            else if (!this.lastHandler) {
+            else {
                 throw new Error("Unexpected end of input.");
             }
         }),
@@ -259,6 +259,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     var rootNavigationController = null;
     var rootPatternHandler = null;
     var hashFlag = "~";
+    var typeLastHandlers = null;
 
     function EnsureInitialized() {
         if (rootNavigationController === null) {
@@ -271,23 +272,69 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     ********************************************************************************/
 
     function InitializeNavigation(_hashFlag, rootType) {
-        hashFlag = _hashFlag;
         rootNavigationController = new rootType();
         rootPatternHandler = new PatternHandler();
-    }
-
-    function FinalizeNavigation() {
-        if (rootNavigationController !== null) {
-            rootNavigationController.NavigateTo(null);
-            rootNavigationController = null;
-            rootPatternHandler = null;
-            hashFlag = "~";
-        }
+        hashFlag = _hashFlag;
+        typeLastHandlers = {};
     }
 
     function RegisterNavigationPath(pattern, type, defaultValues, parentType) {
         EnsureInitialized();
-        throw new Error("Not Implemented.");
+
+        var lastHandlerKey = (parentType === undefined ? "" : parentType.FullName);
+        var startHandlers = typeLastHandlers[lastHandlerKey];
+        if (startHandlers === undefined) {
+            startHandlers = [];
+            typeLastHandlers[lastHandlerKey] = startHandlers;
+        }
+
+        for (var i = 0; i < startHandlers.length; i++) {
+            var handler = startHandlers[i].handler;
+            var usedArguments = startHandlers[i].usedArguments;
+            var assignedArguments = {};
+
+            var fragments = pattern.split("/");
+            for (var j = (fragments[0] === "" ? 1 : 0) ; j < fragments.length; j++) {
+                var fragment = fragments[j];
+                if (fragment === "" || fragment === "+" || fragment === "*") {
+                    throw new Error("Fragments in the URL pattern should not be \"\", \"+\" or \"*\".");
+                }
+
+                if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
+                    if (fragment[1] === "*") {
+                        assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
+                        handler = handler.ArrayIndex(++usedArguments);
+                    }
+                    else {
+                        assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
+                        handler = handler.ArgumentIndex(++usedArguments);
+                    }
+                }
+                else {
+                    handler = handler.ConstantIndex(fragment);
+                }
+            }
+
+            handler.Last();
+            handler.ControllerType(type);
+            for (var j in assignedArguments) {
+                var index = assignedArguments[j];
+                handler.Argument(j, index);
+            }
+            if (defaultValues !== undefined) {
+                for (var j in defaultValues) {
+                    var value = defaultValues[j];
+                    handler.Setter(j, value);
+                }
+            }
+
+            var lastHandlers = typeLastHandlers[type.FullName];
+            if (lastHandlers === undefined) {
+                lastHandlers = [];
+                typeLastHandlers[type.FullName] = lastHandlers;
+            }
+            lastHandlers.push({ handler: handler, usedArguments: usedArguments });
+        }
     }
 
     function BuildNavigationPath(arguments) {
@@ -324,7 +371,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     return {
         INativationController: INativationController,
         InitializeNavigation: InitializeNavigation,
-        FinalizeNavigation: FinalizeNavigation,
         RegisterNavigationPath: RegisterNavigationPath,
         NavigateTo: NavigateTo,
         StartNavigation: StartNavigation,
