@@ -257,7 +257,8 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     ********************************************************************************/
 
     var rootNavigationController = null;
-    var hashFlag = "vczh";
+    var rootPatternHandler = null;
+    var hashFlag = "~";
 
     function EnsureInitialized() {
         if (rootNavigationController === null) {
@@ -272,14 +273,15 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     function InitializeNavigation(_hashFlag, rootType) {
         hashFlag = _hashFlag;
         rootNavigationController = new rootType();
-        throw new Error("Not Implemented.");
+        rootPatternHandler = new PatternHandler();
     }
 
     function FinalizeNavigation() {
         if (rootNavigationController !== null) {
             rootNavigationController.NavigateTo(null);
-            hashFlag = "vczh";
             rootNavigationController = null;
+            rootPatternHandler = null;
+            hashFlag = "~";
         }
     }
 
@@ -299,7 +301,20 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     }
 
     function StartNavigation() {
-        NavigateTo(window.location.hash);
+        var hash = window.location.hash;
+        if (hash === "") {
+            hash = "#" + hashFlag + "/";
+        }
+        if (hash[0] === "#") {
+            hash = hash.substring(1, hash.length);
+        }
+        if (hash.length > hashFlag.length) {
+            if (hash.substring(0, hashFlag.length+1) === hashFlag+"/") {
+                var path = hash.substring(hashFlag.length+1, hash.length);
+                return NavigateTo(path);
+            }
+        }
+        throw new Error("Failed to navigate by hash \"# + hash + "\".");
     }
 
     /********************************************************************************
