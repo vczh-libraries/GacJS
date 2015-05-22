@@ -403,6 +403,13 @@ Packages.Define("Class", function () {
         function (value) { return value === undefined; }
         );
 
+    var __Type = new __PrimitiveType(
+        "<type>",
+        function (text) { throw new Error("Not Supported."); },
+        function (value) { throw new Error("Not Supported."); },
+        function (value) { return value instanceof __Class || value instanceof __Struct || value instanceof __Struct; }
+        );
+
     ///////////////////////////////////////////////////////////////
 
     function __BuildOverloadingFunctions() {
@@ -2168,6 +2175,7 @@ Packages.Define("Class", function () {
         __String: __String,
         __Array: __Array,
         __Function: __Function,
+        __Type: __Type,
         __Void: __Void,
 
         Class: Class,
