@@ -264,10 +264,22 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     Configuration
     ********************************************************************************/
 
+    var PathFragmentType = Enum(FQN("PathFragmentType"), {
+        Constant: 0,
+        Argument: 1,
+        Array: 2,
+    });
+
+    var PathFragment = Struct(FQN("PathFragment"), {
+        type: PathFragmentType.Description.Constant,
+        content: "",
+    });
+
     var PathConfig = Class(FQN("PathConfig"), {
         handler: Public(null),
         usedArguments: Public(0),
         level: Public(0),
+        pathFragments: Public(null),
     });
 
     var rootNavigationController = null;
@@ -296,8 +308,43 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     RegisterNavigationPath
     ********************************************************************************/
 
+    function ParsePathFragments(pattern) {
+        var pathFragments = [];
+
+        var textFragments = pattern.split("/");
+        for (var j = (textFragments[0] === "" ? 1 : 0) ; j < textFragments.length; j++) {
+            var textFragment = textFragments[j];
+            if (textFragment === "+" || textFragment === "*") {
+                throw new Error("Fragments in the URL pattern should not be \"+\" or \"*\".");
+            }
+
+            var pathFragment = new PathFragment();
+
+            if (textFragment[0] === "{" && textFragment[textFragment.length - 1] === "}") {
+                if (textFragment[1] === "*") {
+                    pathFragment.type = PathFragmentType.Description.Array;
+                    pathFragment.content = textFragment.substring(2, textFragment.length - 1);
+                }
+                else {
+                    pathFragment.type = PathFragmentType.Description.Argument;
+                    pathFragment.content = textFragment.substring(1, textFragment.length - 1);
+                }
+            }
+            else {
+                pathFragment.type = PathFragmentType.Description.Constant;
+                pathFragment.content = textFragment;
+            }
+
+            pathFragments.push(pathFragment);
+        }
+
+        return pathFragments;
+    }
+
     function RegisterNavigationPath(pattern, type, defaultValues, parentType) {
         EnsureInitialized();
+
+        var pathFragments = ParsePathFragments(pattern);
 
         var parentPathKey = (parentType === undefined ? "" : parentType.FullName);
         var parentPathConfigs = typePathConfigs[parentPathKey];
@@ -314,25 +361,20 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             var usedArguments = parentPathConfig.usedArguments;
             var assignedArguments = {};
 
-            var fragments = pattern.split("/");
-            for (var j = (fragments[0] === "" ? 1 : 0) ; j < fragments.length; j++) {
-                var fragment = fragments[j];
-                if (fragment === "+" || fragment === "*") {
-                    throw new Error("Fragments in the URL pattern should not be \"+\" or \"*\".");
-                }
-
-                if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
-                    if (fragment[1] === "*") {
-                        assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
-                        handler = handler.ArrayIndex(usedArguments++);
-                    }
-                    else {
-                        assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
+            for (var j = 0; j < pathFragments.length; j++) {
+                var pathFragment = pathFragments[j];
+                switch (pathFragment.type) {
+                    case PathFragmentType.Description.Constant:
+                        handler = handler.ConstantIndex(pathFragment.content);
+                        break;
+                    case PathFragmentType.Description.Argument:
+                        assignedArguments[pathFragment.content] = usedArguments;
                         handler = handler.ArgumentIndex(usedArguments++);
-                    }
-                }
-                else {
-                    handler = handler.ConstantIndex(fragment);
+                        break;
+                    case PathFragmentType.Description.Array:
+                        assignedArguments[pathFragment.content] = usedArguments;
+                        handler = handler.ArrayIndex(usedArguments++);
+                        break;
                 }
             }
 
@@ -358,6 +400,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             pathConfig.handler = handler;
             pathConfig.usedArguments = usedArguments;
             pathConfig.level = parentPathConfig.level + 1;
+            pathConfig.pathFragments = pathFragments;
             currentPathConfigs.push(pathConfig);
         }
     }
