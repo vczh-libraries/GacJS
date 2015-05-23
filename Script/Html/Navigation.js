@@ -264,10 +264,16 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     Configuration
     ********************************************************************************/
 
+    var PathConfig = Class(FQN("PathConfig"), {
+        handler: Public(null),
+        usedArguments: Public(0),
+        level: Public(0),
+    });
+
     var rootNavigationController = null;
     var rootPatternHandler = null;
     var hashFlag = null;
-    var typeLastHandlers = null;
+    var typePathConfigs = null;
 
     function EnsureInitialized() {
         if (rootNavigationController === null) {
@@ -283,7 +289,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         rootNavigationController = new rootType();
         rootPatternHandler = new PatternHandler();
         hashFlag = _hashFlag;
-        typeLastHandlers = {};
+        typePathConfigs = {};
     }
 
     /********************************************************************************
@@ -293,16 +299,19 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     function RegisterNavigationPath(pattern, type, defaultValues, parentType) {
         EnsureInitialized();
 
-        var lastHandlerKey = (parentType === undefined ? "" : parentType.FullName);
-        var startHandlers = typeLastHandlers[lastHandlerKey];
-        if (startHandlers === undefined) {
-            startHandlers = [{ handler: rootPatternHandler, usedArguments: 0 }];
-            typeLastHandlers[lastHandlerKey] = startHandlers;
+        var parentPathKey = (parentType === undefined ? "" : parentType.FullName);
+        var parentPathConfigs = typePathConfigs[parentPathKey];
+        if (parentPathConfigs === undefined) {
+            var pathConfig = new PathConfig();
+            pathConfig.handler = rootPatternHandler;
+            parentPathConfigs = [pathConfig];
+            typePathConfigs[parentPathKey] = parentPathConfigs;
         }
 
-        for (var i = 0; i < startHandlers.length; i++) {
-            var handler = startHandlers[i].handler;
-            var usedArguments = startHandlers[i].usedArguments;
+        for (var i = 0; i < parentPathConfigs.length; i++) {
+            var parentPathConfig = parentPathConfigs[i];
+            var handler = parentPathConfig.handler;
+            var usedArguments = parentPathConfig.usedArguments;
             var assignedArguments = {};
 
             var fragments = pattern.split("/");
@@ -339,12 +348,17 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }
 
-            var lastHandlers = typeLastHandlers[type.FullName];
-            if (lastHandlers === undefined) {
-                lastHandlers = [];
-                typeLastHandlers[type.FullName] = lastHandlers;
+            var currentPathConfigs = typePathConfigs[type.FullName];
+            if (currentPathConfigs === undefined) {
+                currentPathConfigs = [];
+                typePathConfigs[type.FullName] = currentPathConfigs;
             }
-            lastHandlers.push({ handler: handler, usedArguments: usedArguments });
+
+            var pathConfig = new PathConfig();
+            pathConfig.handler = handler;
+            pathConfig.usedArguments = usedArguments;
+            pathConfig.level = parentPathConfig.level + 1;
+            currentPathConfigs.push(pathConfig);
         }
     }
 
