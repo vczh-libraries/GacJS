@@ -278,6 +278,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     });
 
     var PathConfig = Class(FQN("PathConfig"), {
+        parentPathConfig: Public(null),
+        controllerType: Public(null),
+        defaultValues: Public(null),
         handler: Public(null),
         usedArguments: Public(0),
         level: Public(-1),
@@ -387,6 +390,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }
 
             var pathConfig = new PathConfig();
+            pathConfig.parentPathConfig = parentPathConfig;
+            pathConfig.controllerType = type;
+            pathConfig.defaultValues = (defaultValues === undefined ? {} : defaultValues);
             pathConfig.handler = handler;
             pathConfig.usedArguments = usedArguments;
             pathConfig.level = parentPathConfig.level + 1;
@@ -410,6 +416,79 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     /********************************************************************************
     BuildNavigationPath
     ********************************************************************************/
+
+    function EnumeratePathConfigsMatrix(arguments, index, postfixMatrix) {
+        var type = (index === -1 ? null : arguments[index].type);
+
+        if (postfixMatrix !== undefined) {
+            for (var i = postfixMatrix.length - 1; i >= 0; i--) {
+                var row = postfixMatrix[i];
+                var accepted = (type === null
+                    ? row[0].parentPathConfig === null
+                    : row[0].parentPathConfig.controllerType === type
+                    );
+                if (!accepted) {
+                    postfixMatrix.splice(i, 1);
+                }
+            }
+
+            if (postfixMatrix.length === 0) {
+                return [];
+            }
+        }
+
+        if (index === -1) {
+            if (postfixMatrix === undefined) {
+                return [];
+            }
+            else {
+                return postfixMatrix;
+            }
+        }
+
+        var pathConfigs = typePathConfigs[type.FullName];
+        if (pathConfigs === undefined) {
+            return [];
+        }
+
+        var prefixColumn = [];
+        for (var i = 0; i < pathConfigs.length; i++) {
+            var pathConfig = pathConfigs[i];
+            var defaultValues = pathConfig.defaultValues;
+            var expectedValues = arguments[index].values;
+            var accepted = true;
+
+            for (var j in expectedValues) {
+                if (defaultValues.hasOwnProperty(j)) {
+                    if (expectedValues[j] !== defaultValues[j]) {
+                        accepted = false;
+                    }
+                }
+                if (!accepted) {
+                    break;
+                }
+            }
+
+            if (accepted) {
+                prefixColumn.push(pathConfig);
+            }
+        }
+
+        var matrix = [];
+        if (postfixMatrix === undefined) {
+            postfixMatrix = [[]];
+        }
+
+        for (var i = 0; i < prefixColumn.length; i++) {
+            var head = [prefixColumn[i]];
+            for (var j = 0; j < postfixMatrix.length; j++) {
+                var tail = postfixMatrix[j];
+                matrix.push(head.concat.apply(head, tail));
+            }
+        }
+
+        return EnumeratePathConfigsMatrix(arguments, index - 1, matrix);
+    }
 
     function BuildNavigationPath(arguments) {
         EnsureInitialized();
