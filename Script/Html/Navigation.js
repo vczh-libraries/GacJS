@@ -492,7 +492,73 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
     function BuildNavigationPath(arguments) {
         EnsureInitialized();
-        throw new Error("Not Implemented.");
+
+        var matrix = EnumeratePathConfigsMatrix(arguments, arguments.length - 1);
+        var argumentMap = {};
+        for (var i = 0; i < arguments.length; i++) {
+            argumentMap[arguments[i].type.FullName] = arguments[i].values;
+        }
+
+        var path = undefined;
+        var usedArguments = undefined;
+
+        for (var i = 0; i < matrix.length; i++) {
+            var row = matrix[i];
+            var currentPath = "";
+            var currentUsedArguments = 0;
+            var accepted = true;
+
+            for (var j = 0; j < row.length; j++) {
+                var pathConfig = row[j];
+                var values = argumentMap[pathConfig.controllerType.FullName];
+                var pathFragments = pathConfig.pathFragments;
+                for (var k = 0; k < pathFragments; k++) {
+                    var pathFragment = pathFragments[k];
+                    switch (pathFragment.type) {
+                        case PathFragmentType.Constant:
+                            currentPath += "/" + pathFragment.constant;
+                            break;
+                        case PathFragmentType.Argument:
+                            if (values.hasOwnProperty(pathFragment.constant)) {
+                                var value = values[pathFragment.constant];
+                                if (typeof value === "string") {
+                                    currentPath += "/" + value;
+                                    currentUsedArguments++;
+                                    break;
+                                }
+                            }
+                            accepted = false;
+                            break;
+                        case PathFragmentType.Array:
+                            if (values.hasOwnProperty(pathFragment.constant)) {
+                                var value = values[pathFragment.constant];
+                                if (typeof value === "array") {
+                                    currentPath += "/" + value.join("/");
+                                    currentUsedArguments++;
+                                    break;
+                                }
+                            }
+                            accepted = false;
+                            break;
+                    }
+                }
+                if (!accepted) {
+                    break;
+                }
+            }
+
+            if (accepted) {
+                if (usedArguments === undefined || usedArguments > currentUsedArguments) {
+                    path = currentPath.substring(1, currentPath.length);
+                    usedArguments = currentUsedArguments;
+                }
+            }
+        }
+
+        if (path === undefined) {
+            throw new Error("Unable to generate a path according to the arguments.");
+        }
+        return path;
     }
 
     function BuildNavigationHash(arguments) {
