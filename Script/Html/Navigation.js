@@ -122,6 +122,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         return {
             arguments: Protected(null),
             controllerType: Protected(null),
+            level: Protected(null),
             patternIndex: Protected(null),
             argumentIndex: Protected(-1),
 
@@ -148,7 +149,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 this.arguments[argumentName] = argumentValue;
             }),
 
-            ControllerType: Public.StrongTyped(__Void, [__Type], function (controllerType) {
+            ControllerType: Public.StrongTyped(__Void, [__Type, __Number], function (controllerType, level) {
                 if (this.controllerType !== null) {
                     throw new Error("Controller type has already been assigned");
                 }
@@ -156,6 +157,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     throw new Error("Controller type should implements \"" + INativationController.FullName + "\".");
                 }
                 this.controllerType = controllerType;
+                this.level = level;
             }),
 
             ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
@@ -219,7 +221,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     }
                 }
                 if (this.controllerType !== null) {
-                    callback.Create(this.controllerType);
+                    callback.Create(this.controllerType, this.level);
                 }
             }),
 
@@ -278,7 +280,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     var PathConfig = Class(FQN("PathConfig"), {
         handler: Public(null),
         usedArguments: Public(0),
-        level: Public(0),
+        level: Public(-1),
         pathFragments: Public(null),
     });
 
@@ -378,18 +380,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }
 
-            handler.ControllerType(type);
-            for (var j in assignedArguments) {
-                var index = assignedArguments[j];
-                handler.Argument(j, index);
-            }
-            if (defaultValues !== undefined) {
-                for (var j in defaultValues) {
-                    var value = defaultValues[j];
-                    handler.Setter(j, value);
-                }
-            }
-
             var currentPathConfigs = typePathConfigs[type.FullName];
             if (currentPathConfigs === undefined) {
                 currentPathConfigs = [];
@@ -402,6 +392,18 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             pathConfig.level = parentPathConfig.level + 1;
             pathConfig.pathFragments = pathFragments;
             currentPathConfigs.push(pathConfig);
+
+            handler.ControllerType(type, pathConfig.level);
+            for (var j in assignedArguments) {
+                var index = assignedArguments[j];
+                handler.Argument(j, index);
+            }
+            if (defaultValues !== undefined) {
+                for (var j in defaultValues) {
+                    var value = defaultValues[j];
+                    handler.Setter(j, value);
+                }
+            }
         }
     }
 
@@ -444,18 +446,12 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             var last = this.GetLast();
             last.values[name] = value;
         }),
-        Create: Public.Override.StrongTyped(__Void, [__Type], function (type) {
+        Create: Public.Override.StrongTyped(__Void, [__Type, __Number], function (type, level) {
             var last = this.GetLast();
             last.type = type;
 
-            if (this.result.length >= 2) {
-                var previous = this.result[this.result.length - 2];
-                if (previous.type === last.type) {
-                    for (var i in last.values) {
-                        previous.values[i] = last.values[i];
-                    }
-                    this.result.splice(this.result.length - 1, 1);
-                }
+            if (level < this.result.length - 1) {
+                this.result.splice(level, this.result.length - 1 - level);
             }
         }),
 
