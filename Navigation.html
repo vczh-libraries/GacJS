@@ -162,7 +162,7 @@
     </script>
 
     <script>
-        TestCase("navigate to parameterized paths should success", function () {
+        TestCase("build parameterized paths should success", function () {
             InitializeNavigation("~", RootController);
             RegisterNavigationPath("/", HomeController, { Page: "Home" });
             RegisterNavigationPath("/Home", HomeController, { Page: "Home" });
@@ -181,6 +181,41 @@
 
             var result = BuildNavigationPath([{ type: DocumentController, values: { Symbols: ["vl", "presentation", "controls", "GuiControl"] } }]);
             Assert(result === "Document/vl/presentation/controls/GuiControl");
+        });
+    </script>
+
+    <script>
+        TestCase("build cascade controller paths should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/Demo", DemoController);
+            RegisterNavigationPath("/{DemoName}", IndividualDemoController, {}, DemoController);
+            RegisterNavigationPath("/Source", DemoSourceController, { FileName: "main.cpp" }, IndividualDemoController);
+            RegisterNavigationPath("/Source/{FileName}", DemoSourceController, {}, IndividualDemoController);
+
+            var result = BuildNavigationPath([
+                { type: DemoController, values: {} }
+            ]);
+            Assert(result === "Demo");
+
+            var result = BuildNavigationPath([
+                { type: DemoController, values: {} },
+                { type: IndividualDemoController, values: { DemoName: "HelloWorld" } }
+            ]);
+            Assert(result === "Demo/HelloWorld");
+
+            var result = BuildNavigationPath([
+                { type: DemoController, values: {} },
+                { type: IndividualDemoController, values: { DemoName: "HelloWorld" } },
+                { type: DemoSourceController, values: { FileName: "main.cpp" } }
+            ]);
+            Assert(result === "Demo/HelloWorld/Source");
+
+            var result = BuildNavigationPath([
+                { type: DemoController, values: {} },
+                { type: IndividualDemoController, values: { DemoName: "HelloWorld" } },
+                { type: DemoSourceController, values: { FileName: "resource.xml" } }
+            ]);
+            Assert(result === "Demo/HelloWorld/Source/resource.xml");
         });
     </script>
 
