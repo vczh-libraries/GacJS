@@ -19,6 +19,7 @@
         var RootController = Class("RootController", TestController, {});
         var HomeController = Class("HomeController", TestController, {});
         var GettingStartedController = Class("GettingStartedController", TestController, {});
+        var DocumentController = Class("DocumentController", TestController, {});
     </script>
 
     <script>
@@ -70,6 +71,8 @@
             RegisterNavigationPath("/", HomeController, { Page: "Home" });
             RegisterNavigationPath("/Home", HomeController, { Page: "Home" });
             RegisterNavigationPath("/{Page}", HomeController);
+            RegisterNavigationPath("/Document", DocumentController);
+            RegisterNavigationPath("/Document/{*Symbols}", DocumentController);
 
             var result = ParseNavigationPath("");
             Assert(result.length === 1);
@@ -85,6 +88,19 @@
             Assert(result.length === 1);
             Assert(result[0].type === HomeController);
             Assert(result[0].values.Page === "Download");
+
+            var result = ParseNavigationPath("Document");
+            Assert(result.length === 1);
+            Assert(result[0].type === DocumentController);
+
+            var result = ParseNavigationPath("Document/vl/presentation/controls/GuiControl");
+            Assert(result.length === 1);
+            Assert(result[0].type === DocumentController);
+            Assert(result[0].values.Symbols.length === 4);
+            Assert(result[0].values.Symbols[0] === "vl");
+            Assert(result[0].values.Symbols[1] === "presentation");
+            Assert(result[0].values.Symbols[2] === "controls");
+            Assert(result[0].values.Symbols[3] === "GuiControl");
         });
     </script>
 

@@ -123,6 +123,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             argumentIndex: Protected(-1),
             lastHandler: Protected(null),
 
+            SetArgumentIndex: Public(function (argumentIndex) {
+                this.argumentIndex = argumentIndex;
+            }),
+
             __Constructor: Public(function () {
                 this.arguments = {};
                 this.patternIndex = {};
@@ -203,6 +207,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     this.patternIndex["*"] = handler;
                 }
                 this.argumentIndex = index;
+                handler.SetArgumentIndex(index);
                 return handler;
             }),
 
@@ -241,8 +246,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
                 else if (this.patternIndex.hasOwnProperty("*")) {
                     storage.array = true;
-                    storage[this.argumentIndex].push(fragment);
-                    return this.__ExternalReference;
+                    argument = [fragment];
+                    storage[this.argumentIndex] = argument;
+                    return this.patternIndex["*"];
                 }
                 else {
                     throw new Error("Failed to parse the input fragment \"" + fragment + "\".");
@@ -380,7 +386,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             return last;
         }),
 
-        Set: Public.Override.StrongTyped(__Void, [__String, __String], function (name, value) {
+        Set: Public.Override.StrongTyped(__Void, [__String, __Object], function (name, value) {
             var last = this.GetLast();
             last.values[name] = value;
         }),

@@ -314,10 +314,10 @@
                     [], function () {
                         return "1: " + this.Print(arguments);
                     },
-                    [Number, String, Boolean], function (a, b, c) {
+                    [__Number, __String, __Boolean], function (a, b, c) {
                         return "2: " + this.Print(arguments);
                     },
-                    [Function], function (x) {
+                    [__Function], function (x) {
                         return "3: " + this.Print(arguments);
                     },
                     [C], function (x) {
@@ -329,7 +329,7 @@
                     [A], function (x) {
                         return "6: " + this.Print(arguments);
                     },
-                    [Object], function (x) {
+                    [__Object], function (x) {
                         return "7: " + this.Print(arguments);
                     }
                 ),
@@ -345,7 +345,7 @@
             Assert(x.Do(c) === "4: object");
             Assert(x.Do(b) === "5: object");
             Assert(x.Do(a) === "6: object");
-            Assert(x.Do(null) === "7: object");
+            Assert(x.Do({}) === "7: object");
         });
     </script>
 
@@ -357,10 +357,10 @@
                     return this.value;
                 }),
                 __Constructor: Public.Overload(
-                    [Number], function () {
+                    [__Number], function () {
                         this.value = "number";
                     },
-                    [String], function () {
+                    [__String], function () {
                         this.value = "string";
                     }
                 ),

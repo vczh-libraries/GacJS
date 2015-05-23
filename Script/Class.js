@@ -410,6 +410,13 @@ Packages.Define("Class", function () {
         function (value) { return value instanceof __Class || value instanceof __Struct || value instanceof __Struct; }
         );
 
+    var __Object = new __PrimitiveType(
+        "<object>",
+        function (text) { throw new Error("Not Supported."); },
+        function (value) { throw new Error("Not Supported."); },
+        function (value) { return value !== undefined; }
+        );
+
     ///////////////////////////////////////////////////////////////
 
     function __BuildOverloadingFunctions() {
@@ -435,39 +442,7 @@ Packages.Define("Class", function () {
                     var arg = arguments[j];
 
                     var type = typeList[j];
-                    if (type === Number) {
-                        matched = typeof (arg) === "number";
-                    }
-                    else if (type === Boolean) {
-                        matched = typeof (arg) === "boolean";
-                    }
-                    else if (type === String) {
-                        matched = typeof (arg) === "string";
-                    }
-                    else if (type === Array) {
-                        matched = arg instanceof Array;
-                    }
-                    else if (type === Function) {
-                        matched = typeof (arg) === "function";
-                    }
-                    else if (type === Object) {
-                        matched = typeof (arg) === "object";
-                    }
-                    else if (type instanceof __Class) {
-                        matched = arg instanceof Class && type.IsAssignableFrom(arg.__Type);
-                    }
-                    else if (type instanceof __Enum) {
-                        matched = (arg instanceof Enum || arg instanceof Flags) && type === arg.__Type;
-                    }
-                    else if (type instanceof __Struct) {
-                        matched = arg instanceof Struct && type === arg.__Type;
-                    }
-                    else if (arg === undefined) {
-                        matched = false;
-                    }
-                    else if (arg !== null) {
-                        matched = arg instanceof type;
-                    }
+                    matched = type.TestType(arg);
                     if (!matched) break;
                 }
 
@@ -2177,6 +2152,7 @@ Packages.Define("Class", function () {
         __Function: __Function,
         __Type: __Type,
         __Void: __Void,
+        __Object: __Object,
 
         Class: Class,
         Enum: Enum,
