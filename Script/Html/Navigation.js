@@ -513,29 +513,30 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
                 for (var k = 0; k < pathFragments.length; k++) {
                     var pathFragment = pathFragments[k];
+                    var content = pathFragment.content;
                     switch (pathFragment.type) {
                         case PathFragmentType.Description.Constant:
-                            currentPath += "/" + pathFragment.content;
+                            currentPath += "/" + content;
                             break;
                         case PathFragmentType.Description.Argument:
-                            if (values.hasOwnProperty(pathFragment.content)) {
-                                var value = values[pathFragment.content];
+                            if (values.hasOwnProperty(content)) {
+                                var value = values[content];
                                 if (typeof value === "string") {
                                     currentPath += "/" + value;
                                     currentUsedArguments++;
-                                    usedArgumentNames[pathFragment] = null;
+                                    usedArgumentNames[content] = null;
                                     break;
                                 }
                             }
                             accepted = false;
                             break;
                         case PathFragmentType.Description.Array:
-                            if (values.hasOwnProperty(pathFragment.content)) {
-                                var value = values[pathFragment.content];
-                                if (typeof value === "array") {
+                            if (values.hasOwnProperty(content)) {
+                                var value = values[content];
+                                if (value instanceof Array) {
                                     currentPath += "/" + value.join("/");
                                     currentUsedArguments++;
-                                    usedArgumentNames[pathFragment] = null;
+                                    usedArgumentNames[content] = null;
                                     break;
                                 }
                             }
@@ -544,9 +545,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     }
                 }
 
-                if (!accepted) {
+                if (accepted) {
                     for (var k in values) {
-                        if (!usedArgumentNames.hasOwnProperty(k)) {
+                        if (!usedArgumentNames.hasOwnProperty(k) && !pathConfig.defaultValues.hasOwnProperty(k)) {
                             accepted = false;
                             break;
                         }

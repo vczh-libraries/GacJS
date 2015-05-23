@@ -167,12 +167,20 @@
             RegisterNavigationPath("/", HomeController, { Page: "Home" });
             RegisterNavigationPath("/Home", HomeController, { Page: "Home" });
             RegisterNavigationPath("/{Page}", HomeController);
+            RegisterNavigationPath("/Document", DocumentController);
+            RegisterNavigationPath("/Document/{*Symbols}", DocumentController);
 
             var result = BuildNavigationPath([{ type: HomeController, values: { Page: "Home" } }]);
             Assert(result === "");
 
             var result = BuildNavigationPath([{ type: HomeController, values: { Page: "Download" } }]);
             Assert(result === "Download");
+
+            var result = BuildNavigationPath([{ type: DocumentController, values: {} }]);
+            Assert(result === "Document");
+
+            var result = BuildNavigationPath([{ type: DocumentController, values: { Symbols: ["vl", "presentation", "controls", "GuiControl"] } }]);
+            Assert(result === "Document/vl/presentation/controls/GuiControl");
         });
     </script>
 
