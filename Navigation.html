@@ -32,6 +32,17 @@
     </script>
 
     <script>
+        TestCase("navigate to simple path should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/Home", HomeController);
+
+            var result = ParseNavigationPath("Home");
+            Assert(result.length == 1);
+            Assert(result[0].type == HomeController);
+        });
+    </script>
+
+    <script>
         SummaryTest();
     </script>
 </body>

@@ -115,144 +115,146 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }),
     });
 
-    var PatternHandler = Class(FQN("PatternHandler"), {
-        arguments: Protected(null),
-        controllerType: Protected(null),
-        patternIndex: Protected(null),
-        argumentIndex: Protected(-1),
-        lastHandler: Protected(false),
+    var PatternHandler = Class(FQN("PatternHandler"), function () {
+        return {
+            arguments: Protected(null),
+            controllerType: Protected(null),
+            patternIndex: Protected(null),
+            argumentIndex: Protected(-1),
+            lastHandler: Protected(false),
 
-        __Constructor: Public(function () {
-            this.arguments = {};
-            this.patternIndex = {};
-        }),
+            __Constructor: Public(function () {
+                this.arguments = {};
+                this.patternIndex = {};
+            }),
 
-        Argument: Public.StrongTyped(__Void, [__String, __Number], function (argumentName, argumentIndex) {
-            if (this.arguments.hasOwnProperty(argumentName)) {
-                throw new Error("Argument \"" + argumentName + "\" has already been assigned.");
-            }
-            this.arguments[argumentName] = argumentIndex;
-        }),
+            Argument: Public.StrongTyped(__Void, [__String, __Number], function (argumentName, argumentIndex) {
+                if (this.arguments.hasOwnProperty(argumentName)) {
+                    throw new Error("Argument \"" + argumentName + "\" has already been assigned.");
+                }
+                this.arguments[argumentName] = argumentIndex;
+            }),
 
-        Setter: Public.StrongTyped(__Void, [__String, __String], function (argumentName, argumentValue) {
-            if (this.arguments.hasOwnProperty(argumentName)) {
-                throw new Error("Argument \"" + argumentName + "\" has already been assigned.");
-            }
-            this.arguments[argumentName] = argumentValue;
-        }),
+            Setter: Public.StrongTyped(__Void, [__String, __String], function (argumentName, argumentValue) {
+                if (this.arguments.hasOwnProperty(argumentName)) {
+                    throw new Error("Argument \"" + argumentName + "\" has already been assigned.");
+                }
+                this.arguments[argumentName] = argumentValue;
+            }),
 
-        Last: Public.StrongTyped(__Void, [], function () {
-            this.lastHandler = true;
-        }),
+            Last: Public.StrongTyped(__Void, [], function () {
+                this.lastHandler = true;
+            }),
 
-        ControllerType: Public.StrongTyped(__Void, [__Type], function (controllerType) {
-            if (this.controllerType !== null) {
-                throw new Error("Controller type has already been assigned");
-            }
-            if (!INativationController.IsAssignableFrom(controllerType)) {
-                throw new Error("Controller type should implements \"" + INativationController.FullName + "\".");
-            }
-            this.controllerType = controllerType;
-        }),
+            ControllerType: Public.StrongTyped(__Void, [__Type], function (controllerType) {
+                if (this.controllerType !== null) {
+                    throw new Error("Controller type has already been assigned");
+                }
+                if (!INativationController.IsAssignableFrom(controllerType)) {
+                    throw new Error("Controller type should implements \"" + INativationController.FullName + "\".");
+                }
+                this.controllerType = controllerType;
+            }),
 
-        ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
-            var handler = null;
-            if (this.patternIndex.hasOwnProperty(constant)) {
-                handler = this.patternIndex[constant];
-            }
-            else {
-                handler = new PatternHandler();
-                this.patternIndex[constant] = handler;
-            }
-            return handler;
-        }),
-
-        ArgumentIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
-            if (this.patternIndex.hasOwnProperty("*")) {
-                throw new Error("Array index has already been assigned.");
-            }
-
-            var handler = null;
-            if (this.patternIndex.hasOwnProperty("+")) {
-                handler = this.patternIndex["+"];
-            }
-            else {
-                handler = new PatternHandler();
-                this.patternIndex["+"] = handler;
-            }
-            this.argumentIndex = index;
-            return handler;
-        }),
-
-        ArrayIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
-            if (this.patternIndex.hasOwnProperty("+")) {
-                throw new Error("Argument index has already been assigned.");
-            }
-
-            var handler = null;
-            if (this.patternIndex.hasOwnProperty("*")) {
-                handler = this.patternIndex["*"];
-            }
-            else {
-                handler = new PatternHandler();
-                this.patternIndex["*"] = handler;
-            }
-            this.argumentIndex = index;
-            return handler;
-        }),
-
-        Execute: Protected(function (fragment, storage, callback) {
-            if (fragment !== null && this.argumentIndex !== -1) {
-                storage[this.argumentIndex] = fragment;
-            }
-            for (var i in this.arguments) {
-                var value = this.arguments[i];
-                if (typeof value === "number") {
-                    callback.Set(i, storage[value]);
+            ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
+                var handler = null;
+                if (this.patternIndex.hasOwnProperty(constant)) {
+                    handler = this.patternIndex[constant];
                 }
                 else {
-                    callback.Set(i, value);
+                    handler = new PatternHandler();
+                    this.patternIndex[constant] = handler;
                 }
-            }
-            if (this.controllerType !== null) {
-                callback.Create(this.controllerType);
-            }
-        }),
+                return handler;
+            }),
 
-        Parse: Public.Virtual.StrongTyped(PatternHandler, [__String, IPatternHandlerCallback], function (fragment, callback) {
-            var storage = callback.nav_GetStorage();
-            if (storage.array === true) {
-                storage[this.argumentIndex].push(fragment);
-                return this.__ExternalReference;
-            }
+            ArgumentIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
+                if (this.patternIndex.hasOwnProperty("*")) {
+                    throw new Error("Array index has already been assigned.");
+                }
 
-            if (this.patternIndex.hasOwnProperty(fragment)) {
-                this.Execute(null, storage, callback);
-                return this.patternIndex[fragment];
-            }
-            else if (this.patternIndex.hasOwnProperty("+")) {
-                this.Execute(fragment, storage, callback);
-                return this.patternIndex["+"];
-            }
-            else if (this.patternIndex.hasOwnProperty("*")) {
-                storage.array = true;
-                storage[this.argumentIndex].push(fragment);
-                return this.__ExternalReference;
-            }
-            else {
-                throw new Error("Failed to parse the input fragment \"" + fragment + "\".");
-            }
-        }),
+                var handler = null;
+                if (this.patternIndex.hasOwnProperty("+")) {
+                    handler = this.patternIndex["+"];
+                }
+                else {
+                    handler = new PatternHandler();
+                    this.patternIndex["+"] = handler;
+                }
+                this.argumentIndex = index;
+                return handler;
+            }),
 
-        Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
-            if (this.lastHandler) {
+            ArrayIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
+                if (this.patternIndex.hasOwnProperty("+")) {
+                    throw new Error("Argument index has already been assigned.");
+                }
+
+                var handler = null;
+                if (this.patternIndex.hasOwnProperty("*")) {
+                    handler = this.patternIndex["*"];
+                }
+                else {
+                    handler = new PatternHandler();
+                    this.patternIndex["*"] = handler;
+                }
+                this.argumentIndex = index;
+                return handler;
+            }),
+
+            Execute: Protected(function (fragment, storage, callback) {
+                if (fragment !== null && this.argumentIndex !== -1) {
+                    storage[this.argumentIndex] = fragment;
+                }
+                for (var i in this.arguments) {
+                    var value = this.arguments[i];
+                    if (typeof value === "number") {
+                        callback.Set(i, storage[value]);
+                    }
+                    else {
+                        callback.Set(i, value);
+                    }
+                }
+                if (this.controllerType !== null) {
+                    callback.Create(this.controllerType);
+                }
+            }),
+
+            Parse: Public.Virtual.StrongTyped(PatternHandler, [__String, IPatternHandlerCallback], function (fragment, callback) {
                 var storage = callback.nav_GetStorage();
-                this.Execute(null, storage, callback);
-            }
-            else {
-                throw new Error("Unexpected end of input.");
-            }
-        }),
+                if (storage.array === true) {
+                    storage[this.argumentIndex].push(fragment);
+                    return this.__ExternalReference;
+                }
+
+                if (this.patternIndex.hasOwnProperty(fragment)) {
+                    this.Execute(null, storage, callback);
+                    return this.patternIndex[fragment];
+                }
+                else if (this.patternIndex.hasOwnProperty("+")) {
+                    this.Execute(fragment, storage, callback);
+                    return this.patternIndex["+"];
+                }
+                else if (this.patternIndex.hasOwnProperty("*")) {
+                    storage.array = true;
+                    storage[this.argumentIndex].push(fragment);
+                    return this.__ExternalReference;
+                }
+                else {
+                    throw new Error("Failed to parse the input fragment \"" + fragment + "\".");
+                }
+            }),
+
+            Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
+                if (this.lastHandler) {
+                    var storage = callback.nav_GetStorage();
+                    this.Execute(null, storage, callback);
+                }
+                else {
+                    throw new Error("Unexpected end of input.");
+                }
+            }),
+        }
     });
 
     /********************************************************************************
