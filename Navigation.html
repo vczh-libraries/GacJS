@@ -152,6 +152,16 @@
     </script>
 
     <script>
+        TestCase("build root path should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/", HomeController);
+
+            var result = BuildNavigationPath([{ type: HomeController, values: {} }]);
+            Assert(result === "");
+        });
+    </script>
+
+    <script>
         SummaryTest();
     </script>
 </body>

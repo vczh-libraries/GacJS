@@ -423,10 +423,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         if (postfixMatrix !== undefined) {
             for (var i = postfixMatrix.length - 1; i >= 0; i--) {
                 var row = postfixMatrix[i];
-                var accepted = (type === null
-                    ? row[0].parentPathConfig === null
-                    : row[0].parentPathConfig.controllerType === type
-                    );
+                var accepted = row[0].parentPathConfig.controllerType === type;
                 if (!accepted) {
                     postfixMatrix.splice(i, 1);
                 }
