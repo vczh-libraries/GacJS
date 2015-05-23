@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class</title>
+    <script src="./Script/Package.js"></script>
+    <script src="./Script/Test.js"></script>
+    <script src="./Script/Class.js"></script>
+    <script src="./Script/Html/Navigation.js"></script>
+</head>
+<body style="font-family: 'Segoe UI'; font-size: 14px;">
+    <script>
+        eval(Packages.Inject(["Test", "Class", "Html.Navigation"], false));
+
+        var TestController = Class("TestController", INativationController, {
+            OnSubControllerInstalled: Protected.Override(function (controller) { }),
+            OnSubControllerUninstalled: Protected.Override(function (controller) { }),
+        });
+
+        var RootController = Class("RootController", TestController, {});
+        var HomeController = Class("HomeController", TestController, {});
+    </script>
+
+    <script>
+        TestCase("navigate to root path should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/", HomeController);
+
+            var result = ParseNavigationPath("");
+            Assert(result.length == 1);
+            Assert(result[0].type == HomeController);
+        });
+    </script>
+
+    <script>
+        SummaryTest();
+    </script>
+</body>
+</html>

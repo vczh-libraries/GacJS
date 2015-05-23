@@ -14,7 +14,7 @@ API:
 
     void InitializeNavigation(string hashFlag, INavigationController rootType);
 
-    void RegisterNavigationPath(Type parentType, string pattern, Type type);
+    void RegisterNavigationPath(pattern, type, defaultValues, parentType);
         type with the pattern is cascade
         example: (localhost:80 represents the actual url)
             RegisterNavigationPath("/", HomeController);
@@ -245,8 +245,8 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }),
 
         Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
-            var storage = callback.nav_GetStorage();
-            if (storage.lastHandler) {
+            if (this.lastHandler) {
+                var storage = callback.nav_GetStorage();
                 this.Execute(null, storage, callback);
             }
             else {
@@ -261,7 +261,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
     var rootNavigationController = null;
     var rootPatternHandler = null;
-    var hashFlag = "~";
+    var hashFlag = null;
     var typeLastHandlers = null;
 
     function EnsureInitialized() {
@@ -291,7 +291,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         var lastHandlerKey = (parentType === undefined ? "" : parentType.FullName);
         var startHandlers = typeLastHandlers[lastHandlerKey];
         if (startHandlers === undefined) {
-            startHandlers = [];
+            startHandlers = [{ handler: rootPatternHandler, usedArguments: 0 }];
             typeLastHandlers[lastHandlerKey] = startHandlers;
         }
 
@@ -300,25 +300,27 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             var usedArguments = startHandlers[i].usedArguments;
             var assignedArguments = {};
 
-            var fragments = pattern.split("/");
-            for (var j = (fragments[0] === "" ? 1 : 0) ; j < fragments.length; j++) {
-                var fragment = fragments[j];
-                if (fragment === "" || fragment === "+" || fragment === "*") {
-                    throw new Error("Fragments in the URL pattern should not be \"\", \"+\" or \"*\".");
-                }
+            if (pattern !== "/") {
+                var fragments = pattern.split("/");
+                for (var j = (fragments[0] === "" ? 1 : 0) ; j < fragments.length; j++) {
+                    var fragment = fragments[j];
+                    if (fragment === "" || fragment === "+" || fragment === "*") {
+                        throw new Error("Fragments in the URL pattern should not be \"\", \"+\" or \"*\".");
+                    }
 
-                if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
-                    if (fragment[1] === "*") {
-                        assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
-                        handler = handler.ArrayIndex(++usedArguments);
+                    if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
+                        if (fragment[1] === "*") {
+                            assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
+                            handler = handler.ArrayIndex(++usedArguments);
+                        }
+                        else {
+                            assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
+                            handler = handler.ArgumentIndex(++usedArguments);
+                        }
                     }
                     else {
-                        assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
-                        handler = handler.ArgumentIndex(++usedArguments);
+                        handler = handler.ConstantIndex(fragment);
                     }
-                }
-                else {
-                    handler = handler.ConstantIndex(fragment);
                 }
             }
 
@@ -360,16 +362,21 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     var ParseCallback = Class(FQN("ParseCallback"), IPatternHandlerCallback, {
         result: Protected(null),
 
-        Set: Public.Override.StrongTyped(__Void, [__String, __String], function (name, value) {
-            var last = result[result.length - 1];
+        GetLast: Protected(function () {
+            var last = this.result[this.result.length - 1];
             if (last === undefined || last.type !== null) {
                 last = { type: null, values: {} }
-                result.push(last);
+                this.result.push(last);
             }
+            return last;
+        }),
+
+        Set: Public.Override.StrongTyped(__Void, [__String, __String], function (name, value) {
+            var last = this.GetLast();
             last.values[name] = value;
         }),
         Create: Public.Override.StrongTyped(__Void, [__Type], function (type) {
-            var last = result[result.length - 1];
+            var last = this.GetLast();
             last.type = type;
         }),
 
@@ -379,6 +386,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         Result: Public.Property({ readonly: true }),
 
         __Constructor: Public(function () {
+            this.__InitBase(IPatternHandlerCallback, []);
             this.result = [];
         }),
     });
@@ -388,7 +396,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         var fragments = path.split("/");
         var callback = new ParseCallback();
         var handler = rootPatternHandler;
-        for (var i = 0; i < fragments.length; i++) {
+        for (var i = (fragments[0] === "" ? 1 : 0) ; i < fragments.length; i++) {
             handler = handler.Parse(fragments[i], callback);
         }
         handler.Finish(callback);
