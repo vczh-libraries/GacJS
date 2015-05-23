@@ -42,7 +42,7 @@ API:
                 http://localhost:80#<hashFlag>/Document/vl/presentation/controls/GuiControl
                 {*xx} should be at the end of a complete pattern
 
-    string BuildNavigationPath([[type, values], [type, values],  ...]);
+    string BuildNavigationPath([{type:type, values:values}, {type:type, values:values},  ...]);
         example:
             BuildNavigationPath([
                 [DemoController, {}],
@@ -51,7 +51,7 @@ API:
             returns /Demo/HelloWorld/Source/main.cpp
             because DemoControler::DemoName has a default value "HelloWorld"
 
-    [[type, values], [type, values],  ...] ParseNavigationPath(string path);
+    [{type:type, values:values}, {type:type, values:values},  ...] ParseNavigationPath(string path);
         reverted BuildNavigationPath
 
     void NavigateTo(string path);
@@ -271,7 +271,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     }
 
     /********************************************************************************
-    API
+    InitializeNavigation
     ********************************************************************************/
 
     function InitializeNavigation(_hashFlag, rootType) {
@@ -280,6 +280,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         hashFlag = _hashFlag;
         typeLastHandlers = {};
     }
+
+    /********************************************************************************
+    RegisterNavigationPath
+    ********************************************************************************/
 
     function RegisterNavigationPath(pattern, type, defaultValues, parentType) {
         EnsureInitialized();
@@ -340,20 +344,69 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }
     }
 
+    /********************************************************************************
+    BuildNavigationPath
+    ********************************************************************************/
+
     function BuildNavigationPath(arguments) {
         EnsureInitialized();
         throw new Error("Not Implemented.");
     }
 
+    /********************************************************************************
+    ParseNavigationPath
+    ********************************************************************************/
+
+    var ParseCallback = Class(FQN("ParseCallback"), IPatternHandlerCallback, {
+        result: Protected(null),
+
+        Set: Public.Override.StrongTyped(__Void, [__String, __String], function (name, value) {
+            var last = result[result.length - 1];
+            if (last === undefined || last.type !== null) {
+                last = { type: null, values: {} }
+                result.push(last);
+            }
+            last.values[name] = value;
+        }),
+        Create: Public.Override.StrongTyped(__Void, [__Type], function (type) {
+            var last = result[result.length - 1];
+            last.type = type;
+        }),
+
+        GetResult: Public(function () {
+            return this.result;
+        }),
+        Result: Public.Property({ readonly: true }),
+
+        __Constructor: Public(function () {
+            this.result = [];
+        }),
+    });
+
     function ParseNavigationPath(path) {
         EnsureInitialized();
-        throw new Error("Not Implemented.");
+        var fragments = path.split("/");
+        var callback = new ParseCallback();
+        var handler = rootPatternHandler;
+        for (var i = 0; i < fragments.length; i++) {
+            handler = handler.Parse(fragments[i], callback);
+        }
+        handler.Finish(callback);
+        return callback.Result;
     }
+
+    /********************************************************************************
+    NavigateTo
+    ********************************************************************************/
 
     function NavigateTo(path) {
         EnsureInitialized();
         throw new Error("Not Implemented.");
     }
+
+    /********************************************************************************
+    StartNavigation
+    ********************************************************************************/
 
     function StartNavigation() {
         var hash = window.location.hash;
