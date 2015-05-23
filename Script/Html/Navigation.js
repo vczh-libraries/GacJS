@@ -390,6 +390,16 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         Create: Public.Override.StrongTyped(__Void, [__Type], function (type) {
             var last = this.GetLast();
             last.type = type;
+
+            if (this.result.length >= 2) {
+                var previous = this.result[this.result.length - 2];
+                if (previous.type === last.type) {
+                    for (var i in last.values) {
+                        previous.values[i] = last.values[i];
+                    }
+                    this.result.splice(this.result.length - 1, 1);
+                }
+            }
         }),
 
         GetResult: Public(function () {

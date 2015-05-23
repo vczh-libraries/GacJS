@@ -126,12 +126,12 @@
             Assert(result[1].values.DemoName === "HelloWorld");
 
             var result = ParseNavigationPath("Demo/HelloWorld/Source");
-            Assert(result.length === 2);
+            Assert(result.length === 3);
             Assert(result[0].type === DemoController);
             Assert(result[1].type === IndividualDemoController);
             Assert(result[1].values.DemoName === "HelloWorld");
-            Assert(result[1].type === DemoSourceController);
-            Assert(result[1].values.DemoName === "main.cpp");
+            Assert(result[2].type === DemoSourceController);
+            Assert(result[2].values.FileName === "main.cpp");
 
             var result = ParseNavigationPath("Demo/HelloWorld/Source/main.cpp");
             Assert(result.length === 3);
@@ -139,7 +139,7 @@
             Assert(result[1].type === IndividualDemoController);
             Assert(result[1].values.DemoName === "HelloWorld");
             Assert(result[2].type === DemoSourceController);
-            Assert(result[2].values.DemoName === "main.cpp");
+            Assert(result[2].values.FileName === "main.cpp");
 
             var result = ParseNavigationPath("Demo/HelloWorld/Source/resource.xml");
             Assert(result.length === 3);
@@ -147,7 +147,7 @@
             Assert(result[1].type === IndividualDemoController);
             Assert(result[1].values.DemoName === "HelloWorld");
             Assert(result[2].type === DemoSourceController);
-            Assert(result[2].values.DemoName === "resource.xml");
+            Assert(result[2].values.FileName === "resource.xml");
         });
     </script>
 
