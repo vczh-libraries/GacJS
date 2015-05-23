@@ -27,8 +27,8 @@
             RegisterNavigationPath("/", HomeController);
 
             var result = ParseNavigationPath("");
-            Assert(result.length == 1);
-            Assert(result[0].type == HomeController);
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
         });
     </script>
 
@@ -38,29 +38,53 @@
             RegisterNavigationPath("/Home", HomeController);
 
             var result = ParseNavigationPath("Home");
-            Assert(result.length == 1);
-            Assert(result[0].type == HomeController);
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
         });
     </script>
 
     <script>
-        TestCase("navigate to multiple simple path should success", function () {
+        TestCase("navigate to multiple simple paths should success", function () {
             InitializeNavigation("~", RootController);
             RegisterNavigationPath("/", HomeController);
             RegisterNavigationPath("/Home", HomeController);
             RegisterNavigationPath("/GettingStarted", GettingStartedController);
 
             var result = ParseNavigationPath("");
-            Assert(result.length == 1);
-            Assert(result[0].type == HomeController);
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
 
             var result = ParseNavigationPath("Home");
-            Assert(result.length == 1);
-            Assert(result[0].type == HomeController);
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
 
             var result = ParseNavigationPath("GettingStarted");
-            Assert(result.length == 1);
-            Assert(result[0].type == GettingStartedController);
+            Assert(result.length === 1);
+            Assert(result[0].type === GettingStartedController);
+        });
+    </script>
+
+    <script>
+        TestCase("navigate to parameterized paths should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/", HomeController, { Page: "Home" });
+            RegisterNavigationPath("/Home", HomeController, { Page: "Home" });
+            RegisterNavigationPath("/{Page}", HomeController);
+
+            var result = ParseNavigationPath("");
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
+            Assert(result[0].values.Page === "Home");
+
+            var result = ParseNavigationPath("Home");
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
+            Assert(result[0].values.Page === "Home");
+
+            var result = ParseNavigationPath("Download");
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
+            Assert(result[0].values.Page === "Download");
         });
     </script>
 

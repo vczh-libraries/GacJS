@@ -320,11 +320,11 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
                         if (fragment[1] === "*") {
                             assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
-                            handler = handler.ArrayIndex(++usedArguments);
+                            handler = handler.ArrayIndex(usedArguments++);
                         }
                         else {
                             assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
-                            handler = handler.ArgumentIndex(++usedArguments);
+                            handler = handler.ArgumentIndex(usedArguments++);
                         }
                     }
                     else {
