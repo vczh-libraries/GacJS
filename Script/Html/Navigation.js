@@ -26,14 +26,14 @@ API:
                 http://localhost:80#<hashFlag>/GettingStarted
             RegisterNavigationPath("/Download", DownloadController);
                 http://localhost:80#<hashFlag>/Download
-            RegisterNavigationPath("/Demo", DemoController, {DemoName: "HelloWorld"});
+            RegisterNavigationPath("/Demo", DemoController);
                 http://localhost:80#<hashFlag>/Demo
             RegisterNavigationPath("/{DemoName}", IndividualDemoController, {}, DemoController);
                 http://localhost:80#<hashFlag>/Demo/HelloWorld
-            RegisterNavigationPath("/{DemoName}/Source", DemoSourceController, {FileName:"main.cpp"}, DemoController);
+            RegisterNavigationPath("/Source", DemoSourceController, {FileName:"main.cpp"}, IndividualDemoController);
                 http://localhost:80#<hashFlag>/Demo/HelloWorld/Source
                 ==> http://localhost:80#<hashFlag>/Demo/HelloWorld/Source/main.cpp
-            RegisterNavigationPath("/{DemoName}/Source/{FileName}", DemoSourceController, {}, DemoController);
+            RegisterNavigationPath("/Source/{FileName}", DemoSourceController, {}, IndividualDemoController);
                 http://localhost:80#<hashFlag>/Demo/HelloWorld/Source/main.cpp
             RegisterNavigationPath("/Document", DocumentController, {Symbols:["vl","presentation","controls","GuiControl"]});
                 http://localhost:80#<hashFlag>/Document
@@ -42,14 +42,17 @@ API:
                 http://localhost:80#<hashFlag>/Document/vl/presentation/controls/GuiControl
                 {*xx} should be at the end of a complete pattern
 
-    string BuildNavigationPath([{type:type, values:values}, {type:type, values:values},  ...]);
+    string BuildNavigation(Path|Hash|Url)([{type:type, values:values}, {type:type, values:values},  ...]);
         example:
             BuildNavigationPath([
                 [DemoController, {}],
+                [IndividualDemoController, {DemoName:"HelloWorld"}]
                 [DemoSourceController, {FileName:"main.cpp"}]
                 ])
-            returns /Demo/HelloWorld/Source/main.cpp
-            because DemoControler::DemoName has a default value "HelloWorld"
+            returns
+                Path: Demo/HelloWorld/Source/main.cpp
+                Hash: #<hashFlag>/Demo/HelloWorld/Source/main.cpp
+                Path: http://localhost:80#<hashFlag>/Demo/HelloWorld/Source/main.cpp
 
     [{type:type, values:values}, {type:type, values:values},  ...] ParseNavigationPath(string path);
         reverted BuildNavigationPath
@@ -121,10 +124,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             controllerType: Protected(null),
             patternIndex: Protected(null),
             argumentIndex: Protected(-1),
-            lastHandler: Protected(null),
 
-            SetArgumentIndex: Public(function (argumentIndex) {
-                this.argumentIndex = argumentIndex;
+            SetArgumentIndex: Public(function (index) {
+                this.argumentIndex = index;
             }),
 
             __Constructor: Public(function () {
@@ -154,14 +156,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     throw new Error("Controller type should implements \"" + INativationController.FullName + "\".");
                 }
                 this.controllerType = controllerType;
-            }),
-
-            Last: Public.StrongTyped(PatternHandler, [], function () {
-                if (this.lastHandler !== null) {
-                    throw new Error("Ambiguous rule is not allowed.");
-                }
-                this.lastHandler = new PatternHandler();
-                return this.lastHandler;
             }),
 
             ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
@@ -246,8 +240,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
                 else if (this.patternIndex.hasOwnProperty("*")) {
                     storage.array = true;
-                    argument = [fragment];
-                    storage[this.argumentIndex] = argument;
+                    this.Execute([fragment], storage, callback);
                     return this.patternIndex["*"];
                 }
                 else {
@@ -256,12 +249,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }),
 
             Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
-                if (this.lastHandler !== null) {
+                if (this.controllerType !== null) {
                     var storage = callback.nav_GetStorage();
-                    if (storage.array === true) {
-                        this.Execute(null, storage, callback);
-                    }
-                    this.lastHandler.Execute(null, storage, callback);
+                    this.Execute(null, storage, callback);
                 }
                 else {
                     throw new Error("Unexpected end of input.");
@@ -315,40 +305,37 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             var usedArguments = startHandlers[i].usedArguments;
             var assignedArguments = {};
 
-            if (pattern !== "/") {
-                var fragments = pattern.split("/");
-                for (var j = (fragments[0] === "" ? 1 : 0) ; j < fragments.length; j++) {
-                    var fragment = fragments[j];
-                    if (fragment === "" || fragment === "+" || fragment === "*") {
-                        throw new Error("Fragments in the URL pattern should not be \"\", \"+\" or \"*\".");
-                    }
+            var fragments = pattern.split("/");
+            for (var j = (fragments[0] === "" ? 1 : 0) ; j < fragments.length; j++) {
+                var fragment = fragments[j];
+                if (fragment === "+" || fragment === "*") {
+                    throw new Error("Fragments in the URL pattern should not be \"+\" or \"*\".");
+                }
 
-                    if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
-                        if (fragment[1] === "*") {
-                            assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
-                            handler = handler.ArrayIndex(usedArguments++);
-                        }
-                        else {
-                            assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
-                            handler = handler.ArgumentIndex(usedArguments++);
-                        }
+                if (fragment[0] === "{" && fragment[fragment.length - 1] === "}") {
+                    if (fragment[1] === "*") {
+                        assignedArguments[fragment.substring(2, fragment.length - 1)] = usedArguments;
+                        handler = handler.ArrayIndex(usedArguments++);
                     }
                     else {
-                        handler = handler.ConstantIndex(fragment);
+                        assignedArguments[fragment.substring(1, fragment.length - 1)] = usedArguments;
+                        handler = handler.ArgumentIndex(usedArguments++);
                     }
+                }
+                else {
+                    handler = handler.ConstantIndex(fragment);
                 }
             }
 
-            var lastHandler = handler.Last();
-            lastHandler.ControllerType(type);
+            handler.ControllerType(type);
             for (var j in assignedArguments) {
                 var index = assignedArguments[j];
-                lastHandler.Argument(j, index);
+                handler.Argument(j, index);
             }
             if (defaultValues !== undefined) {
                 for (var j in defaultValues) {
                     var value = defaultValues[j];
-                    lastHandler.Setter(j, value);
+                    handler.Setter(j, value);
                 }
             }
 
@@ -368,6 +355,16 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     function BuildNavigationPath(arguments) {
         EnsureInitialized();
         throw new Error("Not Implemented.");
+    }
+
+    function BuildNavigationHash(arguments) {
+        return "#" + hashFlag + "/" + BuildNavigationPath(arguments);
+    }
+
+    function BuildNavigationUrl(arguments) {
+        var href = window.location.href;
+        var hash = window.location.hash;
+        return href.substring(0, href.length - hash.length) + BuildNavigationHash(arguments);
     }
 
     /********************************************************************************
@@ -411,7 +408,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         var fragments = path.split("/");
         var callback = new ParseCallback();
         var handler = rootPatternHandler;
-        for (var i = (fragments[0] === "" ? 1 : 0) ; i < fragments.length; i++) {
+        for (var i = 0 ; i < fragments.length; i++) {
             handler = handler.Parse(fragments[i], callback);
         }
         handler.Finish(callback);
@@ -457,6 +454,8 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         InitializeNavigation: InitializeNavigation,
         RegisterNavigationPath: RegisterNavigationPath,
         BuildNavigationPath: BuildNavigationPath,
+        BuildNavigationHash: BuildNavigationHash,
+        BuildNavigationUrl: BuildNavigationUrl,
         ParseNavigationPath: ParseNavigationPath,
         NavigateTo: NavigateTo,
         StartNavigation: StartNavigation,

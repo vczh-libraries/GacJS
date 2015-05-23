@@ -19,6 +19,9 @@
         var RootController = Class("RootController", TestController, {});
         var HomeController = Class("HomeController", TestController, {});
         var GettingStartedController = Class("GettingStartedController", TestController, {});
+        var DemoController = Class("DemoController", TestController, {});
+        var IndividualDemoController = Class("IndividualDemoController", TestController, {});
+        var DemoSourceController = Class("DemoSourceController", TestController, {});
         var DocumentController = Class("DocumentController", TestController, {});
     </script>
 
@@ -101,6 +104,50 @@
             Assert(result[0].values.Symbols[1] === "presentation");
             Assert(result[0].values.Symbols[2] === "controls");
             Assert(result[0].values.Symbols[3] === "GuiControl");
+        });
+    </script>
+
+    <script>
+        TestCase("navigate to cascade controller paths should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/Demo", DemoController);
+            RegisterNavigationPath("/{DemoName}", IndividualDemoController, {}, DemoController);
+            RegisterNavigationPath("/Source", DemoSourceController, { FileName: "main.cpp" }, IndividualDemoController);
+            RegisterNavigationPath("/Source/{FileName}", DemoSourceController, {}, IndividualDemoController);
+
+            var result = ParseNavigationPath("Demo");
+            Assert(result.length === 1);
+            Assert(result[0].type === DemoController);
+
+            var result = ParseNavigationPath("Demo/HelloWorld");
+            Assert(result.length === 2);
+            Assert(result[0].type === DemoController);
+            Assert(result[1].type === IndividualDemoController);
+            Assert(result[1].values.DemoName === "HelloWorld");
+
+            var result = ParseNavigationPath("Demo/HelloWorld/Source");
+            Assert(result.length === 2);
+            Assert(result[0].type === DemoController);
+            Assert(result[1].type === IndividualDemoController);
+            Assert(result[1].values.DemoName === "HelloWorld");
+            Assert(result[1].type === DemoSourceController);
+            Assert(result[1].values.DemoName === "main.cpp");
+
+            var result = ParseNavigationPath("Demo/HelloWorld/Source/main.cpp");
+            Assert(result.length === 3);
+            Assert(result[0].type === DemoController);
+            Assert(result[1].type === IndividualDemoController);
+            Assert(result[1].values.DemoName === "HelloWorld");
+            Assert(result[2].type === DemoSourceController);
+            Assert(result[2].values.DemoName === "main.cpp");
+
+            var result = ParseNavigationPath("Demo/HelloWorld/Source/resource.xml");
+            Assert(result.length === 3);
+            Assert(result[0].type === DemoController);
+            Assert(result[1].type === IndividualDemoController);
+            Assert(result[1].values.DemoName === "HelloWorld");
+            Assert(result[2].type === DemoSourceController);
+            Assert(result[2].values.DemoName === "resource.xml");
         });
     </script>
 
