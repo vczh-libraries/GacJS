@@ -162,6 +162,21 @@
     </script>
 
     <script>
+        TestCase("navigate to parameterized paths should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/", HomeController, { Page: "Home" });
+            RegisterNavigationPath("/Home", HomeController, { Page: "Home" });
+            RegisterNavigationPath("/{Page}", HomeController);
+
+            var result = BuildNavigationPath([{ type: HomeController, values: { Page: "Home" } }]);
+            Assert(result === "");
+
+            var result = BuildNavigationPath([{ type: HomeController, values: { Page: "Download" } }]);
+            Assert(result === "Download");
+        });
+    </script>
+
+    <script>
         SummaryTest();
     </script>
 </body>

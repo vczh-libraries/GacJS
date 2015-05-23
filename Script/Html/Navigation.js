@@ -508,30 +508,34 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             for (var j = 0; j < row.length; j++) {
                 var pathConfig = row[j];
                 var values = argumentMap[pathConfig.controllerType.FullName];
+                var usedArgumentNames = {};
                 var pathFragments = pathConfig.pathFragments;
-                for (var k = 0; k < pathFragments; k++) {
+
+                for (var k = 0; k < pathFragments.length; k++) {
                     var pathFragment = pathFragments[k];
                     switch (pathFragment.type) {
-                        case PathFragmentType.Constant:
-                            currentPath += "/" + pathFragment.constant;
+                        case PathFragmentType.Description.Constant:
+                            currentPath += "/" + pathFragment.content;
                             break;
-                        case PathFragmentType.Argument:
-                            if (values.hasOwnProperty(pathFragment.constant)) {
-                                var value = values[pathFragment.constant];
+                        case PathFragmentType.Description.Argument:
+                            if (values.hasOwnProperty(pathFragment.content)) {
+                                var value = values[pathFragment.content];
                                 if (typeof value === "string") {
                                     currentPath += "/" + value;
                                     currentUsedArguments++;
+                                    usedArgumentNames[pathFragment] = null;
                                     break;
                                 }
                             }
                             accepted = false;
                             break;
-                        case PathFragmentType.Array:
-                            if (values.hasOwnProperty(pathFragment.constant)) {
-                                var value = values[pathFragment.constant];
+                        case PathFragmentType.Description.Array:
+                            if (values.hasOwnProperty(pathFragment.content)) {
+                                var value = values[pathFragment.content];
                                 if (typeof value === "array") {
                                     currentPath += "/" + value.join("/");
                                     currentUsedArguments++;
+                                    usedArgumentNames[pathFragment] = null;
                                     break;
                                 }
                             }
@@ -539,13 +543,25 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                             break;
                     }
                 }
+
+                if (!accepted) {
+                    for (var k in values) {
+                        if (!usedArgumentNames.hasOwnProperty(k)) {
+                            accepted = false;
+                            break;
+                        }
+                    }
+                }
+
                 if (!accepted) {
                     break;
                 }
             }
 
             if (accepted) {
-                if (usedArguments === undefined || usedArguments > currentUsedArguments) {
+                if (usedArguments === undefined ||
+                    usedArguments > currentUsedArguments ||
+                    (usedArguments === currentUsedArguments && path.length > currentPath.length)) {
                     path = currentPath.substring(1, currentPath.length);
                     usedArguments = currentUsedArguments;
                 }
