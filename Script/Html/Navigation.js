@@ -480,7 +480,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             var head = [prefixColumn[i]];
             for (var j = 0; j < postfixMatrix.length; j++) {
                 var tail = postfixMatrix[j];
-                matrix.push(head.concat.apply(head, tail));
+                matrix.push(head.concat(tail));
             }
         }
 
