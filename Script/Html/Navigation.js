@@ -121,7 +121,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             controllerType: Protected(null),
             patternIndex: Protected(null),
             argumentIndex: Protected(-1),
-            lastHandler: Protected(false),
+            lastHandler: Protected(null),
 
             __Constructor: Public(function () {
                 this.arguments = {};
@@ -142,10 +142,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 this.arguments[argumentName] = argumentValue;
             }),
 
-            Last: Public.StrongTyped(__Void, [], function () {
-                this.lastHandler = true;
-            }),
-
             ControllerType: Public.StrongTyped(__Void, [__Type], function (controllerType) {
                 if (this.controllerType !== null) {
                     throw new Error("Controller type has already been assigned");
@@ -154,6 +150,14 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                     throw new Error("Controller type should implements \"" + INativationController.FullName + "\".");
                 }
                 this.controllerType = controllerType;
+            }),
+
+            Last: Public.StrongTyped(PatternHandler, [], function () {
+                if (this.lastHandler !== null) {
+                    throw new Error("Ambiguous rule is not allowed.");
+                }
+                this.lastHandler = new PatternHandler();
+                return this.lastHandler;
             }),
 
             ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
@@ -202,7 +206,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 return handler;
             }),
 
-            Execute: Protected(function (fragment, storage, callback) {
+            Execute: Public(function (fragment, storage, callback) {
                 if (fragment !== null && this.argumentIndex !== -1) {
                     storage[this.argumentIndex] = fragment;
                 }
@@ -246,9 +250,12 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }),
 
             Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
-                if (this.lastHandler) {
+                if (this.lastHandler !== null) {
                     var storage = callback.nav_GetStorage();
-                    this.Execute(null, storage, callback);
+                    if (storage.array === true) {
+                        this.Execute(null, storage, callback);
+                    }
+                    this.lastHandler.Execute(null, storage, callback);
                 }
                 else {
                     throw new Error("Unexpected end of input.");
@@ -326,16 +333,16 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }
 
-            handler.Last();
-            handler.ControllerType(type);
+            var lastHandler = handler.Last();
+            lastHandler.ControllerType(type);
             for (var j in assignedArguments) {
                 var index = assignedArguments[j];
-                handler.Argument(j, index);
+                lastHandler.Argument(j, index);
             }
             if (defaultValues !== undefined) {
                 for (var j in defaultValues) {
                     var value = defaultValues[j];
-                    handler.Setter(j, value);
+                    lastHandler.Setter(j, value);
                 }
             }
 

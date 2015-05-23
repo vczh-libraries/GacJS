@@ -18,6 +18,7 @@
 
         var RootController = Class("RootController", TestController, {});
         var HomeController = Class("HomeController", TestController, {});
+        var GettingStartedController = Class("GettingStartedController", TestController, {});
     </script>
 
     <script>
@@ -39,6 +40,27 @@
             var result = ParseNavigationPath("Home");
             Assert(result.length == 1);
             Assert(result[0].type == HomeController);
+        });
+    </script>
+
+    <script>
+        TestCase("navigate to multiple simple path should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/", HomeController);
+            RegisterNavigationPath("/Home", HomeController);
+            RegisterNavigationPath("/GettingStarted", GettingStartedController);
+
+            var result = ParseNavigationPath("");
+            Assert(result.length == 1);
+            Assert(result[0].type == HomeController);
+
+            var result = ParseNavigationPath("Home");
+            Assert(result.length == 1);
+            Assert(result[0].type == HomeController);
+
+            var result = ParseNavigationPath("GettingStarted");
+            Assert(result.length == 1);
+            Assert(result[0].type == GettingStartedController);
         });
     </script>
 
