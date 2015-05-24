@@ -66,7 +66,7 @@ API:
     void NavigateTo(string path);
         navigate to http://localhost:80/#<hashFlag><path>
 
-    void StartNavigation();
+    void StartNavigation(defaultPath);
         read the current hash and navigate
 */
 Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
@@ -826,10 +826,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     StartNavigation
     ********************************************************************************/
 
-    function StartNavigation() {
+    function StartNavigation(defaultPath) {
         var hash = window.location.hash;
         if (hash === "") {
-            hash = "#" + hashFlag + "/";
+            hash = "#" + hashFlag + "/" + defaultPath;
         }
         if (hash[0] === "#") {
             hash = hash.substring(1, hash.length);

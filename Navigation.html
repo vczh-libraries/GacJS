@@ -255,7 +255,7 @@
 
     <div class="TabControl" id="tabMain" data-navigation="true">
         <div class="TabButtonContainer">
-            <div class="TabButton" data-url="/">Home</div>
+            <div class="TabButton" data-url="/home">Home</div>
             <div class="TabButton" data-url="/tutorial">Tutorial</div>
             <div class="TabButton" data-url="/download">Download</div>
             <div class="TabButton" data-url="/demos">Demos</div>
@@ -265,47 +265,87 @@
 
         <div class="TabPageContainer">
             <div class="TabPage">
-                Home
+                <div class="TabControl" id="tabHome" data-navigation="true">
+                    <div class="TabButtonContainer">
+                        <div class="TabButton" data-url="/vlpp">Vlpp</div>
+                        <div class="TabButton" data-url="/workflow">Workflow</div>
+                        <div class="TabButton" data-url="/gacui">GacUI</div>
+                        <div class="TabButton" data-url="/gacjs">GacJS</div>
+                    </div>
+
+                    <div class="TabPageContainer">
+                        <div class="TabPage">
+                            Welcome to <a target="_blank" href="https://github.com/vczh-libraries/Vlpp">Vlpp</a>!
+                        </div>
+
+                        <div class="TabPage">
+                            Welcome to <a target="_blank" href="https://github.com/vczh-libraries/Workflow">Workflow</a>!
+                        </div>
+
+                        <div class="TabPage">
+                            Welcome to <a target="_blank" href="https://github.com/vczh-libraries/GacUI">GacUI</a>!
+                        </div>
+
+                        <div class="TabPage">
+                            Welcome to <a target="_blank" href="https://github.com/vczh-libraries/GacJS">GacJS</a>!
+                        </div>
+                    </div>
+                </div>
             </div>
-            <script>
-            </script>
 
             <div class="TabPage">
                 Tutorial
             </div>
-            <script>
-            </script>
 
             <div class="TabPage">
-                Download
+                <div class="TabControl" id="tabDownload" data-navigation="true">
+                    <div class="TabButtonContainer">
+                        <div class="TabButton" data-url="/windows">Windows</div>
+                        <div class="TabButton" data-url="/linux">Linux</div>
+                        <div class="TabButton" data-url="/mac">Mac</div>
+                        <div class="TabButton" data-url="/html">Html</div>
+                    </div>
+
+                    <div class="TabPageContainer">
+                        <div class="TabPage">
+                            Download GacUI for Windows
+                        </div>
+
+                        <div class="TabPage">
+                            Download GacUI for Linux
+                        </div>
+
+                        <div class="TabPage">
+                            Download GacUI for Mac OS
+                        </div>
+
+                        <div class="TabPage">
+                            Download GacUI for Browsers!
+                        </div>
+                    </div>
+                </div>
             </div>
-            <script>
-            </script>
 
             <div class="TabPage">
                 Demos
             </div>
-            <script>
-            </script>
 
             <div class="TabPage">
                 Document
             </div>
-            <script>
-            </script>
 
             <div class="TabPage">
                 About
             </div>
-            <script>
-            </script>
         </div>
     </div>
 
     <script>
         InitializeNavigation("~", TabRootController);
         SetupTabControl(tabMain);
-        StartNavigation();
+        SetupTabControl(tabHome);
+        SetupTabControl(tabDownload);
+        StartNavigation("home/gacjs");
     </script>
 </body>
 </html>
