@@ -198,6 +198,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 return [].concat(constantHandlers, argumentHandlers, arrayHandlers);
             }),
 
+            IsFinishState: Public.StrongTyped(__Boolean, [], function () {
+                return this.controllerType !== null;
+            }),
+
             ExecuteCommands: Protected(function (storage, callback) {
                 for (var i in this.arguments) {
                     var value = this.arguments[i];
@@ -233,10 +237,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }),
 
-            Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
-                var storage = callback.nav_GetStorage();
-                if (this.controllerType !== null) {
-                    this.ExecuteCommands(storage, callback);
+            ExecuteFinished: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
+                if (this.IsFinishState()) {
+                    this.ExecuteCommands(callback.nav_GetStorage(), callback);
                 }
                 else {
                     throw new Error("Unexpected end of input.");
@@ -634,6 +637,8 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }
         }
 
+        handlers = handlers.filter(function (handler) { return handler.handler.IsFinishState(); });
+
         if (handlers.length === 0) {
             throw new Error("Failed to parse \"" + path + "\".");
         }
@@ -651,7 +656,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             var callback = new ParseCallback();
             for (var i = 0; i < orderedHandlers.length; i++) {
                 if (i === orderedHandlers.length - 1) {
-                    orderedHandlers[i].Finish(callback);
+                    orderedHandlers[i].ExecuteFinished(callback);
                 }
                 else {
                     orderedHandlers[i].Execute(fragments[i], callback);
