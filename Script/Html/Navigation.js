@@ -189,10 +189,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 var constantHandlers = this.patternIndex[fragment];
                 if (constantHandlers === undefined) constantHandlers = [];
 
-                var argumentHandlers = this.patternIndex[fragment];
+                var argumentHandlers = this.patternIndex["+"];
                 if (argumentHandlers === undefined) argumentHandlers = [];
 
-                var arrayHandlers = this.patternIndex[fragment];
+                var arrayHandlers = this.patternIndex["*"];
                 if (arrayHandlers === undefined) arrayHandlers = [];
 
                 return [].concat(constantHandlers, argumentHandlers, arrayHandlers);
@@ -234,6 +234,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }),
 
             Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
+                var storage = callback.nav_GetStorage();
                 if (this.controllerType !== null) {
                     this.ExecuteCommands(storage, callback);
                 }
@@ -649,9 +650,13 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
             var callback = new ParseCallback();
             for (var i = 0; i < orderedHandlers.length; i++) {
-                orderedHandlers[i].Execute(fragments[i], callback);
+                if (i === orderedHandlers.length - 1) {
+                    orderedHandlers[i].Finish(callback);
+                }
+                else {
+                    orderedHandlers[i].Execute(fragments[i], callback);
+                }
             }
-            handlers[0].handler.Finish(callback);
         }
         return callback.Result;
     }
