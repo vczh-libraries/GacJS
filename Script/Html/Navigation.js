@@ -126,7 +126,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             level: Protected(null),
             patternIndex: Protected(null),
 
-            __Constructor: Public.StrongTyped(__Void, [__String], function (key) {
+            __Constructor: Public(function (key) {
                 this.key = (key === undefined ? null : key);
                 this.arguments = {};
                 this.patternIndex = {};
@@ -161,7 +161,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 var handlers = this.patternIndex[key];
                 if (handlers === undefined) {
                     handlers = [];
-                    this.patternIndex[constant] = handlers;
+                    this.patternIndex[key] = handlers;
                 }
 
                 var handler = new PatternHandler(key);
@@ -181,7 +181,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 return this.AppendHandler("*");
             }),
 
-            Parse: Public.Virtual.StrongTyped(__Array, [__String, IPatternHandlerCallback], function (fragment, callback) {
+            Parse: Public.Virtual.StrongTyped(__Array, [__String], function (fragment) {
                 if (this.key === "*") {
                     return [this.__ExternalReference];
                 }
@@ -213,7 +213,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }),
 
-            Execute: Public(function (fragment, callback) {
+            Execute: Public.StrongTyped(__Void, [__String, IPatternHandlerCallback], function (fragment, callback) {
                 var storage = callback.nav_GetStorage();
                 switch (this.key) {
                     case "+":
@@ -616,12 +616,43 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     function ParseNavigationPath(path) {
         EnsureInitialized();
         var fragments = path.split("/");
-        var callback = new ParseCallback();
-        var handler = rootPatternHandler;
-        for (var i = 0 ; i < fragments.length; i++) {
-            handler = handler.Parse(fragments[i], callback);
+        var handlers = [{ handler: rootPatternHandler, previous: null }];
+
+        for (var i = 0; i < fragments.length; i++) {
+            var currentHandlers = [];
+            for (var j = 0; j < handlers.length; j++) {
+                var previous = handlers[j];
+                var resultHandlers = previous.handler.Parse(fragments[i]);
+                for (var k = 0; k < resultHandlers.length; k++) {
+                    currentHandlers.push({ handler: resultHandlers[k], previous: previous });
+                }
+            }
+            handlers = currentHandlers;
+            if (handlers.length === 0) {
+                break;
+            }
         }
-        handler.Finish(callback);
+
+        if (handlers.length === 0) {
+            throw new Error("Failed to parse \"" + path + "\".");
+        }
+        else if (handlers.length > 1) {
+            throw new Error("Ambiguous result found from \"" + path + "\".");
+        }
+        else {
+            var orderedHandlers = [];
+            var currentHandler = handlers[0];
+            while (currentHandler != null) {
+                orderedHandlers.splice(0, 0, currentHandler.handler);
+                currentHandler = currentHandler.previous;
+            }
+
+            var callback = new ParseCallback();
+            for (var i = 0; i < orderedHandlers.length; i++) {
+                orderedHandlers[i].Execute(fragments[i], callback);
+            }
+            handlers[0].handler.Finish(callback);
+        }
         return callback.Result;
     }
 
