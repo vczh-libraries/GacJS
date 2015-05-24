@@ -44,7 +44,6 @@ function ShowTabPage(tabPage) {
 }
 
 function CombineTabPage(tabControl, tabPage, tabButton) {
-
     tabPage.TabControl = tabControl;
     tabPage.TabButton = tabButton;
 

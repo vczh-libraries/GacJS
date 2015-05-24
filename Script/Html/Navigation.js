@@ -100,7 +100,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 if (this.subController !== null) {
                     this.OnSubControllerInstalled(this.subController);
                     this.subController.OnInstalled();
-                    this.subController = null;
                 }
             }),
 
@@ -806,7 +805,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
         if (i < newContext.length) {
             for (var j = i; j < newContext.length; j++) {
-                var newItem = newContext[i];
+                var newItem = newContext[j];
                 var nextController = new newItem.type;
                 for (var k in newItem.values) {
                     newController[k] = newItem.values[k];
