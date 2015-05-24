@@ -132,6 +132,14 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 this.patternIndex = {};
             }),
 
+            IsFinishState: Public.StrongTyped(__Boolean, [], function () {
+                return this.controllerType !== null;
+            }),
+
+            IsFromConstantInput: Public.StrongTyped(__Boolean, [], function () {
+                return this.key !== "+" && this.key !== "*";
+            }),
+
             Argument: Public.StrongTyped(__Void, [__String, __Number], function (argumentName, argumentIndex) {
                 if (this.arguments.hasOwnProperty(argumentName)) {
                     throw new Error("Argument \"" + argumentName + "\" has already been assigned.");
@@ -198,10 +206,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 return [].concat(constantHandlers, argumentHandlers, arrayHandlers);
             }),
 
-            IsFinishState: Public.StrongTyped(__Boolean, [], function () {
-                return this.controllerType !== null;
-            }),
-
             ExecuteCommands: Protected(function (storage, callback) {
                 for (var i in this.arguments) {
                     var value = this.arguments[i];
@@ -239,7 +243,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
             ExecuteFinished: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
                 if (this.IsFinishState()) {
-                    this.ExecuteCommands(callback.nav_GetStorage(), callback);
+                    var storage = callback.nav_GetStorage();
+                    if (storage.inArray) {
+                        this.ExecuteCommands(callback.nav_GetStorage(), callback);
+                    }
                 }
                 else {
                     throw new Error("Unexpected end of input.");
@@ -637,31 +644,50 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }
         }
 
-        handlers = handlers.filter(function (handler) { return handler.handler.IsFinishState(); });
+        var selectedHandlers = [];
+        var assignedArguments = undefined;
+        for (var i = 0; i < handlers.length; i++) {
+            var handler = handlers[i];
+            if (handler.handler.IsFinishState()) {
+                var counter = 0;
+                var currentHandler = handler;
+                while (currentHandler !== null) {
+                    if (currentHandler.handler.IsFromConstantInput()) {
+                        counter++;
+                    }
+                    currentHandler = currentHandler.previous;
+                }
 
-        if (handlers.length === 0) {
+                if (assignedArguments === undefined || assignedArguments > counter) {
+                    selectedHandlers = [];
+                    assignedArguments = counter;
+                }
+                if (assignedArguments === counter) {
+                    selectedHandlers.push(handler);
+                }
+            }
+        }
+
+        if (selectedHandlers.length === 0) {
             throw new Error("Failed to parse \"" + path + "\".");
         }
-        else if (handlers.length > 1) {
+        else if (selectedHandlers.length > 1) {
             throw new Error("Ambiguous result found from \"" + path + "\".");
         }
         else {
             var orderedHandlers = [];
-            var currentHandler = handlers[0];
-            while (currentHandler != null) {
+            var currentHandler = selectedHandlers[0];
+            while (currentHandler.handler !== rootPatternHandler) {
                 orderedHandlers.splice(0, 0, currentHandler.handler);
                 currentHandler = currentHandler.previous;
             }
 
             var callback = new ParseCallback();
             for (var i = 0; i < orderedHandlers.length; i++) {
-                if (i === orderedHandlers.length - 1) {
-                    orderedHandlers[i].ExecuteFinished(callback);
-                }
-                else {
-                    orderedHandlers[i].Execute(fragments[i], callback);
-                }
+                var handler = orderedHandlers[i];
+                orderedHandlers[i].Execute(fragments[i], callback);
             }
+            handler.ExecuteFinished(callback);
         }
         return callback.Result;
     }
