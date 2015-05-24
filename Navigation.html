@@ -9,10 +9,10 @@
 <body style="font-family: 'Segoe UI'; font-size: 14px;">
     <script>
         var TestController = Class("TestController", INativationController, {
-            OnSubControllerInstalled: Protected.Override(function (controller) { }),
-            OnSubControllerUninstalled: Protected.Override(function (controller) { }),
-            OnInstalled: Protected.Override(function () { }),
-            OnUninstalled: Protected.Override(function () { }),
+            OnSubControllerInstalled: Public.Override(function (controller) { }),
+            OnSubControllerUninstalled: Public.Override(function (controller) { }),
+            OnInstalled: Public.Override(function () { }),
+            OnUninstalled: Public.Override(function () { }),
         });
 
         var RootController = Class("RootController", TestController, {});
@@ -260,7 +260,7 @@
             <div class="TabButton" data-url="/download">Download</div>
             <div class="TabButton" data-url="/demos">Demos</div>
             <div class="TabButton" data-url="/document">Document</div>
-            <div class="TabButton" data-url="/contactus">Contact Us</div>
+            <div class="TabButton" data-url="/about">About</div>
         </div>
 
         <div class="TabPageContainer">
@@ -295,7 +295,7 @@
             </script>
 
             <div class="TabPage">
-                Contact Us
+                About
             </div>
             <script>
             </script>

@@ -22,10 +22,10 @@ TabControl
 
 function BuildTabController(name, onInstalled) {
     var Controller = Class("<TabController>::" + name, INativationController, {
-        OnSubControllerInstalled: Protected.Override(function (controller) { }),
-        OnSubControllerUninstalled: Protected.Override(function (controller) { }),
-        OnInstalled: Protected.Override(function () { if (onInstalled) onInstalled(); }),
-        OnUninstalled: Protected.Override(function () { }),
+        OnSubControllerInstalled: Public.Override(function (controller) { }),
+        OnSubControllerUninstalled: Public.Override(function (controller) { }),
+        OnInstalled: Public.Override(function () { if (onInstalled) onInstalled(); }),
+        OnUninstalled: Public.Override(function () { }),
     });
     return Controller;
 }

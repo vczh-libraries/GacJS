@@ -80,33 +80,35 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     INativationController
     ********************************************************************************/
 
-    var INativationController = Class(FQN("INavigationController"), {
-        subController: Private(null),
+    var INativationController = Class(FQN("INavigationController"), function () {
+        return {
+            subController: Private(null),
 
-        OnSubControllerInstalled: Protected.Abstract(),
-        OnSubControllerUninstalled: Protected.Abstract(),
-        OnInstalled: Protected.Abstract(),
-        OnUninstalled: Protected.Abstract(),
+            OnSubControllerInstalled: Public.Abstract(),
+            OnSubControllerUninstalled: Public.Abstract(),
+            OnInstalled: Public.Abstract(),
+            OnUninstalled: Public.Abstract(),
 
-        NavigateTo: Public.StrongTyped(__Void, [INativationController], function (subController) {
-            if (this.subController !== null) {
-                this.subController.NavigateTo(null);
-                this.subController.OnUninstalled();
-                this.OnSubControllerUninstalled(this.subController);
-                this.subController = null;
-            }
-            this.subController = subController;
-            if (this.subController !== null) {
-                this.OnSubControllerInstalled(this.subController);
-                this.subController.OnInstalled();
-                this.subController = null;
-            }
-        }),
+            NavigateTo: Public.StrongTyped(__Void, [INativationController], function (subController) {
+                if (this.subController !== null) {
+                    this.subController.NavigateTo(null);
+                    this.subController.OnUninstalled();
+                    this.OnSubControllerUninstalled(this.subController);
+                    this.subController = null;
+                }
+                this.subController = subController;
+                if (this.subController !== null) {
+                    this.OnSubControllerInstalled(this.subController);
+                    this.subController.OnInstalled();
+                    this.subController = null;
+                }
+            }),
 
-        GetSubController: Public.StrongTyped(INativationController, [], function () {
-            return this.subController;
-        }),
-        SubController: Public.Property({ readonly: true }),
+            GetSubController: Public.StrongTyped(INativationController, [], function () {
+                return this.subController;
+            }),
+            SubController: Public.Property({ readonly: true }),
+        }
     });
 
     /********************************************************************************
@@ -775,8 +777,49 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
     function NavigateTo(path) {
         EnsureInitialized();
+
+        var oldContext = GetNavigationContext();
+        var newContext = ParseNavigationPath(path);
+        controller = rootNavigationController;
+
+        var min = Math.min(oldContext.length, newContext.length);
+        for (var i = 0; i < min; i++) {
+            var oldItem = oldContext[i];
+            var newItem = newContext[i];
+
+            if (oldItem.type !== newItem.type) {
+                break;
+            }
+            for (var j in oldItem.values) {
+                if (oldItem.values[j] !== newItem.values[j]) {
+                    break;
+                }
+            }
+            for (var j in newItem.values) {
+                if (oldItem.values[j] !== newItem.values[j]) {
+                    break;
+                }
+            }
+
+            controller = controller.SubController;
+        }
+
+        if (i < newContext.length) {
+            for (var j = i; j < newContext.length; j++) {
+                var newItem = newContext[i];
+                var nextController = new newItem.type;
+                for (var k in newItem.values) {
+                    newController[k] = newItem.values[k];
+                }
+                controller.NavigateTo(nextController);
+                controller = nextController;
+            }
+        }
+        else {
+            controller.NavigateTo(null);
+        }
+
         window.location.hash = "#" + hashFlag + "/" + path;
-        throw new Error("Not Implemented.");
     }
 
     /********************************************************************************
