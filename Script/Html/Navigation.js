@@ -291,6 +291,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     var rootPatternHandler = null;
     var hashFlag = null;
     var typePathConfigs = null;
+    var typeProperties = null;
 
     function EnsureInitialized() {
         if (rootNavigationController === null) {
@@ -307,6 +308,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         rootPatternHandler = new PatternHandler();
         hashFlag = _hashFlag;
         typePathConfigs = {};
+        typeProperties = {};
     }
 
     /********************************************************************************
@@ -399,15 +401,23 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             pathConfig.pathFragments = pathFragments;
             currentPathConfigs.push(pathConfig);
 
+            var prop = typeProperties[type.FullName];
+            if (prop === undefined) {
+                prop = {};
+                typeProperties[type.FullName] = prop;
+            }
+
             handler.ControllerType(type, pathConfig.level);
             for (var j in assignedArguments) {
                 var index = assignedArguments[j];
                 handler.Argument(j, index);
+                typeProperties[j] = null;
             }
             if (defaultValues !== undefined) {
                 for (var j in defaultValues) {
                     var value = defaultValues[j];
                     handler.Setter(j, value);
+                    typeProperties[j] = null;
                 }
             }
         }
