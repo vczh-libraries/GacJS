@@ -152,6 +152,37 @@
     </script>
 
     <script>
+        TestCase("navigate to ambiguous paths should success", function () {
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/{Type}", HomeController);
+            RegisterNavigationPath("/A/{Type}", HomeController);
+            RegisterNavigationPath("/A/B/C", DemoController);
+            RegisterNavigationPath("/{Type}/D", GettingStartedController, {}, HomeController);
+
+            var result = ParseNavigationPath("A");
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
+            Assert(result[0].values.Type === "A");
+
+            var result = ParseNavigationPath("A/B");
+            Assert(result.length === 1);
+            Assert(result[0].type === HomeController);
+            Assert(result[0].values.Type === "B");
+
+            var result = ParseNavigationPath("A/B/C");
+            Assert(result.length === 1);
+            Assert(result[0].type === DemoController);
+
+            var result = ParseNavigationPath("A/B/C/D");
+            Assert(result.length === 2);
+            Assert(result[0].type === HomeController);
+            Assert(result[0].values.Type === "B");
+            Assert(result[1].type === GettingStartedController);
+            Assert(result[1].values.Type === "C");
+        });
+    </script>
+
+    <script>
         TestCase("build root path should success", function () {
             InitializeNavigation("~", RootController);
             RegisterNavigationPath("/", HomeController);
