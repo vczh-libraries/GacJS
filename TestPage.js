@@ -20,6 +20,18 @@ eval(
 TabControl
 ********************************************************************************/
 
+function BuildTabController(name, onInstalled) {
+    var Controller = Class("<TabController>::" + name, INativationController, {
+        OnSubControllerInstalled: Protected.Override(function (controller) { }),
+        OnSubControllerUninstalled: Protected.Override(function (controller) { }),
+        OnInstalled: Protected.Override(function () { if (onInstalled) onInstalled(); }),
+        OnUninstalled: Protected.Override(function () { }),
+    });
+    return Controller;
+}
+
+var TabRootController = BuildTabController("Root");
+
 function ShowTabPage(tabPage) {
     var currentTabPage = tabPage.TabControl.CurrentTabPage;
     if (currentTabPage !== null) {
@@ -32,12 +44,39 @@ function ShowTabPage(tabPage) {
 }
 
 function CombineTabPage(tabControl, tabPage, tabButton) {
+
     tabPage.TabControl = tabControl;
     tabPage.TabButton = tabButton;
+
     tabButton.TabPage = tabPage;
-    tabButton.addEventListener("click", function (event) {
-        ShowTabPage(event.currentTarget.TabPage);
-    });
+    if (tabControl.Navigation) {
+        parentControllerType = undefined;
+        var current = tabButton;
+        while (current) {
+            if (current.TabButton && current.TabButton.NavigationController) {
+                parentControllerType = current.TabButton.NavigationController;
+                break;
+            }
+            current = current.parentElement;
+        }
+
+        tabButton.NavigationController = BuildTabController(tabButton.childNodes[0].textContent, function () {
+            ShowTabPage(tabPage);
+        });
+        RegisterNavigationPath(tabButton.getAttribute("data-url"), tabButton.NavigationController, undefined, parentControllerType);
+
+        tabButton.addEventListener("click", function (event) {
+            var context = GetNavigationContextBefore(tabButton.NavigationController);
+            context.push({ type: tabButton.NavigationController, values: {} });
+            var path = BuildNavigationPath(context);
+            NavigateTo(path);
+        });
+    }
+    else {
+        tabButton.addEventListener("click", function (event) {
+            ShowTabPage(event.currentTarget.TabPage);
+        });
+    }
 }
 
 function SetupTabControl(tabControl) {
@@ -55,13 +94,16 @@ function SetupTabControl(tabControl) {
     }
 
     tabControl.CurrentTabPage = null;
+    tabControl.Navigation = tabControl.getAttribute("data-navigation") === "true";
     var tabButtons = DirectChild(DirectChild(tabControl, "TabButtonContainer")[0], "TabButton");
     var tabPages = DirectChild(DirectChild(tabControl, "TabPageContainer")[0], "TabPage");
     for (var i = 0; i < tabButtons.length; i++) {
         CombineTabPage(tabControl, tabPages[i], tabButtons[i]);
     }
 
-    ShowTabPage(tabPages[0]);
+    if (!tabControl.Navigation) {
+        ShowTabPage(tabPages[0]);
+    }
 }
 
 /********************************************************************************

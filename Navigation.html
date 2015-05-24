@@ -12,7 +12,7 @@
             OnSubControllerInstalled: Protected.Override(function (controller) { }),
             OnSubControllerUninstalled: Protected.Override(function (controller) { }),
             OnInstalled: Protected.Override(function () { }),
-            OnInstalled: Protected.Override(function () { }),
+            OnUninstalled: Protected.Override(function () { }),
         });
 
         var RootController = Class("RootController", TestController, {});
@@ -253,14 +253,14 @@
         SummaryTest();
     </script>
 
-    <div class="TabControl" id="tabMain">
+    <div class="TabControl" id="tabMain" data-navigation="true">
         <div class="TabButtonContainer">
-            <div class="TabButton">Home</div>
-            <div class="TabButton">Tutorial</div>
-            <div class="TabButton">Download</div>
-            <div class="TabButton">Demos</div>
-            <div class="TabButton">Document</div>
-            <div class="TabButton">Contact Us</div>
+            <div class="TabButton" data-url="/">Home</div>
+            <div class="TabButton" data-url="/tutorial">Tutorial</div>
+            <div class="TabButton" data-url="/download">Download</div>
+            <div class="TabButton" data-url="/demos">Demos</div>
+            <div class="TabButton" data-url="/document">Document</div>
+            <div class="TabButton" data-url="/contactus">Contact Us</div>
         </div>
 
         <div class="TabPageContainer">
@@ -303,7 +303,9 @@
     </div>
 
     <script>
+        InitializeNavigation("~", TabRootController);
         SetupTabControl(tabMain);
+        StartNavigation();
     </script>
 </body>
 </html>

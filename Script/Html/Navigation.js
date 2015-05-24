@@ -42,7 +42,9 @@ API:
                 http://localhost:80#<hashFlag>/Document/vl/presentation/controls/GuiControl
                 {*xx} should be at the end of a complete pattern
 
-    string BuildNavigation(Path|Hash|Url)([{type:type, values:values}, {type:type, values:values},  ...]);
+    type Context = [{type:type, values:values}, {type:type, values:values},  ...];
+
+    string BuildNavigation(Path|Hash|Url)(Context);
         example:
             BuildNavigationPath([
                 [DemoController, {}],
@@ -54,8 +56,12 @@ API:
                 Hash: #<hashFlag>/Demo/HelloWorld/Source/main.cpp
                 Path: http://localhost:80#<hashFlag>/Demo/HelloWorld/Source/main.cpp
 
-    [{type:type, values:values}, {type:type, values:values},  ...] ParseNavigationPath(string path);
+    Context ParseNavigationPath(string path);
         reverted BuildNavigationPath
+
+    Context GetNavigationContext();
+    Context GetNavigationContextAt(controllerType);
+    Context GetNavigationContextBefore(controllerType);
 
     void NavigateTo(string path);
         navigate to http://localhost:80/#<hashFlag><path>
@@ -700,8 +706,76 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     NavigateTo
     ********************************************************************************/
 
+    function GetNavigationContextFor(controllers) {
+        var context = [];
+        for (var i = 0; i < controllers.length; i++) {
+            var controller = controllers[i];
+            var type = controller.__Type;
+            var properties = typeProperties[type.FullName];
+
+            var contextItem = { type: type, values: {} };
+            if (properties !== undefined) {
+                for (var j in properties) {
+                    contextItem.values[j] = controller[j];
+                }
+            }
+            context.push(contextItem);
+        }
+        return context;
+    }
+
+    function GetNavigationContext() {
+        var controllers = [];
+        var current = rootNavigationController;
+        while (true) {
+            current = current.SubController;
+            if (current === null) {
+                break;
+            }
+            controllers.push(current);
+        }
+        return GetNavigationContextFor(controllers);
+    }
+
+    function GetNavigationContextAt(controllerType) {
+        var controllers = [];
+        var current = rootNavigationController;
+        while (true) {
+            current = current.SubController;
+            if (current === null) {
+                break;
+            }
+            controllers.push(current);
+            if (current.__Type === controllerType) {
+                break;
+            }
+        }
+        return GetNavigationContextFor(controllers);
+    }
+
+    function GetNavigationContextBefore(controllerType) {
+        var controllers = [];
+        var current = rootNavigationController;
+        while (true) {
+            current = current.SubController;
+            if (current === null) {
+                break;
+            }
+            if (current.__Type === controllerType) {
+                break;
+            }
+            controllers.push(current);
+        }
+        return GetNavigationContextFor(controllers);
+    }
+
+    /********************************************************************************
+    NavigateTo
+    ********************************************************************************/
+
     function NavigateTo(path) {
         EnsureInitialized();
+        window.location.hash = "#" + hashFlag + "/" + path;
         throw new Error("Not Implemented.");
     }
 
@@ -738,6 +812,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         BuildNavigationHash: BuildNavigationHash,
         BuildNavigationUrl: BuildNavigationUrl,
         ParseNavigationPath: ParseNavigationPath,
+        GetNavigationContext: GetNavigationContext,
+        GetNavigationContextAt: GetNavigationContextAt,
+        GetNavigationContextBefore: GetNavigationContextBefore,
         NavigateTo: NavigateTo,
         StartNavigation: StartNavigation,
     }
