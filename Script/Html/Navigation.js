@@ -114,23 +114,20 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }),
 
         __Constructor: Public(function () {
-            this.storage = { array: false };
+            this.storage = { inArray: false, assignedArguments: 0 };
         }),
     });
 
     var PatternHandler = Class(FQN("PatternHandler"), function () {
         return {
+            key: Protected(null),
             arguments: Protected(null),
             controllerType: Protected(null),
             level: Protected(null),
             patternIndex: Protected(null),
-            argumentIndex: Protected(-1),
 
-            SetArgumentIndex: Public(function (index) {
-                this.argumentIndex = index;
-            }),
-
-            __Constructor: Public(function () {
+            __Constructor: Public.StrongTyped(__Void, [__String], function (key) {
+                this.key = (key === undefined ? null : key);
                 this.arguments = {};
                 this.patternIndex = {};
             }),
@@ -160,57 +157,48 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 this.level = level;
             }),
 
-            ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
-                var handler = null;
-                if (this.patternIndex.hasOwnProperty(constant)) {
-                    handler = this.patternIndex[constant];
+            AppendHandler: Protected.StrongTyped(PatternHandler, [__String], function (key) {
+                var handlers = this.patternIndex[key];
+                if (handlers === undefined) {
+                    handlers = [];
+                    this.patternIndex[constant] = handlers;
                 }
-                else {
-                    handler = new PatternHandler();
-                    this.patternIndex[constant] = handler;
-                }
+
+                var handler = new PatternHandler(key);
+                handlers.push(handler);
                 return handler;
+            }),
+
+            ConstantIndex: Public.StrongTyped(PatternHandler, [__String], function (constant) {
+                return this.AppendHandler(constant);
             }),
 
             ArgumentIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
-                if (this.patternIndex.hasOwnProperty("*")) {
-                    throw new Error("Array index has already been assigned.");
-                }
-
-                var handler = null;
-                if (this.patternIndex.hasOwnProperty("+")) {
-                    handler = this.patternIndex["+"];
-                }
-                else {
-                    handler = new PatternHandler();
-                    this.patternIndex["+"] = handler;
-                }
-                this.argumentIndex = index;
-                return handler;
+                return this.AppendHandler("+");
             }),
 
             ArrayIndex: Public.StrongTyped(PatternHandler, [__Number], function (index) {
-                if (this.patternIndex.hasOwnProperty("+")) {
-                    throw new Error("Argument index has already been assigned.");
-                }
-
-                var handler = null;
-                if (this.patternIndex.hasOwnProperty("*")) {
-                    handler = this.patternIndex["*"];
-                }
-                else {
-                    handler = new PatternHandler();
-                    this.patternIndex["*"] = handler;
-                }
-                this.argumentIndex = index;
-                handler.SetArgumentIndex(index);
-                return handler;
+                return this.AppendHandler("*");
             }),
 
-            Execute: Public(function (fragment, storage, callback) {
-                if (fragment !== null && this.argumentIndex !== -1) {
-                    storage[this.argumentIndex] = fragment;
+            Parse: Public.Virtual.StrongTyped(__Array, [__String, IPatternHandlerCallback], function (fragment, callback) {
+                if (this.key === "*") {
+                    return [this.__ExternalReference];
                 }
+
+                var constantHandlers = this.patternIndex[fragment];
+                if (constantHandlers === undefined) constantHandlers = [];
+
+                var argumentHandlers = this.patternIndex[fragment];
+                if (argumentHandlers === undefined) argumentHandlers = [];
+
+                var arrayHandlers = this.patternIndex[fragment];
+                if (arrayHandlers === undefined) arrayHandlers = [];
+
+                return [].concat(constantHandlers, argumentHandlers, arrayHandlers);
+            }),
+
+            ExecuteCommands: Protected(function (storage, callback) {
                 for (var i in this.arguments) {
                     var value = this.arguments[i];
                     if (typeof value === "number") {
@@ -225,35 +213,29 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }),
 
-            Parse: Public.Virtual.StrongTyped(PatternHandler, [__String, IPatternHandlerCallback], function (fragment, callback) {
+            Execute: Public(function (fragment, callback) {
                 var storage = callback.nav_GetStorage();
-                if (storage.array === true) {
-                    storage[this.argumentIndex].push(fragment);
-                    return this.__ExternalReference;
+                switch (this.key) {
+                    case "+":
+                        storage[storage.assignedArguments++] = fragment;
+                        break;
+                    case "*":
+                        if (!storage.inArray) {
+                            storage.inArray = true;
+                            storage[storage.assignedArguments] = [];
+                        }
+                        storage[storage.assignedArguments].push(fragment);
+                        break;
                 }
 
-                if (this.patternIndex.hasOwnProperty(fragment)) {
-                    this.Execute(null, storage, callback);
-                    return this.patternIndex[fragment];
-                }
-                else if (this.patternIndex.hasOwnProperty("+")) {
-                    this.Execute(fragment, storage, callback);
-                    return this.patternIndex["+"];
-                }
-                else if (this.patternIndex.hasOwnProperty("*")) {
-                    storage.array = true;
-                    this.Execute([fragment], storage, callback);
-                    return this.patternIndex["*"];
-                }
-                else {
-                    throw new Error("Failed to parse the input fragment \"" + fragment + "\".");
+                if (!storage.inArray) {
+                    this.ExecuteCommands(storage, callback);
                 }
             }),
 
             Finish: Public.Virtual.StrongTyped(__Void, [IPatternHandlerCallback], function (callback) {
                 if (this.controllerType !== null) {
-                    var storage = callback.nav_GetStorage();
-                    this.Execute(null, storage, callback);
+                    this.ExecuteCommands(storage, callback);
                 }
                 else {
                     throw new Error("Unexpected end of input.");
@@ -618,10 +600,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         Create: Public.Override.StrongTyped(__Void, [__Type, __Number], function (type, level) {
             var last = this.GetLast();
             last.type = type;
-
-            if (level < this.result.length - 1) {
-                this.result.splice(level, this.result.length - 1 - level);
-            }
         }),
 
         GetResult: Public(function () {
