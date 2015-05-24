@@ -652,7 +652,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 var counter = 0;
                 var currentHandler = handler;
                 while (currentHandler !== null) {
-                    if (currentHandler.handler.IsFromConstantInput()) {
+                    if (!currentHandler.handler.IsFromConstantInput()) {
                         counter++;
                     }
                     currentHandler = currentHandler.previous;
