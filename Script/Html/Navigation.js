@@ -79,16 +79,20 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
         OnSubControllerInstalled: Protected.Abstract(),
         OnSubControllerUninstalled: Protected.Abstract(),
+        OnInstalled: Protected.Abstract(),
+        OnUninstalled: Protected.Abstract(),
 
         NavigateTo: Public.StrongTyped(__Void, [INativationController], function (subController) {
             if (this.subController !== null) {
                 this.subController.NavigateTo(null);
+                this.subController.OnUninstalled();
                 this.OnSubControllerUninstalled(this.subController);
                 this.subController = null;
             }
             this.subController = subController;
             if (this.subController !== null) {
                 this.OnSubControllerInstalled(this.subController);
+                this.subController.OnInstalled();
                 this.subController = null;
             }
         }),

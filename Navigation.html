@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" type="text/css" href="./TestPage.css" />
     <title>Class</title>
-    <script src="./Script/Package.js"></script>
-    <script src="./Script/Test.js"></script>
-    <script src="./Script/Class.js"></script>
-    <script src="./Script/Html/Navigation.js"></script>
+    <script src="./LoadPackages.js"></script>
+    <script src="./TestPage.js"></script>
 </head>
 <body style="font-family: 'Segoe UI'; font-size: 14px;">
     <script>
-        eval(Packages.Inject(["Test", "Class", "Html.Navigation"], false));
-
         var TestController = Class("TestController", INativationController, {
             OnSubControllerInstalled: Protected.Override(function (controller) { }),
             OnSubControllerUninstalled: Protected.Override(function (controller) { }),
+            OnInstalled: Protected.Override(function () { }),
+            OnInstalled: Protected.Override(function () { }),
         });
 
         var RootController = Class("RootController", TestController, {});
@@ -252,6 +251,59 @@
 
     <script>
         SummaryTest();
+    </script>
+
+    <div class="TabControl" id="tabMain">
+        <div class="TabButtonContainer">
+            <div class="TabButton">Home</div>
+            <div class="TabButton">Tutorial</div>
+            <div class="TabButton">Download</div>
+            <div class="TabButton">Demos</div>
+            <div class="TabButton">Document</div>
+            <div class="TabButton">Contact Us</div>
+        </div>
+
+        <div class="TabPageContainer">
+            <div class="TabPage">
+                Home
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Tutorial
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Download
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Demos
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Document
+            </div>
+            <script>
+            </script>
+
+            <div class="TabPage">
+                Contact Us
+            </div>
+            <script>
+            </script>
+        </div>
+    </div>
+
+    <script>
+        SetupTabControl(tabMain);
     </script>
 </body>
 </html>

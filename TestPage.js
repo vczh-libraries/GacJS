@@ -3,6 +3,7 @@ eval(
         "Test",
         "Class",
         "Html.ResizeEvent",
+        "Html.Navigation",
         "GacUI.Types",
         "GacUI.Elements.Interface",
         "GacUI.Elements.Basic",
