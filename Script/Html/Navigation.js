@@ -418,13 +418,13 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             for (var j in assignedArguments) {
                 var index = assignedArguments[j];
                 handler.Argument(j, index);
-                typeProperties[j] = null;
+                prop[j] = null;
             }
             if (defaultValues !== undefined) {
                 for (var j in defaultValues) {
                     var value = defaultValues[j];
                     handler.Setter(j, value);
-                    typeProperties[j] = null;
+                    prop[j] = null;
                 }
             }
         }
@@ -777,6 +777,23 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     NavigateTo
     ********************************************************************************/
 
+    function CompareContextItem(oldItem, newItem) {
+        if (oldItem.type !== newItem.type) {
+            return false;
+        }
+        for (var j in oldItem.values) {
+            if (oldItem.values[j] !== newItem.values[j]) {
+                return false;
+            }
+        }
+        for (var j in newItem.values) {
+            if (oldItem.values[j] !== newItem.values[j]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function NavigateTo(path) {
         EnsureInitialized();
 
@@ -788,21 +805,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         for (var i = 0; i < min; i++) {
             var oldItem = oldContext[i];
             var newItem = newContext[i];
-
-            if (oldItem.type !== newItem.type) {
+            if (!CompareContextItem(oldItem, newItem)) {
                 break;
             }
-            for (var j in oldItem.values) {
-                if (oldItem.values[j] !== newItem.values[j]) {
-                    break;
-                }
-            }
-            for (var j in newItem.values) {
-                if (oldItem.values[j] !== newItem.values[j]) {
-                    break;
-                }
-            }
-
             controller = controller.SubController;
         }
 
