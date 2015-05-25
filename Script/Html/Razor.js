@@ -127,6 +127,10 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
             return tags.length > 0 && tags[tags.length - 1] === null;
         }
 
+        function InterpretHtml(html) {
+
+        }
+
         AppendCode("var $printer = new RazorPrinter();");
 
         for (var i = 0; i < lines.length; i++) {
@@ -147,11 +151,15 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                             PopStatement();
                             PrintStat("}");
                         }
+                        else if (line.length >= 2 && line.substring(0, 2) === "@:") {
+                            InterpretHtml(line.substring(2, line.length));
+                        }
                         else {
-
+                            PrintStat(line);
                         }
                     }
                     else {
+                        InterpretHtml(line);
                     }
                 }
             });
