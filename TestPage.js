@@ -30,10 +30,15 @@ function BuildTabController(name) {
             for (var i = 0; i < tabControl.TabButtons.length; i++) {
                 var tabButton = tabControl.TabButtons[i];
                 if (tabButton.getAttribute("data-url") === this.Url) {
-                    ShowTabPage(tabButton.TabPage);
+                    ShowTabPage(tabControl, tabButton.TabPage);
                     break;
                 }
             }
+        }),
+
+        OnUninstalled: Public.Override(function () {
+            var tabControl = window[this.Id];
+            ShowTabPage(tabControl, null);
         }),
     });
     return Controller;
@@ -41,15 +46,16 @@ function BuildTabController(name) {
 
 var TabRootController = BuildTabController("Root");
 
-function ShowTabPage(tabPage) {
-    var currentTabPage = tabPage.TabControl.CurrentTabPage;
-    if (currentTabPage !== null) {
-        currentTabPage.classList.remove("Selected");
-        currentTabPage.TabButton.classList.remove("Selected");
+function ShowTabPage(tabControl, tabPage) {
+    if (tabControl.CurrentTabPage !== null) {
+        tabControl.CurrentTabPage.classList.remove("Selected");
+        tabControl.CurrentTabPage.TabButton.classList.remove("Selected");
     }
-    tabPage.TabControl.CurrentTabPage = tabPage;
-    tabPage.classList.add("Selected");
-    tabPage.TabButton.classList.add("Selected");
+    tabControl.CurrentTabPage = tabPage;
+    if (tabControl.CurrentTabPage !== null) {
+        tabControl.CurrentTabPage.classList.add("Selected");
+        tabControl.CurrentTabPage.TabButton.classList.add("Selected");
+    }
 }
 
 function CombineTabPage(tabControl, tabPage, tabButton) {
@@ -85,7 +91,7 @@ function CombineTabPage(tabControl, tabPage, tabButton) {
     }
     else {
         tabButton.addEventListener("click", function (event) {
-            ShowTabPage(event.currentTarget.TabPage);
+            ShowTabPage(tabControl, event.currentTarget.TabPage);
         });
     }
 }
@@ -118,7 +124,7 @@ function SetupTabControl(tabControl) {
     }
 
     if (!tabControl.TabControllerType) {
-        ShowTabPage(tabControl.TabPages[0]);
+        ShowTabPage(tabControl, tabControl.TabPages[0]);
     }
 }
 
