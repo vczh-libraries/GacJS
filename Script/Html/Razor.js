@@ -26,7 +26,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     }
 
     /********************************************************************************
-    RazorToJs
+    Razor Configurations
     ********************************************************************************/
 
     var regexOption = /^@(\w+)\s+(\w+)$/;
@@ -34,7 +34,10 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     var regexStatement = /^@(for|while|do|if|switch|try|catch)\s*\(.*\)\s*\{/;
     var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
-    var regexVoidElements = /^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
+
+    /********************************************************************************
+    RazorBodyToJs
+    ********************************************************************************/
 
     function RegexSwitch(text, branches) {
         for (var branch in branches) {
@@ -53,12 +56,37 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
         }
     }
 
+    function IsVoidTag(tag) {
+        return tag === "area" ||
+            tag === "base" ||
+            tag === "br" ||
+            tag === "col" ||
+            tag === "command" ||
+            tag === "embed" ||
+            tag === "hr" ||
+            tag === "img" ||
+            tag === "input" ||
+            tag === "keygen" ||
+            tag === "link" ||
+            tag === "meta" ||
+            tag === "param" ||
+            tag === "source" ||
+            tag === "track" ||
+            tag === "wbr";
+    }
+
     function RazorBodyToJs(indent, lines) {
 
+        var indentCounter = 0;
+        var tags = [];
         var result = "";
 
         function AppendCode(code) {
-            result += indent + code + "\n";
+            result += indent;
+            for (var i = 0; i < indentCounter; i++) {
+                result += "    ";
+            }
+            result += code + "\n";
         }
 
         function PrintText(text) {
@@ -69,16 +97,62 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
             AppendCode("$printer.Print(" + expr + ");");
         }
 
+        function PrintStat(stat) {
+            AppendCode(stat);
+        }
+
+        function PushStatement() {
+            tags.push(null);
+        }
+
+        function PopStatement(line) {
+            if (tags.length === 0 || tags[tags.length - 1] !== null) {
+                throw new Error("Razor syntax error: cannot close a JavaScript statement here.");
+            }
+            tags.splice(tags.length - 1, 1);
+        }
+
+        function PushTag(tag) {
+            tags.push(tag);
+        }
+
+        function PopTag(tag, line) {
+            if (tags.length === 0 || tags[tags.length - 1] !== tag) {
+                throw new Error("Razor syntax error: cannot close HTML tag \"" + tag + "\" here: \"" + line + "\".");
+            }
+            tags.splice(tags.length - 1, 1);
+        }
+
+        function InCode() {
+            return tags.length > 0 && tags[tags.length - 1] === null;
+        }
+
         AppendCode("var $printer = new RazorPrinter();");
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
             RegexSwitch(line, {
                 Statement: function (matches) {
+                    PrintStat(line.substring(1, line.length));
+                    PushStatement();
+                    indentCounter++;
                 },
                 Command: function (matches) {
+                    PrintStat(line.substring(1, line.length));
                 },
                 "": function () {
+                    if (InCode()) {
+                        if (line === "}") {
+                            indentCounter--;
+                            PopStatement();
+                            PrintStat("}");
+                        }
+                        else {
+
+                        }
+                    }
+                    else {
+                    }
                 }
             });
         }
@@ -86,6 +160,10 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
         AppendCode("return new RazorHtml($printer.Text);");
         return result;
     }
+
+    /********************************************************************************
+    RazorToJs
+    ********************************************************************************/
 
     function RazorToJs(razor) {
         var packages = ["Html.RazorHelper"];
