@@ -13,6 +13,7 @@
             <div class="TabButton" data-url="/expressions">Expressions</div>
             <div class="TabButton" data-url="/statements">Statements</div>
             <div class="TabButton" data-url="/functions">Functions</div>
+            <div class="TabButton" data-url="/codes">Codes</div>
         </div>
 
         <div class="TabPageContainer">
@@ -33,6 +34,45 @@
             <div class="TabPage">
             </div>
             <div class="TabPage">
+                <script id="razor_expressions_1" type="text/plain">
+                    @package RazorTest
+                    @model User
+
+                    @function PrintName(user){
+                        I am @user.age years old.<br />
+                    }
+
+                    @function PringAge(user){
+                        I am @user.age years old.<br />
+                    }
+
+                    @function PrintGender(user){
+                        @if (user.gender !== Gender.Description.Unknown) {
+                            @:I am a @(user.gender === Gender.Description.Male ? "man" : "woman").<br />
+                        }
+                    }
+
+                    <p>
+                        Hi, My name is <b>@model.name</b>.<br />
+                        @Html(PrintName(model))
+                        @Html(PringAge(model))
+                        @Html(PrintGender(model))
+                    </p>
+                </script>
+            </div>
+            <div class="TabPage">
+                <script id="razor_expressions_1" type="text/plain">
+                    @package RazorTest
+                    @model User
+
+                    <p>
+                        Hi, My name is <b>@model.name</b>.<br />
+                        I am @model.age years old.<br />
+                        @if (model.gender !== Gender.Description.Unknown) {
+                        @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
+                        }
+                    </p>
+                </script>
             </div>
         </div>
 
@@ -66,23 +106,6 @@
     </script>
 
     <script>
-        function ReIndent(text) {
-            var result = "";
-            var lines = text.split("\n");
-            var indent = undefined;
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i];
-                var firstChar = line.search(/[^\s]/);
-                if (firstChar !== -1) {
-                    if (indent === undefined) {
-                        indent = firstChar;
-                    }
-                    result += line.substring(indent, firstChar.length).replace(/\s*$/, "") + "\r\n";
-                }
-            }
-            return result;
-        }
-
         function SetupRazorTabControl(tabControl) {
             SetupTabControl(tabControl);
             for (var i = 0; i < tabControl.TabPages.length; i++) {
@@ -113,7 +136,8 @@
 
                 for (var j = 0; j < scripts.length; j++) {
                     var script = scripts[j];
-                    var razorScript = ReIndent(script.innerHTML);
+                    var razorScript = RazorReIndent(script.innerHTML);
+                    var javaScript = RazorToJs(razorScript);
 
                     var tr = document.createElement("tr");
                     table.appendChild(tr);
@@ -128,6 +152,10 @@
                     {
                         var td = document.createElement("td");
                         tr.appendChild(td);
+
+                        var pre = document.createElement("pre");
+                        td.appendChild(pre);
+                        pre.appendChild(document.createTextNode(javaScript));
                     }
                     {
                         var td = document.createElement("td");
