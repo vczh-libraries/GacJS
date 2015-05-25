@@ -5,6 +5,7 @@ var AllJavaScriptPackages = [
     "./Script/Html/RunAfterWindowLoaded.js",
     "./Script/Html/ResizeEvent.js",
     "./Script/Html/Navigation.js",
+    "./Script/Html/Razor.js",
     "./Script/GacUI/Layout/Basic.js",
     "./Script/GacUI/Layout/Stack.js",
     "./Script/GacUI/Layout/Table.js",
