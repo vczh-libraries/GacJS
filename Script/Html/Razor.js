@@ -241,6 +241,10 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                     }
                 }
 
+                while (html[codeEnd - 1] === ".") {
+                    codeEnd--;
+                }
+
                 PrintExpr(html.substring(codeBegin, codeEnd));
                 reading = codeEnd + (stopAtRightBracket ? 1 : 0);
             }
@@ -407,19 +411,22 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
         result += "(function () {\n";
         result += "    eval(Packages.Inject([" + packages.map(JSON.stringify).join(", ") + "]));\n";
         result += "\n";
-        result += codes.join("\n");
-        result += "\n";
-        for (var i = 0; i < functions.length; i++) {
-            var func = functions[i];
-            result += "    function " + func.name + "(" + func.parameters.join(", ") + ") {\n";
-            result += RazorBodyToJs("        ", func.body);
-            result += "    }\n";
-            result += "\n";
-        }
         result += "    return function (model) {\n";
         if (model !== null) {
             result += "        " + model + ".RequireType(model);\n";
         }
+
+        result += codes.map(function (code) { return "    " + code; }).join("\n");
+        result += "\n";
+
+        for (var i = 0; i < functions.length; i++) {
+            var func = functions[i];
+            result += "        function " + func.name + "(" + func.parameters.join(", ") + ") {\n";
+            result += RazorBodyToJs("            ", func.body);
+            result += "        }\n";
+            result += "\n";
+        }
+
         result += RazorBodyToJs("        ", body);
         result += "    }\n";
         result += "}())\n";
