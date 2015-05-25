@@ -26,7 +26,7 @@
                         Hi, my name is <b>@model.name</b>.<br />
                         I am @model.age years old.<br />
                         @if (model.gender !== Gender.Description.Unknown) {
-                        @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
+                            @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
                         }
                     </p>
                 </script>
@@ -39,21 +39,20 @@
                     @model User
 
                     @function PrintName(){
-                        Hi, my name is<b>@model.name</b>.<br />
+                        Hi, my name is @model.name.<br>
                     }
 
                     @function PringAge(user){
-                        I am @user.age years old.<br />
+                        I am @user.age years old.<br>
                     }
 
                     @function PrintGender(user, useless){
                         @if (user.gender !== Gender.Description.Unknown) {
-                            @:I am a @(user.gender === Gender.Description.Male ? "man" : "woman").<br />
+                            @:I am a @(user.gender === Gender.Description.Male ? "man" : "woman").<br>
                         }
                     }
 
                     <p>
-                        Hi, My name is <b>@model.name</b>.<br />
                         @Html(PrintName(model))
                         @Html(PringAge(model))
                         @Html(PrintGender(model))

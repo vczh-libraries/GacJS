@@ -54,7 +54,23 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     }
 
     function RazorBodyToJs(indent, lines) {
-        return lines.map(function (line) { return indent + line; }).join("\n") + "\n";
+
+        var result = "";
+
+        function AppendCode(code) {
+            result += indent + code + "\n";
+        }
+
+        function PrintText(text) {
+            AppendCode("$printer.Print(" + JSON.stringify(text) + ");");
+        }
+
+        function PrintExpr(expr) {
+            AppendCode("$printer.Print(" + expr + ");");
+        }
+
+        AppendCode("var $printer = new RazorPrinter();");
+
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
             RegexSwitch(line, {
@@ -66,6 +82,9 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                 }
             });
         }
+
+        AppendCode("return new RazorHtml($printer.Text);");
+        return result;
     }
 
     function RazorToJs(razor) {
@@ -215,6 +234,56 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
 
 Packages.Define("Html.RazorHelper", ["Class"], function (__injection__) {
     eval(__injection__);
+
+    function FQN(name) {
+        return "<Html.RazorHelper>::" + name;
+    }
+
+    /********************************************************************************
+    RazorHtml
+    ********************************************************************************/
+
+    var RazorHtml = Class(FQN("RazorHtml"), {
+        rawHtml: Protected(null),
+
+        GetRawHtml: Public.StrongTyped(__String, [], function () {
+            return this.rawHtml;
+        }),
+        RawHtml: Public.Property({ readonly: true }),
+
+        __Constructor: Public.StrongTyped(__Void, [__String], function (rawHtml) {
+            this.rawHtml = rawHtml;
+        }),
+    });
+
+    /********************************************************************************
+    RazorPrinter
+    ********************************************************************************/
+
+    var razorPrinterDiv = document.createElement("div");
+
+    var RazorPrinter = Class(FQN("RazorPrinter"), {
+        text: Protected(""),
+
+        GetText: Public.StrongTyped(__String, [], function () {
+            return this.text;
+        }),
+        Text: Public.Property({ readonly: true }),
+
+        __Constructor: Public.StrongTyped(__Void, [], function () {
+        }),
+
+        Print: Public.Overload(
+            [RazorHtml], function (html) {
+                this.text += html.RawHtml;
+            },
+            [__Object], function (text) {
+                razorPrinterDiv.appendChild(document.createTextNode);
+                this.text += razorPrinterDiv.innerHTML;
+                razorPrinterDiv.innerHTML = "";
+            }
+            ),
+    });
 
     /********************************************************************************
     Package
