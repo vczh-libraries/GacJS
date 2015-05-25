@@ -20,12 +20,21 @@ eval(
 TabControl
 ********************************************************************************/
 
-function BuildTabController(name, onInstalled) {
+function BuildTabController(name) {
     var Controller = Class("<TabController>::" + name, INativationController, {
-        OnSubControllerInstalled: Public.Override(function (controller) { }),
-        OnSubControllerUninstalled: Public.Override(function (controller) { }),
-        OnInstalled: Public.Override(function () { if (onInstalled) onInstalled(); }),
-        OnUninstalled: Public.Override(function () { }),
+        Id: Public(null),
+        Url: Public(null),
+
+        OnInstalled: Public.Override(function () {
+            var tabControl = window[this.Id];
+            for (var i = 0; i < tabControl.TabButtons.length; i++) {
+                var tabButton = tabControl.TabButtons[i];
+                if (tabButton.getAttribute("data-url") === this.Url) {
+                    ShowTabPage(tabButton.TabPage);
+                    break;
+                }
+            }
+        }),
     });
     return Controller;
 }
@@ -48,25 +57,28 @@ function CombineTabPage(tabControl, tabPage, tabButton) {
     tabPage.TabButton = tabButton;
 
     tabButton.TabPage = tabPage;
-    if (tabControl.Navigation) {
+    if (tabControl.TabControllerType) {
         parentControllerType = undefined;
         var current = tabButton;
         while (current) {
-            if (current.TabButton && current.TabButton.NavigationController) {
-                parentControllerType = current.TabButton.NavigationController;
+            if (current.TabControllerType && current !== tabControl) {
+                parentControllerType = current.TabControllerType;
                 break;
             }
             current = current.parentElement;
         }
 
-        tabButton.NavigationController = BuildTabController(tabButton.childNodes[0].textContent, function () {
-            ShowTabPage(tabPage);
-        });
-        RegisterNavigationPath(tabButton.getAttribute("data-url"), tabButton.NavigationController, undefined, parentControllerType);
+        var url = tabButton.getAttribute("data-url");
+        RegisterNavigationPath(
+            url,
+            tabControl.TabControllerType,
+            { Id: tabControl.id, Url: url },
+            parentControllerType
+            );
 
         tabButton.addEventListener("click", function (event) {
-            var context = GetNavigationContextBefore(tabButton.NavigationController);
-            context.push({ type: tabButton.NavigationController, values: {} });
+            var context = GetNavigationContextBefore(tabControl.TabControllerType);
+            context.push({ type: tabControl.TabControllerType, values: { Id: tabControl.id, Url: url } });
             var path = BuildNavigationPath(context);
             NavigateTo(path);
         });
@@ -79,7 +91,6 @@ function CombineTabPage(tabControl, tabPage, tabButton) {
 }
 
 function SetupTabControl(tabControl) {
-
     function DirectChild(parent, className) {
         var result = [];
         var childNodes = parent.childNodes;
@@ -93,15 +104,21 @@ function SetupTabControl(tabControl) {
     }
 
     tabControl.CurrentTabPage = null;
-    tabControl.Navigation = tabControl.getAttribute("data-navigation") === "true";
-    var tabButtons = DirectChild(DirectChild(tabControl, "TabButtonContainer")[0], "TabButton");
-    var tabPages = DirectChild(DirectChild(tabControl, "TabPageContainer")[0], "TabPage");
-    for (var i = 0; i < tabButtons.length; i++) {
-        CombineTabPage(tabControl, tabPages[i], tabButtons[i]);
+    if (tabControl.getAttribute("data-navigation") === "true") {
+        tabControl.TabControllerType = BuildTabController(tabControl.id);
+    }
+    else {
+        tabControl.TabControllerType = null;
     }
 
-    if (!tabControl.Navigation) {
-        ShowTabPage(tabPages[0]);
+    tabControl.TabButtons = DirectChild(DirectChild(tabControl, "TabButtonContainer")[0], "TabButton");
+    tabControl.TabPages = DirectChild(DirectChild(tabControl, "TabPageContainer")[0], "TabPage");
+    for (var i = 0; i < tabControl.TabButtons.length; i++) {
+        CombineTabPage(tabControl, tabControl.TabPages[i], tabControl.TabButtons[i]);
+    }
+
+    if (!tabControl.TabControllerType) {
+        ShowTabPage(tabControl.TabPages[0]);
     }
 }
 

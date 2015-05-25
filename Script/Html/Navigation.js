@@ -84,10 +84,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         return {
             subController: Private(null),
 
-            OnSubControllerInstalled: Public.Abstract(),
-            OnSubControllerUninstalled: Public.Abstract(),
-            OnInstalled: Public.Abstract(),
-            OnUninstalled: Public.Abstract(),
+            OnSubControllerInstalled: Public.Virtual.StrongTyped(__Void, [INativationController], function (controller) { }),
+            OnSubControllerUninstalled: Public.StrongTyped(__Void, [INativationController], function (controller) { }),
+            OnInstalled: Public.Virtual.StrongTyped(__Void, [], function () { }),
+            OnUninstalled: Public.Virtual.StrongTyped(__Void, [], function () { }),
 
             NavigateTo: Public.StrongTyped(__Void, [INativationController], function (subController) {
                 if (this.subController !== null) {
@@ -355,6 +355,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     function RegisterNavigationPath(pattern, type, defaultValues, parentType) {
         EnsureInitialized();
 
+        if (type === parentType) {
+            throw new Error("RegisterNavigationPath cannot append a controll type after itself.");
+        }
         var pathFragments = ParsePathFragments(pattern);
 
         var parentPathKey = (parentType === undefined ? "" : parentType.FullName);
@@ -808,7 +811,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 var newItem = newContext[j];
                 var nextController = new newItem.type;
                 for (var k in newItem.values) {
-                    newController[k] = newItem.values[k];
+                    nextController[k] = newItem.values[k];
                 }
                 controller.NavigateTo(nextController);
                 controller = nextController;
