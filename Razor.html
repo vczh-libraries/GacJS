@@ -32,6 +32,35 @@
                         </p>
                     -->
                 </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+
+                        <p>
+                            @model.name <br/>
+                            @model.name. <br/>
+                            @model.name) <br/>
+                            @model.name] <br/>
+                            @model.name + model.age (intentionally not a plus sign)<br/>
+                            @(model.name) <br/>
+                            @[model.name] <br/>
+                            @[model.name, model.age].map(function(x){return "<"+x+">";}).join(" : ") <br/>
+                        </p>
+                    -->
+                </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+
+                        <p>
+                            @("\"" + model.name + "\"") </br>
+                            @model.name.match(/\w+/g).map(function(x){return "\""+x+"\"";}).join(" ") </br>
+                            @(model.age/10) </br>
+                        </p>
+                    -->
+                </script>
             </div>
             <div class="TabPage">
             </div>
