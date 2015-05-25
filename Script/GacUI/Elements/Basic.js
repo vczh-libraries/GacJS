@@ -7,7 +7,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
 
     var ElementShape = Enum("vl::presentation::elements::ElementShape", {
         Rectangle: 0,
-        Ellipse: 1,
+        Ellipse: 1
     });
 
     /********************************************************************************
@@ -58,7 +58,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.shape = value;
             this.UpdateStyle();
         }),
-        Shape: Public.Property({}),
+        Shape: Public.Property({})
     });
 
     /********************************************************************************
@@ -102,7 +102,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.radius = value;
             this.UpdateStyle();
         }),
-        Radius: Public.Property({}),
+        Radius: Public.Property({})
     });
 
     /********************************************************************************
@@ -154,7 +154,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.color1 = value1;
             this.color2 = value2;
             this.UpdateStyle();
-        }),
+        })
     });
 
     /********************************************************************************
@@ -163,7 +163,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
 
     var ThreeDSplitterDirection = Enum("vl::presentation::elements::Gui3DSplitterElement::Direction", {
         Horizontal: 0,
-        Vertical: 1,
+        Vertical: 1
     });
 
     var ThreeDSplitter = Class(FQN("3DSplitter"), IElement, {
@@ -240,7 +240,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.direction = value;
             this.UpdateStyle();
         }),
-        Direction: Public.Property({}),
+        Direction: Public.Property({})
     });
 
     /********************************************************************************
@@ -290,7 +290,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.shape = value;
             this.UpdateStyle();
         }),
-        Shape: Public.Property({}),
+        Shape: Public.Property({})
     });
 
     /********************************************************************************
@@ -301,7 +301,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
         Horizontal: 0,
         Vertical: 1,
         Slash: 2,
-        Backslash: 2,
+        Backslash: 2
     });
 
     var GradientBackground = Class(FQN("GradientBackground"), IElement, {
@@ -389,7 +389,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.shape = value;
             this.UpdateStyle();
         }),
-        Shape: Public.Property({}),
+        Shape: Public.Property({})
     });
 
     /********************************************************************************
@@ -688,7 +688,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.wrapLineHeightCalculation = value;
             this.UpdateStyle();
         }),
-        WrapLineHeightCalculation: Public.Property({}),
+        WrapLineHeightCalculation: Public.Property({})
     });
 
     /********************************************************************************
@@ -765,7 +765,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.enabled = value;
             this.UpdateStyle();
         }),
-        Enabled: Public.Property({}),
+        Enabled: Public.Property({})
     });
 
     /********************************************************************************
@@ -781,7 +781,7 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
             this.htmlElement.style.width = "100%";
             this.htmlElement.style.height = "100%";
             this.UpdateStyle();
-        }),
+        })
     });
 
     /********************************************************************************
@@ -800,6 +800,6 @@ Packages.Define("GacUI.Elements.Basic", ["Class", "GacUI.Types", "Html.ResizeEve
         GradientBackgroundrDirection: GradientBackgroundrDirection,
         SolidLabel: SolidLabel,
         ImageFrameElement: ImageFrameElement,
-        PolygonElement: PolygonElement,
+        PolygonElement: PolygonElement
     }
 });

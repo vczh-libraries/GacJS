@@ -25,6 +25,6 @@ Packages.Define("GacUI.Layout.Misc", ["Class", "GacUI.Types", "GacUI.Layout.Basi
 
     return {
         SideAlignedLayout: SideAlignedLayout,
-        PartialViewLayout: PartialViewLayout,
+        PartialViewLayout: PartialViewLayout
     }
 });

@@ -185,25 +185,25 @@ Packages.Define("Class", function () {
         configurable: false,
         enumerable: true,
         writable: false,
-        value: 1,
+        value: 1
     });
     Object.defineProperty(__MemberBase, "ABSTRACT", {
         configurable: false,
         enumerable: true,
         writable: false,
-        value: 2,
+        value: 2
     });
     Object.defineProperty(__MemberBase, "VIRTUAL", {
         configurable: false,
         enumerable: true,
         writable: false,
-        value: 3,
+        value: 3
     });
     Object.defineProperty(__MemberBase, "OVERRIDE", {
         configurable: false,
         enumerable: true,
         writable: false,
-        value: 4,
+        value: 4
     });
 
     ///////////////////////////////////////////////////////////////
@@ -328,25 +328,25 @@ Packages.Define("Class", function () {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: fullName,
+            value: fullName
         });
         Object.defineProperty(this, "Parse", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: parse,
+            value: parse
         });
         Object.defineProperty(this, "Print", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: print,
+            value: print
         });
         Object.defineProperty(this, "TestType", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: testType,
+            value: testType
         });
         Object.defineProperty(this, "RequireType", {
             configurable: false,
@@ -356,7 +356,7 @@ Packages.Define("Class", function () {
                 if (!this.TestType(value)) {
                     throw new Error("The specified object's type is not compatible with \"" + this.FullName + "\".");
                 }
-            },
+            }
         });
         Object.seal(this);
     }
@@ -653,7 +653,7 @@ Packages.Define("Class", function () {
                 configurable: false,
                 enumerable: false,
                 writable: false,
-                value: typeObject,
+                value: typeObject
             });
 
             for (var name in description) {
@@ -675,7 +675,7 @@ Packages.Define("Class", function () {
                                 },
                                 set: member.Value.Readonly ? undefined : function (value) {
                                     internalReference[setterName].apply(internalReference, [value]);
-                                },
+                                }
                             });
                         })();
                     }
@@ -684,7 +684,7 @@ Packages.Define("Class", function () {
                             configurable: true,
                             enumerable: true,
                             writable: typeof member.Value !== "function" && !(member.Value instanceof __Event),
-                            value: member.Value,
+                            value: member.Value
                         });
                     }
                 }
@@ -863,7 +863,7 @@ Packages.Define("Class", function () {
                             configurable: false,
                             enumerable: false,
                             writable: false,
-                            value: accumulated[typeObject.FullName],
+                            value: accumulated[typeObject.FullName]
                         });
                     }
                     else {
@@ -871,7 +871,7 @@ Packages.Define("Class", function () {
                             configurable: false,
                             enumerable: false,
                             writable: false,
-                            value: externalReference,
+                            value: externalReference
                         });
                     }
 
@@ -913,7 +913,7 @@ Packages.Define("Class", function () {
                                             },
                                             set: function (value) {
                                                 ref[memberName] = value;
-                                            },
+                                            }
                                         });
                                     }
                                 }
@@ -941,7 +941,7 @@ Packages.Define("Class", function () {
                 configurable: false,
                 enumerable: false,
                 writable: false,
-                value: typeObject,
+                value: typeObject
             });
 
             // externalReference.__Dynamic
@@ -951,7 +951,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function (type) {
                     return GetScope(type, true, false);
-                },
+                }
             });
 
             // externalReference.__Static
@@ -961,7 +961,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function (type) {
                     return GetScope(type, false, false);
-                },
+                }
             });
 
             for (var i in accumulated) {
@@ -982,7 +982,7 @@ Packages.Define("Class", function () {
                         configurable: false,
                         enumerable: false,
                         writable: false,
-                        value: externalReference,
+                        value: externalReference
                     });
 
                     // this.__Dynamic(type)
@@ -992,7 +992,7 @@ Packages.Define("Class", function () {
                         writable: false,
                         value: function (type) {
                             return GetScope(type, true, true);
-                        },
+                        }
                     });
 
                     // this.__Static(type)
@@ -1002,7 +1002,7 @@ Packages.Define("Class", function () {
                         writable: false,
                         value: function (type) {
                             return GetScope(type, false, true);
-                        },
+                        }
                     });
 
                     // this.__InitBase(type) (deleted after constructor)
@@ -1037,7 +1037,7 @@ Packages.Define("Class", function () {
                             else {
                                 throw new Error("The constructor of type \"" + type.FullName + "\" has already been executed by \"" + baseRef.__ConstructedBy.FullName + "\".");
                             }
-                        },
+                        }
                     });
                 })();
             }
@@ -1083,7 +1083,7 @@ Packages.Define("Class", function () {
 
             // copy all public member fields to externalReference
             var accumulatedCopyOrder = [typeObject];
-            for (var i = 0; i < accumulatedCopyOrder.length; i++) {
+            for (  i = 0; i < accumulatedCopyOrder.length; i++) {
                 var type = accumulatedCopyOrder[i];
                 var baseClasses = type.BaseClasses;
                 for (var j = 0; j < baseClasses.length; j++) {
@@ -1093,7 +1093,7 @@ Packages.Define("Class", function () {
                     }
                 }
             }
-            for (var i = 0; i < accumulatedCopyOrder.length; i++) {
+            for (  i = 0; i < accumulatedCopyOrder.length; i++) {
                 var ref = accumulated[accumulatedCopyOrder[i].FullName];
                 CopyReferencableMembers(
                     externalReference,
@@ -1112,8 +1112,8 @@ Packages.Define("Class", function () {
             }
 
             // check is there any constructor is not called
-            for (var i in accumulated) {
-                var ref = accumulated[i];
+            for (  i in accumulated) {
+                  ref = accumulated[i];
                 if (ref !== internalReference) {
                     if (ref.__ConstructedBy === null) {
                         throw new Error("The constructor of type \"" + ref.__ScopeType.FullName + "\" has never been executed.");
@@ -1122,7 +1122,7 @@ Packages.Define("Class", function () {
             }
 
             // delete every __InitBase so that this function can only be called when constructing the object
-            for (var i in accumulated) {
+            for (  i in accumulated) {
                 delete accumulated[i].__FromVirtualBaseClass;
                 delete accumulated[i].__ConstructedBy;
                 delete accumulated[i].__CanBeConstructedBy;
@@ -1130,7 +1130,7 @@ Packages.Define("Class", function () {
             }
 
             // return the created object
-            for (var i in accumulated) {
+            for (  i in accumulated) {
                 Object.seal(accumulated[i]);
             }
             Object.seal(externalReference);
@@ -1214,13 +1214,13 @@ Packages.Define("Class", function () {
                 AddFlattenedBaseClass(baseClass);
             }
 
-            for (var i in flattenedBaseClasses) {
+            for (  i in flattenedBaseClasses) {
                 var virtualBaseClass = flattenedBaseClasses[i];
                 if (virtualBaseClass.Virtual === true) {
                     var firstClass = null;
                     var counter = 0;
 
-                    for (var j in directBaseClasses) {
+                    for (  j in directBaseClasses) {
                         var directBaseClass = directBaseClasses[j];
                         var constructedBy = virtualBaseClass.Type.VirtuallyConstructedBy[directBaseClass.Type.FullName];
                         if (constructedBy !== undefined) {
@@ -1243,11 +1243,11 @@ Packages.Define("Class", function () {
             // calculate Type.FlattenedDescription
             flattenedDescription = Object.create(description);
 
-            for (var i in directBaseClasses) {
-                var baseClass = directBaseClasses[i];
+            for (  i in directBaseClasses) {
+                  baseClass = directBaseClasses[i];
                 var flattened = baseClass.Type.FlattenedDescription;
-                for (var name in flattened) {
-                    var member = description[name];
+                for (  name in flattened) {
+                      member = description[name];
                     var baseMember = flattened[name];
 
                     if (name === "__Constructor") {
@@ -1274,10 +1274,10 @@ Packages.Define("Class", function () {
                 }
             }
 
-            for (var i in description) {
-                var member = description[i];
+            for (  i in description) {
+                  member = description[i];
 
-                for (var j in member.HiddenMembers) {
+                for (  j in member.HiddenMembers) {
                     var hiddenMember = member.HiddenMembers[j];
                     if (hiddenMember.Value instanceof __Event) {
                         throw new Error("Type \"" + fullName + "\" cannot hide event \"" + i + "\".");
@@ -1289,8 +1289,8 @@ Packages.Define("Class", function () {
                         throw new Error("Type \"" + fullName + "\" cannot find virtual function \"" + i + "\" to override.");
                     }
                     else {
-                        for (var j in member.HiddenMembers) {
-                            var hiddenMember = member.HiddenMembers[j];
+                        for (  j in member.HiddenMembers) {
+                              hiddenMember = member.HiddenMembers[j];
                             if (hiddenMember.Virtual === __MemberBase.NORMAL) {
                                 throw new Error("Type \"" + fullName + "\" cannot override non-virtual function \"" + i + "\".");
                             }
@@ -1303,8 +1303,8 @@ Packages.Define("Class", function () {
                     }
                 }
                 else {
-                    for (var j in member.HiddenMembers) {
-                        var hiddenMember = member.HiddenMembers[j];
+                    for (  j in member.HiddenMembers) {
+                          hiddenMember = member.HiddenMembers[j];
                         if (hiddenMember.Virtual === __MemberBase.NORMAL) {
                             throw new Error("Type \"" + fullName + "\" cannot hide member \"" + i + "\" without new.");
                         }
@@ -1317,8 +1317,8 @@ Packages.Define("Class", function () {
 
             // Type.VirtualClass
             isVirtualClass = false;
-            for (var i in flattenedDescription) {
-                var member = flattenedDescription[i];
+            for (  i in flattenedDescription) {
+                  member = flattenedDescription[i];
                 if (member.Virtual === __MemberBase.ABSTRACT) {
                     isVirtualClass = true;
                 }
@@ -1332,7 +1332,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function () {
                     LoadType();
-                },
+                }
             });
         }
         else {
@@ -1344,7 +1344,7 @@ Packages.Define("Class", function () {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: fullName,
+            value: fullName
         });
 
         // Type.Description
@@ -1354,7 +1354,7 @@ Packages.Define("Class", function () {
             get: function () {
                 LoadType();
                 return description;
-            },
+            }
         });
 
         // Type.FlattenedDescription
@@ -1364,7 +1364,7 @@ Packages.Define("Class", function () {
             get: function () {
                 LoadType();
                 return flattenedDescription;
-            },
+            }
         });
 
         // Type.BaseClasses
@@ -1372,7 +1372,7 @@ Packages.Define("Class", function () {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: directBaseClasses,
+            value: directBaseClasses
         });
 
         // Type.FlattenedBaseClasses
@@ -1382,7 +1382,7 @@ Packages.Define("Class", function () {
             get: function () {
                 LoadType();
                 return flattenedBaseClasses;
-            },
+            }
         });
 
         // Type.FlattenedBaseClasses
@@ -1392,7 +1392,7 @@ Packages.Define("Class", function () {
             get: function () {
                 LoadType();
                 return virtuallyConstructedBy;
-            },
+            }
         });
 
         // Type.IsAssignableFrom(childType)
@@ -1459,14 +1459,14 @@ Packages.Define("Class", function () {
                 configurable: false,
                 enumerable: true,
                 writable: false,
-                value: typeObject,
+                value: typeObject
             });
             // obj.__Value
             Object.defineProperty(this, "__Value", {
                 configurable: false,
                 enumerable: true,
                 writable: false,
-                value: value,
+                value: value
             });
             // obj.__Clone
             Object.defineProperty(this, "__Clone", {
@@ -1475,7 +1475,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function () {
                     return this;
-                },
+                }
             });
             // obj.__Equals
             Object.defineProperty(this, "__Equals", {
@@ -1484,7 +1484,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function (obj) {
                     return obj instanceof Enum && obj.__Type === typeObject && obj.__Value === value;
-                },
+                }
             });
             // obj.__ToString
             Object.defineProperty(this, "__ToString", {
@@ -1493,7 +1493,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function () {
                     return itemName;
-                },
+                }
             });
 
             Object.seal(this);
@@ -1504,21 +1504,21 @@ Packages.Define("Class", function () {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: false,
+            value: false
         });
         // Type.FullName
         Object.defineProperty(Type, "FullName", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: fullName,
+            value: fullName
         });
         // Type.Description
         Object.defineProperty(Type, "Description", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: {},
+            value: {}
         });
         for (var i in description) {
             Type.Description[i] = new Type(i, description[i]);
@@ -1533,7 +1533,7 @@ Packages.Define("Class", function () {
                     throw new Error("\"" + text + "\" is not a valid string representation for type \"" + Type.FullName + "\".");
                 }
                 return Type.Description[text];
-            },
+            }
         });
         // Type.TestType(obj)
         Object.defineProperty(Type, "TestType", {
@@ -1578,7 +1578,7 @@ Packages.Define("Class", function () {
                 configurable: false,
                 enumerable: true,
                 writable: false,
-                value: typeObject,
+                value: typeObject
             });
             // obj.__Value
             if (arguments.length === 2) {
@@ -1586,7 +1586,7 @@ Packages.Define("Class", function () {
                     configurable: false,
                     enumerable: true,
                     writable: false,
-                    value: value,
+                    value: value
                 });
             }
             else {
@@ -1599,7 +1599,7 @@ Packages.Define("Class", function () {
                             result += typeObject.Description[i].__Value;
                         }
                         return result;
-                    },
+                    }
                 });
             }
             // obj.__Clone
@@ -1613,7 +1613,7 @@ Packages.Define("Class", function () {
                         result = result.__Add(typeObject.Description[i]);
                     }
                     return result;
-                },
+                }
             });
             // obj.__Equals
             Object.defineProperty(this, "__Equals", {
@@ -1622,7 +1622,7 @@ Packages.Define("Class", function () {
                 writable: false,
                 value: function (obj) {
                     return obj instanceof Flags && obj.__Type === typeObject && obj.__Value === this.__Value;
-                },
+                }
             });
             // obj.__ToString
             if (arguments.length === 2) {
@@ -1632,7 +1632,7 @@ Packages.Define("Class", function () {
                     writable: false,
                     value: function () {
                         return itemName;
-                    },
+                    }
                 });
             }
             else {
@@ -1651,7 +1651,7 @@ Packages.Define("Class", function () {
                             }
                         }
                         return result;
-                    },
+                    }
                 });
             }
             if (arguments.length === 0) {
@@ -1676,7 +1676,7 @@ Packages.Define("Class", function () {
 
                         flags[name] = obj;
                         return this;
-                    },
+                    }
                 });
                 // obj.__Remove
                 Object.defineProperty(this, "__Remove", {
@@ -1699,14 +1699,14 @@ Packages.Define("Class", function () {
 
                         delete flags[name];
                         return this;
-                    },
+                    }
                 });
                 // obj.__Flags
                 Object.defineProperty(this, "__Flags", {
                     configurable: false,
                     enumerable: true,
                     writable: false,
-                    value: flags,
+                    value: flags
                 });
             }
 
@@ -1718,21 +1718,21 @@ Packages.Define("Class", function () {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: true,
+            value: true
         });
         // Type.FullName
         Object.defineProperty(Type, "FullName", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: fullName,
+            value: fullName
         });
         // Type.Description
         Object.defineProperty(Type, "Description", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: {},
+            value: {}
         });
         for (var i in description) {
             Type.Description[i] = new Type(i, description[i]);
@@ -1755,7 +1755,7 @@ Packages.Define("Class", function () {
                     }
                 }
                 return result;
-            },
+            }
         });
         // Type.TestType(obj)
         Object.defineProperty(Type, "TestType", {
@@ -1898,7 +1898,7 @@ Packages.Define("Class", function () {
         }
 
         var descriptionTypes = {};
-        for (var i in description) {
+        for (  i in description) {
             var defaultValue = description[i];
             var memberType = null;
 
@@ -1938,7 +1938,7 @@ Packages.Define("Class", function () {
                 configurable: false,
                 enumerable: true,
                 writable: false,
-                value: typeObject,
+                value: typeObject
             });
             // obj.__Clone
             Object.defineProperty(this, "__Clone", {
@@ -1951,7 +1951,7 @@ Packages.Define("Class", function () {
                         proto[i] = this[i];
                     }
                     return new typeObject(proto);
-                },
+                }
             });
             // obj.__Equals
             Object.defineProperty(this, "__Equals", {
@@ -1965,7 +1965,7 @@ Packages.Define("Class", function () {
                         if (!__StructMemberEquals(this[i], obj[i])) return false;
                     }
                     return true;
-                },
+                }
             });
             // obj.__ToString
             Object.defineProperty(this, "__ToString", {
@@ -1981,7 +1981,7 @@ Packages.Define("Class", function () {
                         result += i + ":" + __StructEscape(__StructMemberToString(this[i]));
                     }
                     return result;
-                },
+                }
             });
 
             var members = {};
@@ -1999,18 +1999,18 @@ Packages.Define("Class", function () {
                         set: function (value) {
                             memberType.RequireType(value);
                             members[memberName] = value;
-                        },
+                        }
                     });
                 }).apply(this, []);
             }
 
             if (arguments.length === 0) {
-                for (var i in description) {
+                for (  i in description) {
                     this[i] = __StructMemberClone(description[i]);
                 }
             }
             else if (arguments.length === 1 && proto.__proto__ === Object.prototype) {
-                for (var i in description) {
+                for (  i in description) {
                     if (proto.hasOwnProperty(i)) {
                         this[i] = __StructMemberClone(proto[i]);
                     } else {
@@ -2023,7 +2023,7 @@ Packages.Define("Class", function () {
                     throw new Error("Values of each member should be provided to create struct \"" + fullName + "\".");
                 }
                 var index = 0;
-                for (var i in description) {
+                for (  i in description) {
                     this[i] = __StructMemberClone(arguments[index++]);
                 }
             }
@@ -2035,14 +2035,14 @@ Packages.Define("Class", function () {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: fullName,
+            value: fullName
         });
         // Type.Description
         Object.defineProperty(Type, "Description", {
             configurable: false,
             enumerable: true,
             writable: false,
-            value: description,
+            value: description
         });
         // Type.Parse(text)
         Object.defineProperty(Type, "Parse", {
@@ -2083,7 +2083,7 @@ Packages.Define("Class", function () {
                     } else {
                         var space = text.indexOf(' ', colon + 1);
                         if (space === -1) space = text.length;
-                        var value = text.substring(colon + 1, space);
+                          value = text.substring(colon + 1, space);
                         reading = space;
                     }
 
@@ -2100,7 +2100,7 @@ Packages.Define("Class", function () {
                     }
                 }
                 return new Type(proto);
-            },
+            }
         });
         // Type.TestType(obj)
         Object.defineProperty(Type, "TestType", {
@@ -2162,6 +2162,6 @@ Packages.Define("Class", function () {
         Public: Public,
         Protected: Protected,
         Private: Private,
-        Virtual: Virtual,
+        Virtual: Virtual
     }
 });

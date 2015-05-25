@@ -34,28 +34,28 @@ Object.defineProperty(Packages, "EnabledRegistering", {
     configurable: false,
     enumerable: true,
     writable: true,
-    value: true,
+    value: true
 });
 
 Object.defineProperty(Packages, "Types", {
     configurable: false,
     enumerable: true,
     writable: false,
-    value: {},
+    value: {}
 });
 
 Object.defineProperty(Packages, "Packages", {
     configurable: false,
     enumerable: true,
     writable: false,
-    value: {},
+    value: {}
 });
 
 Object.defineProperty(Packages, "__PackageDefinitions", {
     configurable: false,
     enumerable: true,
     writable: false,
-    value: {},
+    value: {}
 });
 
 Object.defineProperty(Packages, "RegisterType", {
@@ -79,7 +79,7 @@ Object.defineProperty(Packages, "__PreparePackage", {
     value: function (fullName) {
         if (!Packages.__PackageDefinitions.hasOwnProperty(fullName)) {
             Packages.__PackageDefinitions[fullName] = {
-                ReverseDependencies: [],
+                ReverseDependencies: []
             }
         }
     }
@@ -126,7 +126,7 @@ Object.defineProperty(Packages, "Define", {
             throw new Error("Required package \"" + fullName + "\" already exists.");
         }
 
-        for (var i = 0; i < dependencies.length; i++) {
+        for (  i = 0; i < dependencies.length; i++) {
             Packages.__PackageDefinitions[dependencies[i]].ReverseDependencies.push(fullName);
         }
 
@@ -146,22 +146,22 @@ Object.defineProperty(Packages, "Define", {
                 pkg[i] = obj[i];
             }
 
-            for (var i in pkg) {
+            for (  i in pkg) {
                 var symbol = pkg[i];
                 if (symbol.__ForceLoad !== undefined) {
                     symbol.__ForceLoad();
                 }
             }
-        }
+        };
 
-        for (var i = 0; i < dependencies.length; i++) {
+        for (  i = 0; i < dependencies.length; i++) {
             var dependency = Packages.__PackageDefinitions[dependencies[i]];
             if (dependency.Loaded === true) {
                 def.Counter++;
             }
         }
 
-        for (var i in Packages.__PackageDefinitions) {
+        for (  i in Packages.__PackageDefinitions) {
             Packages.__TryLoadPackage(i);
         }
     }
@@ -209,19 +209,19 @@ Object.defineProperty(Packages, "Inject", {
         var code = "";
 
         if (!forceInject) {
-            for (var i in names) {
-                var name = names[i];
-                var pkg = Packages.Require(name);
-                for (var j in pkg) {
+            for (  i in names) {
+                  name = names[i];
+                  pkg = Packages.Require(name);
+                for (  j in pkg) {
                     code += "if (" + j + " !== undefined) throw new Error(\"Name \\\"" + j + "\\\" already exists.\");\r\n";
                 }
             }
         }
 
-        for (var i in names) {
-            var name = names[i];
-            var pkg = Packages.Require(name);
-            for (var j in pkg) {
+        for (  i in names) {
+              name = names[i];
+              pkg = Packages.Require(name);
+            for (  j in pkg) {
                 code += "var " + j + " = Packages.Packages[" + JSON.stringify(name) + "][" + JSON.stringify(j) + "];\r\n";
             }
         }

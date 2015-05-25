@@ -63,37 +63,37 @@ Packages.Define("Test", function () {
             container.appendChild(div);
         }
         {
-            var div = document.createElement("div");
+            div = document.createElement("div");
             div.appendChild(document.createTextNode("Passed: " + __passedCases));
             div.setAttribute("style", "color: green; float: left");
             container.appendChild(div);
         }
         {
-            var div = document.createElement("div");
+            div = document.createElement("div");
             div.appendChild(document.createTextNode("\u00A0"));
             div.setAttribute("style", "min-width: 4em; float: left");
             container.appendChild(div);
         }
         {
-            var div = document.createElement("div");
+            div = document.createElement("div");
             div.appendChild(document.createTextNode("Failed: " + __failedCases));
             div.setAttribute("style", "color: red; float: left");
             container.appendChild(div);
         }
         {
-            var div = document.createElement("div");
+            div = document.createElement("div");
             div.appendChild(document.createTextNode("\u00A0"));
             div.setAttribute("style", "min-width: 4em; float: left");
             container.appendChild(div);
         }
         {
-            var div = document.createElement("div");
+            div = document.createElement("div");
             div.appendChild(document.createTextNode("Empty: " + __emptyCases));
             div.setAttribute("style", "color: purple; float: left");
             container.appendChild(div);
         }
         {
-            var div = document.createElement("div");
+            div = document.createElement("div");
             div.setAttribute("style", "clear: both");
             container.appendChild(div);
         }

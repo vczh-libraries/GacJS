@@ -162,6 +162,6 @@ Packages.Define("Html.ResizeEvent", ["Html.Events", "Html.RunAfterWindowLoaded"]
         DetachConnectionToBodyChangedEvent: DetachConnectionToBodyChangedEvent,
         AttachResizeEvent: AttachResizeEvent,
         DetachResizeEvent: DetachResizeEvent,
-        DetectResize: DetectResize,
+        DetectResize: DetectResize
     }
 });

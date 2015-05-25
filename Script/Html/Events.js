@@ -34,6 +34,6 @@ Packages.Define("Html.Events", ["Class"], function (__injection__) {
 
     return {
         AttachGeneralEvent: AttachGeneralEvent,
-        DetachGeneralEvent: DetachGeneralEvent,
+        DetachGeneralEvent: DetachGeneralEvent
     }
 });

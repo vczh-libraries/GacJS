@@ -8,7 +8,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
     var MinSizeLimitation = Enum("vl::presentation::compositions::GuiGraphicsComposition::MinSizeLimitation", {
         NoLimit: 0,
         LimitToElement: 1,
-        LimitToElementAndChildren: 2,
+        LimitToElementAndChildren: 2
     });
 
     /********************************************************************************
@@ -298,7 +298,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             GetRelatedCursor: Public(function () {
                 throw new Error("Not Implemented.");
             }),
-            RelatedCursor: Public.Property({ readonly: true }),
+            RelatedCursor: Public.Property({ readonly: true })
         };
     });
 
@@ -307,7 +307,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
     ********************************************************************************/
 
     var SiteLayout = Class(FQN("GraphicsSite"), Layout, {
-        Bounds: Public.Property({ readonly: true }),
+        Bounds: Public.Property({ readonly: true })
     });
 
     /********************************************************************************
@@ -344,7 +344,7 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
             this.alignmentToParent = value;
             this.UpdateStyle();
         }),
-        AlignmentToParent: Public.Property({}),
+        AlignmentToParent: Public.Property({})
     });
 
     /********************************************************************************
@@ -356,6 +356,6 @@ Packages.Define("GacUI.Layout.Basic", ["Class", "GacUI.Types", "GacUI.Elements.I
         Layout: Layout,
         SiteLayout: SiteLayout,
         WindowLayout: WindowLayout,
-        BoundsLayout: BoundsLayout,
+        BoundsLayout: BoundsLayout
     }
 });
