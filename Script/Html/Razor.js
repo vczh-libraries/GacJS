@@ -130,14 +130,14 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
 
         function InterpretHtml(html) {
             var reading = 0;
-            while (true) {
+            while (reading < html.length) {
                 var atSign = html.indexOf("@", reading);
                 if (atSign === -1) {
-                    PrintText(html.substring(reading, html.length - 1));
+                    PrintText(html.substring(reading, html.length));
                     return;
                 }
                 else if (atSign > reading) {
-                    PrintText(html.substring(reading, atSign - 1));
+                    PrintText(html.substring(reading, atSign));
                 }
 
                 if (atSign === html.length - 1) {
@@ -227,7 +227,12 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                 }
 
                 if (codeEnd === -1) {
-                    throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                    if (exprCounter === 0 && arrayCounter === 0) {
+                        codeEnd = html.length;
+                    }
+                    else {
+                        throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                    }
                 }
 
                 PrintExpr(html.substring(codeBegin, codeEnd));
