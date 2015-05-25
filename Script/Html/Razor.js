@@ -37,6 +37,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
     var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
     var regexNormalCode = /^[a-zA-Z0-9_$.]$/;
+    var regexExpressionEnd = /^[a-zA-Z0-9_$}"')\]/]$/;
 
     /********************************************************************************
     RazorBodyToJs
@@ -170,6 +171,23 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                                     state = InString;
                                     break;
                                 case "/":
+                                    if (i === html.length - 1) {
+                                        throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                                    }
+                                    else if (html[i + 1] === "/") {
+                                        throw new Error("Razor syntax error: cannot use JavaScript comment here: \"" + html + "\".");
+                                    }
+
+                                    var j = i - 1;
+                                    while (html[j] === " " || html[j] === "\t") {
+                                        j--;
+                                    }
+                                    if (regexExpressionEnd.exec(html[j]) === null) {
+                                        state = InRegex;
+                                    }
+                                    else if (exprCounter === 0 && arrayCounter === 0) {
+                                        codeEnd = i;
+                                    }
                                     break;
                                 case "[":
                                     arrayCounter++;
@@ -228,6 +246,17 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                             }
                             break;
                         case InRegex:
+                            switch (html[i]) {
+                                case "/":
+                                    state = InExpr;
+                                    break;
+                                case "\\":
+                                    if (i === html.length - 1) {
+                                        throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                                    }
+                                    i++;
+                                    break;
+                            }
                             break;
                     }
                 }
