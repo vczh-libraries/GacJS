@@ -826,7 +826,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             controller.NavigateTo(null);
         }
 
-        window.location.hash = "#" + hashFlag + "/" + path;
+        window.location.replace("#" + hashFlag + "/" + path);
     }
 
     /********************************************************************************
