@@ -32,9 +32,9 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     var regexOption = /^@(\w+)\s+(\w+)$/;
     var regexCode = /^@\{$/;
     var regexStatement = /^@(for|while|do|if|switch|try|catch)\s*\(.*\)\s*\{/;
-    var regexCommand = /^@(break|continue|throw(\s+.*)?);/;
-    var regexVariable = /^@var\s+.*;/;
+    var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
+    var regexVoidElements = /^(area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
 
     function RegexSwitch(text, branches) {
         for (var branch in branches) {
@@ -60,9 +60,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
             RegexSwitch(line, {
                 Statement: function (matches) {
                 },
-                regexCommand: function (matches) {
-                },
-                Variable: function (matches) {
+                Command: function (matches) {
                 },
                 "": function () {
                 }
