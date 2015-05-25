@@ -34,6 +34,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     var regexStatement = /^@(for|while|do|if|switch|try|catch)\s*\(.*\)\s*\{/;
     var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
+    var regexNormalCode = /^[a-zA-Z0-9_$.]$/;
 
     /********************************************************************************
     RazorBodyToJs
@@ -128,7 +129,110 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
         }
 
         function InterpretHtml(html) {
+            var reading = 0;
+            while (true) {
+                var atSign = html.indexOf("@", reading);
+                if (atSign === -1) {
+                    PrintText(html.substring(reading, html.length - 1));
+                    return;
+                }
+                else if (atSign > reading) {
+                    PrintText(html.substring(reading, atSign - 1));
+                }
 
+                if (atSign === html.length - 1) {
+                    throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                }
+
+                var stopAtRightBracket = html[atSign + 1] === "(";
+                var codeBegin = atSign + (stopAtRightBracket ? 2 : 1);
+                var codeEnd = -1;
+
+                var InExpr = 0;
+                var InString = 1;
+                var InRegex = 2;
+
+                var exprCounter = (stopAtRightBracket ? 1 : 0);
+                var arrayCounter = 0;
+                var state = InExpr;
+
+                for (var i = codeBegin; i < html.length && codeEnd === -1; i++) {
+                    switch (state) {
+                        case InExpr:
+                            switch (html[i]) {
+                                case "\"":
+                                    state = InString;
+                                    break;
+                                case "/":
+                                    break;
+                                case "[":
+                                    arrayCounter++;
+                                    break;
+                                case "]":
+                                    if (arrayCounter === 0) {
+                                        if (exprCounter === 0) {
+                                            codeEnd = i;
+                                            break;
+                                        }
+                                        else {
+                                            throw new Error("Razor syntax error: unmatched \"]\" found: \"" + html + "\".");
+                                        }
+                                    }
+                                    arrayCounter--;
+                                    break;
+                                case "(":
+                                    exprCounter++;
+                                    break;
+                                case ")":
+                                    if (exprCounter === 0) {
+                                        if (arrayCounter === 0) {
+                                            codeEnd = i;
+                                            break;
+                                        }
+                                        else {
+                                            throw new Error("Razor syntax error: unmatched \")\" found: \"" + html + "\".");
+                                        }
+                                    }
+                                    exprCounter--;
+                                    if (exprCounter === 0 && stopAtRightBracket) {
+                                        codeEnd = i;
+                                        break;
+                                    }
+                                    break;
+                                default:
+                                    if (exprCounter === 0 && arrayCounter === 0) {
+                                        if (regexNormalCode.exec(html[i]) === null) {
+                                            codeEnd = i;
+                                            break;
+                                        }
+                                    }
+                            }
+                            break;
+                        case InString:
+                            switch (html[i]) {
+                                case "\"":
+                                    state = InExpr;
+                                    break;
+                                case "\\":
+                                    if (i === html.length - 1) {
+                                        throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                                    }
+                                    i++;
+                                    break;
+                            }
+                            break;
+                        case InRegex:
+                            break;
+                    }
+                }
+
+                if (codeEnd === -1) {
+                    throw new Error("Razor syntax error: unexpected end of JavaScript expression: \"" + html + "\".");
+                }
+
+                PrintExpr(html.substring(codeBegin, codeEnd));
+                reading = codeEnd + (stopAtRightBracket ? 1 : 0);
+            }
         }
 
         AppendCode("var $printer = new RazorPrinter();");
@@ -153,6 +257,9 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                         }
                         else if (line.length >= 2 && line.substring(0, 2) === "@:") {
                             InterpretHtml(line.substring(2, line.length));
+                        }
+                        else if (line.length >= 1 && line[0] === "<") {
+                            InterpretHtml(line);
                         }
                         else {
                             PrintStat(line);
@@ -195,7 +302,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                 RegexSwitch(line, {
                     Option: function (matches) {
                         if (state !== InBody) {
-                            throw new Error("Option cannot appear in code block or functions: \"" + line + "\".");
+                            throw new Error("Razor syntax error: option cannot appear in code block or functions: \"" + line + "\".");
                         }
                         switch (matches[1]) {
                             case "package":
@@ -206,22 +313,22 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                                     model = matches[2];
                                 }
                                 else {
-                                    throw new Error("Option \"@model\" can only appear once: \"" + line + "\".");
+                                    throw new Error("Razor syntax error: option \"@model\" can only appear once: \"" + line + "\".");
                                 }
                                 break;
                             default:
-                                throw new Error("Unknown option: \"" + line + "\".");
+                                throw new Error("Razor syntax error: unknown option: \"" + line + "\".");
                         }
                     },
                     Code: function (matches) {
                         if (state !== InBody) {
-                            throw new Error("Code block cannot appear in code block or functions: \"" + line + "\".");
+                            throw new Error("Razor syntax error: code block cannot appear in code block or functions: \"" + line + "\".");
                         }
                         state = InCode;
                     },
                     Function: function (matches) {
                         if (state !== InBody) {
-                            throw new Error("Code block cannot appear in code block or functions: \"" + line + "\".");
+                            throw new Error("Razor syntax error: code block cannot appear in code block or functions: \"" + line + "\".");
                         }
                         state = InFunction;
 
@@ -244,7 +351,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                                 functions[functions.length - 1].body.push(line);
                                 break;
                             default:
-                                throw new Error("Illegal JavaScript statement: \"" + line + "\".");
+                                throw new Error("Razor syntax error: illegal JavaScript statement: \"" + line + "\".");
                         }
                     },
                     "": function () {
