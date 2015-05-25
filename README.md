@@ -28,12 +28,12 @@ Running test pages is very simple, just follow the steps:
     * POD
     * Enum
     * Unit test for Class.js in **[Class.html](https://github.com/vczh-libraries/GacJS/blob/master/Class.html)**.
-* **Razor.js**
 * **[Html/](https://github.com/vczh-libraries/GacJS/tree/master/Script/Html)** : HTML related packages.
    * **[Events.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Events.js)** : A general custom event framework.
    * **[RunAfterWindowLoaded.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/RunAfterWindowLoaded.js)** : Execute a function. If window is not loaded then delay the execution.
    * **[ResizeEvent.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/ResizeEvent.js)** : ConnectionToBodyChanged and Resize custom event that works on every elements.
    * **[Navigation.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Navigation.js)** : A pure front-end navigation system driven by hash in the url. Test page: **[Navigation.html](https://github.com/vczh-libraries/GacJS/blob/master/Navigation.html)**.
+   * **[Razor.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Razor.js)** : Razor template engine driven by JavaScript. Test page: **[Razor.html](https://github.com/vczh-libraries/GacJS/blob/master/Razor.html)**.
 * **[GacUI/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI)** : GacUI in Browsers!.
    * **[Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
    * **[Elements/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI/Elements)** : GacUI Predefined Graphic Elements. Test page: **[Element.html](https://github.com/vczh-libraries/GacJS/blob/master/Element.html)**.
