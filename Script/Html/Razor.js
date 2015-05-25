@@ -124,7 +124,10 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
 
                         var func = { name: matches[1], parameters: [], body: [] };
                         for (var j = 2; j < matches.length; j++) {
-                            func.parameters.push(matches[j]);
+                            var parameter = matches[j];
+                            if (parameter !== undefined) {
+                                func.parameters.push(parameter);
+                            }
                         }
                         functions.push(func);
                     },
