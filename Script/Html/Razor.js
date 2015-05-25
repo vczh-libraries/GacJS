@@ -1,7 +1,9 @@
 /*
 API:
+    CompileRazor(razor)
+        returns a function with a parameter "model", which will return the compiled HTML from the razor template.
 */
-Packages.Define("Html.Razor", ["Class"], function (__injection__) {
+Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
@@ -90,12 +92,16 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
             result += code + "\n";
         }
 
+        function PrintHtml(text) {
+            AppendCode("$printer.PrintHtml(" + JSON.stringify(text) + ");");
+        }
+
         function PrintText(text) {
-            AppendCode("$printer.Print(" + JSON.stringify(text) + ");");
+            AppendCode("$printer.PrintText(" + JSON.stringify(text) + ");");
         }
 
         function PrintExpr(expr) {
-            AppendCode("$printer.Print(" + expr + ");");
+            AppendCode("$printer.PrintValue(" + expr + ");");
         }
 
         function PrintStat(stat) {
@@ -133,11 +139,11 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
             while (reading < html.length) {
                 var atSign = html.indexOf("@", reading);
                 if (atSign === -1) {
-                    PrintText(html.substring(reading, html.length));
+                    PrintHtml(html.substring(reading, html.length));
                     return;
                 }
                 else if (atSign > reading) {
-                    PrintText(html.substring(reading, atSign));
+                    PrintHtml(html.substring(reading, atSign));
                 }
 
                 if (atSign === html.length - 1) {
@@ -398,8 +404,8 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
         }
 
         var result = "";
-        result += "function () {\n";
-        result += "    eval(Packages.Inject([" + packages.map(JSON.stringify).join(", ") + "], true));\n";
+        result += "(function () {\n";
+        result += "    eval(Packages.Inject([" + packages.map(JSON.stringify).join(", ") + "]));\n";
         result += "\n";
         result += codes.join("\n");
         result += "\n";
@@ -416,8 +422,17 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
         }
         result += RazorBodyToJs("        ", body);
         result += "    }\n";
-        result += "}()\n";
+        result += "}())\n";
         return result;
+    }
+
+    /********************************************************************************
+    CompileRazor
+    ********************************************************************************/
+
+    function CompileRazor(razor) {
+        var code = RazorToJs(razor);
+        return eval(code);
     }
 
     /********************************************************************************
@@ -427,6 +442,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     return {
         RazorReIndent: RazorReIndent,
         RazorToJs: RazorToJs,
+        CompileRazor: CompileRazor,
     }
 });
 
@@ -471,14 +487,22 @@ Packages.Define("Html.RazorHelper", ["Class"], function (__injection__) {
         __Constructor: Public.StrongTyped(__Void, [], function () {
         }),
 
-        Print: Public.Overload(
+        PrintHtml: Public(function (html) {
+            this.text += html;
+        }),
+
+        PrintText: Public(function (text) {
+            razorPrinterDiv.appendChild(document.createTextNode(text));
+            this.text += razorPrinterDiv.innerHTML;
+            razorPrinterDiv.innerHTML = "";
+        }),
+
+        PrintValue: Public.Overload(
             [RazorHtml], function (html) {
-                this.text += html.RawHtml;
+                this.PrintHtml(html.RawHtml);
             },
             [__Object], function (text) {
-                razorPrinterDiv.appendChild(document.createTextNode);
-                this.text += razorPrinterDiv.innerHTML;
-                razorPrinterDiv.innerHTML = "";
+                this.PrintText(text);
             }
             ),
     });
@@ -488,5 +512,7 @@ Packages.Define("Html.RazorHelper", ["Class"], function (__injection__) {
     ********************************************************************************/
 
     return {
+        RazorHtml: RazorHtml,
+        RazorPrinter: RazorPrinter,
     }
 });

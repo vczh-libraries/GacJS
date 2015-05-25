@@ -18,76 +18,82 @@
 
         <div class="TabPageContainer">
             <div class="TabPage">
-                <script id="razor_expressions_1" type="text/plain">
-                    @package RazorTest
-                    @model User
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
 
-                    <p>
-                        Hi, my name is <b>@model.name</b>.<br />
-                        I am @model.age years old.<br />
-                        @if (model.gender !== Gender.Description.Unknown) {
-                            @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
-                        }
-                    </p>
+                        <p>
+                            Hi, my name is <b>@model.name</b>.<br />
+                            I am @model.age years old.<br />
+                            @if (model.gender !== Gender.Description.Unknown) {
+                                @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
+                            }
+                        </p>
+                    -->
                 </script>
             </div>
             <div class="TabPage">
             </div>
             <div class="TabPage">
-                <script id="razor_expressions_1" type="text/plain">
-                    @package RazorTest
-                    @model User
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
 
-                    @function PrintName(){
-                        Hi, my name is @model.name.<br>
-                    }
-
-                    @function PringAge(user){
-                        I am @user.age years old.<br>
-                    }
-
-                    @function PrintGender(user, useless){
-                        @if (user.gender !== Gender.Description.Unknown) {
-                            @:I am a @(user.gender === Gender.Description.Male ? "man" : "woman").<br>
+                        @function PrintName(){
+                            Hi, my name is @model.name.<br>
                         }
-                    }
 
-                    <p>
-                        @PrintName(model)
-                        @PringAge(model)
-                        @PrintGender(model)
-                    </p>
+                        @function PringAge(user){
+                            I am @user.age years old.<br>
+                        }
+
+                        @function PrintGender(user, useless){
+                            @if (user.gender !== Gender.Description.Unknown) {
+                                @:I am a @(user.gender === Gender.Description.Male ? "man" : "woman").<br>
+                            }
+                        }
+
+                        <p>
+                            @PrintName(model)
+                            @PringAge(model)
+                            @PrintGender(model)
+                        </p>
+                    -->
                 </script>
             </div>
             <div class="TabPage">
-                <script id="razor_expressions_1" type="text/plain">
-                    @package RazorTest
-                    @model User
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
 
-                    @{
-                        function PrintName(user) {
-                            return "Hi, my name is " + user.name+ ".";
-                        }
-
-                        function PringAge(user) {
-                            return "I am " + user.age + " years old.";
-                        }
-
-                        function PrintGender(user) {
-                            if (user.gender !== Gender.Description.Unknown) {
-                                return "I am a " + (user.gender === Gender.Description.Male ? "man" : "woman") + ".";
+                        @{
+                            function PrintName(user) {
+                                return "Hi, my name is " + user.name+ ".";
                             }
-                            else {
-                                return "";
+
+                            function PringAge(user) {
+                                return "I am " + user.age + " years old.";
+                            }
+
+                            function PrintGender(user) {
+                                if (user.gender !== Gender.Description.Unknown) {
+                                    return "I am a " + (user.gender === Gender.Description.Male ? "man" : "woman") + ".";
+                                }
+                                else {
+                                    return "";
+                                }
                             }
                         }
-                    }
 
-                    <p>
-                        @PrintName(model)<br />
-                        @PringAge(model)<br />
-                        @PrintGender(model)<br />
-                    </p>
+                        <p>
+                            @PrintName(model)<br />
+                            @PringAge(model)<br />
+                            @PrintGender(model)<br />
+                        </p>
+                    -->
                 </script>
             </div>
         </div>
@@ -122,6 +128,13 @@
     </script>
 
     <script>
+        eval(Packages.Inject(["RazorTest"]));
+
+        function ExtractRazorFromComment(comment) {
+            comment = comment.replace(/^\s*/, "").replace(/\s*^/, "");
+            return comment.substring(4, comment.length - 3);
+        }
+
         function SetupRazorTabControl(tabControl) {
             SetupTabControl(tabControl);
             for (var i = 0; i < tabControl.TabPages.length; i++) {
@@ -152,7 +165,8 @@
 
                 for (var j = 0; j < scripts.length; j++) {
                     var script = scripts[j];
-                    var razorScript = RazorReIndent(script.innerHTML);
+                    var comment = script.childNodes[0].nodeValue;
+                    var razorScript = RazorReIndent(ExtractRazorFromComment(script.childNodes[0].nodeValue));
                     var javaScript = RazorToJs(razorScript);
 
                     var tr = document.createElement("tr");
@@ -176,6 +190,30 @@
                     {
                         var td = document.createElement("td");
                         tr.appendChild(td);
+
+                        var razor = null;
+                        try {
+                            razor = CompileRazor(razorScript);
+                        }
+                        catch (ex) {
+                            var div = document.createElement("div");
+                            div.style.color = "red";
+                            div.appendChild(document.createTextNode(ex));
+                            td.appendChild(div);
+                            continue;
+                        }
+
+                        var razorHtml = null;
+                        switch (script.getAttribute("data-razor-driver")) {
+                            case "User":
+                                var user = new User();
+                                user.name = "John Smith";
+                                user.age = 16;
+                                user.gender = Gender.Description.Male;
+                                razorHtml = razor(user);
+                                break;
+                        }
+                        td.innerHTML = razorHtml.RawHtml;
                     }
                 }
             }
