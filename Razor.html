@@ -23,7 +23,7 @@
                     @model User
 
                     <p>
-                        Hi, My name is <b>@model.name</b>.<br />
+                        Hi, my name is <b>@model.name</b>.<br />
                         I am @model.age years old.<br />
                         @if (model.gender !== Gender.Description.Unknown) {
                         @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
@@ -39,7 +39,7 @@
                     @model User
 
                     @function PrintName(user){
-                        I am @user.age years old.<br />
+                        Hi, my name is<b>@model.name</b>.<br />
                     }
 
                     @function PringAge(user){
@@ -65,12 +65,29 @@
                     @package RazorTest
                     @model User
 
-                    <p>
-                        Hi, My name is <b>@model.name</b>.<br />
-                        I am @model.age years old.<br />
-                        @if (model.gender !== Gender.Description.Unknown) {
-                        @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
+                    @{
+                        function PrintName(user) {
+                            return "Hi, my name is " + user.name+ ".";
                         }
+
+                        function PringAge(user) {
+                            return "I am " + user.age + " years old.";
+                        }
+
+                        function PrintGender(user) {
+                            if (user.gender !== Gender.Description.Unknown) {
+                                return "I am a " + (user.gender === Gender.Description.Male ? "man" : "woman") + ".";
+                            }
+                            else {
+                                return "";
+                            }
+                        }
+                    }
+
+                    <p>
+                        @PrintName(model)<br />
+                        @PringAge(model)<br />
+                        @PrintGender(model)<br />
                     </p>
                 </script>
             </div>

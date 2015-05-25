@@ -29,9 +29,9 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     RazorToJs
     ********************************************************************************/
 
-    var regexOption = /^@(\w+)\s+@(.+)$/;
+    var regexOption = /^@(\w+)\s+(\w+)$/;
     var regexCode = /^@\{$/;
-    var regexStatement = /@^(for|while|do|if|switch|try|catch)\s*\(.*\)\s*\{/;
+    var regexStatement = /^@(for|while|do|if|switch|try|catch)\s*\(.*\)\s*\{/;
     var regexCommand = /^@(break|continue|throw(\s+.*)?);/;
     var regexVariable = /^@var\s+.*;/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
@@ -129,7 +129,6 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                         functions.push(func);
                     },
                     Statement: function (matches) {
-                        statementCounter++;
                         switch (state) {
                             case InBody:
                                 body.push(line);
@@ -148,12 +147,19 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                                 body.push(line);
                                 break;
                             case InCode:
+                                if (line[line.length - 1] === "{") {
+                                    statementCounter++;
+                                }
                                 if (line === "}") {
-                                    state = InBody;
+                                    if (statementCounter === 0) {
+                                        state = InBody;
+                                        return;
+                                    }
+                                    else {
+                                        statementCounter--;
+                                    }
                                 }
-                                else {
-                                    codes.push(lines[i]);
-                                }
+                                codes.push(lines[i]);
                                 break;
                             case InFunction:
                                 if (line === "}") {
@@ -187,6 +193,9 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
             result += "\n";
         }
         result += "    return function (model) {\n";
+        if (model !== null) {
+            result += "        " + model + ".RequireType(model);\n";
+        }
         result += RazorBodyToJs("        ", body);
         result += "    }\n";
         result += "}()\n";
