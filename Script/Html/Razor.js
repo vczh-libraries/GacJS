@@ -54,7 +54,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
     }
 
     function RazorBodyToJs(indent, lines) {
-        return lines.map(function (line) { return indent + line; }).join("\n");
+        return lines.map(function (line) { return indent + line; }).join("\n") + "\n";
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
             RegexSwitch(line, {
@@ -94,13 +94,13 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                         if (state !== InBody) {
                             throw new Error("Option cannot appear in code block or functions: \"" + line + "\".");
                         }
-                        switch (matches[0]) {
+                        switch (matches[1]) {
                             case "package":
-                                packages.push(matches[1]);
+                                packages.push(matches[2]);
                                 break;
                             case "model":
                                 if (model === null) {
-                                    model = matches[1];
+                                    model = matches[2];
                                 }
                                 else {
                                     throw new Error("Option \"@model\" can only appear once: \"" + line + "\".");
@@ -122,9 +122,9 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                         }
                         state = InFunction;
 
-                        var func = { name: matches[0], parameters: [], body: [] };
-                        for (var i = 1; i < matches.length; i++) {
-                            func.parameters.push(matches[i]);
+                        var func = { name: matches[1], parameters: [], body: [] };
+                        for (var j = 2; j < matches.length; j++) {
+                            func.parameters.push(matches[j]);
                         }
                         functions.push(func);
                     },
@@ -136,7 +136,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                                 break;
                             case InFunction:
                                 statementCounter++;
-                                functions[functions.length].body.push(line);
+                                functions[functions.length - 1].body.push(line);
                                 break;
                             default:
                                 throw new Error("Illegal JavaScript statement: \"" + line + "\".");
@@ -165,7 +165,7 @@ Packages.Define("Html.Razor", ["Class"], function (__injection__) {
                                         statementCounter--;
                                     }
                                 }
-                                functions[functions.length].body.push(line);
+                                functions[functions.length - 1].body.push(line);
                                 break;
                         }
                     }
