@@ -36,14 +36,14 @@
         SummaryTest();
     </script>
 
-    <div class="TabControl" id="tabElements">
+    <div class="TabControl" id="tabElements" data-navigation="true">
         <div class="TabButtonContainer">
-            <div class="TabButton">Borders</div>
-            <div class="TabButton">Backgrounds</div>
-            <div class="TabButton">3D</div>
-            <div class="TabButton">Gradient</div>
-            <div class="TabButton">Label</div>
-            <div class="TabButton">Others</div>
+            <div class="TabButton" data-url="/borders">Borders</div>
+            <div class="TabButton" data-url="/backgrounds">Backgrounds</div>
+            <div class="TabButton" data-url="/3d">3D</div>
+            <div class="TabButton" data-url="/gradient">Gradient</div>
+            <div class="TabButton" data-url="/label">Label</div>
+            <div class="TabButton" data-url="/others">Others</div>
         </div>
 
         <div class="TabPageContainer">
@@ -384,7 +384,9 @@
     </div>
 
     <script>
+        InitializeNavigation("~", TabRootController);
         SetupTabControl(tabElements);
+        StartNavigation("borders");
     </script>
 </body>
 </html>

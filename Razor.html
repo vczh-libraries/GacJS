@@ -7,14 +7,139 @@
     <script src="./TestPage.js"></script>
 </head>
 <body style="font-family: 'Segoe UI'; font-size: 14px;">
+
+    <div class="TabControl" id="tabMain" data-navigation="true">
+        <div class="TabButtonContainer">
+            <div class="TabButton" data-url="/expressions">Expressions</div>
+            <div class="TabButton" data-url="/statements">Statements</div>
+            <div class="TabButton" data-url="/functions">Functions</div>
+        </div>
+
+        <div class="TabPageContainer">
+            <div class="TabPage">
+                <script id="razor_expressions_1" type="text/plain">
+                    @package RazorTest
+                    @model User
+
+                    <p>
+                        Hi, My name is <b>@model.name</b>.<br />
+                        I am @model.age years old.<br />
+                        @if (model.gender !== Gender.Description.Unknown) {
+                        @:I am a @(model.gender === Gender.Description.Male ? "man" : "woman").<br />
+                        }
+                    </p>
+                </script>
+            </div>
+            <div class="TabPage">
+            </div>
+            <div class="TabPage">
+            </div>
+        </div>
+
+    </div>
+
     <script>
-        TestCase("empty test case", function () {
-            EmptyCase();
+        Packages.Define("RazorTest", ["Class"], function (__injection__) {
+            eval(__injection__);
+
+            function FQN(name) {
+                return "<RazorTest>::" + name;
+            }
+
+            var Gender = Enum("Gender", {
+                Unknown: 0,
+                Male: 1,
+                Female: 2,
+            });
+
+            var User = Struct("Person", {
+                name: "",
+                age: 0,
+                gender: Gender.Description.Unknown,
+            });
+
+            return {
+                Gender: Gender,
+                User: User,
+            }
         });
     </script>
 
     <script>
-        SummaryTest();
+        function ReIndent(text) {
+            var result = "";
+            var lines = text.split("\n");
+            var indent = undefined;
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                var firstChar = line.search(/[^\s]/);
+                if (firstChar !== -1) {
+                    if (indent === undefined) {
+                        indent = firstChar;
+                    }
+                    result += line.substring(indent, firstChar.length).replace(/\s*$/, "") + "\r\n";
+                }
+            }
+            return result;
+        }
+
+        function SetupRazorTabControl(tabControl) {
+            SetupTabControl(tabControl);
+            for (var i = 0; i < tabControl.TabPages.length; i++) {
+                var tabPage = tabControl.TabPages[i];
+                var scripts = tabPage.getElementsByTagName("script");
+
+                var table = document.createElement("table");
+                tabPage.appendChild(table);
+                {
+                    var tr = document.createElement("tr");
+                    table.appendChild(tr);
+                    {
+                        var th = document.createElement("th");
+                        tr.appendChild(th);
+                        th.appendChild(document.createTextNode("Razor Script"));
+                    }
+                    {
+                        var th = document.createElement("th");
+                        tr.appendChild(th);
+                        th.appendChild(document.createTextNode("JavaScript"));
+                    }
+                    {
+                        var th = document.createElement("th");
+                        tr.appendChild(th);
+                        th.appendChild(document.createTextNode("Result"));
+                    }
+                }
+
+                for (var j = 0; j < scripts.length; j++) {
+                    var script = scripts[j];
+                    var razorScript = ReIndent(script.innerHTML);
+
+                    var tr = document.createElement("tr");
+                    table.appendChild(tr);
+                    {
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+
+                        var pre = document.createElement("pre");
+                        td.appendChild(pre);
+                        pre.appendChild(document.createTextNode(razorScript));
+                    }
+                    {
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+                    }
+                    {
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+                    }
+                }
+            }
+        }
+
+        InitializeNavigation("~", TabRootController);
+        SetupRazorTabControl(tabMain);
+        StartNavigation("expressions");
     </script>
 </body>
 </html>

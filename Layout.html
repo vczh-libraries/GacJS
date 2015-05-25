@@ -73,13 +73,13 @@
         SummaryTest();
     </script>
 
-    <div class="TabControl" id="tabMain">
+    <div class="TabControl" id="tabMain" data-navigation="true">
         <div class="TabButtonContainer">
-            <div class="TabButton">Bounds</div>
-            <div class="TabButton">Table</div>
-            <div class="TabButton">Stack</div>
-            <div class="TabButton">SideAligned</div>
-            <div class="TabButton">PartialView</div>
+            <div class="TabButton" data-url="/bounds">Bounds</div>
+            <div class="TabButton" data-url="/table">Table</div>
+            <div class="TabButton" data-url="/stack">Stack</div>
+            <div class="TabButton" data-url="/sidealigned">SideAligned</div>
+            <div class="TabButton" data-url="/partialview">PartialView</div>
         </div>
 
         <div class="TabPageContainer">
@@ -117,7 +117,9 @@
     </div>
 
     <script>
+        InitializeNavigation("~", TabRootController);
         SetupTabControl(tabMain);
+        StartNavigation("bounds");
     </script>
 </body>
 </html>
