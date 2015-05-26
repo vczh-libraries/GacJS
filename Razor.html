@@ -59,9 +59,9 @@
                         @model User
 
                         <p>
-                            @("\"" + model.name + "\"") </br>
-                            @model.name.match(/\w+/g).map(function(x){return "\""+x+"\"";}).join(" ") </br>
-                            @(model.age/10) </br>
+                            @("\"" + model.name + "\"") <br/>
+                            @model.name.match(/\w+/g).map(function(x){return "\""+x+"\"";}).join(" ") <br/>
+                            @(model.age/10) <br/>
                         </p>
                     -->
                 </script>
@@ -81,7 +81,7 @@
                             Initials: @(matches[0][0]).@(matches[1][0]).<br>
                         </p>
                         @var isAdult = model.age >= 18;
-                        <p>
+                        <p style="color: @"red";">
                             I am @(isAdult ? "" : "not ")an adult.<br>
                         </p>
                     -->
@@ -93,7 +93,7 @@
 
                         @if (true) {
                             var matches = model.name.match(/\w+/g);
-                            <p style="color: blue;">
+                            <p>
                                 Full name: @model.name<br>
                                 Initials: @(matches[0][0]).@(matches[1][0]).<br>
                             </p>

@@ -3,7 +3,7 @@ API:
     CompileRazor(razor)
         returns a function with a parameter "model", which will return the compiled HTML from the razor template.
 */
-Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injection__) {
+Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
@@ -141,22 +141,182 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
 
         ////////////////////////////////////////////////////////////////////////
 
-        function InterpretHtmlFragment(html) {
+        function InterpretHtmlFragment(state, html) {
             PrintHtml(html);
+
+            var InText = 0;
+            var ExpectOpenTagName = 1;
+            var InOpenTagName = 2;
+            var ExpectAttNameOrEnd = 3;
+            var InAttName = 4;
+            var ExpectAttEq = 5;
+            var ExpectAttValue = 6;
+            var InAttValue = 7;
+            var ExpectCloseTagName = 8;
+            var InCloseTagName = 9;
+            var ExpectEnd = 10;
+
+            if (state === undefined) {
+                state = InText;
+            }
+
+            var tagName = "";
+
+            for (var i = 0; i < html.length; i++) {
+                var c = html[i];
+                switch (state) {
+                    case InText:
+                        switch (c) {
+                            case "<":
+                                state = ExpectOpenTagName;
+                                break;
+                        }
+                        break;
+                    case ExpectOpenTagName:
+                        switch (c) {
+                            case " ": case "\t":
+                                break;
+                            case "/":
+                                state = ExpectCloseTagName;
+                                break;
+                            default:
+                                tagName = c;
+                                state = InOpenTagName;
+                        }
+                        break;
+                    case InOpenTagName:
+                        switch (c) {
+                            case " ": case "\t":
+                                state = ExpectAttNameOrEnd;
+                                if (!IsVoidTag(tagName)) {
+                                    PushTag(tagName);
+                                }
+                                break;
+                            case "/":
+                                state = ExpectEnd;
+                                if (!IsVoidTag(tagName)) {
+                                    PushTag(tagName);
+                                }
+                                break;
+                            case ">":
+                                state = InText;
+                                if (!IsVoidTag(tagName)) {
+                                    PushTag(tagName);
+                                }
+                            default:
+                                tagName += c;
+                        }
+                        break;
+                    case ExpectAttNameOrEnd:
+                        switch (c) {
+                            case " ": case "\t":
+                                break;
+                            case ">":
+                                state = InText;
+                                break;
+                            default:
+                                state = InAttName;
+                        }
+                        break;
+                    case InAttName:
+                        switch (c) {
+                            case " ": case "\t":
+                                state = ExpectAttEq;
+                                break;
+                            case "=":
+                                state = ExpectAttValue;
+                                break;
+                        }
+                        break;
+                    case ExpectAttEq:
+                        switch (c) {
+                            case " ": case "\t":
+                                break;
+                            case "=":
+                                state = ExpectAttValue;
+                                break;
+                            case ">":
+                                state = InText;
+                                break;
+                            default:
+                                state = InAttName;
+                        }
+                        break;
+                    case ExpectAttValue:
+                        switch (c) {
+                            case " ": case "\t":
+                                break;
+                            case "\"":
+                                state = InAttValue;
+                                break;
+                        }
+                        break;
+                    case InAttValue:
+                        switch (c) {
+                            case " ": case "\t":
+                                break;
+                            case "\"":
+                                state = InAttValue;
+                                break;
+                        }
+                        break;
+                    case ExpectCloseTagName:
+                        switch (c) {
+                            case " ": case "\t":
+                                break;
+                            default:
+                                tagName = c;
+                                state = InCloseTagName;
+                        }
+                        break;
+                    case InCloseTagName:
+                        switch (c) {
+                            case " ": case "\t":
+                                state = ExpectEnd;
+                                PopTag(tagName, html);
+                                break;
+                            case ">":
+                                state = InText;
+                                PopTag(tagName, html);
+                                break;
+                            default:
+                                tagName += c;
+                        }
+                        break;
+                    case ExpectEnd:
+                        switch (c) {
+                            case ">":
+                                state = InText;
+                                break;
+                        }
+                        break;
+                }
+            }
+
+            switch (state) {
+                case InOpenTagName:
+                case InCloseTagName:
+                    throw new Error("Razor syntax error: HTML tag name should be completed: \"" + html + "\".");
+                    break;
+            }
+
+            return state;
         }
 
         ////////////////////////////////////////////////////////////////////////
 
         function InterpretHtmlLine(html) {
             var reading = 0;
+            var htmlState = undefined;
+
             while (reading < html.length) {
                 var atSign = html.indexOf("@", reading);
                 if (atSign === -1) {
-                    InterpretHtmlFragment(html.substring(reading, html.length));
+                    htmlState = InterpretHtmlFragment(htmlState, html.substring(reading, html.length));
                     return;
                 }
                 else if (atSign > reading) {
-                    InterpretHtmlFragment(html.substring(reading, atSign));
+                    htmlState = InterpretHtmlFragment(htmlState, html.substring(reading, atSign));
                 }
 
                 if (atSign === html.length - 1) {
@@ -293,6 +453,10 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                     PrintExpr(html.substring(codeBegin, codeEnd));
                 }
                 reading = codeEnd + (stopAtRightBracket ? 1 : 0);
+            }
+
+            if (htmlState !== undefined && htmlState !== 0) {
+                throw new Error("Razor syntax error: HTML tags should be completed at the same line \"" + html + "\".");
             }
         }
 
@@ -504,8 +668,17 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
     }
 
     /********************************************************************************
-    CompileRazor
+    Package
     ********************************************************************************/
+
+    return {
+        RazorReIndent: RazorReIndent,
+        RazorToJs: RazorToJs,
+        CompileRazor: CompileRazor,
+    }
+});
+
+Packages.Define("Html.CompileRazor", function () {
 
     function CompileRazor(razor) {
         return eval(RazorToJs(razor));
@@ -516,8 +689,6 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
     ********************************************************************************/
 
     return {
-        RazorReIndent: RazorReIndent,
-        RazorToJs: RazorToJs,
         CompileRazor: CompileRazor,
     }
 });
