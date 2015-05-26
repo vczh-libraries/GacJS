@@ -33,8 +33,10 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
 
     var regexOption = /^@(\w+)\s+(\w+)$/;
     var regexCode = /^@\{$/;
-    var regexStatement = /^@((for|while|if|switch)\s*\(.*\)|(do|try))\s*\{/;
-    var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);/;
+    var regexStatement = /^@((for|while|if|switch)\s*\(.*\)|(do|try))\s*\{$/;
+    var regexStatementContinue = /^((else\s+if|catch)\s*\(.*\)|(else))\s*\{$/;
+    var regexStatementInCode = /^((for|while|if|switch|else\s+if|catch)\s*\(.*\)|(do|try|else))\s*\{$/;
+    var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);$/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
     var regexNormalCode = /^[a-zA-Z0-9_$.]$/;
     var regexExpressionEnd = /^[a-zA-Z0-9_$}"')\]/]$/;
@@ -81,6 +83,8 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
 
     function RazorBodyToJs(indent, lines) {
 
+        ////////////////////////////////////////////////////////////////////////
+
         var indentCounter = 0;
         var tags = [];
         var result = "";
@@ -113,7 +117,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
             tags.push(null);
         }
 
-        function PopStatement(line) {
+        function PopStatement() {
             if (tags.length === 0 || tags[tags.length - 1] !== null) {
                 throw new Error("Razor syntax error: cannot close a JavaScript statement here.");
             }
@@ -135,16 +139,24 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
             return tags.length > 0 && tags[tags.length - 1] === null;
         }
 
-        function InterpretHtml(html) {
+        ////////////////////////////////////////////////////////////////////////
+
+        function InterpretHtmlFragment(html) {
+            PrintHtml(html);
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+
+        function InterpretHtmlLine(html) {
             var reading = 0;
             while (reading < html.length) {
                 var atSign = html.indexOf("@", reading);
                 if (atSign === -1) {
-                    PrintHtml(html.substring(reading, html.length));
+                    InterpretHtmlFragment(html.substring(reading, html.length));
                     return;
                 }
                 else if (atSign > reading) {
-                    PrintHtml(html.substring(reading, atSign));
+                    InterpretHtmlFragment(html.substring(reading, atSign));
                 }
 
                 if (atSign === html.length - 1) {
@@ -289,41 +301,65 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////
+
+        var lastPoppedStatementIndex = -1;
+
         AppendCode("var $printer = new RazorPrinter();");
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
-            RegexSwitch(line, {
-                Statement: function (matches) {
-                    PrintStat(line.substring(1, line.length));
-                    PushStatement();
-                    indentCounter++;
-                },
-                Command: function (matches) {
-                    PrintStat(line.substring(1, line.length));
-                },
-                "": function () {
-                    if (InCode()) {
+            if (InCode()) {
+                RegexSwitch(line, {
+                    StatementInCode: function (matches) {
+                        PrintStat(line);
+                        PushStatement();
+                        indentCounter++;
+                    },
+                    "": function () {
                         if (line === "}") {
+                            lastPoppedStatementIndex = i;
                             indentCounter--;
-                            PopStatement();
+                            poppedStat = PopStatement();
                             PrintStat("}");
                         }
                         else if (line.length >= 2 && line.substring(0, 2) === "@:") {
-                            InterpretHtml(line.substring(2, line.length));
+                            InterpretHtmlLine(line.substring(2, line.length));
                         }
                         else if (line.length >= 1 && line[0] === "<") {
-                            InterpretHtml(line);
+                            InterpretHtmlLine(line);
                         }
                         else {
                             PrintStat(line);
                         }
                     }
-                    else {
-                        InterpretHtml(line);
+                });
+            }
+            else {
+                RegexSwitch(line, {
+                    Statement: function (matches) {
+                        PrintStat(line.substring(1, line.length));
+                        PushStatement();
+                        indentCounter++;
+                    },
+                    Command: function (matches) {
+                        PrintStat(line.substring(1, line.length));
+                    },
+                    StatementContinue: function (matches) {
+                        if (i === lastPoppedStatementIndex + 1) {
+                            PrintStat(line);
+                            PushStatement();
+                            indentCounter++;
+                        }
+                        else {
+                            InterpretHtmlLine(line);
+                        }
+                    },
+                    "": function () {
+                        InterpretHtmlLine(line);
                     }
-                }
-            });
+                });
+            }
         }
 
         AppendCode("return new RazorHtml($printer.Text);");

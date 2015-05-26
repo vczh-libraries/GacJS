@@ -70,7 +70,7 @@
 
                         @if (true) {
                             var matches = model.name.match(/w+/g);
-                            <p>
+                            <p style="color: blue;">
                                 Full name: @model.name<br>
                                 Initials: @(matches[0][0]).@(matches[1][0]).<br>
                             </p>
@@ -99,8 +99,24 @@
                     <!--
                         @package RazorTest
                         @model User
-                        
-                        My name is @model.name.
+
+                        My name is @model.name.<br>
+                        @if (true) {
+                            if (model.age >= 18) {
+                                @:I am an adult.<br>
+                            }
+                            else {
+                                @:I am not an adult.<br>
+                            }
+                        }
+                    -->
+                </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+
+                        My name is @model.name.<br>
                         @try {
                             switch (model.gender) {
                                 case Gender.Description.Male:
