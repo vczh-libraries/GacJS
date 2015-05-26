@@ -63,6 +63,61 @@
                 </script>
             </div>
             <div class="TabPage">
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+
+                        @if (true) {
+                            var matches = model.name.match(/w+/g);
+                            <p>
+                                Full name: @model.name
+                                Initials: @(matches[0][0]).@(matches[1][0]).
+                            </p>
+                            var isAdult = model.age >= 18;
+                            <p>
+                                I am @(isAdult ? "" : "not ")an adult.
+                            </p>
+                        }
+                    -->
+                </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+
+                        My name is @model.name.
+                        @if (model.age >= 18) {
+                            @:I am an adult.
+                        }
+                        else {
+                            @:I am not an adult.
+                        }
+                    -->
+                </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+                        
+                        My name is @model.name.
+                        @try {
+                            switch (model.gender) {
+                                case Gender.Description.Male:
+                                    @:I am male.
+                                    break;
+                                case Gender.Description.Female:
+                                    @:I am female.
+                                    break;
+                                default:
+                                    throw new Error("Cannot determine the gender.");
+                            }
+                        }
+                        catch (ex) {
+                            @:@ex
+                        }
+                    -->
+                </script>
             </div>
             <div class="TabPage">
                 <script type="text/plain" data-razor-driver="User">
@@ -220,9 +275,19 @@
                         var td = document.createElement("td");
                         tr.appendChild(td);
 
-                        var razor = null;
                         try {
-                            razor = CompileRazor(razorScript);
+                            var razor = CompileRazor(razorScript);
+                            var razorHtml = null;
+                            switch (script.getAttribute("data-razor-driver")) {
+                                case "User":
+                                    var user = new User();
+                                    user.name = "John Smith";
+                                    user.age = 16;
+                                    user.gender = Gender.Description.Male;
+                                    razorHtml = razor(user);
+                                    break;
+                            }
+                            td.innerHTML = razorHtml.RawHtml;
                         }
                         catch (ex) {
                             var div = document.createElement("div");
@@ -231,18 +296,6 @@
                             td.appendChild(div);
                             continue;
                         }
-
-                        var razorHtml = null;
-                        switch (script.getAttribute("data-razor-driver")) {
-                            case "User":
-                                var user = new User();
-                                user.name = "John Smith";
-                                user.age = 16;
-                                user.gender = Gender.Description.Male;
-                                razorHtml = razor(user);
-                                break;
-                        }
-                        td.innerHTML = razorHtml.RawHtml;
                     }
                 }
             }
