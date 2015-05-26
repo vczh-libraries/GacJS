@@ -106,7 +106,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             GetSubController: Public.StrongTyped(INativationController, [], function () {
                 return this.subController;
             }),
-            SubController: Public.Property({ readonly: true }),
+            SubController: Public.Property({ readonly: true })
         }
     });
 
@@ -126,7 +126,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
         __Constructor: Public(function () {
             this.storage = { inArray: false, assignedArguments: 0 };
-        }),
+        })
     });
 
     var PatternHandler = Class(FQN("PatternHandler"), function () {
@@ -262,7 +262,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 else {
                     throw new Error("Unexpected end of input.");
                 }
-            }),
+            })
         }
     });
 
@@ -273,12 +273,12 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     var PathFragmentType = Enum(FQN("PathFragmentType"), {
         Constant: 0,
         Argument: 1,
-        Array: 2,
+        Array: 2
     });
 
     var PathFragment = Struct(FQN("PathFragment"), {
         type: PathFragmentType.Description.Constant,
-        content: "",
+        content: ""
     });
 
     var PathConfig = Class(FQN("PathConfig"), {
@@ -288,7 +288,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         handler: Public(null),
         usedArguments: Public(0),
         level: Public(-1),
-        pathFragments: Public(null),
+        pathFragments: Public(null)
     });
 
     var rootNavigationController = null;
@@ -398,7 +398,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 typePathConfigs[type.FullName] = currentPathConfigs;
             }
 
-            var pathConfig = new PathConfig();
+              pathConfig = new PathConfig();
             pathConfig.parentPathConfig = parentPathConfig;
             pathConfig.controllerType = type;
             pathConfig.defaultValues = (defaultValues === undefined ? {} : defaultValues);
@@ -415,13 +415,13 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             }
 
             handler.ControllerType(type, pathConfig.level);
-            for (var j in assignedArguments) {
+            for (  j in assignedArguments) {
                 var index = assignedArguments[j];
                 handler.Argument(j, index);
                 prop[j] = null;
             }
             if (defaultValues !== undefined) {
-                for (var j in defaultValues) {
+                for (  j in defaultValues) {
                     var value = defaultValues[j];
                     handler.Setter(j, value);
                     prop[j] = null;
@@ -466,11 +466,11 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }
 
         var prefixColumn = [];
-        for (var i = 0; i < pathConfigs.length; i++) {
+        for (  i = 0; i < pathConfigs.length; i++) {
             var pathConfig = pathConfigs[i];
             var defaultValues = pathConfig.defaultValues;
             var expectedValues = arguments[index].values;
-            var accepted = true;
+              accepted = true;
 
             for (var j in expectedValues) {
                 if (defaultValues.hasOwnProperty(j)) {
@@ -493,9 +493,9 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             postfixMatrix = [[]];
         }
 
-        for (var i = 0; i < prefixColumn.length; i++) {
+        for (  i = 0; i < prefixColumn.length; i++) {
             var head = [prefixColumn[i]];
-            for (var j = 0; j < postfixMatrix.length; j++) {
+            for (  j = 0; j < postfixMatrix.length; j++) {
                 var tail = postfixMatrix[j];
                 matrix.push(head.concat(tail));
             }
@@ -516,7 +516,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         var path = undefined;
         var usedArguments = undefined;
 
-        for (var i = 0; i < matrix.length; i++) {
+        for (  i = 0; i < matrix.length; i++) {
             var row = matrix[i];
             var currentPath = "";
             var currentUsedArguments = 0;
@@ -549,7 +549,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                             break;
                         case PathFragmentType.Description.Array:
                             if (values.hasOwnProperty(content)) {
-                                var value = values[content];
+                                  value = values[content];
                                 if (value instanceof Array) {
                                     currentPath += "/" + value.join("/");
                                     currentUsedArguments++;
@@ -563,7 +563,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
 
                 if (accepted) {
-                    for (var k in values) {
+                    for (  k in values) {
                         if (!usedArgumentNames.hasOwnProperty(k) && !pathConfig.defaultValues.hasOwnProperty(k)) {
                             accepted = false;
                             break;
@@ -612,7 +612,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         GetLast: Protected(function () {
             var last = this.result[this.result.length - 1];
             if (last === undefined || last.type !== null) {
-                last = { type: null, values: {} }
+                last = { type: null, values: {} };
                 this.result.push(last);
             }
             return last;
@@ -635,7 +635,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         __Constructor: Public(function () {
             this.__InitBase(IPatternHandlerCallback, []);
             this.result = [];
-        }),
+        })
     });
 
     function ParseNavigationPath(path) {
@@ -660,7 +660,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
         var selectedHandlers = [];
         var assignedArguments = undefined;
-        for (var i = 0; i < handlers.length; i++) {
+        for (  i = 0; i < handlers.length; i++) {
             var handler = handlers[i];
             if (handler.handler.IsFinishState()) {
                 var counter = 0;
@@ -690,15 +690,15 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }
         else {
             var orderedHandlers = [];
-            var currentHandler = selectedHandlers[0];
+              currentHandler = selectedHandlers[0];
             while (currentHandler.handler !== rootPatternHandler) {
                 orderedHandlers.splice(0, 0, currentHandler.handler);
                 currentHandler = currentHandler.previous;
             }
 
             var callback = new ParseCallback();
-            for (var i = 0; i < orderedHandlers.length; i++) {
-                var handler = orderedHandlers[i];
+            for (  i = 0; i < orderedHandlers.length; i++) {
+                  handler = orderedHandlers[i];
                 orderedHandlers[i].Execute(fragments[i], callback);
             }
             handler.ExecuteFinished(callback);
@@ -786,7 +786,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 return false;
             }
         }
-        for (var j in newItem.values) {
+        for (  j in newItem.values) {
             if (oldItem.values[j] !== newItem.values[j]) {
                 return false;
             }
@@ -813,7 +813,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
 
         if (i < newContext.length) {
             for (var j = i; j < newContext.length; j++) {
-                var newItem = newContext[j];
+                  newItem = newContext[j];
                 var nextController = new newItem.type;
                 for (var k in newItem.values) {
                     nextController[k] = newItem.values[k];
@@ -866,6 +866,6 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         GetNavigationContextAt: GetNavigationContextAt,
         GetNavigationContextBefore: GetNavigationContextBefore,
         NavigateTo: NavigateTo,
-        StartNavigation: StartNavigation,
+        StartNavigation: StartNavigation
     }
 });

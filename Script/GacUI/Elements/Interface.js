@@ -29,6 +29,6 @@ Packages.Define("GacUI.Elements.Interface", ["Class", "GacUI.Types", "Html.Resiz
     ********************************************************************************/
 
     return {
-        IElement: IElement,
+        IElement: IElement
     }
 });

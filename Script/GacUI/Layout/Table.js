@@ -25,6 +25,6 @@ Packages.Define("GacUI.Layout.Table", ["Class", "GacUI.Types", "GacUI.Layout.Bas
 
     return {
         TableLayout: TableLayout,
-        CellLayout: CellLayout,
+        CellLayout: CellLayout
     }
 });

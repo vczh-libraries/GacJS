@@ -18,7 +18,7 @@ Packages.Define("GacUI.Elements.Document", ["Class", "GacUI.Types", "GacUI.Eleme
             this.htmlElement.style.width = "100%";
             this.htmlElement.style.height = "100%";
             this.UpdateStyle();
-        }),
+        })
     });
 
     /********************************************************************************
@@ -26,6 +26,6 @@ Packages.Define("GacUI.Elements.Document", ["Class", "GacUI.Types", "GacUI.Eleme
     ********************************************************************************/
 
     return {
-        DocumentElement: DocumentElement,
+        DocumentElement: DocumentElement
     }
 });

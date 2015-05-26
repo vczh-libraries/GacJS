@@ -11,7 +11,7 @@ Packages.Define("Html.RunAfterWindowLoaded", function () {
     var windowLoaded = false;
     var runAfterWindowLoadedFunctions = [];
 
-    window.addEventListener("load", function (event) {
+    window.addEventListener("load", function () {
         windowLoaded = true;
         for (var i = 0; i < runAfterWindowLoadedFunctions.length; i++) {
             runAfterWindowLoadedFunctions[i]();
