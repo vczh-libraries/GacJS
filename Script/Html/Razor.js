@@ -513,8 +513,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
     ********************************************************************************/
 
     function CompileRazor(razor) {
-        var code = RazorToJs(razor);
-        return eval(code);
+        return eval(RazorToJs(razor));
     }
 
     /********************************************************************************
