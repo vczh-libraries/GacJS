@@ -287,12 +287,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                 }
 
                 if (codeBegin === codeEnd) {
-                    if (stopAtRightBracket) {
-                        PrintText("@()");
-                    }
-                    else {
-                        PrintText("@");
-                    }
+                    throw new Error("Razor syntax error: Incompleted JavaScript expression: \"" + html + "\".");
                 }
                 else {
                     PrintExpr(html.substring(codeBegin, codeEnd));

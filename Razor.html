@@ -14,6 +14,7 @@
             <div class="TabButton" data-url="/statements">Statements</div>
             <div class="TabButton" data-url="/functions">Functions</div>
             <div class="TabButton" data-url="/codes">Codes</div>
+            <div class="TabButton" data-url="/errors">Errors</div>
         </div>
 
         <div class="TabPageContainer">
@@ -241,6 +242,27 @@
                     -->
                 </script>
             </div>
+            <!----------------------------------------------------------------------------------
+            Errors
+            ----------------------------------------------------------------------------------->
+            <div class="TabPage">
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @{
+                            @package RazorTest
+                            @model User
+                        }
+                    -->
+                </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @function func() {
+                            @package RazorTest
+                            @model User
+                        }
+                    -->
+                </script>
+            </div>
         </div>
 
     </div>
@@ -311,14 +333,18 @@
                 for (var j = 0; j < scripts.length; j++) {
                     var script = scripts[j];
                     var comment = script.childNodes[0].nodeValue;
-                    var razorScript = RazorReIndent(ExtractRazorFromComment(script.childNodes[0].nodeValue));
-                    var javaScript = RazorToJs(razorScript);
+
+                    var razorScript = null;
+                    var javaScript = null;
+                    var razorHtml = null;
 
                     var tr = document.createElement("tr");
                     table.appendChild(tr);
                     {
                         var td = document.createElement("td");
                         tr.appendChild(td);
+
+                        razorScript = RazorReIndent(ExtractRazorFromComment(script.childNodes[0].nodeValue));
 
                         var pre = document.createElement("pre");
                         td.appendChild(pre);
@@ -328,34 +354,46 @@
                         var td = document.createElement("td");
                         tr.appendChild(td);
 
-                        var pre = document.createElement("pre");
-                        td.appendChild(pre);
-                        pre.appendChild(document.createTextNode(javaScript));
-                    }
-                    {
-                        var td = document.createElement("td");
-                        tr.appendChild(td);
-
                         try {
-                            var razor = CompileRazor(razorScript);
-                            var razorHtml = null;
-                            switch (script.getAttribute("data-razor-driver")) {
-                                case "User":
-                                    var user = new User();
-                                    user.name = "John Smith";
-                                    user.age = 16;
-                                    user.gender = Gender.Description.Male;
-                                    razorHtml = razor(user);
-                                    break;
-                            }
-                            td.innerHTML = razorHtml.RawHtml;
+                            javaScript = RazorToJs(razorScript);
+
+                            var pre = document.createElement("pre");
+                            td.appendChild(pre);
+                            pre.appendChild(document.createTextNode(javaScript));
                         }
                         catch (ex) {
                             var div = document.createElement("div");
                             div.style.color = "red";
                             div.appendChild(document.createTextNode(ex));
                             td.appendChild(div);
-                            continue;
+                        }
+
+                    }
+                    {
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+
+                        if (javaScript !== null) {
+                            try {
+                                var razor = CompileRazor(razorScript);
+                                var razorHtml = null;
+                                switch (script.getAttribute("data-razor-driver")) {
+                                    case "User":
+                                        var user = new User();
+                                        user.name = "John Smith";
+                                        user.age = 16;
+                                        user.gender = Gender.Description.Male;
+                                        razorHtml = razor(user);
+                                        break;
+                                }
+                                td.innerHTML = razorHtml.RawHtml;
+                            }
+                            catch (ex) {
+                                var div = document.createElement("div");
+                                div.style.color = "red";
+                                div.appendChild(document.createTextNode(ex));
+                                td.appendChild(div);
+                            }
                         }
                     }
                 }
