@@ -123,6 +123,23 @@
                         @model User
 
                         My name is @model.name.<br>
+                        @if (model.gender === Gender.Description.Male) {
+                            @:I am male.<br>
+                        }
+                        else if (model.gender === Gender.Description.Female) {
+                            @:I am female.<br>
+                        }
+                        else {
+                            @:Cannot determine the gender.
+                        }
+                    -->
+                </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package RazorTest
+                        @model User
+
+                        My name is @model.name.<br>
                         @try {
                             switch (model.gender) {
                                 case Gender.Description.Male:
