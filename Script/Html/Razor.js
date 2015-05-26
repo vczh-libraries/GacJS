@@ -274,7 +274,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                 }
 
                 if (codeEnd === -1) {
-                    if (exprCounter === 0 && arrayCounter === 0) {
+                    if (exprCounter === 0 && arrayCounter === 0 && state === InExpr) {
                         codeEnd = html.length;
                     }
                     else {
@@ -413,7 +413,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                     },
                     Function: function (matches) {
                         if (state !== InBody) {
-                            throw new Error("Razor syntax error: code block cannot appear in code block or functions: \"" + line + "\".");
+                            throw new Error("Razor syntax error: functions cannot appear in code block or functions: \"" + line + "\".");
                         }
                         state = InFunction;
 
