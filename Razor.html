@@ -71,12 +71,12 @@
                         @if (true) {
                             var matches = model.name.match(/w+/g);
                             <p>
-                                Full name: @model.name
-                                Initials: @(matches[0][0]).@(matches[1][0]).
+                                Full name: @model.name<br>
+                                Initials: @(matches[0][0]).@(matches[1][0]).<br>
                             </p>
                             var isAdult = model.age >= 18;
                             <p>
-                                I am @(isAdult ? "" : "not ")an adult.
+                                I am @(isAdult ? "" : "not ")an adult.<br>
                             </p>
                         }
                     -->
@@ -86,12 +86,12 @@
                         @package RazorTest
                         @model User
 
-                        My name is @model.name.
+                        My name is @model.name.<br>
                         @if (model.age >= 18) {
-                            @:I am an adult.
+                            @:I am an adult.<br>
                         }
                         else {
-                            @:I am not an adult.
+                            @:I am not an adult.<br>
                         }
                     -->
                 </script>
@@ -104,17 +104,17 @@
                         @try {
                             switch (model.gender) {
                                 case Gender.Description.Male:
-                                    @:I am male.
+                                    @:I am male.<br>
                                     break;
                                 case Gender.Description.Female:
-                                    @:I am female.
+                                    @:I am female.<br>
                                     break;
                                 default:
                                     throw new Error("Cannot determine the gender.");
                             }
                         }
                         catch (ex) {
-                            @:@ex
+                            @:@ex<br>
                         }
                     -->
                 </script>

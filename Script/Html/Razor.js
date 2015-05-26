@@ -33,7 +33,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
 
     var regexOption = /^@(\w+)\s+(\w+)$/;
     var regexCode = /^@\{$/;
-    var regexStatement = /^@(for|while|do|if|switch|try)\s*\(.*\)\s*\{/;
+    var regexStatement = /^@((for|while|if|switch)\s*\(.*\)|(do|try))\s*\{/;
     var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);/;
     var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
     var regexNormalCode = /^[a-zA-Z0-9_$.]$/;
@@ -274,7 +274,17 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper"], function (__injecti
                     codeEnd--;
                 }
 
-                PrintExpr(html.substring(codeBegin, codeEnd));
+                if (codeBegin === codeEnd) {
+                    if (stopAtRightBracket) {
+                        PrintText("@()");
+                    }
+                    else {
+                        PrintText("@");
+                    }
+                }
+                else {
+                    PrintExpr(html.substring(codeBegin, codeEnd));
+                }
                 reading = codeEnd + (stopAtRightBracket ? 1 : 0);
             }
         }
