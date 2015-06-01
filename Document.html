@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="./Doc/TreeView.css" />
     <script src="./Script/Package.js"></script>
     <script src="./Script/Class.js"></script>
+    <script src="./Script/Test.js"></script>
     <script src="./Script/Html/Navigation.js"></script>
     <script src="./Script/Html/Razor.js"></script>
     <script src="./Doc/TreeView.js"></script>
@@ -14,6 +15,23 @@
     <script src="./Doc/Document.js"></script>
 </head>
 <body>
-    Hello, world!
+    <script>
+        eval(Packages.Inject(["Test"]));
+    </script>
+    <!-- Task.js -->
+    <script>
+        TestCase("write a result to a not executed task should success", function () {
+            EmptyCase();
+        })
+    </script> 
+    <script>
+        TestCase("write a result to an executed task should success", function () {
+            EmptyCase();
+        })
+    </script> 
+    <!-- Summary -->
+    <script>
+        SummaryTest();
+    </script>
 </body>
 </html>
