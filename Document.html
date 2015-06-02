@@ -10,7 +10,7 @@
     <script src="./Script/Html/Navigation.js"></script>
     <script src="./Script/Html/Razor.js"></script>
     <script src="./Doc/TreeView.js"></script>
-    <script src="./Doc/Task.js"></script>
+    <script src="./Doc/Delay.js"></script>
     <script src="./Doc/Resource.js"></script>
     <script src="./Doc/Document.js"></script>
 </head>
@@ -20,12 +20,12 @@
     </script>
     <!-- Task.js -->
     <script>
-        TestCase("write a result to a not executed task should success", function () {
+        TestCase("write a result to a not evaluated delay should success", function () {
             EmptyCase();
         })
     </script> 
     <script>
-        TestCase("write a result to an executed task should success", function () {
+        TestCase("write a result to an evaluated delay should success", function () {
             EmptyCase();
         })
     </script> 

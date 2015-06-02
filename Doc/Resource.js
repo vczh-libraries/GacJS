@@ -1,4 +1,4 @@
-Packages.Define("Doc.Resource", ["Class", "Doc.Task"], function (__injection__) {
+Packages.Define("Doc.Resource", ["Class", "Doc.Delay"], function (__injection__) {
     eval(__injection__);
 
     return {
