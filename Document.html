@@ -72,7 +72,7 @@
                 Assert(DelayException.TestType(value));
                 return value.Exception * 4;
             });
-            x.promise.SetResult(100);
+            x.promise.SetException(100);
             Assert(f1.Result === 200);
             Assert(f2.Result === 400);
         })
