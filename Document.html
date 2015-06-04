@@ -21,14 +21,28 @@
     <!-- Task.js -->
     <script>
         TestCase("write a result to a not evaluated delay should success", function () {
-            EmptyCase();
+            eval(Packages.Inject(["Doc.Delay"]));
+
+            var x = CreateDelay();
+            x.promise.SetResult(100);
+            Assert(x.future.GetResult() === 100);
         })
-    </script> 
+    </script>
     <script>
         TestCase("write a result to an evaluated delay should success", function () {
-            EmptyCase();
+            eval(Packages.Inject(["Doc.Delay"]));
+
+            var x = CreateDelay();
+            x.promise.SetResult(100);
+            try {
+                x.promise.SetResult(200);
+                Assert(false);
+            }
+            catch (ex) {
+                Assert(x.future.GetResult() === 100);
+            }
         })
-    </script> 
+    </script>
     <!-- Summary -->
     <script>
         SummaryTest();
