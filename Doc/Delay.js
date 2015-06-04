@@ -72,7 +72,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         Exception: Public.Property({ readonly: true }),
 
         __Constructor: Public(function (exception) {
-            this.exception = ex;
+            this.exception = exception;
         })
     });
 
@@ -109,7 +109,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
                 var delay = new Delay();
                 var promise = new Promise(delay);
                 var future = new Future(delay);
-                delay.DelayExecute(function (value) {
+                this.delay.DelayExecute(function (value) {
                     if (!DelayException.TestType(value)) {
                         try {
                             promise.SetResult(generator(value));
@@ -126,7 +126,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
                 var delay = new Delay();
                 var promise = new Promise(delay);
                 var future = new Future(delay);
-                delay.DelayExecute(function (value) {
+                this.delay.DelayExecute(function (value) {
                     if (DelayException.TestType(value)) {
                         try {
                             promise.SetResult(generator(value.Exception));
@@ -143,7 +143,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
                 var delay = new Delay();
                 var promise = new Promise(delay);
                 var future = new Future(delay);
-                delay.DelayExecute(function (value) {
+                this.delay.DelayExecute(function (value) {
                     try {
                         promise.SetResult(generator(value));
                     }
@@ -167,6 +167,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
     }
 
     return {
+        DelayException: DelayException,
         Promise: Promise,
         Future: Future,
         CreateDelay: CreateDelay,
