@@ -20,16 +20,16 @@
     </script>
     <!-- Task.js -->
     <script>
-        TestCase("write a result to a not evaluated delay should success", function () {
+        TestCase("writing a result to a not evaluated delay should success", function () {
             eval(Packages.Inject(["Doc.Delay"]));
 
             var x = CreateDelay();
             x.promise.SetResult(100);
-            Assert(x.future.GetResult() === 100);
+            Assert(x.future.Result === 100);
         })
     </script>
     <script>
-        TestCase("write a result to an evaluated delay should success", function () {
+        TestCase("writing a result to an evaluated delay should success", function () {
             eval(Packages.Inject(["Doc.Delay"]));
 
             var x = CreateDelay();
@@ -39,8 +39,42 @@
                 Assert(false);
             }
             catch (ex) {
-                Assert(x.future.GetResult() === 100);
+                Assert(x.future.Result === 100);
             }
+        })
+    </script>
+    <script>
+        TestCase("A written succeeded result should be correctly redirected", function () {
+            eval(Packages.Inject(["Doc.Delay"]));
+
+            var x = CreateDelay();
+            var f1 = x.future.SucceededThen(function (value) {
+                return value * 2;
+            });
+            var f2 = x.future.Then(function (value) {
+                Assert(!DelayException.TestType(value));
+                return value * 4;
+            });
+            x.promise.SetResult(100);
+            Assert(f1.Result === 200);
+            Assert(f2.Result === 400);
+        })
+    </script>
+    <script>
+        TestCase("A written failed result should be correctly redirected", function () {
+            eval(Packages.Inject(["Doc.Delay"]));
+
+            var x = CreateDelay();
+            var f1 = x.future.FailedThen(function (value) {
+                return value * 2;
+            });
+            var f2 = x.future.Then(function (value) {
+                Assert(DelayException.TestType(value));
+                return value.Exception * 4;
+            });
+            x.promise.SetResult(100);
+            Assert(f1.Result === 200);
+            Assert(f2.Result === 400);
         })
     </script>
     <!-- Summary -->

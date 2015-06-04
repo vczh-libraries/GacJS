@@ -92,48 +92,68 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         }),
     });
 
-    var Future = Class("<Doc.Delay>::Future", {
-        delay: Protected(null),
+    var Future = Class("<Doc.Delay>::Future", function () {
+        return {
+            delay: Protected(null),
 
-        __Constructor: Public.StrongTyped(__Void, [Delay], function (delay) {
-            this.delay = delay;
-        }),
+            __Constructor: Public.StrongTyped(__Void, [Delay], function (delay) {
+                this.delay = delay;
+            }),
 
-        GetResult: Public(function () {
-            return this.delay.Result;
-        }),
-        Result: Public.Property({ readonly: true }),
+            GetResult: Public(function () {
+                return this.delay.Result;
+            }),
+            Result: Public.Property({ readonly: true }),
 
-        SucceededThen: Public.StrongTyped(Future, [__Function], function (generator) {
-            var delay = new Delay();
-            var future = new Future(delay);
-            delay.DelayExecute(function (value) {
-                if (!DelayException.TestType(value)) {
-                    delay.Result = generator(value);
-                }
-            });
-            return future;
-        }),
+            SucceededThen: Public.StrongTyped(Future, [__Function], function (generator) {
+                var delay = new Delay();
+                var promise = new Promise(delay);
+                var future = new Future(delay);
+                delay.DelayExecute(function (value) {
+                    if (!DelayException.TestType(value)) {
+                        try {
+                            promise.SetResult(generator(value));
+                        }
+                        catch (ex) {
+                            promise.SetException(ex);
+                        }
+                    }
+                });
+                return future;
+            }),
 
-        FailedThen: Public.StrongTyped(Future, [__Function], function (generator) {
-            var delay = new Delay();
-            var future = new Future(delay);
-            delay.DelayExecute(function (value) {
-                if (DelayException.TestType(value)) {
-                    delay.Result = generator(value.Exception);
-                }
-            });
-            return future;
-        }),
+            FailedThen: Public.StrongTyped(Future, [__Function], function (generator) {
+                var delay = new Delay();
+                var promise = new Promise(delay);
+                var future = new Future(delay);
+                delay.DelayExecute(function (value) {
+                    if (DelayException.TestType(value)) {
+                        try {
+                            promise.SetResult(generator(value.Exception));
+                        }
+                        catch (ex) {
+                            promise.SetException(ex);
+                        }
+                    }
+                });
+                return future;
+            }),
 
-        Then: Public.StrongTyped(Future, [__Function], function (generator) {
-            var delay = new Delay();
-            var future = new Future(delay);
-            delay.DelayExecute(function (value) {
-                delay.Result = generator(value.Exception);
-            });
-            return future;
-        }),
+            Then: Public.StrongTyped(Future, [__Function], function (generator) {
+                var delay = new Delay();
+                var promise = new Promise(delay);
+                var future = new Future(delay);
+                delay.DelayExecute(function (value) {
+                    try {
+                        promise.SetResult(generator(value));
+                    }
+                    catch (ex) {
+                        promise.SetException(ex);
+                    }
+                });
+                return future;
+            }),
+        }
     });
 
     function CreateDelay() {
