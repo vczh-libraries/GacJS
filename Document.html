@@ -77,6 +77,38 @@
             Assert(f2.Result === 400);
         })
     </script>
+    <script>
+        TestCase("Exception should be converted to failed result (1)", function () {
+            eval(Packages.Inject(["Doc.Delay"]));
+
+            var x = CreateDelay();
+            var f1 = x.future.SucceededThen(function (value) {
+                throw value * 2;
+            });
+            var f2 = x.future.Then(function (value) {
+                throw value * 4;
+            });
+            x.promise.SetResult(100);
+            Assert(f1.Result.Exception === 200);
+            Assert(f2.Result.Exception === 400);
+        })
+    </script>
+    <script>
+        TestCase("Exception should be converted to failed result (2)", function () {
+            eval(Packages.Inject(["Doc.Delay"]));
+
+            var x = CreateDelay();
+            var f1 = x.future.FailedThen(function (value) {
+                throw value * 2;
+            });
+            var f2 = x.future.Then(function (value) {
+                throw value.Exception * 4;
+            });
+            x.promise.SetException(100);
+            Assert(f1.Result.Exception === 200);
+            Assert(f2.Result.Exception === 400);
+        })
+    </script>
     <!-- Summary -->
     <script>
         SummaryTest();
