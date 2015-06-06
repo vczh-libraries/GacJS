@@ -12,6 +12,7 @@
     <script src="./Doc/TreeView.js"></script>
     <script src="./Doc/Delay.js"></script>
     <script src="./Doc/Resource.js"></script>
+    <script src="./Doc/Wildcard.js"></script>
     <script src="./Doc/Document.js"></script>
 </head>
 <body>
@@ -162,6 +163,17 @@
                     Assert(f.Result.result === i);
                 }
             }
+        })
+    </script>
+    <!-- Wildcard -->
+    <script>
+        TestCase("wildcard", function () {
+            eval(Packages.Inject(["Doc.Wildcard"]));
+
+            Assert(WildcardToRegex("*"), toString() === ".*");
+            Assert(WildcardToRegex("?"), toString() === ".");
+            Assert(WildcardToRegex("*.txt"), toString() === ".*\\.txt");
+            Assert(WildcardToRegex("ns(+*+)"), toString() === "ns\(\+.*\+\)");
         })
     </script>
     <!-- Summary -->
