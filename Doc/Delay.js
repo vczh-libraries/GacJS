@@ -26,7 +26,7 @@ API:
 Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
     eval(__injection__);
 
-    var Delay = Class("<Doc.Delay>::Delay", {
+    var Delay = Class(PQN("Delay"), {
         result: Protected(null),
         callbacks: Protected(null),
 
@@ -71,7 +71,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         })
     });
 
-    var DelayException = Class("<Doc.Delay>::DelayException", {
+    var DelayException = Class(PQN("DelayException"), {
         exception: Protected(null),
 
         GetException: Public(function () {
@@ -84,7 +84,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         })
     });
 
-    var Promise = Class("<Doc.Delay>::Promise", {
+    var Promise = Class(PQN("Promise"), {
         delay: Protected(null),
 
         __Constructor: Public.StrongTyped(__Void, [Delay], function (delay) {
@@ -100,7 +100,7 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         }),
     });
 
-    var Future = Class("<Doc.Delay>::Future", function () {
+    var Future = Class(PQN("Future"), function () {
         return {
             delay: Protected(null),
 

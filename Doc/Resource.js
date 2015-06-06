@@ -13,7 +13,7 @@ API:
 Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function (__injection__) {
     eval(__injection__);
 
-    var IResourceDeserializer = Class("<Doc.Resource>::IResourceDeserializer", {
+    var IResourceDeserializer = Class(PQN("IResourceDeserializer"), {
         GetName: Public.Abstract(),
         Name: Public.Property({ readonly: true }),
 

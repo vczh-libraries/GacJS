@@ -138,7 +138,7 @@ Object.defineProperty(Packages, "Define", {
             var pkg = {};
             Packages.Packages[fullName] = pkg;
 
-            var obj = constructor(Packages.Inject(dependencies));
+            var obj = constructor(Packages.Inject(dependencies) + "function PQN(name){ return \"<" + fullName + ">\" + name; }");
             for (var i in obj) {
                 if (pkg.hasOwnProperty(i)) {
                     throw new Error("Package \"" + fullName + "\" has already exported symbol \"" + i + "\".");

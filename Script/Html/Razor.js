@@ -696,15 +696,11 @@ Packages.Define("Html.CompileRazor", function () {
 Packages.Define("Html.RazorHelper", ["Class"], function (__injection__) {
     eval(__injection__);
 
-    function FQN(name) {
-        return "<Html.RazorHelper>::" + name;
-    }
-
     /********************************************************************************
     RazorHtml
     ********************************************************************************/
 
-    var RazorHtml = Class(FQN("RazorHtml"), {
+    var RazorHtml = Class(PQN("RazorHtml"), {
         rawHtml: Protected(null),
 
         GetRawHtml: Public.StrongTyped(__String, [], function () {
@@ -723,7 +719,7 @@ Packages.Define("Html.RazorHelper", ["Class"], function (__injection__) {
 
     var razorPrinterDiv = document.createElement("div");
 
-    var RazorPrinter = Class(FQN("RazorPrinter"), {
+    var RazorPrinter = Class(PQN("RazorPrinter"), {
         text: Protected(""),
 
         GetText: Public.StrongTyped(__String, [], function () {

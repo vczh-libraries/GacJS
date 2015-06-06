@@ -72,15 +72,11 @@ API:
 Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     eval(__injection__);
 
-    function FQN(name) {
-        return "<Html.Navigation>::" + name;
-    }
-
     /********************************************************************************
     INativationController
     ********************************************************************************/
 
-    var INativationController = Class(FQN("INavigationController"), function () {
+    var INativationController = Class(PQN("INavigationController"), function () {
         return {
             subController: Private(null),
 
@@ -114,7 +110,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     PatternHandler
     ********************************************************************************/
 
-    var IPatternHandlerCallback = Class(FQN("IPatternHandlerCallback"), {
+    var IPatternHandlerCallback = Class(PQN("IPatternHandlerCallback"), {
         storage: Protected(null),
 
         Set: Public.Abstract(),
@@ -129,7 +125,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         }),
     });
 
-    var PatternHandler = Class(FQN("PatternHandler"), function () {
+    var PatternHandler = Class(PQN("PatternHandler"), function () {
         return {
             key: Protected(null),
             arguments: Protected(null),
@@ -270,18 +266,18 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     Configuration
     ********************************************************************************/
 
-    var PathFragmentType = Enum(FQN("PathFragmentType"), {
+    var PathFragmentType = Enum(PQN("PathFragmentType"), {
         Constant: 0,
         Argument: 1,
         Array: 2,
     });
 
-    var PathFragment = Struct(FQN("PathFragment"), {
+    var PathFragment = Struct(PQN("PathFragment"), {
         type: PathFragmentType.Description.Constant,
         content: "",
     });
 
-    var PathConfig = Class(FQN("PathConfig"), {
+    var PathConfig = Class(PQN("PathConfig"), {
         parentPathConfig: Public(null),
         controllerType: Public(null),
         defaultValues: Public(null),
@@ -606,7 +602,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     ParseNavigationPath
     ********************************************************************************/
 
-    var ParseCallback = Class(FQN("ParseCallback"), IPatternHandlerCallback, {
+    var ParseCallback = Class(PQN("ParseCallback"), IPatternHandlerCallback, {
         result: Protected(null),
 
         GetLast: Protected(function () {
