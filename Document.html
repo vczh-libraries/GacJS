@@ -170,10 +170,10 @@
         TestCase("wildcard", function () {
             eval(Packages.Inject(["Doc.Wildcard"]));
 
-            Assert(WildcardToRegex("*"), toString() === ".*");
-            Assert(WildcardToRegex("?"), toString() === ".");
-            Assert(WildcardToRegex("*.txt"), toString() === ".*\\.txt");
-            Assert(WildcardToRegex("ns(+*+)"), toString() === "ns\(\+.*\+\)");
+            Assert(WildcardToRegExp("*"), toString() === ".*");
+            Assert(WildcardToRegExp("?"), toString() === ".");
+            Assert(WildcardToRegExp("*.txt"), toString() === ".*\\.txt");
+            Assert(WildcardToRegExp("ns(+*+)"), toString() === "ns\(\+.*\+\)");
         })
     </script>
     <!-- Summary -->
