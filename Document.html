@@ -19,7 +19,7 @@
     <script>
         eval(Packages.Inject(["Test"]));
     </script>
-    <!-- Task.js -->
+    <!-- Delay.js -->
     <script>
         TestCase("writing a result to a not evaluated delay should success", function () {
             eval(Packages.Inject(["Doc.Delay"]));
@@ -165,7 +165,7 @@
             }
         })
     </script>
-    <!-- Wildcard -->
+    <!-- Wildcard.js -->
     <script>
         TestCase("wildcard", function () {
             eval(Packages.Inject(["Doc.Wildcard"]));
@@ -176,6 +176,7 @@
             Assert(WildcardToRegExp("ns(+*+)"), toString() === "ns\(\+.*\+\)");
         })
     </script>
+    <!-- Resource.js -->
     <!-- Summary -->
     <script>
         SummaryTest();
