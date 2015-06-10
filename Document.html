@@ -177,6 +177,32 @@
         })
     </script>
     <!-- Resource.js -->
+    <script>
+        TestCase("querying for a text resource should succeed", function () {
+            eval(Packages.Inject(["Doc.Resource"]));
+
+            var result = GetResourceAsync("./Test/a.txt", false).Result;
+            Assert(result["Text"] === "Running GacUI in Browsers!");
+        })
+    </script>
+    <script>
+        TestCase("querying for a json resource should succeed", function () {
+            eval(Packages.Inject(["Doc.Resource"]));
+
+            var result = GetResourceAsync("./Test/a.json", false).Result;
+            Assert(result["Text"] === "{title:\"Running GacUI in Browsers!\"}");
+            Assert(result["Json"].title === "Running GacUI in Browsers!");
+        })
+    </script>
+    <script>
+        TestCase("querying for an xml resource should succeed", function () {
+            eval(Packages.Inject(["Doc.Resource"]));
+
+            var result = GetResourceAsync("./Test/a.xml", false).Result;
+            Assert(result["Text"] === "<document><title>Running GacUI in Browsers!</title></document>");
+            Assert(result["Text"].getElementByTagName("document")[0].getElementByTagName("text")[0].text === "Running GacUI in Browsers!");
+        })
+    </script>
     <!-- Summary -->
     <script>
         SummaryTest();

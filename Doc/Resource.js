@@ -9,7 +9,7 @@ API:
     
     void                                RegisterDeserializer(IResourceDeserializer deserializer);
     void                                RegisterResource(string fileNamePattern, string deserializerName);
-    Future<Dictionary<string, object>>  GetResourceAsync(path);
+    Future<Dictionary<string, object>>  GetResourceAsync(string path, bool async);
 */
 Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function (__injection__) {
     eval(__injection__);
@@ -151,7 +151,10 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
         }
     }
 
-    function GetResourceAsync(path) {
+    function GetResourceAsync(path, async) {
+        if (async === undefined) {
+            async = true;
+        }
         var delay = CreateDelay();
 
         var resource = staticResources[path];
@@ -172,7 +175,7 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
                 }
             }
 
-            xhr.open("GET", path, true);
+            xhr.open("GET", path, async);
             xhr.send(null);
         }
         else {
