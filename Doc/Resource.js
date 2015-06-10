@@ -140,12 +140,13 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
     function DeserializeResource(path, text, result) {
         var index = path.lastIndexOf("/");
         if (index !== -1) {
-            path = path.substring(index, path.length);
+            path = path.substring(index + 1, path.length);
         }
 
         for (var i = 0; i < resourcePatterns.length; i++) {
             var pattern = resourcePatterns[i];
-            if (pattern.pattern.exec(path) === path) {
+            var match = pattern.pattern.exec(path);
+            if (match !== null && match[0] === path) {
                 DeserializeResourceByName(pattern.name, text, result);
             }
         }

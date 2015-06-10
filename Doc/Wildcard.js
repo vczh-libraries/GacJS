@@ -19,7 +19,7 @@ Packages.Define("Doc.Wildcard", function (__injection__) {
                 case "(": case ")":
                 case "[": case "]":
                 case "{": case "}":
-                case "*": case "+": case "?":
+                case "*": case "+": case "?": case ".":
                 case "$": case "^":
                 case "\\": case "/":
                     regex += "\\" + c;
