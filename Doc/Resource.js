@@ -36,12 +36,12 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
     Text
     ********************************************************************************/
 
-    var TextResourceDeserializer = Class(PQN("TextResourceDeserializer"), {
+    var TextResourceDeserializer = Class(PQN("TextResourceDeserializer"), IResourceDeserializer, {
         GetName: Public.Override(function () {
             return "Text";
         }),
 
-        Deserializer: Public.Override(function (resource) {
+        Deserialize: Public.Override(function (resource) {
             return resource;
         }),
     });
@@ -52,7 +52,7 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
 
     var domParser = new DOMParser();
 
-    var XmlResourceDeserializer = Class(PQN("XmlResourceDeserializer"), {
+    var XmlResourceDeserializer = Class(PQN("XmlResourceDeserializer"), IResourceDeserializer, {
         GetName: Public.Override(function () {
             return "Xml";
         }),
@@ -61,7 +61,7 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
             return "Text";
         }),
 
-        Deserializer: Public.Override(function (resource) {
+        Deserialize: Public.Override(function (resource) {
             return domParser.parseFromString(resource, "text/xml");
         }),
     });
@@ -70,7 +70,7 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
     Json
     ********************************************************************************/
 
-    var JsonResourceDeserializer = Class(PQN("JsonResourceDeserializer"), {
+    var JsonResourceDeserializer = Class(PQN("JsonResourceDeserializer"), IResourceDeserializer, {
         GetName: Public.Override(function () {
             return "Json";
         }),
@@ -79,7 +79,7 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
             return "Text";
         }),
 
-        Deserializer: Public.Override(function (resource) {
+        Deserialize: Public.Override(function (resource) {
             return JSON.parse(resource);
         }),
     });
@@ -99,7 +99,7 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
         }
 
         var prior = deserializer.PriorDeserializerName;
-        if (prior !== null && !deserializer.hasOwnProperty(prior)) {
+        if (prior !== null && !deserializers.hasOwnProperty(prior)) {
             throw new Error("Resource deserializer \"" + prior + "\" does not exist.");
         }
 
@@ -124,6 +124,9 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
     RegisterDeserializer(new TextResourceDeserializer());
     RegisterDeserializer(new XmlResourceDeserializer());
     RegisterDeserializer(new JsonResourceDeserializer());
+    RegisterResource(WildcardToRegExp("*.txt"), "Text");
+    RegisterResource(WildcardToRegExp("*.xml"), "Xml");
+    RegisterResource(WildcardToRegExp("*.json"), "Json");
 
     return {
         IResourceDeserializer: IResourceDeserializer,
