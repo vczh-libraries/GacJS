@@ -26,6 +26,10 @@ API:
 Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
     eval(__injection__);
 
+    /********************************************************************************
+    Delay
+    ********************************************************************************/
+
     var Delay = Class(PQN("Delay"), {
         result: Protected(null),
         callbacks: Protected(null),
@@ -71,6 +75,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         })
     });
 
+    /********************************************************************************
+    DelayException
+    ********************************************************************************/
+
     var DelayException = Class(PQN("DelayException"), {
         exception: Protected(null),
 
@@ -83,6 +91,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
             this.exception = exception;
         })
     });
+
+    /********************************************************************************
+    Promise
+    ********************************************************************************/
 
     var Promise = Class(PQN("Promise"), {
         delay: Protected(null),
@@ -99,6 +111,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
             this.delay.Result = new DelayException(value);
         }),
     });
+
+    /********************************************************************************
+    Future
+    ********************************************************************************/
 
     var Future = Class(PQN("Future"), function () {
         return {
@@ -168,6 +184,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         }
     });
 
+    /********************************************************************************
+    CreateDelay
+    ********************************************************************************/
+
     function CreateDelay() {
         var delay = new Delay();
         var promise = new Promise(delay);
@@ -177,6 +197,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
             future: future,
         }
     }
+
+    /********************************************************************************
+    WaitAll
+    ********************************************************************************/
 
     function WaitAll(futures) {
         var count = futures.length;
@@ -211,6 +235,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
         return delay.future;
     }
 
+    /********************************************************************************
+    WaitAny
+    ********************************************************************************/
+
     function WaitAny(futures) {
         var count = futures.length;
         var delay = CreateDelay();
@@ -239,6 +267,10 @@ Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
 
         return delay.future;
     }
+
+    /********************************************************************************
+    Package
+    ********************************************************************************/
 
     return {
         DelayException: DelayException,
