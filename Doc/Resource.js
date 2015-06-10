@@ -113,8 +113,73 @@ Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function
         resourcePatterns.push({ pattern: fileNamePattern, name: deserializerName });
     }
 
-    function GetResourceAsync(path) {
+    function DeserializeResourceByName(deserializerName, text, result) {
+        var resource = result[deserializerName];
+        if (resource === undefined) {
+            try {
+                var deserializer = deserializers[deserializerName];
+                if (deserializer.PriorDeserializerName === null) {
+                    resource = deserializer.Deserialize(text);
+                }
+                else {
+                    var priorResource = DeserializeResourceByName(deserializer.PriorDeserializerName, text, result);
+                    if (priorResource === null) {
+                        throw Error("Unable to deserialize the resource as \"" + deserializerName + "\" because the deserialization of \"" + deserializer.PriorDeserializerName + "\" failed.");
+                    }
+                    resource = deserializer.Deserialize(priorResource);
+                }
+            }
+            catch (ex) {
+                resource = ex;
+            }
+            result[deserializerName] = resource;
+        }
+        return resource instanceof Error ? null : resource;
+    }
 
+    function DeserializeResource(path, text, result) {
+        var index = path.lastIndexOf("/");
+        if (index !== -1) {
+            path = path.substring(index, path.length);
+        }
+
+        for (var i = 0; i < resourcePatterns.length; i++) {
+            var pattern = resourcePatterns[i];
+            if (pattern.pattern.exec(path) === path) {
+                DeserializeResourceByName(pattern.name, text, result);
+            }
+        }
+    }
+
+    function GetResourceAsync(path) {
+        var delay = CreateDelay();
+
+        var resource = staticResources[path];
+        if (resource === undefined) {
+            var xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var result = {};
+                        DeserializeResource(path, xhr.responseText, result);
+                        staticResources[path] = result;
+                        delay.promise.SetResult(result);
+                    }
+                    else {
+                        delay.promise.SetException();
+                    }
+                }
+            }
+
+            xhr.open("GET", path, true);
+            xhr.send(null);
+        }
+        else {
+            delay.promise.SetResult(resource);
+        }
+
+        return delay.future;
     }
 
     /********************************************************************************
