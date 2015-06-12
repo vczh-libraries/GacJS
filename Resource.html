@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resource</title>
+    <link rel="stylesheet" type="text/css" href="./TestPage.css" />
+    <script src="./LoadPackages.js"></script>
+    <script src="./TestPage.js"></script>
+</head>
+<body>
+    <script>
+        TestCase("querying for a text resource should succeed", function () {
+            var result = GetResourceAsync("./Test/a.txt", false).Result;
+            Assert(result["Text"] === "Running GacUI in Browsers!");
+        })
+    </script>
+    <script>
+        TestCase("querying for a json resource should succeed", function () {
+            var result = GetResourceAsync("./Test/a.json", false).Result;
+            Assert(result["Text"] === "{\"title\":\"Running GacUI in Browsers!\"}");
+            Assert(result["Json"].title === "Running GacUI in Browsers!");
+        })
+    </script>
+    <script>
+        TestCase("querying for an xml resource should succeed", function () {
+            var result = GetResourceAsync("./Test/a.xml", false).Result;
+            Assert(result["Text"] === "<document><title>Running GacUI in Browsers!</title></document>");
+            Assert(result["Xml"].getElementsByTagName("document")[0].getElementsByTagName("title")[0].textContent === "Running GacUI in Browsers!");
+        })
+    </script>
+    <script>
+        SummaryTest();
+    </script>
+</body>
+</html>

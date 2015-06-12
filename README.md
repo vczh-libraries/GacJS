@@ -34,6 +34,10 @@ Running test pages is very simple, just follow the steps:
    * **[ResizeEvent.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/ResizeEvent.js)** : ConnectionToBodyChanged and Resize custom event that works on every elements.
    * **[Navigation.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Navigation.js)** : A pure front-end navigation system driven by hash in the url. Test page: **[Navigation.html](https://github.com/vczh-libraries/GacJS/blob/master/Navigation.html)**.
    * **[Razor.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Html/Razor.js)** : Razor template engine driven by JavaScript. Test page: **[Razor.html](https://github.com/vczh-libraries/GacJS/blob/master/Razor.html)**.
+* **[IO/](https://github.com/vczh-libraries/GacJS/tree/master/Script/IO)** : IO related packages.
+   * **[Delay.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/IO/Delay.js)** : A delay execution framework. Test page: **[Navigation.html](https://github.com/vczh-libraries/GacJS/blob/master/Delay.html)**.
+   * **[Wildcard.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/IO/Wildcard.js)** : Convert wildcards to regular expressions. Test page: **[Navigation.html](https://github.com/vczh-libraries/GacJS/blob/master/Wildcard.html)**.
+   * **[Resource.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/IO/Resource.js)** : A delay static resource loader. Test page: **[Navigation.html](https://github.com/vczh-libraries/GacJS/blob/master/Resource.html)**.
 * **[GacUI/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI)** : GacUI in Browsers!.
    * **[Types.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/GacUI/Types.js)** : Basic types that used in GacJS.
    * **[Elements/](https://github.com/vczh-libraries/GacJS/tree/master/Script/GacUI/Elements)** : GacUI Predefined Graphic Elements. Test page: **[Element.html](https://github.com/vczh-libraries/GacJS/blob/master/Element.html)**.

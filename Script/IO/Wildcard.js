@@ -2,7 +2,7 @@
 API:
     RegExp WildcardToRegExp(string wildcard);
 */
-Packages.Define("Doc.Wildcard", function (__injection__) {
+Packages.Define("IO.Wildcard", function (__injection__) {
     eval(__injection__);
 
     function WildcardToRegExp(wildcard) {

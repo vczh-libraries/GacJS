@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wildcard</title>
+    <link rel="stylesheet" type="text/css" href="./TestPage.css" />
+    <script src="./LoadPackages.js"></script>
+    <script src="./TestPage.js"></script>
+</head>
+<body>
+    <script>
+        TestCase("wildcard", function () {
+            Assert(WildcardToRegExp("*"), toString() === ".*");
+            Assert(WildcardToRegExp("?"), toString() === ".");
+            Assert(WildcardToRegExp("*.txt"), toString() === ".*\\.txt");
+            Assert(WildcardToRegExp("ns(+*+)"), toString() === "ns\(\+.*\+\)");
+        })
+    </script>
+    <script>
+        SummaryTest();
+    </script>
+</body>
+</html>

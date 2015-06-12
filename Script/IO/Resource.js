@@ -11,7 +11,7 @@ API:
     void                                RegisterResource(string fileNamePattern, string deserializerName);
     Future<Dictionary<string, object>>  GetResourceAsync(string path, bool async);
 */
-Packages.Define("Doc.Resource", ["Class", "Doc.Delay", "Doc.Wildcard"], function (__injection__) {
+Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************

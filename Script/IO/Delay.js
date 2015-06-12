@@ -23,7 +23,7 @@ API:
     Future<object[]> WaitAll(Future[]);
     Future<{index:number, result:object}> WaitAny(Future[]);
 */
-Packages.Define("Doc.Delay", ["Class"], function (__injection__) {
+Packages.Define("IO.Delay", ["Class"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
