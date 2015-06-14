@@ -165,57 +165,53 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
     }
 
     function GetResourceRetryOnceAsync(path, async) {
-        if (async === undefined) {
-            async = true;
-        }
-
         var delay = CreateDelay();
-        var resource = staticResources[path];
-        if (resource === undefined) {
-            var xhr = new XMLHttpRequest();
+        var xhr = new XMLHttpRequest();
 
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200) {
-                        var result = {};
-                        DeserializeResource(path, xhr.responseText, result);
-                        staticResources[path] = result;
-                        delay.promise.SetResult(result);
-                    }
-                    else {
-                        delay.promise.SetException();
-                    }
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    var result = {};
+                    DeserializeResource(path, xhr.responseText, result);
+                    delay.promise.SetResult(result);
+                }
+                else {
+                    delay.promise.SetException();
                 }
             }
-
-            xhr.open("GET", path, async);
-            xhr.send(null);
-        }
-        else {
-            delay.promise.SetResult(resource);
         }
 
+        xhr.open("GET", path, async);
+        xhr.send(null);
         return delay.future;
     }
 
     function GetResourceAsync(path, async, maxRetryCount) {
+        if (async === undefined) {
+            async = true;
+        }
         if (maxRetryCount === undefined) {
             maxRetryCount = 3;
         }
 
-        var counter = 0;
+        var future = staticResources[path];
+        if (future === undefined) {
+            var counter = 0;
 
-        function generator() {
-            return GetResourceRetryOnceAsync(path, async);
+            function generator() {
+                return GetResourceRetryOnceAsync(path, async);
+            }
+
+            function continueRepeating(value) {
+                return DelayException.TestType(value) || ++counter === maxRetryCount;
+            }
+
+            future = RepeatFuture(generator, continueRepeating).ContinueWith(function (value) {
+                return value[value.length - 1];
+            });
+            staticResources[path] = future;
         }
-
-        function continueRepeating(value) {
-            return DelayException.TestType(value) || ++counter === maxRetryCount;
-        }
-
-        return RepeatFuture(generator, continueRepeating).ContinueWith(function (value) {
-            return value[value.length - 1];
-        });
+        return future;
     }
 
     /********************************************************************************
