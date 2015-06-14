@@ -9,7 +9,7 @@ API:
     
     void                                RegisterDeserializer(IResourceDeserializer deserializer);
     void                                RegisterResource(string fileNamePattern, string deserializerName);
-    Future<Dictionary<string, object>>  GetResourceAsync(string path, bool async);
+    Future<Dictionary<string, object>>  GetResourceAsync(string path, bool async, int maxRetryCount);
 */
 Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (__injection__) {
     eval(__injection__);
@@ -92,6 +92,10 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
     resourcePatterns = [];
     staticResources = {};
 
+    /********************************************************************************
+    RegisterDeserializer
+    ********************************************************************************/
+
     function RegisterDeserializer(deserializer) {
         IResourceDeserializer.RequireType(deserializer);
         if (deserializers.hasOwnProperty(deserializer.Name)) {
@@ -106,12 +110,20 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
         deserializers[deserializer.Name] = deserializer;
     }
 
+    /********************************************************************************
+    RegisterResource
+    ********************************************************************************/
+
     function RegisterResource(fileNamePattern, deserializerName) {
         if (!deserializers.hasOwnProperty(deserializerName)) {
             throw new Error("Resource deserializer \"" + deserializerName + "\" does not exist.");
         }
         resourcePatterns.push({ pattern: fileNamePattern, name: deserializerName });
     }
+
+    /********************************************************************************
+    GetResourceAsync
+    ********************************************************************************/
 
     function DeserializeResourceByName(deserializerName, text, result) {
         var resource = result[deserializerName];
@@ -152,12 +164,12 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
         }
     }
 
-    function GetResourceAsync(path, async) {
+    function GetResourceRetryOnceAsync(path, async) {
         if (async === undefined) {
             async = true;
         }
-        var delay = CreateDelay();
 
+        var delay = CreateDelay();
         var resource = staticResources[path];
         if (resource === undefined) {
             var xhr = new XMLHttpRequest();
@@ -184,6 +196,26 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
         }
 
         return delay.future;
+    }
+
+    function GetResourceAsync(path, async, maxRetryCount) {
+        if (maxRetryCount === undefined) {
+            maxRetryCount = 3;
+        }
+
+        var counter = 0;
+
+        function generator() {
+            return GetResourceRetryOnceAsync(path, async);
+        }
+
+        function continueRepeating(value) {
+            return DelayException.TestType(value) || ++counter === maxRetryCount;
+        }
+
+        return RepeatFuture(generator, continueRepeating).ContinueWith(function (value) {
+            return value[value.length - 1];
+        });
     }
 
     /********************************************************************************

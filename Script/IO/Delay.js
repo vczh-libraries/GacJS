@@ -5,6 +5,8 @@ API:
         object Exception { get; }
     }
 
+    type CombinedValue = DelayException | object | Future;
+
     class Promise
     {
         void SetResult(object value);
@@ -14,14 +16,18 @@ API:
     class Future
     {
         object Result { get; }
-        Future SucceededThen(function generator);
-        Future FailedThen(function generator);
-        Future Then(function generator);
+        Future SucceededThen(delegate CombinedValue (object));
+        Future FailedThen(delegate CombinedValue (object));
+        Future Then(delegate CombinedValue (object | DelayException));
+        Future ContinueWith(delegate CombinedValue (object));
     }
 
-    {promise:Promise, future:Future} CreateDelay();
-    Future<object[]> WaitAll(Future[]);
-    Future<{index:number, result:object}> WaitAny(Future[]);
+    void                                    PassResultToPromise((object | DelayException | Future), Promise);
+    {promise:Promise, future:Future}        CreateDelay();
+    Future                                  CreateEvaluatedFuture(object value);
+    Future<object[]>                        WaitAll(Future[]);
+    Future<{index:number, result:object}>   WaitAny(Future[]);
+    Future                                  RepeatFuture(delegate Future (), delegate bool continueRepeating(object | DelayException));
 */
 Packages.Define("IO.Delay", ["Class"], function (__injection__) {
     eval(__injection__);
@@ -116,6 +122,20 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
     Future
     ********************************************************************************/
 
+    function PassResultToPromise(result, promise) {
+        if (Future.TestType(result)) {
+            result.Then(function (value) {
+                PassResultToPromise(value, promise);
+            });
+        }
+        else if (DelayException.TestType(result)) {
+            promise.SetException(result.Exception);
+        }
+        else {
+            promise.SetResult(result);
+        }
+    }
+
     var Future = Class(PQN("Future"), function () {
         return {
             delay: Protected(null),
@@ -140,7 +160,7 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
                 this.delay.DelayExecute(function (value) {
                     if (!DelayException.TestType(value)) {
                         try {
-                            promise.SetResult(generator(value));
+                            PassResultToPromise(generator(value), promise);
                         }
                         catch (ex) {
                             promise.SetException(ex);
@@ -157,7 +177,7 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
                 this.delay.DelayExecute(function (value) {
                     if (DelayException.TestType(value)) {
                         try {
-                            promise.SetResult(generator(value.Exception));
+                            PassResultToPromise(generator(value.Exception), promise);
                         }
                         catch (ex) {
                             promise.SetException(ex);
@@ -173,7 +193,25 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
                 var future = new Future(delay);
                 this.delay.DelayExecute(function (value) {
                     try {
-                        promise.SetResult(generator(value));
+                        PassResultToPromise(generator(value), promise);
+                    }
+                    catch (ex) {
+                        promise.SetException(ex);
+                    }
+                });
+                return future;
+            }),
+
+            ContinueWith: Public.StrongTyped(Future, [__Function], function (generator) {
+                var delay = new Delay();
+                var promise = new Promise(delay);
+                var future = new Future(delay);
+                this.delay.DelayExecute(function (value) {
+                    try {
+                        if (DelayException.TestType(value)) {
+                            throw value.Exception;
+                        }
+                        PassResultToPromise(generator(value), promise);
                     }
                     catch (ex) {
                         promise.SetException(ex);
@@ -185,7 +223,7 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
     });
 
     /********************************************************************************
-    CreateDelay
+    CreateDelay / CreateEvaluatedFuture
     ********************************************************************************/
 
     function CreateDelay() {
@@ -196,6 +234,12 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
             promise: promise,
             future: future,
         }
+    }
+
+    function CreateEvaluatedFuture(value) {
+        var delay = CreateDelay();
+        PassResultToPromise(value, delay.promise);
+        return delay.future;
     }
 
     /********************************************************************************
@@ -269,15 +313,47 @@ Packages.Define("IO.Delay", ["Class"], function (__injection__) {
     }
 
     /********************************************************************************
+    RepeatFuture
+    ********************************************************************************/
+
+    function RepeatFutureBody(results, delay, generator, continueRepeating) {
+        var future = generator();
+        future.Then(function (value) {
+            results.push(value);
+            try {
+                if (continueRepeating(value)) {
+                    RepeatFutureBody(results, delay, generator, continueRepeating);
+                }
+                else {
+                    delay.promise.SetResult(results);
+                }
+            }
+            catch (ex) {
+                delay.promise.SetException(ex);
+            }
+        })
+    }
+
+    function RepeatFuture(generator, continueRepeating) {
+        var results = [];
+        var delay = CreateDelay();
+        RepeatFutureBody(results, delay, generator, continueRepeating);
+        return delay.future;
+    }
+
+    /********************************************************************************
     Package
     ********************************************************************************/
 
     return {
         DelayException: DelayException,
+        PassResultToPromise: PassResultToPromise,
         Promise: Promise,
         Future: Future,
         CreateDelay: CreateDelay,
+        CreateEvaluatedFuture: CreateEvaluatedFuture,
         WaitAll: WaitAll,
         WaitAny: WaitAny,
+        RepeatFuture: RepeatFuture,
     }
 })

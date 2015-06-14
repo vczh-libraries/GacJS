@@ -28,7 +28,7 @@
         })
     </script>
     <script>
-        TestCase("a written succeeded result should be correctly redirected", function () {
+        TestCase("a written succeeded result should be correctly redirected (1)", function () {
             var x = CreateDelay();
             var f1 = x.future.SucceededThen(function (value) {
                 return value * 2;
@@ -43,7 +43,22 @@
         })
     </script>
     <script>
-        TestCase("a written failed result should be correctly redirected", function () {
+        TestCase("a written succeeded result should be correctly redirected (2)", function () {
+            var x = CreateDelay();
+            var f1 = x.future.SucceededThen(function (value) {
+                return CreateEvaluatedFuture(value * 2);
+            });
+            var f2 = x.future.Then(function (value) {
+                Assert(!DelayException.TestType(value));
+                return CreateEvaluatedFuture(value * 4);
+            });
+            x.promise.SetResult(100);
+            Assert(f1.Result === 200);
+            Assert(f2.Result === 400);
+        })
+    </script>
+    <script>
+        TestCase("a written failed result should be correctly redirected (1)", function () {
             var x = CreateDelay();
             var f1 = x.future.FailedThen(function (value) {
                 return value * 2;
@@ -55,6 +70,41 @@
             x.promise.SetException(100);
             Assert(f1.Result === 200);
             Assert(f2.Result === 400);
+        })
+    </script>
+    <script>
+        TestCase("a written failed result should be correctly redirected (2)", function () {
+            var x = CreateDelay();
+            var f1 = x.future.FailedThen(function (value) {
+                return CreateEvaluatedFuture(value * 2);
+            });
+            var f2 = x.future.Then(function (value) {
+                Assert(DelayException.TestType(value));
+                return CreateEvaluatedFuture(value.Exception * 4);
+            });
+            x.promise.SetException(100);
+            Assert(f1.Result === 200);
+            Assert(f2.Result === 400);
+        })
+    </script>
+    <script>
+        TestCase("ContinueWith should pass the result", function () {
+            var x = CreateDelay();
+            var f = x.future.ContinueWith(function (value) {
+                return value * 2;
+            });
+            x.promise.SetResult(100);
+            Assert(f.Result === 200);
+        })
+    </script>
+    <script>
+        TestCase("ContinueWith should pass the exception", function () {
+            var x = CreateDelay();
+            var f = x.future.ContinueWith(function (value) {
+                return value * 2;
+            });
+            x.promise.SetException(100);
+            Assert(f.Result.Exception === 100);
         })
     </script>
     <script>
@@ -86,7 +136,7 @@
         })
     </script>
     <script>
-        TestCase("wait all should success", function () {
+        TestCase("WaitAll should success", function () {
             for (var i = 0; i <= 3; i++) {
                 var ds = [CreateDelay(), CreateDelay(), CreateDelay()];
                 for (var j = 0; j < i; j++) {
@@ -109,7 +159,7 @@
         })
     </script>
     <script>
-        TestCase("wait any should success", function () {
+        TestCase("WaitAny should success", function () {
             for (var i = 0; i < 3; i++) {
                 {
                     var ds = [CreateDelay(), CreateDelay(), CreateDelay()];
@@ -133,6 +183,26 @@
                     Assert(f.Result.index === i);
                     Assert(f.Result.result === i);
                 }
+            }
+        })
+    </script>
+    <script>
+        TestCase("RepeatFuture should success", function () {
+            var counter = 0;
+
+            function generator() {
+                return CreateEvaluatedFuture(++counter);
+            }
+
+            function continueRepeating(value) {
+                return value !== 100;
+            }
+
+            var f = RepeatFuture(generator, continueRepeating);
+            Assert(f.HasResult() === true);
+            Assert(f.Result.length === 100);
+            for (var i = 0; i < 100; i++) {
+                Assert(f.Result[i] === i + 1);
             }
         })
     </script>

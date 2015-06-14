@@ -4,8 +4,10 @@ API:
     class INavigationController
     {
     protected:
-        abstract void OnSubControllerInstalled(INavigationController subController);
-        abstract void OnSubControllerUninstalled(INavigationController subController);
+        virtual void OnSubControllerInstalled(INavigationController subController);
+        virtual void OnSubControllerUninstalled(INavigationController subController);
+        virtual void OnInstalled();
+        virtual void OnUninstalled();
 
     public:
         void NavigateTo(INavigationController subController);
