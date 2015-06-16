@@ -1,6 +1,12 @@
 /*
 API:
-    CompileRazor(razor)
+    string RazorReIndent(text);
+        removes unnecessary spaces before each rows.
+
+    RazorToJs(string razor, string[] defaultPackages);
+        compiles a razor template to a JavaScript function.
+
+    void CompileRazor(string razor, string[] defaultPackages);
         returns a function with a parameter "model", which will return the compiled HTML from the razor template.
 */
 Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"], function (__injection__) {
@@ -529,8 +535,11 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
     RazorToJs
     ********************************************************************************/
 
-    function RazorToJs(razor) {
-        var packages = ["Html.RazorHelper"];
+    function RazorToJs(razor, defaultPackages) {
+        if (defaultPackages === undefined) {
+            defaultPackages = [];
+        }
+        var packages = ["Html.RazorHelper"].concat(defaultPackages);
         var model = null;
         var codes = [];
         var body = [];
@@ -668,6 +677,14 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
     }
 
     /********************************************************************************
+    CompileRazor
+    ********************************************************************************/
+
+    function CompileRazor(razor, defaultPackages) {
+        return CompileRazorInternal(RazorToJs(razor, defaultPackages));
+    }
+
+    /********************************************************************************
     Package
     ********************************************************************************/
 
@@ -680,8 +697,8 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
 
 Packages.Define("Html.CompileRazor", function () {
 
-    function CompileRazor(razor) {
-        return eval(RazorToJs(razor));
+    function CompileRazorInternal(js) {
+        return eval(js);
     }
 
     /********************************************************************************
@@ -689,7 +706,7 @@ Packages.Define("Html.CompileRazor", function () {
     ********************************************************************************/
 
     return {
-        CompileRazor: CompileRazor,
+        CompileRazorInternal: CompileRazorInternal,
     }
 });
 
