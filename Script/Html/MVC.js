@@ -63,25 +63,53 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }),
         RenderPageId: Public.Property({ readonly: true }),
 
-        OnSubControllerUninstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
+        razorReadyCallbacks: Private(),
+        ExecuteAfterRazorReady: Public(function (callback) {
+            if (this.razor === null) {
+                this.razorReadyCallbacks.push(callback);
+            }
+            else {
+                callback();
+            }
+        }),
+
+        InstallSubControllerPage: Private(function () {
+            var span = document.getElementById(this.renderPageId);
+            if (span !== null) {
+                span.innerHTML = controller.Html;
+            }
+        }),
+
+        UninstallSubControllerPage: Private(function () {
             var span = document.getElementById(this.renderPageId);
             if (span !== null) {
                 span.innerHTML = "";
             }
         }),
 
+        OnSubControllerInstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
+            var self = this;
+            controller.ExecuteAfterRazorReady(function () {
+                self.InstallSubControllerPage();
+            });
+        }),
+
+        OnSubControllerUninstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
+            this.UninstallSubControllerPage();
+        }),
+
         __Constructor: Public.StrongTyped(__Void, [__String, __String], function (razorUrl, renderPageId) {
             this.renderPageId = renderPageId;
+            this.razorReadyCallbacks = [];
 
             var self = this;
             GetResourceAsync(razorUrl).Then(function (razor) {
                 self.razor = razor;
                 self.OnRazorLoaded();
-
-                var span = document.getElementById(self.renderPageId);
-                if (span !== null) {
-                    span.innerHTML = controller.Html;
+                for (var i = 0; i < self.razorReadyCallbacks.length; i++) {
+                    self.razorReadyCallbacks[i]();
                 }
+                self.razorReadyCallbacks = null;
             });
         }),
     });
