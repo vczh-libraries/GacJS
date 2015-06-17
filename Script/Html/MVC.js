@@ -63,14 +63,11 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }),
         RenderPageId: Public.Property({ readonly: true }),
 
-        mvc_ParentController: Public(null),
-
-        OnSubControllerInstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
-            controller.mvc_ParentController = this.__ExternalReference;
-        }),
-
         OnSubControllerUninstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
-            controller.mvc_ParentController = null;
+            var span = document.getElementById(this.renderPageId);
+            if (span !== null) {
+                span.innerHTML = "";
+            }
         }),
 
         __Constructor: Public.StrongTyped(__Void, [__String, __String], function (razorUrl, renderPageId) {
@@ -80,10 +77,10 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
             GetResourceAsync(razorUrl).Then(function (razor) {
                 self.razor = razor;
                 self.OnRazorLoaded();
-                if (this.mvc_ParentController !== null) {
-                    var id = this.mvc_ParentController.RenderPageId;
-                    var span = document.getElementById(id);
-                    span.innerHTML = this.Html;
+
+                var span = document.getElementById(self.renderPageId);
+                if (span !== null) {
+                    span.innerHTML = controller.Html;
                 }
             });
         }),
@@ -126,14 +123,14 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
 
     var loadingRazor = null;
 
-    function InitializeMvc(hashFlag, rootRazorUrl, loadingRazorUrl, properties) {
+    function InitializeMvc(hashFlag, rootRazorUrl, loadingRazorUrl, rootRazorProperties) {
         var loadingRazor = GetResourceAsync(loadingRazorUrl, false).Result.Razor;
         document.body.innerHTML = loadingRazor({ Url: rootRazorUrl }).RawHtml;
 
         var rootRazorControllerType = CreateMvcControllerType(
             PQN("RootMvcRazorController"),
             rootRazorUrl,
-            properties,
+            rootRazorProperties,
             {
                 OnRazorLoaded: Protected.Override(function () {
                     document.body.innerHTML = this.Html;
