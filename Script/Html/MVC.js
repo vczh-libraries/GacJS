@@ -29,8 +29,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }),
         Model: Public.Property({ readonly: true }),
 
-        OnRazorLoaded: Protected.Virtual(function () {
-        }),
+        OnRazorLoaded: Protected.Virtual(function () { }),
 
         razor: Private(null),
 
@@ -105,7 +104,12 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
             properties,
             {
                 OnRazorLoaded: Protected.Override(function () {
-                    document.body.innerHTML = this.Html;
+                    try {
+                        document.body.innerHTML = this.Html;
+                    }
+                    catch (ex) {
+                        document.body.innerHTML = "<span style=\"color:red;\">" + ex + "</span>";
+                    }
                 }),
             });
         InitializeNavigation(hashFlag, rootRazorControllerType);

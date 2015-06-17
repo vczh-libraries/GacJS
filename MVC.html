@@ -8,7 +8,16 @@
 </head>
 <body>
     <script>
-        InitializeMvc("~", "./Test/MVC/Home.razor.html", "./Test/MVC/Loading.razor.html", { Name: "vczh" });
+        InitializeMvc("~", "./Test/MVC/Root.razor.html", "./Test/MVC/Loading.razor.html", { Name: "vczh" });
+
+        var HomeController = CreateMvcControllerType("MvcTest.HomeController", "./Test/MVC/Home.razor.html");
+        RegisterNavigationPath("/", HomeController);
+        RegisterNavigationPath("/Home", HomeController);
+
+        var PostsController = CreateMvcControllerType("MvcTest.PostsController", "./Test/MVC/Posts.razor.html");
+        RegisterNavigationPath("/Posts", PostsController);
+
+        StartNavigation("");
     </script>
 </body>
 </html>
