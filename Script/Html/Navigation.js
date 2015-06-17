@@ -75,19 +75,19 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
-    INativationController
+    INavigationController
     ********************************************************************************/
 
-    var INativationController = Class(PQN("INavigationController"), function () {
+    var INavigationController = Class(PQN("INavigationController"), function () {
         return {
             subController: Private(null),
 
-            OnSubControllerInstalled: Public.Virtual.StrongTyped(__Void, [INativationController], function (controller) { }),
-            OnSubControllerUninstalled: Public.StrongTyped(__Void, [INativationController], function (controller) { }),
+            OnSubControllerInstalled: Public.Virtual.StrongTyped(__Void, [INavigationController], function (controller) { }),
+            OnSubControllerUninstalled: Public.StrongTyped(__Void, [INavigationController], function (controller) { }),
             OnInstalled: Public.Virtual.StrongTyped(__Void, [], function () { }),
             OnUninstalled: Public.Virtual.StrongTyped(__Void, [], function () { }),
 
-            NavigateTo: Public.StrongTyped(__Void, [INativationController], function (subController) {
+            NavigateTo: Public.StrongTyped(__Void, [INavigationController], function (subController) {
                 if (this.subController !== null) {
                     this.subController.NavigateTo(null);
                     this.subController.OnUninstalled();
@@ -101,7 +101,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 }
             }),
 
-            GetSubController: Public.StrongTyped(INativationController, [], function () {
+            GetSubController: Public.StrongTyped(INavigationController, [], function () {
                 return this.subController;
             }),
             SubController: Public.Property({ readonly: true }),
@@ -167,8 +167,8 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
                 if (this.controllerType !== null) {
                     throw new Error("Controller type has already been assigned");
                 }
-                if (!INativationController.IsAssignableFrom(controllerType)) {
-                    throw new Error("Controller type should implements \"" + INativationController.FullName + "\".");
+                if (!INavigationController.IsAssignableFrom(controllerType)) {
+                    throw new Error("Controller type should implements \"" + INavigationController.FullName + "\".");
                 }
                 this.controllerType = controllerType;
                 this.level = level;
@@ -853,7 +853,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     ********************************************************************************/
 
     return {
-        INativationController: INativationController,
+        INavigationController: INavigationController,
         InitializeNavigation: InitializeNavigation,
         RegisterNavigationPath: RegisterNavigationPath,
         BuildNavigationPath: BuildNavigationPath,

@@ -26,7 +26,7 @@ TabControl
 ********************************************************************************/
 
 function BuildTabController(name) {
-    var Controller = Class("<TabController>::" + name, INativationController, {
+    var Controller = Class("<TabController>::" + name, INavigationController, {
         Id: Public(null),
         Url: Public(null),
 
