@@ -76,7 +76,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         InstallSubControllerPage: Private(function () {
             var span = document.getElementById(this.renderPageId);
             if (span !== null) {
-                span.innerHTML = controller.Html;
+                span.innerHTML = this.SubController.Html;
             }
         }),
 
@@ -115,7 +115,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     });
 
     /********************************************************************************
-    MvcController
+    CreateMvcControllerType
     ********************************************************************************/
 
     function CreateMvcControllerType(name, razorUrl, properties, additionalDefinitions) {
