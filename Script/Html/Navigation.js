@@ -83,7 +83,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
             subController: Private(null),
 
             OnSubControllerInstalled: Public.Virtual.StrongTyped(__Void, [INavigationController], function (controller) { }),
-            OnSubControllerUninstalled: Public.StrongTyped(__Void, [INavigationController], function (controller) { }),
+            OnSubControllerUninstalled: Public.Virtual.StrongTyped(__Void, [INavigationController], function (controller) { }),
             OnInstalled: Public.Virtual.StrongTyped(__Void, [], function () { }),
             OnUninstalled: Public.Virtual.StrongTyped(__Void, [], function () { }),
 

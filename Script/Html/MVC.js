@@ -7,7 +7,7 @@ API:
         virtual object      GetModel() { return this; }
         virtual void        OnRazorLoaded() {}
     public:
-        MvcController(string razorUrl);
+        MvcController(string razorUrl, string renderPageId);
 
         Razor               Razor { get; }
         string              RazorText { get; }
@@ -16,7 +16,7 @@ API:
     Type CreateMvcControllerType(string name, string razorUrl, { property : defaultValue }, additionalDefinitions);
     void InitializeMvc(string hashFlag, string rootRazorUrl, string loadingRazorUrl, { property : defaultValue });
 */
-Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resource", "IO.Wildcard"], function (__injection__) {
+Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resource", "IO.Wildcard", "Html.MVCRazorHelper.Internal"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
@@ -32,7 +32,6 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         OnRazorLoaded: Protected.Virtual(function () { }),
 
         razor: Private(null),
-
         GetRazor: Private(function () {
             return this.razor.Razor;
         }),
@@ -43,16 +42,49 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }),
         RazorText: Public.Property({ readonly: true }),
 
+        html: Private(null),
         GetHtml: Private(function () {
-            return this.Razor(this.GetModel()).RawHtml;
+            if (this.html === null) {
+                try {
+                    SetMvcRenderPageId(this.renderPageId);
+                    this.html = this.Razor(this.GetModel()).RawHtml;
+                }
+                catch (ex) {
+                    return "<span style=\"color:red;\">" + ex + "</span>";
+                }
+            }
+            return this.html;
         }),
         Html: Public.Property({ readonly: true }),
 
-        __Constructor: Public.StrongTyped(__Void, [__String], function (razorUrl) {
+        renderPageId: Private(null),
+        GetRenderPageId: Private(function () {
+            return this.renderPageId;
+        }),
+        RenderPageId: Public.Property({ readonly: true }),
+
+        mvc_ParentController: Public(null),
+
+        OnSubControllerInstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
+            controller.mvc_ParentController = this.__ExternalReference;
+        }),
+
+        OnSubControllerUninstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
+            controller.mvc_ParentController = null;
+        }),
+
+        __Constructor: Public.StrongTyped(__Void, [__String, __String], function (razorUrl, renderPageId) {
+            this.renderPageId = renderPageId;
+
             var self = this;
             GetResourceAsync(razorUrl).Then(function (razor) {
                 self.razor = razor;
                 self.OnRazorLoaded();
+                if (this.mvc_ParentController !== null) {
+                    var id = this.mvc_ParentController.RenderPageId;
+                    var span = document.getElementById(id);
+                    span.innerHTML = this.Html;
+                }
             });
         }),
     });
@@ -64,7 +96,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     function CreateMvcControllerType(name, razorUrl, properties, additionalDefinitions) {
         var def = {
             __Constructor: Public.StrongTyped(__Void, [], function () {
-                this.__InitBase(MvcController, [razorUrl]);
+                this.__InitBase(MvcController, [razorUrl, GenerateMvcRenderPageId()]);
             }),
         };
 
@@ -104,12 +136,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
             properties,
             {
                 OnRazorLoaded: Protected.Override(function () {
-                    try {
-                        document.body.innerHTML = this.Html;
-                    }
-                    catch (ex) {
-                        document.body.innerHTML = "<span style=\"color:red;\">" + ex + "</span>";
-                    }
+                    document.body.innerHTML = this.Html;
                 }),
             });
         InitializeNavigation(hashFlag, rootRazorControllerType);
@@ -146,7 +173,36 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     }
 })
 
-Packages.Define("Html.MVCRazorHelper", function (__injection__) {
+Packages.Define("Html.MVCRazorHelper.Internal", ["Html.RazorHelper"], function (__injection__) {
+    eval(__injection__);
+
+    var index = 0;
+    var id = null;
+
+    function GenerateMvcRenderPageId() {
+        return "HTML_MVC_RENDER_PAGE_ID_" + (++index);
+    }
+
+    function SetMvcRenderPageId(newId) {
+        id = newId;
+    }
+
+    function RenderPage() {
+        return new RazorHtml("<span id=\"" + id + "\"></span>");
+    }
+
+    /********************************************************************************
+    Package
+    ********************************************************************************/
+
+    return {
+        GenerateMvcRenderPageId: GenerateMvcRenderPageId,
+        SetMvcRenderPageId: SetMvcRenderPageId,
+        RenderPage: RenderPage,
+    }
+})
+
+Packages.Define("Html.MVCRazorHelper", ["Html.MVCRazorHelper.Internal"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
@@ -154,5 +210,6 @@ Packages.Define("Html.MVCRazorHelper", function (__injection__) {
     ********************************************************************************/
 
     return {
+        RenderPage: RenderPage,
     }
 })
