@@ -792,7 +792,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         return true;
     }
 
-    function NavigateTo(path) {
+    function NavigateToInternal(path) {
         EnsureInitialized();
 
         var oldContext = GetNavigationContext();
@@ -823,7 +823,10 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         else {
             controller.NavigateTo(null);
         }
+    }
 
+    function NavigateTo(path) {
+        EnsureInitialized();
         window.location.replace("#" + hashFlag + "/" + path);
     }
 
@@ -831,22 +834,32 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
     StartNavigation
     ********************************************************************************/
 
-    function StartNavigation(defaultPath) {
-        var hash = window.location.hash;
-        if (hash === "") {
-            hash = "#" + hashFlag + "/" + defaultPath;
-        }
+    function OnHashChanged(hash) {
         if (hash[0] === "#") {
             hash = hash.substring(1, hash.length);
         }
         if (hash.length > hashFlag.length) {
             if (hash.substring(0, hashFlag.length + 1) === hashFlag + "/") {
                 var path = hash.substring(hashFlag.length + 1, hash.length);
-                return NavigateTo(path);
+                return NavigateToInternal(path);
             }
         }
         throw new Error("Failed to navigate by hash \"#" + hash + "\".");
     }
+
+    function StartNavigation(defaultPath) {
+        var hash = window.location.hash;
+        if (hash === "") {
+            NavigateTo(defaultPath);
+        }
+        else {
+            OnHashChanged(hash);
+        }
+    }
+
+    window.addEventListener("hashchange", function () {
+        OnHashChanged(window.location.hash);
+    }, false);
 
     /********************************************************************************
     Package
