@@ -5,12 +5,15 @@ API:
     {
     protected:
         virtual object      GetModel() { return this; }
-        virtual void        OnRazorLoaded() {}
+        virtual void        OnLoaded() {}
     public:
-        MvcController(string razorUrl, string renderPageId);
+        MvcController(string razorUrl, string renderPageId, bool autoLoad);
 
+        string              RazorUrl { get; }
         Razor               Razor { get; }
         string              RazorText { get; }
+
+        void                Load();
     }
 
     Type CreateMvcControllerType(string name, string razorUrl, { property : defaultValue }, additionalDefinitions);
@@ -24,12 +27,19 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     ********************************************************************************/
 
     var MvcController = Class(PQN("MvcController"), INavigationController, {
+
+        //---------------------------------------------------------------------
+
         GetModel: Protected.Virtual(function () {
             return this.__ExternalReference;
         }),
         Model: Public.Property({ readonly: true }),
 
-        OnRazorLoaded: Protected.Virtual(function () { }),
+        razorUrl: Private(null),
+        GetRazorUrl: Private(function () {
+            return this.razorUrl;
+        }),
+        RazorUrl: Public.Property({ readonly: true }),
 
         razor: Private(null),
         GetRazor: Private(function () {
@@ -41,6 +51,14 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
             return this.razor.Text;
         }),
         RazorText: Public.Property({ readonly: true }),
+
+        renderPageId: Private(null),
+        GetRenderPageId: Private(function () {
+            return this.renderPageId;
+        }),
+        RenderPageId: Public.Property({ readonly: true }),
+
+        //---------------------------------------------------------------------
 
         html: Private(null),
         GetHtml: Private(function () {
@@ -57,11 +75,17 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }),
         Html: Public.Property({ readonly: true }),
 
-        renderPageId: Private(null),
-        GetRenderPageId: Private(function () {
-            return this.renderPageId;
+        //---------------------------------------------------------------------
+
+        loaded: Private(false),
+        GetLoaded: Private(function () {
+            return this.loaded;
         }),
-        RenderPageId: Public.Property({ readonly: true }),
+        Loaded: Public.Property({ readonly: true }),
+
+        OnLoaded: Protected.Virtual(function () { }),
+
+        //---------------------------------------------------------------------
 
         razorReadyCallbacks: Private(),
         ExecuteAfterRazorReady: Public(function (callback) {
@@ -73,44 +97,75 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
             }
         }),
 
-        InstallSubControllerPage: Private(function () {
+        Load: Public.StrongTyped(__Void, [], function () {
+            if (this.loaded === true) {
+                return;
+            }
+
+            this.loaded = true;
+            var self = this;
+
+            GetResourceAsync(this.razorUrl).Then(function (razor) {
+                self.razor = razor;
+                self.OnLoaded();
+                if (self.SubController !== null) {
+                    self.DelayInstallSubControllerPage();
+                }
+
+                for (var i = 0; i < self.razorReadyCallbacks.length; i++) {
+                    self.razorReadyCallbacks[i]();
+                }
+                self.razorReadyCallbacks = null;
+            });
+        }),
+
+        //---------------------------------------------------------------------
+
+        ReplaceSubControllerPage: Private(function (html) {
             var span = document.getElementById(this.renderPageId);
             if (span !== null) {
-                span.innerHTML = this.SubController.Html;
+                span.innerHTML = html;
             }
+        }),
+
+        DelayInstallSubControllerPage: Private(function () {
+            this.ReplaceSubControllerPage(loadingRazor({ Url: this.SubController.RazorUrl }).RawHtml);
+
+            var self = this;
+            this.SubController.ExecuteAfterRazorReady(function () {
+                self.InstallSubControllerPage();
+            });
+        }),
+
+        //---------------------------------------------------------------------
+
+        InstallSubControllerPage: Private(function () {
+            this.ReplaceSubControllerPage(this.SubController.Html);
         }),
 
         UninstallSubControllerPage: Private(function () {
-            var span = document.getElementById(this.renderPageId);
-            if (span !== null) {
-                span.innerHTML = "";
-            }
+            this.ReplaceSubControllerPage("");
         }),
 
         OnSubControllerInstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
-            var self = this;
-            controller.ExecuteAfterRazorReady(function () {
-                self.InstallSubControllerPage();
-            });
+            if (this.loaded) {
+                this.DelayInstallSubControllerPage();
+            }
         }),
 
         OnSubControllerUninstalled: Public.Override.StrongTyped(__Void, [INavigationController], function (controller) {
             this.UninstallSubControllerPage();
         }),
 
-        __Constructor: Public.StrongTyped(__Void, [__String, __String], function (razorUrl, renderPageId) {
+        //---------------------------------------------------------------------
+
+        __Constructor: Public.StrongTyped(__Void, [__String, __String, __Boolean], function (razorUrl, renderPageId, autoLoad) {
+            this.razorUrl = razorUrl;
             this.renderPageId = renderPageId;
             this.razorReadyCallbacks = [];
-
-            var self = this;
-            GetResourceAsync(razorUrl).Then(function (razor) {
-                self.razor = razor;
-                self.OnRazorLoaded();
-                for (var i = 0; i < self.razorReadyCallbacks.length; i++) {
-                    self.razorReadyCallbacks[i]();
-                }
-                self.razorReadyCallbacks = null;
-            });
+            if (autoLoad === true) {
+                this.Load();
+            }
         }),
     });
 
@@ -118,10 +173,10 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     CreateMvcControllerType
     ********************************************************************************/
 
-    function CreateMvcControllerType(name, razorUrl, properties, additionalDefinitions) {
+    function CreateMvcControllerTypeInternal(name, razorUrl, autoLoad, properties, additionalDefinitions) {
         var def = {
             __Constructor: Public.StrongTyped(__Void, [], function () {
-                this.__InitBase(MvcController, [razorUrl, GenerateMvcRenderPageId()]);
+                this.__InitBase(MvcController, [razorUrl, GenerateMvcRenderPageId(), autoLoad]);
             }),
         };
 
@@ -145,6 +200,10 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         return Class(name, MvcController, def);
     }
 
+    function CreateMvcControllerType(name, razorUrl, properties, additionalDefinitions) {
+        return CreateMvcControllerTypeInternal(name, razorUrl, true, properties, additionalDefinitions);
+    }
+
     /********************************************************************************
     InitializeMvc
     ********************************************************************************/
@@ -152,7 +211,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     var loadingRazor = null;
 
     function InitializeMvc(hashFlag, rootRazorUrl, loadingRazorUrl, rootRazorProperties) {
-        var loadingRazor = GetResourceAsync(loadingRazorUrl, false).Result.Razor;
+        loadingRazor = GetResourceAsync(loadingRazorUrl, false).Result.Razor;
         document.body.innerHTML = loadingRazor({ Url: rootRazorUrl }).RawHtml;
 
         var rootRazorControllerType = CreateMvcControllerType(
@@ -160,7 +219,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
             rootRazorUrl,
             rootRazorProperties,
             {
-                OnRazorLoaded: Protected.Override(function () {
+                OnLoaded: Protected.Override(function () {
                     document.body.innerHTML = this.Html;
                 }),
             });
