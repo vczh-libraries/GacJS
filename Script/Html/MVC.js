@@ -7,7 +7,7 @@ API:
         virtual object      GetModel() { return this; }
         virtual void        OnLoaded() {}
     public:
-        MvcController(string razorUrl, string renderPageId, bool autoLoad);
+        MvcController(string razorUrl, string renderPageId);
 
         string              RazorUrl { get; }
         Razor               Razor { get; }
@@ -159,13 +159,11 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
 
         //---------------------------------------------------------------------
 
-        __Constructor: Public.StrongTyped(__Void, [__String, __String, __Boolean], function (razorUrl, renderPageId, autoLoad) {
+        __Constructor: Public.StrongTyped(__Void, [__String, __String], function (razorUrl, renderPageId) {
             this.razorUrl = razorUrl;
             this.renderPageId = renderPageId;
             this.razorReadyCallbacks = [];
-            if (autoLoad === true) {
-                this.Load();
-            }
+            this.Load();
         }),
     });
 
@@ -173,10 +171,10 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
     CreateMvcControllerType
     ********************************************************************************/
 
-    function CreateMvcControllerTypeInternal(name, razorUrl, autoLoad, properties, additionalDefinitions) {
+    function CreateMvcControllerType(name, razorUrl, properties, additionalDefinitions) {
         var def = {
             __Constructor: Public.StrongTyped(__Void, [], function () {
-                this.__InitBase(MvcController, [razorUrl, GenerateMvcRenderPageId(), autoLoad]);
+                this.__InitBase(MvcController, [razorUrl, GenerateMvcRenderPageId()]);
             }),
         };
 
@@ -198,10 +196,6 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }
 
         return Class(name, MvcController, def);
-    }
-
-    function CreateMvcControllerType(name, razorUrl, properties, additionalDefinitions) {
-        return CreateMvcControllerTypeInternal(name, razorUrl, true, properties, additionalDefinitions);
     }
 
     /********************************************************************************
