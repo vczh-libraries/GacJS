@@ -262,7 +262,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
                             case " ": case "\t":
                                 break;
                             case "\"":
-                                state = InAttValue;
+                                state = ExpectAttNameOrEnd;
                                 break;
                         }
                         break;

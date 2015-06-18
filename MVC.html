@@ -17,6 +17,11 @@
         var PostsController = CreateMvcControllerType("MvcTest.PostsController", "./Test/MVC/Posts.razor.html");
         RegisterNavigationPath("/Posts", PostsController);
 
+        for (var i = 1; i <= 3; i++) {
+            var IndividualPostController = CreateMvcControllerType("MvcTest.IndividualPostController<" + i + ">", "./Test/MVC/Post_" + i + ".razor.html");
+            RegisterNavigationPath("/" + i, IndividualPostController, {}, PostsController);
+        }
+
         StartNavigation("");
     </script>
 </body>
