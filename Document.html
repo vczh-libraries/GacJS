@@ -5,24 +5,38 @@
     <link rel="stylesheet" href="./Doc/Document.css" />
     <link rel="stylesheet" href="./Doc/TreeView.css" />
     <script src="./Script/Package.js"></script>
-    <script src="./Script/Class.js"></script>
-    <script src="./Script/Test.js"></script>
-    <script src="./Script/Html/Navigation.js"></script>
-    <script src="./Script/Html/Razor.js"></script>
-    <script src="./Script/HTML/MVC.js"></script>
-    <script src="./Script/IO/Delay.js"></script>
-    <script src="./Script/IO/Resource.js"></script>
-    <script src="./Script/IO/Wildcard.js"></script>
-    <script src=".Doc/Document.js"></script>
-    <script src="./Doc/TreeView.js"></script>
+    <script async src="./Script/Class.js"></script>
+    <script async src="./Script/Test.js"></script>
+    <script async src="./Script/Html/Navigation.js"></script>
+    <script async src="./Script/Html/Razor.js"></script>
+    <script async src="./Script/IO/Delay.js"></script>
+    <script async src="./Script/IO/Resource.js"></script>
+    <script async src="./Script/IO/Wildcard.js"></script>
+    <script async src="./Doc/Document.js"></script>
+    <script async src="./Doc/TreeView.js"></script>
 </head>
 <body>
+    <table class="DocumentView">
+        <tr>
+            <td class="DocumentTitle" colspan="2">
+                <img src="./Doc/Logo.gif" />
+            </td>
+        </tr>
+        <tr>
+            <td class="DocumentIndex" id="documentIndex"></td>
+            <td class="DocumentContent" id="documentContent"></td>
+        </tr>
+    </table>
+
     <script>
-        eval(Packages.Inject(["Test"]));
-    </script>
-    <!-- Summary -->
-    <script>
-        SummaryTest();
+        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.TreeView"], function (__injection__) {
+            eval(__injection__);
+
+            rootContainer = new TreeNodeContainer(false, documentIndex);
+
+            return {
+            }
+        })
     </script>
 </body>
 </html>

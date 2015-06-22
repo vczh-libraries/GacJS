@@ -1,3 +1,27 @@
 body {
-    font-family:'Segoe UI'
+    font-family: 'Segoe UI';
+    font-size: 14px;
 }
+
+.DocumentView {
+    width: calc(100% - 2em);
+    margin: 1em;
+    border-left: 1px solid gray;
+    border-top: 1px solid gray;
+    border-spacing: 0px;
+    border-collapse: separate;
+}
+
+    .DocumentView td {
+        border-right: 1px solid gray;
+        border-bottom: 1px solid gray;
+        padding: 1em;
+    }
+
+    .DocumentView .DocumentIndex {
+        width: 30em;
+        overflow: auto;
+    }
+
+    .DocumentView .DocumentContent {
+    }
