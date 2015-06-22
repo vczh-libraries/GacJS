@@ -32,7 +32,27 @@
         Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.TreeView"], function (__injection__) {
             eval(__injection__);
 
-            rootContainer = new TreeNodeContainer(false, documentIndex);
+            rootContainer = new TreeNodeContainer(true, documentIndex);
+
+            var a = new TreeNode(true);
+            a.Title = "a";
+            rootContainer.AddTreeNode(a);
+
+            var b = new TreeNode(false);
+            b.Title = "b";
+            rootContainer.AddTreeNode(b);
+
+            var c = new TreeNode(false);
+            c.Title = "c";
+            rootContainer.AddTreeNode(c);
+
+            var d = new TreeNode(false);
+            d.Title = "d";
+            a.AddTreeNode(d);
+
+            var e = new TreeNode(false);
+            e.Title = "e";
+            a.AddTreeNode(e);
 
             return {
             }

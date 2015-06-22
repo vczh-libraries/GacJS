@@ -8,7 +8,7 @@ API:
 
     class __Event {
         __EventHandler              Attach(object function);
-        void                        Detach(function);
+        void                        Detach(__EventHandler handler);
         void                        Execute(...);
         bool                        ContainsHandler(__EventHandler handler);
         bool                        IsEmpty();
