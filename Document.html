@@ -29,30 +29,22 @@
     </table>
 
     <script>
-        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.TreeView"], function (__injection__) {
+        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.TreeView", "IO.Resource"], function (__injection__) {
             eval(__injection__);
 
             rootContainer = new TreeNodeContainer(true, documentIndex);
 
-            var a = new TreeNode(true);
-            a.Title = "a";
-            rootContainer.AddTreeNode(a);
+            GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
+                var nss = result.Xml.firstChild.getElementsByTagName("Namespace");
+                for (var i = 0; i < nss.length; i++) {
+                    var displayName = nss[i].getAttribute("DisplayName").split(" ");
 
-            var b = new TreeNode(false);
-            b.Title = "b";
-            rootContainer.AddTreeNode(b);
-
-            var c = new TreeNode(false);
-            c.Title = "c";
-            rootContainer.AddTreeNode(c);
-
-            var d = new TreeNode(false);
-            d.Title = "d";
-            a.AddTreeNode(d);
-
-            var e = new TreeNode(false);
-            e.Title = "e";
-            a.AddTreeNode(e);
+                    var treeNode = new TreeNode(true);
+                    treeNode.Title = displayName[0];
+                    treeNode.Postfix = displayName[1];
+                    rootContainer.AddTreeNode(treeNode);
+                }
+            });
 
             return {
             }

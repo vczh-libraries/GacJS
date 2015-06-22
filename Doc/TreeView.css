@@ -5,11 +5,11 @@
 
 .TreeNodeDecorator {
     float: left;
-    min-width: 1.2em;
+    min-width: 2.4em;
     display: block;
     font-family: 'Consolas';
     text-decoration: none;
-    color: #0026ff;
+    color: #000000;
     cursor: pointer;
 }
 
@@ -18,6 +18,7 @@
     }
 
 .TreeNodeTitle {
+    float: left;
     display: block;
     text-decoration: none;
     color: #0026ff;
@@ -28,6 +29,14 @@
         text-decoration: underline;
         color: #ff5000;
     }
+
+.TreeNodePostfix {
+    float: left;
+    display: block;
+    text-decoration: none;
+    color: #000000;
+    margin-left: 0.5em;
+}
 
 .Expanded {
     margin-left: 1.2em;

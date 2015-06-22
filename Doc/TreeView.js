@@ -61,12 +61,15 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
     var TreeNode = Class(PQN("TreeNode"), function () {
         return {
             parent: Private(null),
+
             element: Private(null),
             decoratorElement: Private(null),
-            titleElement: Private(null),
+            postfixElement: Private(null),
+
             nodeContainer: Private(null),
             expanded: Private(false),
             title: Private(""),
+            postfix: Private(""),
 
             decoratorElement_OnClick: Private(function () {
                 this.Expanded = !this.Expanded;
@@ -88,15 +91,22 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             }),
             Title: Public.Property({}),
 
+            GetPostfix: Private(function () { return this.postfix; }),
+            SetPostfix: Private.StrongTyped(__Void, [__String], function (value) {
+                this.postfix = value;
+                this.postfixElement.firstChild.textContent = value;
+            }),
+            Postfix: Public.Property({}),
+
             GetExpanded: Private(function () { return this.expanded; }),
             SetExpanded: Private.StrongTyped(__Void, [__Boolean], function (value) {
                 if (this.nodeContainer !== null && this.expanded !== value) {
                     this.expanded = value;
                     if (value) {
-                        this.decoratorElement.firstChild.nodeValue = "-";
+                        this.decoratorElement.firstChild.nodeValue = "[-]";
                     }
                     else {
-                        this.decoratorElement.firstChild.nodeValue = "+";
+                        this.decoratorElement.firstChild.nodeValue = "[+]";
                     }
                     this.nodeContainer.Visible = value;
                     this.ExpandedChanged.Execute(this.__ExternalReference);
@@ -113,7 +123,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 this.decoratorElement = Dom("div", this.element);
                 this.decoratorElement.setAttribute("class", "TreeNodeDecorator");
                 if (hasChild) {
-                    this.decoratorElement.appendChild(Text("+"));
+                    this.decoratorElement.appendChild(Text("[+]"));
                     this.decoratorElement.addEventListener("click", function () {
                         self.decoratorElement_OnClick();
                     }, false);
@@ -125,6 +135,10 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 this.titleElement = Dom("div", this.element);
                 this.titleElement.appendChild(Text("\u00A0"));
                 this.titleElement.setAttribute("class", "TreeNodeTitle");
+
+                this.postfixElement = Dom("div", this.element);
+                this.postfixElement.appendChild(Text("\u00A0"));
+                this.postfixElement.setAttribute("class", "TreeNodePostfix");
 
                 Dom("div", this.element).setAttribute("style", "clear: both;");
 
