@@ -40,6 +40,11 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             }),
             Visible: Public.Property({}),
 
+            GetChildren: Private(function () {
+                return this.children;
+            }),
+            Children: Public.Property({ readonly: true }),
+
             __Constructor: Public.StrongTyped(__Void, [__Boolean, __Object, __String], function (visible, parent, loadingText) {
                 this.element = Dom("ul", parent);
                 this.element.doc_Owner = this.__ExternalReference;
@@ -59,6 +64,14 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                     }
                     this.children.push(treeNode);
                     this.element.appendChild(treeNode.Element);
+                }
+            }),
+
+            RemoveLoadingText: Public.StrongTyped(__Void, [], function () {
+                if (this.nodeContainer !== null) {
+                    if (this.children.length === 0) {
+                        this.element.innerHTML = "";
+                    }
                 }
             }),
         }
@@ -177,6 +190,17 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                     this.nodeContainer.AddTreeNode(treeNode);
                 }
                 return this.__ExternalReference;
+            }),
+
+            RemoveLoadingText: Public.StrongTyped(__Void, [], function () {
+                if (this.nodeContainer !== null) {
+                    this.nodeContainer.RemoveLoadingText();
+                    if (this.nodeContainer.Children.length === 0) {
+                        this.decoratorElement.firstChild.textContent = "\u00A0";
+                        this.element.removeChild(this.nodeContainer.Element);
+                        this.nodeContainer = null;
+                    }
+                }
             }),
         }
     });

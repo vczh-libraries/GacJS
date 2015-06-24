@@ -228,6 +228,9 @@ Packages.Define("Class", function () {
 
     ///////////////////////////////////////////////////////////////
 
+    function __EventConstructor() {
+    }
+
     function __EventHandler(func) {
         this.Function = func;
         Object.seal(this);
@@ -547,7 +550,7 @@ Packages.Define("Class", function () {
 
     function __DefineEvent(accessor) {
         __DefineDecorator(accessor, "Event", function (member) {
-            member.Value = new __Event();
+            member.Value = new __EventConstructor();
         });
     }
 
@@ -683,8 +686,8 @@ Packages.Define("Class", function () {
                         Object.defineProperty(internalReference, name, {
                             configurable: true,
                             enumerable: true,
-                            writable: typeof member.Value !== "function" && !(member.Value instanceof __Event),
-                            value: member.Value,
+                            writable: typeof member.Value !== "function" && !(member.Value instanceof __EventConstructor),
+                            value: member.Value instanceof __EventConstructor ? new __Event() : member.Value,
                         });
                     }
                 }
@@ -1170,7 +1173,7 @@ Packages.Define("Class", function () {
                     !(value instanceof Struct) &&
                     !(value instanceof Enum) &&
                     !(value instanceof Flags) &&
-                    !(value instanceof __Event) &&
+                    !(value instanceof __EventConstructor) &&
                     !(value instanceof __Property)) {
                     throw new Error("Default value of fields can only be null, undefined, function, number, string, boolean, struct, enum and flags.");
                 }
@@ -1279,7 +1282,7 @@ Packages.Define("Class", function () {
 
                 for (var j in member.HiddenMembers) {
                     var hiddenMember = member.HiddenMembers[j];
-                    if (hiddenMember.Value instanceof __Event) {
+                    if (hiddenMember.Value instanceof __EventConstructor) {
                         throw new Error("Type \"" + fullName + "\" cannot hide event \"" + i + "\".");
                     }
                 }
@@ -2136,6 +2139,7 @@ Packages.Define("Class", function () {
         __PrivateMember: __PrivateMember,
         __ProtectedMember: __ProtectedMember,
         __PublicMember: __PublicMember,
+        __EventConstructor: __EventConstructor,
         __Event: __Event,
         __EventHandler: __EventHandler,
         __Property: __Property,
