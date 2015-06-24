@@ -32,16 +32,20 @@
         Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.TreeView", "IO.Resource"], function (__injection__) {
             eval(__injection__);
 
-            rootContainer = new TreeNodeContainer(true, documentIndex);
+            rootContainer = new TreeNodeContainer(true, documentIndex, "Loading ./Doc/Data/nss.xml ...");
 
             GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
                 var nss = result.Xml.firstChild.getElementsByTagName("Namespace");
                 for (var i = 0; i < nss.length; i++) {
                     var ns = nss[i];
+                    var key = ns.getAttribute("Key");
                     var displayName = ns.getAttribute("DisplayName").split(" ");
                     var hasDoc = ns.getAttribute("Doc") === "true";
 
-                    var treeNode = new TreeNode(true);
+                    var urlName = ns.getAttribute("UrlName");
+                    var indexFile = "./Doc/Data/ns(" + urlName + ").xml";
+
+                    var treeNode = new TreeNode(true, "Loading " + indexFile + " ...");
                     treeNode.Title = displayName[0];
                     treeNode.Postfix = displayName[1];
                     treeNode.HasDoc = hasDoc;

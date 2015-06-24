@@ -40,16 +40,23 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             }),
             Visible: Public.Property({}),
 
-            __Constructor: Public.StrongTyped(__Void, [__Boolean, __Object], function (visible, parent) {
+            __Constructor: Public.StrongTyped(__Void, [__Boolean, __Object, __String], function (visible, parent, loadingText) {
                 this.element = Dom("ul", parent);
                 this.element.doc_Owner = this.__ExternalReference;
                 this.element.classList.add("TreeNodeContainer");
                 this.Visible = visible;
                 this.children = [];
+
+                if (loadingText !== "") {
+                    this.element.appendChild(Text(loadingText));
+                }
             }),
 
             AddTreeNode: Public.StrongTyped(__Void, [TreeNode], function (treeNode) {
                 if (this.children.indexOf(treeNode) === -1) {
+                    if (this.children.length === 0) {
+                        this.element.innerHTML = "";
+                    }
                     this.children.push(treeNode);
                     this.element.appendChild(treeNode.Element);
                 }
@@ -132,7 +139,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             Expanded: Public.Property({}),
             ExpandedChanged: Public.Event(),
 
-            __Constructor: Public.StrongTyped(__Void, [__Boolean], function (hasChild) {
+            __Constructor: Public.StrongTyped(__Void, [__Boolean, __String], function (hasChild, loadingText) {
                 var self = this;
 
                 this.element = Dom("li");
@@ -160,7 +167,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 Dom("div", this.element).setAttribute("style", "clear: both;");
 
                 if (hasChild) {
-                    this.nodeContainer = new TreeNodeContainer(this.expanded, this.element);
+                    this.nodeContainer = new TreeNodeContainer(this.expanded, this.element, loadingText);
                 }
             }),
 
