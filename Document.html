@@ -33,16 +33,18 @@
             eval(__injection__);
 
             rootContainer = new TreeNodeContainer(true, documentIndex, "Loading ./Doc/Data/nss.xml ...");
+            keyNodeMap = {};
+            nodeLoaded = {};
 
+            // nss.xml
             GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
-                var nss = result.Xml.firstChild.getElementsByTagName("Namespace");
-                for (var i = 0; i < nss.length; i++) {
-                    var ns = nss[i];
-                    var key = ns.getAttribute("Key");
-                    var displayName = ns.getAttribute("DisplayName").split(" ");
-                    var hasDoc = ns.getAttribute("Doc") === "true";
+                var nsXmls = result.Xml.firstChild.getElementsByTagName("Namespace");
+                for (var i = 0; i < nsXmls.length; i++) {
+                    var nsXml = nsXmls[i];
+                    var displayName = nsXml.getAttribute("DisplayName").split(" ");
+                    var hasDoc = nsXml.getAttribute("Doc") === "true";
 
-                    var urlName = ns.getAttribute("UrlName");
+                    var urlName = nsXml.getAttribute("UrlName");
                     var indexFile = "./Doc/Data/ns(" + urlName + ").xml";
 
                     var treeNode = new TreeNode(true, "Loading " + indexFile + " ...");
@@ -50,6 +52,60 @@
                     treeNode.Postfix = displayName[1];
                     treeNode.HasDoc = hasDoc;
                     rootContainer.AddTreeNode(treeNode);
+
+                    var key = nsXml.getAttribute("Key");
+                    keyNodeMap[key] = treeNode;
+                    treeNode.ExpandedChanged.Attach((function () {
+                        var nsKey = key;
+                        var nsIndexFile = indexFile;
+                        var nsTreeNode = treeNode;
+                        return function () {
+                            if (!nodeLoaded.hasOwnProperty(nsKey)) {
+                                nodeLoaded[nsKey] = null;
+
+                                // ns(symbol).xml
+                                GetResourceAsync(nsIndexFile, true).SucceededThen(function (result) {
+                                    var overloadsXmls = result.Xml.firstChild.getElementsByTagName("Overloads");
+                                    for (var i = 0; i < overloadsXmls.length; i++) {
+                                        var overloadsXml = overloadsXmls[i];
+                                        var displayName = overloadsXml.getAttribute("DisplayName").split(" ");
+                                        var symbolXmls = overloadsXml.getElementsByTagName("Symbol");
+                                        var treeNodes = [];
+
+                                        for (var j = 0; j < symbolXmls.length; j++) {
+                                            var symbolXml = symbolXmls[j];
+                                            var hasDoc = symbolXml.getAttribute("Doc") === "true";
+                                            var hasChildren = displayName[1] === "class" || displayName[1] === "struct" || displayName[1] === "union";
+
+                                            var urlName = symbolXml.getAttribute("UrlName");
+                                            var indexFile = "./Doc/Data/t(" + urlName + ").xml";
+
+                                            var treeNode = new TreeNode(hasChildren, "Loading " + indexFile + " ...");
+                                            treeNode.Title = displayName[0];
+                                            treeNode.Postfix = displayName[1];
+                                            treeNode.HasDoc = hasDoc;
+                                            treeNodes.push(treeNode);
+                                        }
+
+                                        if (treeNodes.length === 1) {
+                                            nsTreeNode.AddTreeNode(treeNodes[0]);
+                                        }
+                                        else {
+                                            var treeNode = new TreeNode(true, "");
+                                            treeNode.Title = displayName[0];
+                                            treeNode.Postfix = displayName[1];
+                                            treeNode.HasDoc = treeNodes.filter(function (n) { return n.HasDoc; }).length > 0;
+                                            nsTreeNode.AddTreeNode(treeNode);
+
+                                            for (var j = 0; j < treeNodes.length; j++) {
+                                                treeNode.AddTreeNode(treeNodes[j]);
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    })());
                 }
             });
 
