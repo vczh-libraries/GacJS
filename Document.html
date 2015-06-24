@@ -37,11 +37,14 @@
             GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
                 var nss = result.Xml.firstChild.getElementsByTagName("Namespace");
                 for (var i = 0; i < nss.length; i++) {
-                    var displayName = nss[i].getAttribute("DisplayName").split(" ");
+                    var ns = nss[i];
+                    var displayName = ns.getAttribute("DisplayName").split(" ");
+                    var hasDoc = ns.getAttribute("Doc") === "true";
 
                     var treeNode = new TreeNode(true);
                     treeNode.Title = displayName[0];
                     treeNode.Postfix = displayName[1];
+                    treeNode.HasDoc = hasDoc;
                     rootContainer.AddTreeNode(treeNode);
                 }
             });

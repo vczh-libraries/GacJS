@@ -20,20 +20,22 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
     var TreeNodeContainer = Class(PQN("TreeNodeContainer"), function () {
         return {
             element: Private(null),
-            visible: Private(false),
             children: Private(null),
 
             GetElement: Private(function () { return this.element; }),
             Element: Public.Property({ readonly: true }),
 
-            GetVisible: Private(function () { return this.visible; }),
+            GetVisible: Private(function () {
+                return this.element.classList.contains("Expanded");
+            }),
             SetVisible: Private.StrongTyped(__Void, [__Boolean], function (value) {
-                this.visible = value;
+                this.element.classList.remove("Expanded");
+                this.element.classList.remove("Collapsed");
                 if (value) {
-                    this.element.setAttribute("class", "TreeNodeContainer Expanded");
+                    this.element.classList.add("Expanded");
                 }
                 else {
-                    this.element.setAttribute("class", "TreeNodeContainer Collapsed");
+                    this.element.classList.add("Collapsed");
                 }
             }),
             Visible: Public.Property({}),
@@ -41,6 +43,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             __Constructor: Public.StrongTyped(__Void, [__Boolean, __Object], function (visible, parent) {
                 this.element = Dom("ul", parent);
                 this.element.doc_Owner = this.__ExternalReference;
+                this.element.classList.add("TreeNodeContainer");
                 this.Visible = visible;
                 this.children = [];
             }),
@@ -63,6 +66,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             parent: Private(null),
 
             element: Private(null),
+            titleElement: Private(null),
             decoratorElement: Private(null),
             postfixElement: Private(null),
 
@@ -97,6 +101,19 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 this.postfixElement.firstChild.textContent = value;
             }),
             Postfix: Public.Property({}),
+
+            GetHasDoc: Private(function () {
+                return this.titleElement.classList.contains("HasDoc");
+            }),
+            SetHasDoc: Private.StrongTyped(__Void, [__Boolean], function (value) {
+                if (value) {
+                    return this.titleElement.classList.add("HasDoc");
+                }
+                else {
+                    return this.titleElement.classList.remove("HasDoc");
+                }
+            }),
+            HasDoc: Public.Property({}),
 
             GetExpanded: Private(function () { return this.expanded; }),
             SetExpanded: Private.StrongTyped(__Void, [__Boolean], function (value) {

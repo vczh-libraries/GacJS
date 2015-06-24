@@ -9,7 +9,7 @@
     display: block;
     font-family: 'Consolas';
     text-decoration: none;
-    color: #000000;
+    color: #808080;
     cursor: pointer;
 }
 
@@ -21,20 +21,27 @@
     float: left;
     display: block;
     text-decoration: none;
-    color: #0026ff;
     cursor: pointer;
+    color: #808080;
 }
 
     .TreeNodeTitle:hover {
         text-decoration: underline;
-        color: #ff5000;
     }
+
+    .TreeNodeTitle.HasDoc {
+        color: #0026ff;
+    }
+
+        .TreeNodeTitle.HasDoc:hover {
+            color: #ff5000;
+        }
 
 .TreeNodePostfix {
     float: left;
     display: block;
     text-decoration: none;
-    color: #000000;
+    color: #808080;
     margin-left: 0.5em;
 }
 
