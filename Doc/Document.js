@@ -1,6 +1,17 @@
 Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildcard"], function (__injection__) {
     eval(__injection__);
 
+    function GetDirectXmlChild(element, name) {
+        var xmls = [];
+        for (var i = 0; i < element.childNodes.length; i++) {
+            var xml = element.childNodes[i];
+            if (xml.tagName === name) {
+                xmls.push(xml);
+            }
+        }
+        return xmls;
+    }
+
     /********************************************************************************
     RazorResourceDeserializer
     ********************************************************************************/
@@ -42,9 +53,9 @@ Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildc
         }),
 
         Deserialize: Public.Override(function (resource) {
-            var nsXmls = resource.getElementsByTagName("Namespace");
             var list = [];
             var map = {};
+            var nsXmls = GetDirectXmlChild(resource.firstChild, "Namespace");
             for (var i = 0; i < nsXmls.length; i++) {
                 var nsXml = nsXmls[i];
                 var item = new DocNamespaceItem(
@@ -61,6 +72,50 @@ Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildc
     });
     RegisterDeserializer(new NssResourceDeserializer());
     RegisterResource(WildcardToRegExp("nss.xml"), "Nss");
+
+    /********************************************************************************
+    NsResourceDeserializer
+    ********************************************************************************/
+
+    var NsResourceDeserializer = Class(PQN("NsResourceDeserializer"), IResourceDeserializer, {
+        GetName: Public.Override(function () {
+            return "Ns";
+        }),
+
+        GetPriorDeserializerName: Public.Override(function () {
+            return "Xml";
+        }),
+
+        Deserialize: Public.Override(function (resource) {
+            var names = [];
+            var map = {};
+            var overloadsXmls = GetDirectXmlChild(resource.firstChild, "Overloads");
+            for (var i = 0; i < overloadsXmls.length; i++) {
+                var overloadsXml = overloadsXmls[i];
+                var displayName = overloadsXml.getAttribute("DisplayName");
+
+                var items = [];
+                names.push(displayName);
+                map[displayName] = items;
+
+                var symbolXmls = GetDirectXmlChild(overloadsXml, "Symbol");
+                for (var j = 0; j < symbolXmls.length; j++) {
+                    var symbolXml = symbolXmls[j];
+
+                    var item = new DocNamespaceItem(
+                        symbolXml.getAttribute("Key"),
+                        displayName,
+                        symbolXml.getAttribute("UrlName"),
+                        symbolXml.getAttribute("Doc") === "true"
+                        );
+                    items.push(item);
+                }
+            }
+            return { names: names, map: map };
+        }),
+    });
+    RegisterDeserializer(new NsResourceDeserializer());
+    RegisterResource(WildcardToRegExp("ns(*).xml"), "Ns");
 
     /********************************************************************************
     Package
