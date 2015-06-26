@@ -141,33 +141,48 @@
 
                     // t(symbol).xml
                     GetResourceAsync(tIndexFile, true).SucceededThen(function (result) {
-                        var rootSymbolXml = result.Xml.firstChild.getElementsByTagName("Symbol")[0];
-                        var symbolXmls = GetSymbolXmls(rootSymbolXml);
-                        for (var i = 0; i < symbolXmls.length; i++) {
-                            FillSymbolTree(tTreeNode, symbolXmls[i], sIndexFile);
-                        }
+                        var rootSymbolItem = result.Tree.rootItem;
+                        FillSymbolTree(tTreeNode, rootSymbolItem, sIndexFile);
                         tTreeNode.RemoveLoadingText();
                     });
                 }
             }
 
-            function FillSymbolTree(parentTreeNode, symbolXml, sIndexFile) {
-                var displayName = symbolXml.getAttribute("DisplayName").split(" ");
-                var hasDoc = symbolXml.getAttribute("Doc") === "true";
-                var symbolXmls = GetSymbolXmls(symbolXml);
+            function FillSymbolTree(parentTreeNode, parentSymbol, sIndexFile) {
+                for (var i = 0; i < parentSymbol.ChildNames.length; i++) {
+                    var displayNameKey = parentSymbol.ChildNames[i];
+                    var childSymbols = parentSymbol.Children[displayNameKey];
+                    var displayName = displayNameKey.split(" ");
+                    var treeNodes = [];
 
-                var treeNode = new TreeNode(symbolXmls.length > 0, "");
-                treeNode.Title = displayName[0];
-                treeNode.Postfix = displayName[1];
-                treeNode.HasDoc = hasDoc;
-                parentTreeNode.AddTreeNode(treeNode);
+                    for (var j = 0; j < childSymbols.length; j++) {
+                        var childSymbol = childSymbols[j];
 
-                var key = symbolXml.getAttribute("Key");
-                keyNodeMap[key] = treeNode;
-                BindSymbolNode(treeNode, key, sIndexFile);
+                        var treeNode = new TreeNode(childSymbol.ChildNames.length > 0, "");
+                        treeNode.Title = displayName[0];
+                        treeNode.Postfix = displayName[1];
+                        treeNode.HasDoc = childSymbol.Doc;
 
-                for (var i = 0; i < symbolXmls.length; i++) {
-                    FillSymbolTree(treeNode, symbolXmls[i], sIndexFile);
+                        keyNodeMap[childSymbol.Key] = treeNode;
+                        BindSymbolNode(treeNode, childSymbol.Key, sIndexFile);
+                        treeNodes.push(treeNode);
+                        FillSymbolTree(treeNode, childSymbol, sIndexFile);
+                    }
+
+                    if (treeNodes.length === 1) {
+                        parentTreeNode.AddTreeNode(treeNodes[0]);
+                    }
+                    else {
+                        var treeNode = new TreeNode(true, "");
+                        treeNode.Title = displayName[0];
+                        treeNode.Postfix = displayName[1];
+                        treeNode.HasDoc = treeNodes.filter(function (n) { return n.HasDoc; }).length > 0;
+                        parentTreeNode.AddTreeNode(treeNode);
+
+                        for (var j = 0; j < treeNodes.length; j++) {
+                            treeNode.AddTreeNode(treeNodes[j]);
+                        }
+                    }
                 }
             }
 
