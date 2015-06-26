@@ -194,5 +194,7 @@ Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildc
     ********************************************************************************/
 
     return {
+        DocNamespaceItem: DocNamespaceItem,
+        DocSymbolTreeItem: DocSymbolTreeItem,
     }
 })
