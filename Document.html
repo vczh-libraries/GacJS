@@ -87,6 +87,7 @@
 
                                 var urlName = symbolXml.getAttribute("UrlName");
                                 var indexFile = "./Doc/Data/t(" + urlName + ").xml";
+                                var symbolIndexFile = "./Doc/Data/s(" + urlName + ").xml";
 
                                 var treeNode = new TreeNode(hasChildren, "Loading " + indexFile + " ...");
                                 treeNode.Title = displayName[0];
@@ -96,14 +97,16 @@
 
                                 var key = symbolXml.getAttribute("Key");
                                 keyNodeMap[key] = treeNode;
+                                BindSymbolNode(treeNode, key, symbolIndexFile);
 
                                 if (hasChildren) {
                                     treeNode.ExpandedChanged.Attach((function () {
                                         var tKey = key;
                                         var tIndexFile = indexFile;
                                         var tTreeNode = treeNode;
+                                        var sIndexFile = symbolIndexFile;
                                         return function () {
-                                            LoadSymbolNodeChildren(tKey, tIndexFile, tTreeNode);
+                                            LoadSymbolNodeChildren(tKey, tIndexFile, tTreeNode, sIndexFile);
                                         }
                                     })());
                                 }
@@ -140,7 +143,7 @@
                 return symbolXmls;
             }
 
-            function LoadSymbolNodeChildren(tKey, tIndexFile, tTreeNode) {
+            function LoadSymbolNodeChildren(tKey, tIndexFile, tTreeNode, sIndexFile) {
                 if (!nodeLoaded.hasOwnProperty(tKey)) {
                     nodeLoaded[tKey] = null;
 
@@ -149,30 +152,44 @@
                         var rootSymbolXml = result.Xml.firstChild.getElementsByTagName("Symbol")[0];
                         var symbolXmls = GetSymbolXmls(rootSymbolXml);
                         for (var i = 0; i < symbolXmls.length; i++) {
-                            FillSymbolTree(tTreeNode, symbolXmls[i]);
+                            FillSymbolTree(tTreeNode, symbolXmls[i], sIndexFile);
                         }
                         tTreeNode.RemoveLoadingText();
                     });
-
-                    function FillSymbolTree(parentTreeNode, symbolXml) {
-                        var displayName = symbolXml.getAttribute("DisplayName").split(" ");
-                        var hasDoc = symbolXml.getAttribute("Doc") === "true";
-                        var symbolXmls = GetSymbolXmls(symbolXml);
-
-                        var treeNode = new TreeNode(symbolXmls.length > 0, "");
-                        treeNode.Title = displayName[0];
-                        treeNode.Postfix = displayName[1];
-                        treeNode.HasDoc = hasDoc;
-                        parentTreeNode.AddTreeNode(treeNode);
-
-                        var key = symbolXml.getAttribute("Key");
-                        keyNodeMap[key] = treeNode;
-
-                        for (var i = 0; i < symbolXmls.length; i++) {
-                            FillSymbolTree(treeNode, symbolXmls[i]);
-                        }
-                    }
                 }
+            }
+
+            function FillSymbolTree(parentTreeNode, symbolXml, sIndexFile) {
+                var displayName = symbolXml.getAttribute("DisplayName").split(" ");
+                var hasDoc = symbolXml.getAttribute("Doc") === "true";
+                var symbolXmls = GetSymbolXmls(symbolXml);
+
+                var treeNode = new TreeNode(symbolXmls.length > 0, "");
+                treeNode.Title = displayName[0];
+                treeNode.Postfix = displayName[1];
+                treeNode.HasDoc = hasDoc;
+                parentTreeNode.AddTreeNode(treeNode);
+
+                var key = symbolXml.getAttribute("Key");
+                keyNodeMap[key] = treeNode;
+                BindSymbolNode(treeNode, key, sIndexFile);
+
+                for (var i = 0; i < symbolXmls.length; i++) {
+                    FillSymbolTree(treeNode, symbolXmls[i], sIndexFile);
+                }
+            }
+
+            var xmlSerializer = new XMLSerializer();
+
+            function BindSymbolNode(treeNode, key, sIndexFile) {
+                treeNode.Clicked.Attach(function () {
+                    documentContent.innerHTML = "";
+                    documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
+                    GetResourceAsync(sIndexFile, true).SucceededThen(function (result) {
+                        documentContent.innerHTML = "";
+                        documentContent.appendChild(document.createTextNode(xmlSerializer.serializeToString(result.Xml)));
+                    });
+                });
             }
 
             return {

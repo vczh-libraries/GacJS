@@ -152,6 +152,8 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             Expanded: Public.Property({}),
             ExpandedChanged: Public.Event(),
 
+            Clicked: Public.Event(),
+
             __Constructor: Public.StrongTyped(__Void, [__Boolean, __String], function (hasChild, loadingText) {
                 var self = this;
 
@@ -172,6 +174,9 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 this.titleElement = Dom("div", this.element);
                 this.titleElement.appendChild(Text("\u00A0"));
                 this.titleElement.setAttribute("class", "TreeNodeTitle");
+                this.titleElement.addEventListener("click", function () {
+                    self.Clicked.Execute(self.__ExternalReference);
+                }, false);
 
                 this.postfixElement = Dom("div", this.element);
                 this.postfixElement.appendChild(Text("\u00A0"));

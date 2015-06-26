@@ -24,4 +24,5 @@ body {
     }
 
     .DocumentView .DocumentContent {
+        vertical-align: text-top;
     }
