@@ -38,26 +38,22 @@
 
             // nss.xml
             GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
-                var nsXmls = result.Xml.firstChild.getElementsByTagName("Namespace");
-                for (var i = 0; i < nsXmls.length; i++) {
-                    var nsXml = nsXmls[i];
-                    var displayName = nsXml.getAttribute("DisplayName").split(" ");
-                    var hasDoc = nsXml.getAttribute("Doc") === "true";
-
-                    var urlName = nsXml.getAttribute("UrlName");
-                    var indexFile = "./Doc/Data/ns(" + urlName + ").xml";
+                var nsItems = result.Nss.list;
+                for (var i = 0; i < nsItems.length; i++) {
+                    var nsItem = nsItems[i];
+                    var displayName = nsItem.DisplayName.split(" ");
+                    var indexFile = "./Doc/Data/ns(" + nsItem.UrlName + ").xml";
 
                     var treeNode = new TreeNode(true, "Loading " + indexFile + " ...");
                     treeNode.Title = displayName[0];
                     treeNode.Postfix = displayName[1];
-                    treeNode.HasDoc = hasDoc;
+                    treeNode.HasDoc = nsItem.Doc;
                     rootContainer.AddTreeNode(treeNode);
 
-                    var key = nsXml.getAttribute("Key");
-                    keyNodeMap[key] = treeNode;
+                    keyNodeMap[nsItem.Key] = treeNode;
 
                     treeNode.ExpandedChanged.Attach((function () {
-                        var nsKey = key;
+                        var nsKey = nsItem.Key;
                         var nsIndexFile = indexFile;
                         var nsTreeNode = treeNode;
                         return function () {
