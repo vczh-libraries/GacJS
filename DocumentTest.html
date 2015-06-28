@@ -31,12 +31,19 @@
         var ns_s = [];
         for (var i = 0; i < nss.list.length; i++) {
             var fileName = "ns(" + nss.list[i].UrlName + ").xml";
-            TestCase(fileName, function () {
-                var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
-                var ns = result.Ns;
-                Assert(ns.names !== undefined);
-                ns_s.push(ns);
-            });
+            try {
+                TestCase(fileName, function () {
+                    var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
+                    if (result.hasOwnProperty("Exception")) {
+                        console.debug(fileName + " => " + result.Exception);
+                    }
+                    var ns = result.Ns;
+                    Assert(ns.names !== undefined);
+                    ns_s.push(ns);
+                });
+            }
+            catch (ex) {
+            }
         }
     </script>
 
@@ -47,11 +54,18 @@
                 var symbols = ns.map[ns.names[j]];
                 for (var k = 0; k < symbols.length; k++) {
                     var fileName = "t(" + symbols[k].UrlName + ").xml";
-                    TestCase(fileName, function () {
-                        var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
-                        var t = result.Tree;
-                        Assert(t.parentMapping !== undefined);
-                    });
+                    try {
+                        TestCase(fileName, function () {
+                            var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
+                            if (result.hasOwnProperty("Exception")) {
+                                console.debug(fileName + " => " + result.Exception);
+                            }
+                            var t = result.Tree;
+                            Assert(t.parentMapping !== undefined);
+                        });
+                    }
+                    catch (ex) {
+                    }
                 }
             }
         }
