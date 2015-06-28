@@ -79,11 +79,95 @@ Packages.Define("Doc.SymbolTree", ["Class"], function (__injection__) {
     });
 
     /********************************************************************************
-    Type Deserialization
+    Symbol
     ********************************************************************************/
 
+    var Access = Enum(PQN("Access"), {
+        Public: 0,
+        Protected: 1,
+        Private: 2,
+    });
+
+    var SymbolDecl = Class(PQN("SymbolDecl"), {
+        Access: Public(Access.Description.Public),
+        Name: Public(""),
+        Children: Public(null),
+        Document: Public(null),
+        Tags: Public(null),
+        NameKey: Public(""),
+        OverloadKey: Public(""),
+    });
+
+    var TypeParameterDecl = Class(PQN("TypeParameterDecl"), SymbolDecl, {
+    });
+
+    var TemplateDecl = Class(PQN("TemplateDecl"), SymbolDecl, {
+        TypeParameters: Public(null),
+        Specialization: Public(null),
+        Element: Public(null),
+    });
+
+    var ClassType = Enum(PQN("ClassType"), {
+        Class: 0,
+        Struct: 1,
+        Union: 2,
+    });
+
+    var BaseTypeDecl = Class(PQN("BaseTypeDecl"), SymbolDecl, {
+        Type: Public(null),
+    });
+
+    var ClassDecl = Class(PQN("ClassDecl"), SymbolDecl, {
+        ClassType: Public(ClassType.Description.Class),
+        BaseTypes: Public(null),
+    });
+
+    var VarDecl = Class(PQN("VarDecl"), SymbolDecl, {
+        Type: Public(null),
+        Static: Public(false),
+    });
+
+    var Virtual = Enum(PQN("Virtual"), {
+        Static: 0,
+        Normal: 1,
+        Virtual: 2,
+        Abstract: 3,
+    });
+
+    var Function = Enum(PQN("Function"), {
+        Constructor: 0,
+        Destructor: 1,
+        Function: 2,
+    });
+
+    var FuncDecl = Class(PQN("FuncDecl"), SymbolDecl, {
+        Type: Public(null),
+        Virtual: Public(Virtual.Description.Normal),
+        Function: Public(Function.Description.Function),
+    });
+
+    var Grouping = Enum(PQN("Grouping"), {
+        Union: 0,
+        Struct: 1,
+    });
+
+    var GroupedFieldDecl = Class(PQN("GroupedFieldDecl"), SymbolDecl, {
+        Grouping: Public(Grouping.Description.Struct),
+    });
+
+    var EnumItemDecl = Class(PQN("EnumItemDecl"), SymbolDecl, {
+    });
+
+    var EnumDecl = Class(PQN("EnumDecl"), SymbolDecl, {
+        EnumClass: Public(false),
+    });
+
+    var TypedefDecl = Class(PQN("TypedefDecl"), SymbolDecl, {
+        Type: Public(null),
+    });
+
     /********************************************************************************
-    Symbol
+    Type Deserialization
     ********************************************************************************/
 
     /********************************************************************************
