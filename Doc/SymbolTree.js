@@ -188,5 +188,22 @@ Packages.Define("Doc.SymbolTree", ["Class"], function (__injection__) {
         DeclTypeDecl: DeclTypeDecl,
         VariadicArgumentTypeDecl: VariadicArgumentTypeDecl,
         ConstantTypeDecl: ConstantTypeDecl,
+
+        Access: Access,
+        SymbolDecl: SymbolDecl,
+        TypeParameterDecl: TypeParameterDecl,
+        TemplateDecl: TemplateDecl,
+        ClassType: ClassType,
+        BaseTypeDecl: BaseTypeDecl,
+        ClassDecl: ClassDecl,
+        VarDecl: VarDecl,
+        Virtual: Virtual,
+        Function: Function,
+        FuncDecl: FuncDecl,
+        Grouping: Grouping,
+        GroupedFieldDecl: GroupedFieldDecl,
+        EnumItemDecl: EnumItemDecl,
+        EnumDecl: EnumDecl,
+        TypedefDecl: TypedefDecl,
     }
 })
