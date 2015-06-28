@@ -21,7 +21,8 @@
 
     <script>
         TestCase("nss.xml", function () {
-            nss = GetResourceAsync("./Doc/Data/nss.xml", false).Result.Nss;
+            var result = GetResourceAsync("./Doc/Data/nss.xml", false).Result;
+            nss = result.Nss;
             Assert(nss.list !== undefined);
         });
     </script>
@@ -31,10 +32,28 @@
         for (var i = 0; i < nss.list.length; i++) {
             var fileName = "ns(" + nss.list[i].UrlName + ").xml";
             TestCase(fileName, function () {
-                var ns = GetResourceAsync("./Doc/Data/" + fileName, false).Result.Ns;
+                var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
+                var ns = result.Ns;
                 Assert(ns.names !== undefined);
                 ns_s.push(ns);
             });
+        }
+    </script>
+
+    <script>
+        for (var i = 0; i < ns_s.length; i++) {
+            var ns = ns_s[i];
+            for (var j = 0; j < ns.names.length; j++) {
+                var symbols = ns.map[ns.names[j]];
+                for (var k = 0; k < symbols.length; k++) {
+                    var fileName = "t(" + symbols[k].UrlName + ").xml";
+                    TestCase(fileName, function () {
+                        var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
+                        var t = result.Tree;
+                        Assert(t.parentMapping !== undefined);
+                    });
+                }
+            }
         }
     </script>
 

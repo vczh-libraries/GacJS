@@ -176,7 +176,7 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
                     delay.promise.SetResult(result);
                 }
                 else {
-                    delay.promise.SetException();
+                    delay.promise.SetException(xhr.status);
                 }
             }
         }
@@ -193,6 +193,11 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
         if (maxRetryCount === undefined) {
             maxRetryCount = 3;
         }
+        var paths = path.split("/");
+        for (var i = 0; i < paths.length; i++) {
+            paths[i] = encodeURIComponent(paths[i]);
+        }
+        path = paths.join("/");
 
         var future = staticResources[path];
         if (future === undefined) {
