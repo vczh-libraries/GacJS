@@ -203,7 +203,7 @@ Packages.Define("IO.Resource", ["Class", "IO.Delay", "IO.Wildcard"], function (_
             }
 
             function continueRepeating(value) {
-                return DelayException.TestType(value) || ++counter === maxRetryCount;
+                return DelayException.TestType(value) && ++counter === maxRetryCount;
             }
 
             future = RepeatFuture(generator, continueRepeating).ContinueWith(function (value) {
