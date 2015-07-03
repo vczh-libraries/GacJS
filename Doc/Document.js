@@ -1,4 +1,4 @@
-Packages.Define("Doc.Document", ["Class", , "XmlHelper", "Html.Razor", "IO.Resource", "IO.Wildcard", "Doc.SymbolTree"], function (__injection__) {
+Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resource", "IO.Wildcard", "Doc.SymbolTree"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************

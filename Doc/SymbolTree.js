@@ -32,7 +32,7 @@ Packages.Define("XmlHelper", function () {
         GetDirectXmlChild: GetDirectXmlChild,
         Att: Att,
     }
-});
+})
 
 Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection__) {
     eval(__injection__);
