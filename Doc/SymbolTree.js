@@ -205,6 +205,8 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Private: 2,
     });
 
+    var domParser = new DOMParser();
+
     var SymbolDecl = Class(PQN("SymbolDecl"), {
         Access: Public(AccessOption.Description.Public),
         Name: Public(""),
@@ -215,7 +217,23 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         OverloadKey: Public(""),
 
         Load: Public.Virtual(function (xml) {
+            this.Access = AccessOption.Description[Att(xml, "Access")];
+            this.Name = Att(xml, "Name");
+            this.Document = Att(xml, "Document", null);
+            if (this.Document !== null) {
+                this.Document = domParser.parseFromString(this.Document, "text/xml");
+            }
+            this.Tags = Att(xml, "Tags").split(";");
+            this.NameKey = Att(xml, "NameKey", null);
+            this.OverloadKey = Att(xml, "OverloadKey", null);
 
+            var childXmls = GetDirectXmlChild(xml, "Children");
+            if (childXmls.length === 0) {
+                this.Children = [];
+            }
+            else {
+                this.Children = childXmls[0].map(LoadSymbol);
+            }
         }),
     });
 
