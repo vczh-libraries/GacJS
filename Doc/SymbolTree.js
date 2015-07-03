@@ -4,7 +4,7 @@ Packages.Define("XmlHelper", function () {
         var xmls = [];
         for (var i = 0; i < element.childNodes.length; i++) {
             var xml = element.childNodes[i];
-            if (xml.tagName === name) {
+            if (name === undefined || xml.tagName === name) {
                 xmls.push(xml);
             }
         }
@@ -131,8 +131,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.CallingConvention = CallingConventionOption.Description[Att(xml, "CallingConvention")];
             this.Const = Att(xml, "Const") === "true";
             this.ReturnType = LoadType(GetDirectXmlChild(xml, "ReturnType")[0]);
-            this.Parameters = GetDirectXmlChild(xml, "Parameters")[0].
-                childNodes.
+            this.Parameters = GetDirectXmlChild(GetDirectXmlChild(xml, "Parameters")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadType);
         }),
@@ -158,8 +157,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.__Static(TypeDecl).Load(xml);
 
             this.Element = LoadType(GetDirectXmlChild(xml, "Element")[0]);
-            this.TypeArguments = GetDirectXmlChild(xml, "TypeArguments")[0].
-                childNodes.
+            this.TypeArguments = GetDirectXmlChild(GetDirectXmlChild(xml, "TypeArguments")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadType);
         }),
@@ -252,12 +250,10 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
 
-            this.TypeParameters = GetDirectXmlChild(xml, "TypeParameters")[0].
-                childNodes.
+            this.TypeParameters = GetDirectXmlChild(GetDirectXmlChild(xml, "TypeParameters")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadSymbol);
-            this.Specialization = GetDirectXmlChild(xml, "Specialization")[0].
-                childNodes.
+            this.Specialization = GetDirectXmlChild(GetDirectXmlChild(xml, "Specialization")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadType);
             this.Element = LoadSymbol(GetDirectXmlChild(xml, "Element")[0]);
@@ -288,8 +284,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.__Static(SymbolDecl).Load(xml);
 
             this.ClassType = ClassTypeOption.Description[Att(xml, "ClassType")];
-            this.BaseTypes = GetDirectXmlChild(xml, "BaseTypes")[0].
-                childNodes.
+            this.BaseTypes = GetDirectXmlChild(GetDirectXmlChild(xml, "BaseTypes")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadSymbol);
         }),
@@ -381,7 +376,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
     ********************************************************************************/
 
     function LoadType(xml) {
-        var type = Packages.Types(PQN(xml.tagName));
+        var type = Packages.Types[PQN(xml.tagName)];
         var obj = new type;
         TypeDecl.RequireType(obj);
         obj.Load(xml);
@@ -393,7 +388,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
     ********************************************************************************/
 
     function LoadSymbol(xml) {
-        var type = Packages.Types(PQN(xml.tagName));
+        var type = Packages.Types[PQN(xml.tagName)];
         var obj = new type;
         SymbolDecl.RequireType(obj);
         obj.Load(xml);

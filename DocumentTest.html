@@ -72,6 +72,30 @@
     </script>
 
     <script>
+        for (var i = 0; i < ns_s.length; i++) {
+            var ns = ns_s[i];
+            for (var j = 0; j < ns.names.length; j++) {
+                var symbols = ns.map[ns.names[j]];
+                for (var k = 0; k < symbols.length; k++) {
+                    var fileName = "s(" + symbols[k].UrlName + ").xml";
+                    try {
+                        TestCase(fileName, function () {
+                            var result = GetResourceAsync("./Doc/Data/" + fileName, false).Result;
+                            if (result.hasOwnProperty("Exception")) {
+                                console.debug(fileName + " => " + result.Exception);
+                            }
+                            var t = result.Tree;
+                            Assert(t.length != 0);
+                        });
+                    }
+                    catch (ex) {
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
         SummaryTest();
     </script>
 </body>

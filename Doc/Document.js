@@ -193,8 +193,7 @@ Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resourc
         }),
 
         Deserialize: Public.Override(function (resource) {
-            return GetDirectXmlChild(resource, "Symbols").
-                childNodes.
+            return GetDirectXmlChild(GetDirectXmlChild(resource, "Symbols")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadSymbol);
         }),
