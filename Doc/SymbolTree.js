@@ -4,7 +4,7 @@ Packages.Define("XmlHelper", function () {
         var xmls = [];
         for (var i = 0; i < element.childNodes.length; i++) {
             var xml = element.childNodes[i];
-            if (name === undefined || xml.tagName === name) {
+            if (name === undefined ? xml.tagName !== undefined : xml.tagName === name) {
                 xmls.push(xml);
             }
         }
@@ -46,7 +46,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         ReferencingOverloadKeys: Public(null),
 
         Load: Public.Virtual(function (xml) {
-            this.ReferencingNameKey = Att(xml, "ReferencingNameKey");
+            this.ReferencingNameKey = Att(xml, "ReferencingNameKey", "");
             this.ReferencingOverloadKeys = GetDirectXmlChild(xml, "ReferencingOverloadKeys").
                 map(function (xml) { return GetDirectXmlChild(xml, "Key"); }).
                 map(function (xml) { return xml.getAttribute("Value"); });
@@ -71,7 +71,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.__Static(TypeDecl).Load(xml);
 
             this.Name = Att(xml, "Name");
-            this.Parent = LoadType(GetDirectXmlChild(xml, "Parent")[0]);
+            this.Parent = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Parent")[0])[0]);
         }),
     });
 
@@ -92,7 +92,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(TypeDecl).Load(xml);
 
-            this.Element = LoadType(GetDirectXmlChild(xml, "Element")[0]);
+            this.Element = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
             this.Decoration = DecorationOption.Description[Att(xml, "Decoration")];
         }),
     });
@@ -104,7 +104,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(TypeDecl).Load(xml);
 
-            this.Element = LoadType(GetDirectXmlChild(xml, "Element")[0]);
+            this.Element = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
             this.Expression = Att(xml, "Expression");
         }),
     });
@@ -130,7 +130,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
             this.CallingConvention = CallingConventionOption.Description[Att(xml, "CallingConvention")];
             this.Const = Att(xml, "Const") === "true";
-            this.ReturnType = LoadType(GetDirectXmlChild(xml, "ReturnType")[0]);
+            this.ReturnType = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "ReturnType")[0])[0]);
             this.Parameters = GetDirectXmlChild(GetDirectXmlChild(xml, "Parameters")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadType);
@@ -144,8 +144,8 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(TypeDecl).Load(xml);
 
-            this.Element = LoadType(GetDirectXmlChild(xml, "Element")[0]);
-            this.ClassType = LoadType(GetDirectXmlChild(xml, "ClassType")[0]);
+            this.Element = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
+            this.ClassType = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "ClassType")[0])[0]);
         }),
     });
 
@@ -156,7 +156,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(TypeDecl).Load(xml);
 
-            this.Element = LoadType(GetDirectXmlChild(xml, "Element")[0]);
+            this.Element = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
             this.TypeArguments = GetDirectXmlChild(GetDirectXmlChild(xml, "TypeArguments")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadType);
@@ -179,7 +179,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(TypeDecl).Load(xml);
 
-            this.Element = LoadType(GetDirectXmlChild(xml, "Element")[0]);
+            this.Element = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
         }),
     });
 
@@ -256,7 +256,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.Specialization = GetDirectXmlChild(GetDirectXmlChild(xml, "Specialization")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
                 map(LoadType);
-            this.Element = LoadSymbol(GetDirectXmlChild(xml, "Element")[0]);
+            this.Element = LoadSymbol(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
         }),
     });
 
@@ -266,7 +266,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
 
-            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
+            this.Type = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Type")[0])[0]);
         }),
     });
 
@@ -298,7 +298,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.__Static(SymbolDecl).Load(xml);
 
             this.Static = Att(xml, "Static") === "true";
-            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
+            this.Type = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Type")[0])[0]);
         }),
     });
 
@@ -325,7 +325,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
             this.Virtual = VirtualOption.Description[Att(xml, "Virtual")];
             this.Function = FunctionOption.Description[Att(xml, "Function")];
-            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
+            this.Type = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Type")[0])[0]);
         }),
     });
 
@@ -367,7 +367,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
 
-            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
+            this.Type = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Type")[0])[0]);
         }),
     });
 
