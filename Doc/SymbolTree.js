@@ -129,7 +129,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.__Static(TypeDecl).Load(xml);
 
             this.CallingConvention = CallingConventionOption.Description[Att(xml, "CallingConvention")];
-            this.Const = Att(xml, "Const") === true;
+            this.Const = Att(xml, "Const") === "true";
             this.ReturnType = LoadType(GetDirectXmlChild(xml, "ReturnType")[0]);
             this.Parameters = GetDirectXmlChild(xml, "Parameters")[0].
                 childNodes.
@@ -251,6 +251,26 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.TypeParameters = GetDirectXmlChild(xml, "TypeParameters")[0].
+                childNodes.
+                filter(function (xml) { return xml.tagName !== undefined; }).
+                map(LoadSymbol);
+            this.Specialization = GetDirectXmlChild(xml, "Specialization")[0].
+                childNodes.
+                filter(function (xml) { return xml.tagName !== undefined; }).
+                map(LoadType);
+            this.Element = LoadSymbol(GetDirectXmlChild(xml, "Element")[0]);
+        }),
+    });
+
+    var BaseTypeDecl = Class(PQN("BaseTypeDecl"), SymbolDecl, {
+        Type: Public(null),
+
+        Load: Public.Override(function (xml) {
+            this.__Static(SymbolDecl).Load(xml);
+
+            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
         }),
     });
 
@@ -260,20 +280,18 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Union: 2,
     });
 
-    var BaseTypeDecl = Class(PQN("BaseTypeDecl"), SymbolDecl, {
-        Type: Public(null),
-
-        Load: Public.Override(function (xml) {
-            this.__Static(SymbolDecl).Load(xml);
-        }),
-    });
-
     var ClassDecl = Class(PQN("ClassDecl"), SymbolDecl, {
         ClassType: Public(ClassTypeOption.Description.Class),
         BaseTypes: Public(null),
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.ClassType = ClassTypeOption.Description[Att(xml, "ClassType")];
+            this.BaseTypes = GetDirectXmlChild(xml, "BaseTypes")[0].
+                childNodes.
+                filter(function (xml) { return xml.tagName !== undefined; }).
+                map(LoadSymbol);
         }),
     });
 
@@ -283,6 +301,9 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.Static = Att(xml, "Static") === "true";
+            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
         }),
     });
 
@@ -306,19 +327,25 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.Virtual = VirtualOption.Description[Att(xml, "Virtual")];
+            this.Function = FunctionOption.Description[Att(xml, "Function")];
+            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
         }),
     });
 
-    var Grouping = Enum(PQN("Grouping"), {
+    var GroupingOption = Enum(PQN("Grouping"), {
         Union: 0,
         Struct: 1,
     });
 
     var GroupedFieldDecl = Class(PQN("GroupedFieldDecl"), SymbolDecl, {
-        Grouping: Public(Grouping.Description.Struct),
+        Grouping: Public(GroupingOption.Description.Struct),
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.Grouping = GroupingOption.Description[Att(xml, "Grouping")];
         }),
     });
 
@@ -334,6 +361,8 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.EnumClass = Att(xml, "EnumClass") === "true";
         }),
     });
 
@@ -342,6 +371,8 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
+
+            this.Type = LoadType(GetDirectXmlChild(xml, "Type")[0]);
         }),
     });
 
@@ -352,6 +383,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
     function LoadType(xml) {
         var type = Packages.Types(PQN(xml.tagName));
         var obj = new type;
+        TypeDecl.RequireType(obj);
         obj.Load(xml);
         return obj;
     }
@@ -363,6 +395,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
     function LoadSymbol(xml) {
         var type = Packages.Types(PQN(xml.tagName));
         var obj = new type;
+        SymbolDecl.RequireType(obj);
         obj.Load(xml);
         return obj;
     }
@@ -397,10 +430,13 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         VirtualOption: VirtualOption,
         FunctionOption: FunctionOption,
         FuncDecl: FuncDecl,
-        Grouping: Grouping,
+        GroupingOption: GroupingOption,
         GroupedFieldDecl: GroupedFieldDecl,
         EnumItemDecl: EnumItemDecl,
         EnumDecl: EnumDecl,
         TypedefDecl: TypedefDecl,
+
+        LoadType: LoadType,
+        LoadSymbol: LoadSymbol,
     }
 })
