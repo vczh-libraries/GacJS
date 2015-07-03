@@ -180,6 +180,29 @@ Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resourc
     RegisterResource(WildcardToRegExp("t(*).xml"), "Tree");
 
     /********************************************************************************
+    SymbolResourceDeserializer
+    ********************************************************************************/
+
+    var SymbolResourceDeserializer = Class(PQN("SymbolResourceDeserializer"), IResourceDeserializer, {
+        GetName: Public.Override(function () {
+            return "Symbol";
+        }),
+
+        GetPriorDeserializerName: Public.Override(function () {
+            return "Xml";
+        }),
+
+        Deserialize: Public.Override(function (resource) {
+            return GetDirectXmlChild(resource, "Symbols").
+                childNodes.
+                filter(function (xml) { return xml.tagName !== undefined; }).
+                map(LoadSymbol);
+        }),
+    });
+    RegisterDeserializer(new SymbolResourceDeserializer());
+    RegisterResource(WildcardToRegExp("s(*).xml"), "Symbol");
+
+    /********************************************************************************
     Package
     ********************************************************************************/
 
