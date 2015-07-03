@@ -1,16 +1,5 @@
-Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildcard", "Doc.SymbolTree"], function (__injection__) {
+Packages.Define("Doc.Document", ["Class", , "XmlHelper", "Html.Razor", "IO.Resource", "IO.Wildcard", "Doc.SymbolTree"], function (__injection__) {
     eval(__injection__);
-
-    function GetDirectXmlChild(element, name) {
-        var xmls = [];
-        for (var i = 0; i < element.childNodes.length; i++) {
-            var xml = element.childNodes[i];
-            if (xml.tagName === name) {
-                xmls.push(xml);
-            }
-        }
-        return xmls;
-    }
 
     /********************************************************************************
     RazorResourceDeserializer
@@ -175,6 +164,7 @@ Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildc
         }),
 
         Deserialize: Public.Override(function (resource) {
+            var ns = resource.firstChild.getAttribute("NamespaceUrlName");
             var parentMapping = {};
             var mapXmls = GetDirectXmlChild(GetDirectXmlChild(resource.firstChild, "SymbolParentMapping")[0], "Map");
             for (var i = 0; i < mapXmls.length; i++) {
@@ -183,7 +173,7 @@ Packages.Define("Doc.Document", ["Class", "Html.Razor", "IO.Resource", "IO.Wildc
             }
 
             var rootItem = this.CreateSymbol(GetDirectXmlChild(resource.firstChild, "Symbol")[0]);
-            return { parentMapping: parentMapping, rootItem: rootItem };
+            return { parentMapping: parentMapping, rootItem: rootItem, namespaceUrlName: ns };
         }),
     });
     RegisterDeserializer(new TreeResourceDeserializer());
