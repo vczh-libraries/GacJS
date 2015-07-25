@@ -9,11 +9,14 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     var DocRenderType = Enum(PQN("DocRenderType"), {
         Detailed: 0,
         ClassMember: 1,
+        FunctionParameter: 2,
     });
 
     var viewType = null;
     var viewTemplate = null;
     var viewTypedef = null;
+    var viewVar = null;
+    var viewFunction = null;
 
     function RenderType(type, continuation) {
         var model = { type: type, continuation: continuation };
@@ -32,10 +35,10 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             throw new Error("Rending symbol of type \"" + symbol.__Type.FullName + "\" is not implemented.");
         }
         else if (VarDecl.TestType(symbol)) {
-            throw new Error("Rending symbol of type \"" + symbol.__Type.FullName + "\" is not implemented.");
+            return viewVar(model);
         }
         else if (FuncDecl.TestType(symbol)) {
-            throw new Error("Rending symbol of type \"" + symbol.__Type.FullName + "\" is not implemented.");
+            return viewFunction(model);
         }
         else if (EnumDecl.TestType(symbol)) {
             throw new Error("Rending symbol of type \"" + symbol.__Type.FullName + "\" is not implemented.");
@@ -80,8 +83,10 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             var asyncType = GetResourceAsync("./Doc/View/Type.razor.html", true);
             var asyncTemplate = GetResourceAsync("./Doc/View/Template.razor.html", true);
             var asyncTypedef = GetResourceAsync("./Doc/View/Typedef.razor.html", true);
+            var asyncVar = GetResourceAsync("./Doc/View/Var.razor.html", true);
+            var asyncFunction = GetResourceAsync("./Doc/View/Function.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTemplate, asyncTypedef];
+            var asyncTasks = [asyncType, asyncTemplate, asyncTypedef, asyncVar, asyncFunction];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -94,6 +99,8 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
                 viewType = result[0].Razor;
                 viewTemplate = result[1].Razor;
                 viewTypedef = result[2].Razor;
+                viewVar = result[3].Razor;
+                viewFunction = result[4].Razor;
 
                 taskReady = true;
                 taskPreparing = false;

@@ -1,0 +1,24 @@
+@package Doc.SymbolTree
+@package Doc.View
+
+@var renderType = model.renderType;
+@var symbol = model.symbol;
+@var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
+
+@if (template !== null) {
+    @:@RenderTemplate(template)<br/>
+}
+@switch (symbol.Virtual) {
+    case VirtualOption.Description.Static:
+        <span class="DocKeyword">static</span>&nbsp;
+        break;
+    case VirtualOption.Description.Virtual:
+    case VirtualOption.Description.Abstract:
+        <span class="DocKeyword">virtual</span>&nbsp;
+        break;
+}
+@RenderType(symbol.Type, symbol.Name)
+@if (symbol.Virtual === VirtualOption.Description.Abstract) {
+    @:=0
+}
+;

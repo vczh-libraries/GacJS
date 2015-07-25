@@ -1,0 +1,13 @@
+@package Doc.SymbolTree
+@package Doc.View
+
+@var renderType = model.renderType;
+@var symbol = model.symbol;
+
+@if (symbol.Static === true) {
+    <span class="DocKeyword">static</span>&nbsp;
+}
+@RenderType(symbol.Type, symbol.Name)
+@if (renderType !== DocRenderType.Description.FunctionParameter) {
+    @:;
+}

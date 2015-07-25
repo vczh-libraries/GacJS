@@ -134,7 +134,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.ReturnType = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "ReturnType")[0])[0]);
             this.Parameters = GetDirectXmlChild(GetDirectXmlChild(xml, "Parameters")[0]).
                 filter(function (xml) { return xml.tagName !== undefined; }).
-                map(LoadType);
+                map(LoadSymbol);
         }),
     });
 
