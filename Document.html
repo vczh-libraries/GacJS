@@ -14,6 +14,7 @@
     <script async src="./Doc/Document.js"></script>
     <script async src="./Doc/SymbolTree.js"></script>
     <script async src="./Doc/TreeView.js"></script>
+    <script async src="./Doc/View/DocView.js"></script>
 </head>
 <body>
     <table class="DocumentView">
@@ -29,7 +30,7 @@
     </table>
 
     <script>
-        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.SymbolTree", "Doc.TreeView", "IO.Resource"], function (__injection__) {
+        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.SymbolTree", "Doc.TreeView", "Doc.View", "IO.Resource"], function (__injection__) {
             eval(__injection__);
 
             rootContainer = new TreeNodeContainer(true, documentIndex, "Loading ./Doc/Data/nss.xml ...");

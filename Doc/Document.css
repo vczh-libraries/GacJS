@@ -26,3 +26,23 @@ body {
     .DocumentView .DocumentContent {
         vertical-align: text-top;
     }
+
+.DocHyperlink {
+    color: lime;
+}
+
+.DocName {
+    font-weight: bold;
+}
+
+.DocKeyword {
+    color: blue;
+}
+
+.DocNotImportant {
+    color: gray;
+}
+
+.DocError {
+    color: red;
+}
