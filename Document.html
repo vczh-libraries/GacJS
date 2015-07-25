@@ -195,7 +195,15 @@
                     documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
                     GetResourceAsync(sIndexFile, true).SucceededThen(function (result) {
                         documentContent.innerHTML = "";
-                        documentContent.appendChild(document.createTextNode(xmlSerializer.serializeToString(result.Xml)));
+                        var symbol = result.Symbol;
+                        CancelAndRunAfterDocViewReady(
+                            function () {
+                                var view = RenderSymbol(DocRenderType.Description.Detailed, symbol);
+                                documentContent.appendChild(view.RawHtml);
+                            },
+                            function () {
+                                documentContent.innerHTML = "<span class=\"DocError\">Failed to render the symbol.</span>";
+                            });
                     });
                 });
             }

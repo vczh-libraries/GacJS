@@ -15,7 +15,7 @@ Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resourc
         }),
 
         Deserialize: Public.Override(function (resource) {
-            return CompileRazor(resource, "Html.MVCRazorHelper");
+            return CompileRazor(resource, []);
         }),
     });
     RegisterDeserializer(new RazorResourceDeserializer());

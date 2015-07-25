@@ -1,5 +1,5 @@
 
-Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource"], function (__injection__) {
+Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
@@ -77,11 +77,11 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource"], function
         if (taskPreparing === false) {
             taskPreparing === true;
 
-            var asyncType = GetResourceAsync("./Doc/View.Type.razor.html", true);
-            var asyncTemplate = GetResourceAsync("./Doc/View.Template.razor.html", true);
-            var asyncTypedef = GetResourceAsync("./Doc/View.Typedef.razor.html", true);
+            var asyncType = GetResourceAsync("./Doc/View/Type.razor.html", true);
+            var asyncTemplate = GetResourceAsync("./Doc/View/Template.razor.html", true);
+            var asyncTypedef = GetResourceAsync("./Doc/View/Typedef.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTypedef];
+            var asyncTasks = [asyncType, asyncTemplate, asyncTypedef];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -91,9 +91,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource"], function
                     }
                 }
 
-                viewType = result[0];
-                viewTemplate = result[1];
-                viewTypedef = result[2];
+                viewType = result[0].Razor;
+                viewTemplate = result[1].Razor;
+                viewTypedef = result[2].Razor;
 
                 taskReady = true;
                 taskPreparing = false;

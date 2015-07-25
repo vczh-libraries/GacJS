@@ -234,7 +234,7 @@ Packages.Define("Html.MVC", ["Class", "Html.Navigation", "Html.Razor", "IO.Resou
         }),
 
         Deserialize: Public.Override(function (resource) {
-            return CompileRazor(resource, "Html.MVCRazorHelper");
+            return CompileRazor(resource, ["Html.MVCRazorHelper"]);
         }),
     });
     RegisterDeserializer(new RazorResourceDeserializer());
