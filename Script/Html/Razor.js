@@ -37,7 +37,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
     Razor Configurations
     ********************************************************************************/
 
-    var regexOption = /^@(\w+)\s+(\w+)$/;
+    var regexOption = /^@(\w+)\s+([a-zA-Z0-9_\.]+)$/;
     var regexCode = /^@\{$/;
     var regexStatement = /^@((for|while|if|switch)\s*\(.*\)|(do|try))\s*\{$/;
     var regexStatementContinue = /^((else\s+if|catch)\s*\(.*\)|(else))\s*\{$/;
@@ -600,6 +600,19 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
                         functions.push(func);
                     },
                     Statement: function (matches) {
+                        switch (state) {
+                            case InBody:
+                                body.push(line);
+                                break;
+                            case InFunction:
+                                statementCounter++;
+                                functions[functions.length - 1].body.push(line);
+                                break;
+                            default:
+                                throw new Error("Razor syntax error: illegal JavaScript statement: \"" + line + "\".");
+                        }
+                    },
+                    StatementContinue: function (matches) {
                         switch (state) {
                             case InBody:
                                 body.push(line);

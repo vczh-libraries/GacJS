@@ -205,6 +205,49 @@
                         </p>
                     -->
                 </script>
+                <script type="text/plain" data-razor-driver="User">
+                    <!--
+                        @package Doc.SymbolTree
+
+                        @function Render(type) {
+                            @if (RefTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (SubTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (DecorateTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (ArrayTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (FunctionTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (ClassMemberTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (GenericTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (DeclTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (VariadicArgumentTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else if (ConstantTypeDecl.TestType(model.type)) {
+                                <span class="DocError">ERROR</span>
+                            }
+                            else {
+                                <span class="DocError">ERROR</span>
+                            }
+                        }
+
+                        @Render(model.type)
+                    -->
+                </script>
             </div>
             <!----------------------------------------------------------------------------------
             Codes

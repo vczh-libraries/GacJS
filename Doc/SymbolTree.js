@@ -2,10 +2,12 @@ Packages.Define("XmlHelper", function () {
 
     function GetDirectXmlChild(element, name) {
         var xmls = [];
-        for (var i = 0; i < element.childNodes.length; i++) {
-            var xml = element.childNodes[i];
-            if (name === undefined ? xml.tagName !== undefined : xml.tagName === name) {
-                xmls.push(xml);
+        if (element) {
+            for (var i = 0; i < element.childNodes.length; i++) {
+                var xml = element.childNodes[i];
+                if (name === undefined ? xml.tagName !== undefined : xml.tagName === name) {
+                    xmls.push(xml);
+                }
             }
         }
         return xmls;
@@ -47,8 +49,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Virtual(function (xml) {
             this.ReferencingNameKey = Att(xml, "ReferencingNameKey", "");
-            this.ReferencingOverloadKeys = GetDirectXmlChild(xml, "ReferencingOverloadKeys").
-                map(function (xml) { return GetDirectXmlChild(xml, "Key"); }).
+            this.ReferencingOverloadKeys = GetDirectXmlChild(GetDirectXmlChild(xml, "ReferencingOverloadKeys")[0], "Key").
                 map(function (xml) { return xml.getAttribute("Value"); });
         }),
     });
