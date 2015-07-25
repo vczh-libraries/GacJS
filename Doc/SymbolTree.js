@@ -218,7 +218,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
 
         Load: Public.Virtual(function (xml) {
             this.Access = AccessOption.Description[Att(xml, "Access")];
-            this.Name = Att(xml, "Name");
+            this.Name = Att(xml, "Name", "");
             this.Document = Att(xml, "Document", null);
             if (this.Document !== null) {
                 this.Document = domParser.parseFromString(this.Document, "text/xml");

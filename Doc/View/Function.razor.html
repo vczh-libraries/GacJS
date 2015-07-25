@@ -6,7 +6,7 @@
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
 
 @if (template !== null) {
-    @:@RenderTemplate(template)<br/>
+    @:@RenderTemplate({template : template})<br/>
 }
 @switch (symbol.Virtual) {
     case VirtualOption.Description.Static:

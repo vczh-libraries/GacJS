@@ -6,7 +6,7 @@
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
 
 @if (template !== null) {
-    @:@RenderTemplate(template)<br/>
+    @:@RenderTemplate({template : template})<br />
     <span class="DocKeyword">using</span>&nbsp;<span class="DocName">@symbol.Name</span>&nbsp;=&nbsp;@RenderType(symbol.Type, null);
 }
 else {
