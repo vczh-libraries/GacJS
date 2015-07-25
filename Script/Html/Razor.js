@@ -548,7 +548,6 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
         var InBody = 0;
         var InCode = 1;
         var InFunction = 2;
-        var InFunctionBody = 3;
 
         var state = InBody;
         var statementCounter = 0;
@@ -616,6 +615,27 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
                         switch (state) {
                             case InBody:
                                 body.push(line);
+                                break;
+                            case InCode:
+                                codes.push(line);
+                                statementCounter++;
+                                break;
+                            case InFunction:
+                                statementCounter++;
+                                functions[functions.length - 1].body.push(line);
+                                break;
+                            default:
+                                throw new Error("Razor syntax error: illegal JavaScript statement: \"" + line + "\".");
+                        }
+                    },
+                    StatementInCode: function (matches) {
+                        switch (state) {
+                            case InBody:
+                                body.push(line);
+                                break;
+                            case InCode:
+                                codes.push(line);
+                                statementCounter++;
                                 break;
                             case InFunction:
                                 statementCounter++;

@@ -2,35 +2,64 @@
 @package Doc.View
 
 @function Render(type) {
-    @if (RefTypeDecl.TestType(model.type)) {
+    @if (RefTypeDecl.TestType(type)) {
+        <span class="DocHyperlink">@type.Name</span>
+    }
+    else if (SubTypeDecl.TestType(type)) {
+        @:@Render(type.Parent)::<span class="DocHyperlink">@type.Name</span>
+    }
+    else if (DecorateTypeDecl.TestType(type)) {
+        switch (type.Decoration) {
+            case DecorationOption.Description.Const:
+                @:@Render(type.Element)&nbsp;<span class="DocKeyword">const</span>
+                break;
+            case DecorationOption.Description.Volatile:
+                @:@Render(type.Element)&nbsp;<span class="DocKeyword">volatile</span>
+                break;
+            case DecorationOption.Description.Pointer:
+                @:@Render(type.Element)&nbsp;*
+                break;
+            case DecorationOption.Description.LeftRef:
+                @:@Render(type.Element)&nbsp;&amp;
+                break;
+            case DecorationOption.Description.RightRef:
+                @:@Render(type.Element)&nbsp;&amp;&amp;
+                break;
+            case DecorationOption.Description.Signed:
+                <span class="DocKeyword">signed</span>&nbsp;@Render(type.Element)
+                break;
+            case DecorationOption.Description.Unsigned:
+                <span class="DocKeyword">unsigned</span>&nbsp;@Render(type.Element)
+                break;
+        }
+    }
+    else if (ArrayTypeDecl.TestType(type)) {
+        @:@(Render(type.Element))[<span class="DocNotImportant">@type.Expression</span>]
+    }
+    else if (FunctionTypeDecl.TestType(type)) {
         <span class="DocError">ERROR</span>
     }
-    else if (SubTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
+    else if (ClassMemberTypeDecl.TestType(type)) {
+        @:@Render(type.Element)&nbsp;@Render(type.ParClassTypeent)::<span class="DocHyperlink">@type.Name</span>
     }
-    else if (DecorateTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
+    else if (GenericTypeDecl.TestType(type)) {
+        @:@Render(type.Element)@"<"
+        for (var i = 0; i < type.TypeArguments.length; i++) {
+            if (i !== 0) {
+                @:,&nbsp;
+            }
+            @:@Render(type.TypeArguments[i])
+        }
+        @:&gt;
     }
-    else if (ArrayTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
+    else if (DeclTypeDecl.TestType(type)) {
+        <span class="DocKeyword">decltype</span>(<span class="DocNotImportant">@type.Expression</span>)
     }
-    else if (FunctionTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
+    else if (VariadicArgumentTypeDecl.TestType(type)) {
+        @:@Render(type.Element)...
     }
-    else if (ClassMemberTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
-    }
-    else if (GenericTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
-    }
-    else if (DeclTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
-    }
-    else if (VariadicArgumentTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
-    }
-    else if (ConstantTypeDecl.TestType(model.type)) {
-        <span class="DocError">ERROR</span>
+    else if (ConstantTypeDecl.TestType(type)) {
+        <span class="DocNotImportant">@type.Value</span>
     }
     else {
         <span class="DocError">ERROR</span>
