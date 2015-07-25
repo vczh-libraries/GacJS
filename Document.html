@@ -195,11 +195,11 @@
                     documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
                     GetResourceAsync(sIndexFile, true).SucceededThen(function (result) {
                         documentContent.innerHTML = "";
-                        var symbol = result.Symbol;
+                        var symbol = result.Symbol[0];
                         CancelAndRunAfterDocViewReady(
                             function () {
                                 var view = RenderSymbol(DocRenderType.Description.Detailed, symbol);
-                                documentContent.appendChild(view.RawHtml);
+                                documentContent.innerHTML = view.RawHtml;
                             },
                             function () {
                                 documentContent.innerHTML = "<span class=\"DocError\">Failed to render the symbol.</span>";
