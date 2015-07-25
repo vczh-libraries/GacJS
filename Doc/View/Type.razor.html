@@ -1,46 +1,110 @@
 @package Doc.SymbolTree
 @package Doc.View
 
-@function Render(type) {
+@function ContFollow(continuation) {
+    @if (continuation) {
+        if (typeof continuation === "string") {
+            @:&nbsp;<span class="DocName">@continuation</span>
+        }
+        else {
+            @:&nbsp;@continuation
+        }
+    }
+}
+
+@function ContInside(continuation) {
+    @if (continuation) {
+        if (typeof continuation === "string") {
+            @:&nbsp;<span class="DocName">@continuation</span>
+        }
+        else {
+            @:&nbsp;(@continuation)
+        }
+    }
+}
+
+@function ContConst(continuation) {
+    <span class="DocKeyword">const</span>@ContFollow(continuation)
+}
+
+@function ContVolatile(continuation) {
+    <span class="DocKeyword">volatile</span>@ContFollow(continuation)
+}
+
+@function ContPointer(continuation) {
+    *@ContFollow(continuation)
+}
+
+@function ContLeftRef(continuation) {
+    &amp;@ContFollow(continuation)
+}
+
+@function ContRightRef(continuation) {
+    &amp;&amp;@ContFollow(continuation)
+}
+
+@function ContArray(type, continuation) {
+    @(ContInside(continuation))[<span class="DocNotImportant">@type.Expression</span>]
+}
+
+@function ContFunction(type, continuation) {
+    @(ContInside(continuation))(
+    @for (var i = 0; i < type.Parameters.length; i++) {
+        if (i !== 0) {
+            @:,&nbsp;
+        }
+        @:@RenderSymbol(type.Parameters[i])
+    }
+    )
+    @if (type.Const) {
+        <span class="DocKeyword">const</span>
+    }
+}
+
+@function ContClassMember(type, continuation) {
+    @Render(type.ClassType)::@ContFollow(continuation)
+}
+
+@function Render(type, continuation) {
     @if (RefTypeDecl.TestType(type)) {
-        <span class="DocHyperlink">@type.Name</span>
+        <span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
     }
     else if (SubTypeDecl.TestType(type)) {
-        @:@Render(type.Parent)::<span class="DocHyperlink">@type.Name</span>
+        @:@Render(type.Parent)::<span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
     }
     else if (DecorateTypeDecl.TestType(type)) {
         switch (type.Decoration) {
             case DecorationOption.Description.Const:
-                @:@Render(type.Element)&nbsp;<span class="DocKeyword">const</span>
+                @:@Render(type.Element, ContConst(continuation))
                 break;
             case DecorationOption.Description.Volatile:
-                @:@Render(type.Element)&nbsp;<span class="DocKeyword">volatile</span>
+                @:@Render(type.Element, ContVolatile(continuation))
                 break;
             case DecorationOption.Description.Pointer:
-                @:@Render(type.Element)&nbsp;*
+                @:@Render(type.Element, ContPointer(continuation))
                 break;
             case DecorationOption.Description.LeftRef:
-                @:@Render(type.Element)&nbsp;&amp;
+                @:@Render(type.Element, ContLeftRef(continuation))
                 break;
             case DecorationOption.Description.RightRef:
-                @:@Render(type.Element)&nbsp;&amp;&amp;
+                @:@Render(type.Element, ContRightRef(continuation))
                 break;
             case DecorationOption.Description.Signed:
-                <span class="DocKeyword">signed</span>&nbsp;@Render(type.Element)
+                <span class="DocKeyword">signed</span>&nbsp;@Render(type.Element, continuation)
                 break;
             case DecorationOption.Description.Unsigned:
-                <span class="DocKeyword">unsigned</span>&nbsp;@Render(type.Element)
+                <span class="DocKeyword">unsigned</span>&nbsp;@Render(type.Element, continuation)
                 break;
         }
     }
     else if (ArrayTypeDecl.TestType(type)) {
-        @:@(Render(type.Element))[<span class="DocNotImportant">@type.Expression</span>]
+        @:@Render(type.Element, ContArray(type, continuation))
     }
     else if (FunctionTypeDecl.TestType(type)) {
-        <span class="DocError">ERROR</span>
+        @:@Render(type.ReturnType, ContFunction(type, continuation))
     }
     else if (ClassMemberTypeDecl.TestType(type)) {
-        @:@Render(type.Element)&nbsp;@Render(type.ParClassTypeent)::<span class="DocHyperlink">@type.Name</span>
+        @:@Render(type.Element, ContClassMember(type, continuation))
     }
     else if (GenericTypeDecl.TestType(type)) {
         @:@Render(type.Element)@"<"
@@ -50,7 +114,7 @@
             }
             @:@Render(type.TypeArguments[i])
         }
-        @:&gt;
+        @:&gt;@ContFollow(continuation)
     }
     else if (DeclTypeDecl.TestType(type)) {
         <span class="DocKeyword">decltype</span>(<span class="DocNotImportant">@type.Expression</span>)
@@ -66,4 +130,4 @@
     }
 }
 
-@Render(model.type)
+@Render(model.type, model.continuation)

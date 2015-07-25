@@ -15,8 +15,8 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     var viewTemplate = null;
     var viewTypedef = null;
 
-    function RenderType(type) {
-        var model = { type: type };
+    function RenderType(type, continuation) {
+        var model = { type: type, continuation: continuation };
         return viewType(model);
     }
 

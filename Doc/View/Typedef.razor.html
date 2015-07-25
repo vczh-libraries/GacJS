@@ -7,5 +7,8 @@
 
 @if (template !== null) {
     @:@RenderTemplate(template)<br/>
+    <span class="DocKeyword">using</span>&nbsp;<span class="DocName">@symbol.Name</span>&nbsp;=&nbsp;@RenderType(symbol.Type, null);
 }
-<span class="DocKeyword">using</span>&nbsp;<span class="DocName">@symbol.Name</span>&nbsp;=&nbsp;@RenderType(symbol.Type);
+else {
+    <span class="DocKeyword">typedef</span>&nbsp;@RenderType(symbol.Type, symbol.Name);
+}
