@@ -227,15 +227,10 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.NameKey = Att(xml, "NameKey", null);
             this.OverloadKey = Att(xml, "OverloadKey", null);
 
-            var childXmls = GetDirectXmlChild(xml, "Children");
-            if (childXmls.length === 0) {
-                this.Children = [];
-            }
-            else {
-                this.Children = childXmls[0].map(LoadSymbol);
-                for (var i = 0; i < this.Children.length; i++) {
-                    this.Children[i].Parent = this.__ExternalReference;
-                }
+            var childXmls = GetDirectXmlChild(GetDirectXmlChild(xml, "Children")[0]);
+            this.Children = childXmls.map(LoadSymbol);
+            for (var i = 0; i < this.Children.length; i++) {
+                this.Children[i].Parent = this.__ExternalReference;
             }
         }),
     });
@@ -303,7 +298,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
 
-            this.Static = Att(xml, "Static") === "true";
+            this.Static = Att(xml, "Static") === "True";
             this.Type = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Type")[0])[0]);
         }),
     });
@@ -363,7 +358,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(SymbolDecl).Load(xml);
 
-            this.EnumClass = Att(xml, "EnumClass") === "true";
+            this.EnumClass = Att(xml, "EnumClass") === "True";
         }),
     });
 

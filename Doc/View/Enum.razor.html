@@ -1,0 +1,18 @@
+@package Doc.SymbolTree
+@package Doc.View
+
+@var renderType = model.renderType;
+@var symbol = model.symbol;
+
+@if (symbol.EnumClass === true) {
+    <span class="DocKeyword">enum&nbsp;class</span>
+}
+else {
+    <span class="DocKeyword">enum</span>
+}
+&nbsp;<span class="DocName">@symbol.Name</span><br />
+{<br />
+@for (var i = 0; i < symbol.Children.length; i++) {
+    @:&nbsp;&nbsp;&nbsp;&nbsp;@symbol.Children[i].Name,<br/>
+}
+}<br />

@@ -85,7 +85,7 @@
                                 console.debug(fileName + " => " + result.Exception);
                             }
                             var s = result.Symbol;
-                            Assert(s.length != 0);
+                            Assert(s.length != 0 && SymbolDecl.TestType(s[0]));
                         });
                     }
                     catch (ex) {
