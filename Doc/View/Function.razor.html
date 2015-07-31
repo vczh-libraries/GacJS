@@ -10,14 +10,19 @@
     @if (template != null) {
         @:@RenderSpecification(template)
     }
-    (<br />
-    @for (var i = 0; i < symbol.Type.Parameters.length; i++) {
-        if (i !== 0) {
-            @:,<br />
-        }
-        @:&nbsp;&nbsp;&nbsp;&nbsp;@RenderSymbol(DocRenderType.Description.FunctionParameter, symbol.Type.Parameters[i])
+    @if (symbol.Type.Parameters.length === 0) {
+        @:()
     }
-    <br />)
+    else {
+        @:(<br />
+        for (var i = 0; i < symbol.Type.Parameters.length; i++) {
+            if (i !== 0) {
+                @:,<br />
+            }
+            @:&nbsp;&nbsp;&nbsp;&nbsp;@RenderSymbol(DocRenderType.Description.FunctionParameter, symbol.Type.Parameters[i])
+        }
+        @:<br />)
+    }
 }
 
 @if (template !== null) {
@@ -32,7 +37,17 @@
         <span class="DocKeyword">virtual</span>&nbsp;
         break;
 }
-@RenderType(symbol.Type.ReturnType, ContFunction(symbol))
+
+@switch (symbol.Function) {
+    case FunctionOption.Description.Constructor:
+    case FunctionOption.Description.Destructor:
+        @:@ContFunction(symbol)
+        break;
+    case FunctionOption.Description.Function:
+        @:@RenderType(symbol.Type.ReturnType, ContFunction(symbol))
+        break;
+}
+
 @if (symbol.Type.Const) {
     <span class="DocKeyword">const</span>
 }
