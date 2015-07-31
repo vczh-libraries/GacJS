@@ -6,7 +6,11 @@
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
 
 @function ContFunction(symbol) {
-    <span class="DocName">@symbol.Name</span>(<br />
+    <span class="DocName">@symbol.Name</span>
+    @if (template != null) {
+        @:@RenderSpecification(template)
+    }
+    (<br />
     @for (var i = 0; i < symbol.Type.Parameters.length; i++) {
         if (i !== 0) {
             @:,<br />
@@ -17,7 +21,7 @@
 }
 
 @if (template !== null) {
-    @:@RenderTemplate({template : template})<br/>
+    @:@RenderTemplate(template)<br/>
 }
 @switch (symbol.Virtual) {
     case VirtualOption.Description.Static:

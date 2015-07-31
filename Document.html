@@ -196,9 +196,10 @@
                     GetResourceAsync(sIndexFile, true).SucceededThen(function (result) {
                         documentContent.innerHTML = "";
                         var symbol = result.Symbol[0];
+                        var targetChildSymbol = FindSymbolByOverloadKey(symbol, key);
                         CancelAndRunAfterDocViewReady(
                             function () {
-                                var view = RenderSymbol(DocRenderType.Description.Detailed, symbol);
+                                var view = RenderSymbol(DocRenderType.Description.Detailed, targetChildSymbol);
                                 documentContent.innerHTML = view.RawHtml;
                             },
                             function () {

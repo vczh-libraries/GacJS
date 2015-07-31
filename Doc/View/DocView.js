@@ -14,6 +14,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
 
     var viewType = null;
     var viewTemplate = null;
+    var viewSpecification = null;
     var viewTypedef = null;
     var viewVar = null;
     var viewFunction = null;
@@ -24,9 +25,14 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         return viewType(model);
     }
 
-    function RenderTemplate(symbol) {
-        var model = { symbol: symbol };
+    function RenderTemplate(template) {
+        var model = { template: template };
         return viewTemplate(model);
+    }
+
+    function RenderSpecification(template) {
+        var model = { template: template };
+        return viewSpecification(model);
     }
 
     function RenderSymbol(renderType, symbol) {
@@ -50,6 +56,25 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         else {
             throw new Error("Cannot render symbol of type \"" + symbol.__Type.FullName + "\".");
         }
+    }
+
+    function FindSymbolByOverloadKey(symbol, overloadKey) {
+        if (symbol.OverloadKey === overloadKey) {
+            return symbol;
+        }
+
+        if (TemplateDecl.TestType(symbol)) {
+            return FindSymbolByOverloadKey(symbol.Element, overloadKey);
+        }
+
+        for (var i = 0; i < symbol.Children.length; i++) {
+            var result = FindSymbolByOverloadKey(symbol.Children[i], overloadKey);
+            if (result !== null) {
+                return result;
+            }
+        }
+
+        return null;
     }
 
     /********************************************************************************
@@ -83,12 +108,13 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
 
             var asyncType = GetResourceAsync("./Doc/View/Type.razor.html", true);
             var asyncTemplate = GetResourceAsync("./Doc/View/Template.razor.html", true);
+            var asyncSpecification = GetResourceAsync("./Doc/View/Specification.razor.html", true);
             var asyncTypedef = GetResourceAsync("./Doc/View/Typedef.razor.html", true);
             var asyncVar = GetResourceAsync("./Doc/View/Var.razor.html", true);
             var asyncFunction = GetResourceAsync("./Doc/View/Function.razor.html", true);
             var asyncEnum = GetResourceAsync("./Doc/View/Enum.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTemplate, asyncTypedef, asyncVar, asyncFunction, asyncEnum];
+            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -100,10 +126,11 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
 
                 viewType = result[0].Razor;
                 viewTemplate = result[1].Razor;
-                viewTypedef = result[2].Razor;
-                viewVar = result[3].Razor;
-                viewFunction = result[4].Razor;
-                viewEnum = result[5].Razor;
+                viewSpecification = result[2].Razor;
+                viewTypedef = result[3].Razor;
+                viewVar = result[4].Razor;
+                viewFunction = result[5].Razor;
+                viewEnum = result[6].Razor;
 
                 taskReady = true;
                 taskPreparing = false;
@@ -132,7 +159,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         DocRenderType: DocRenderType,
         RenderType: RenderType,
         RenderTemplate: RenderTemplate,
+        RenderSpecification: RenderSpecification,
         RenderSymbol: RenderSymbol,
+        FindSymbolByOverloadKey: FindSymbolByOverloadKey,
         CancelAndRunAfterDocViewReady: CancelAndRunAfterDocViewReady,
     }
 });
