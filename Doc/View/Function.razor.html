@@ -5,6 +5,17 @@
 @var symbol = model.symbol;
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
 
+@function ContFunction(symbol) {
+    <span class="DocName">@symbol.Name</span>(<br />
+    @for (var i = 0; i < symbol.Type.Parameters.length; i++) {
+        if (i !== 0) {
+            @:,<br />
+        }
+        @:&nbsp;&nbsp;&nbsp;&nbsp;@RenderSymbol(DocRenderType.Description.FunctionParameter, symbol.Type.Parameters[i])
+    }
+    <br />)
+}
+
 @if (template !== null) {
     @:@RenderTemplate({template : template})<br/>
 }
@@ -17,8 +28,11 @@
         <span class="DocKeyword">virtual</span>&nbsp;
         break;
 }
-@RenderType(symbol.Type, symbol.Name)
+@RenderType(symbol.Type.ReturnType, ContFunction(symbol))
+@if (symbol.Type.Const) {
+    <span class="DocKeyword">const</span>
+}
 @if (symbol.Virtual === VirtualOption.Description.Abstract) {
-    @:=0
+    @:&nbsp;=&nbsp;0
 }
 ;
