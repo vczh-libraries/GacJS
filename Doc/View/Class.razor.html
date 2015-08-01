@@ -1,0 +1,89 @@
+@package Doc.SymbolTree
+@package Doc.View
+
+@var renderType = model.renderType;
+@var symbol = model.symbol;
+@var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
+
+@function RenderAccess(access) {
+    @switch (access) {
+        case AccessOption.Description.Public:
+            <span class="DocKeyword">public</span>
+            break;
+        case AccessOption.Description.Protected:
+            <span class="DocKeyword">protected</span>
+            break;
+        case AccessOption.Description.Public:
+            <span class="DocKeyword">public</span>
+            break;
+    }
+}
+
+@function RenderMembers(access, text) {
+    @var found = false;
+    @for (var i = 0; i < symbol.Children.length; i++) {
+        var classMember = symbol.Children[i];
+        if (classMember.Access === access) {
+            if (symbol.ClassType === ClassTypeOption.Description.Class || access !== AccessOption.Description.Public) {
+                <span class="DocKeyword">@text</span>:<br />
+                found = true;
+                break;
+            }
+        }
+    }
+
+    @if (found === true) {
+        <div style="display: block; float: left; margin-left: 2em;">
+            @for (var i = 0; i < symbol.Children.length; i++) {
+                var classMember = symbol.Children[i];
+                if (classMember.Access === access) {
+                    @:@RenderSymbol(DocRenderType.Description.ClassMember, classMember)<br />
+                }
+            }
+        </div>
+        <div style="clear: both;"></div>
+    }
+}
+
+@if (template !== null) {
+    @:@RenderTemplate(template)<br />
+}
+
+@switch (symbol.ClassType) {
+    case ClassTypeOption.Description.Class:
+        <span class="DocKeyword">class</span>
+        break;
+    case ClassTypeOption.Description.Struct:
+        <span class="DocKeyword">struct</span>
+        break;
+    case ClassTypeOption.Description.Union:
+        <span class="DocKeyword">union</span>
+        break;
+}
+
+&nbsp;<span class="DocName">@symbol.Name</span>
+@if (template != null) {
+    @:@RenderSpecification(template)
+}
+
+@if (renderType === DocRenderType.Description.ClassMember) {
+    ;
+}
+else {
+    for (var i = 0; i < symbol.BaseTypes.length; i++) {
+        if (i === 0) {
+            @:&nbsp;:&nbsp;
+        }
+        else {
+            @:,&nbsp;
+        }
+        var baseType = symbol.BaseTypes[i];
+        @:@RenderAccess(baseType.Access)&nbsp;@RenderType(baseType.Type)
+    }
+    <br />
+    @:{<br />
+    @:@RenderMembers(AccessOption.Description.Public, "public")
+    @:@RenderMembers(AccessOption.Description.Protected, "protected")
+    @:@RenderMembers(AccessOption.Description.Protected, "private")
+    @:};
+}

@@ -19,6 +19,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     var viewVar = null;
     var viewFunction = null;
     var viewEnum = null;
+    var viewClass = null;
 
     function RenderType(type, continuation) {
         var model = { type: type, continuation: continuation };
@@ -39,7 +40,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         var model = { renderType: renderType, symbol: symbol };
 
         if (ClassDecl.TestType(symbol)) {
-            throw new Error("Rending symbol of type \"" + symbol.__Type.FullName + "\" is not implemented.");
+            return viewClass(model);
         }
         else if (VarDecl.TestType(symbol)) {
             return viewVar(model);
@@ -113,8 +114,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             var asyncVar = GetResourceAsync("./Doc/View/Var.razor.html", true);
             var asyncFunction = GetResourceAsync("./Doc/View/Function.razor.html", true);
             var asyncEnum = GetResourceAsync("./Doc/View/Enum.razor.html", true);
+            var asyncClass = GetResourceAsync("./Doc/View/Class.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum];
+            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -131,6 +133,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
                 viewVar = result[4].Razor;
                 viewFunction = result[5].Razor;
                 viewEnum = result[6].Razor;
+                viewClass = result[7].Razor;
 
                 taskReady = true;
                 taskPreparing = false;
