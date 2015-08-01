@@ -12,23 +12,30 @@ body {
     border-collapse: separate;
 }
 
-    .DocumentView td {
-        border-right: 1px solid gray;
-        border-bottom: 1px solid gray;
-    }
+.DocumentTitle {
+}
 
-    .DocumentView .DocumentCell {
-        display: block;
-        height: 100%;
-        overflow-y: scroll;
-    }
+.DocumentView td {
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+}
 
-    .DocumentView .DocumentIndex {
-    }
+.DocumentCell {
+    height: 100%;
+}
 
-    .DocumentView .DocumentContent {
-        vertical-align: text-top;
-    }
+.DocumentDiv {
+    display: block;
+    overflow-y: scroll;
+}
+
+.DocumentIndex {
+    padding: 1em;
+}
+
+.DocumentContent {
+    padding: 1em;
+}
 
 .DocHyperlink {
     color: green;
