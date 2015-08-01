@@ -20,6 +20,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     var viewFunction = null;
     var viewEnum = null;
     var viewClass = null;
+    var viewGroupedField = null;
 
     function RenderType(type, continuation) {
         var model = { type: type, continuation: continuation };
@@ -56,6 +57,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         }
         else if (TypedefDecl.TestType(symbol)) {
             return viewTypedef(model);
+        }
+        else if (GroupedFieldDecl.TestType(symbol)) {
+            return viewGroupedField(model);
         }
         else {
             throw new Error("Cannot render symbol of type \"" + symbol.__Type.FullName + "\".");
@@ -118,8 +122,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             var asyncFunction = GetResourceAsync("./Doc/View/Function.razor.html", true);
             var asyncEnum = GetResourceAsync("./Doc/View/Enum.razor.html", true);
             var asyncClass = GetResourceAsync("./Doc/View/Class.razor.html", true);
+            var asyncGroupedField = GetResourceAsync("./Doc/View/GroupedField.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass];
+            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass, asyncGroupedField];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -137,6 +142,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
                 viewFunction = result[5].Razor;
                 viewEnum = result[6].Razor;
                 viewClass = result[7].Razor;
+                viewGroupedField = result[8].Razor;
 
                 taskReady = true;
                 taskPreparing = false;

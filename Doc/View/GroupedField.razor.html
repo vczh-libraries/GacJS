@@ -1,0 +1,48 @@
+@package Doc.SymbolTree
+@package Doc.View
+
+@var renderType = model.renderType;
+@var symbol = model.symbol;
+@var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
+
+@function RenderMembers(access, text) {
+    @var found = false;
+    @for (var i = 0; i < symbol.Children.length; i++) {
+        var classMember = symbol.Children[i];
+        if (classMember.Access === access) {
+            found = true;
+            if (text !== null) {
+                <span class="DocKeyword">@text</span>:<br />
+            }
+            break;
+        }
+    }
+
+    @if (found === true) {
+        <div style="display: block; float: left; margin-left: 2em;">
+            @for (var i = 0; i < symbol.Children.length; i++) {
+                var classMember = symbol.Children[i];
+                if (classMember.Access === access) {
+                    @:@RenderSymbol(DocRenderType.Description.ClassMember, classMember)<br />
+                }
+            }
+        </div>
+        <div style="clear: both;"></div>
+    }
+}
+
+@switch (symbol.Grouping) {
+    case GroupingOption.Description.Struct:
+        <span class="DocKeyword">struct</span>
+        break;
+    case GroupingOption.Description.Union:
+        <span class="DocKeyword">union</span>
+        break;
+}
+
+<br />
+{<br />
+@RenderMembers(AccessOption.Description.Public, null)
+@RenderMembers(AccessOption.Description.Protected, "protected")
+@RenderMembers(AccessOption.Description.Private, "private")
+};<br />

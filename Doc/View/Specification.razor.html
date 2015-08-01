@@ -2,11 +2,13 @@
 @package Doc.View
 
 @var template = model.template;
-&lt;
-@for (var i = 0; i < template.Specialization.length; i++) {
-    if (i !== 0) {
-        @:,&nbsp;
+@if (template.Specialization.length > 0) {
+    @:&lt;
+    for (var i = 0; i < template.Specialization.length; i++) {
+        if (i !== 0) {
+            @:,&nbsp;
+        }
+        @:@RenderType(template.Specialization[i])
     }
-    @:@RenderType(template.Specialization[i])
+    @:&gt;
 }
-&gt;
