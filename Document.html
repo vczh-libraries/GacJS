@@ -18,16 +18,28 @@
 </head>
 <body>
     <table id="documentViewTable" class="DocumentView">
-        <tr>
+        <tr style="height: 200px;">
             <td class="DocumentTitle" colspan="2">
                 <img src="./Doc/Logo.gif" />
             </td>
         </tr>
         <tr>
-            <td class="DocumentIndex" id="documentIndex"></td>
-            <td class="DocumentContent" id="documentContent"></td>
+            <td style="width: 30em;">
+                <div class="DocumentIndex DocumentCell" id="documentIndex"></div>
+            </td>
+            <td>
+                <div class="DocumentContent DocumentCell" id="documentContent"></div>
+            </td>
         </tr>
     </table>
+
+    <script>
+        function SetTableHeight() {
+            documentViewTable.style.height = "calc("+window.innerHeight+"px - 2em)";
+            setTimeout(SetTableHeight, 100);
+        }
+        SetTableHeight();
+    </script>
 
     <script>
         Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.SymbolTree", "Doc.TreeView", "Doc.View", "IO.Resource"], function (__injection__) {

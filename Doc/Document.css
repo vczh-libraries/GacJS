@@ -15,19 +15,19 @@ body {
     .DocumentView td {
         border-right: 1px solid gray;
         border-bottom: 1px solid gray;
-        padding: 1em;
+    }
+
+    .DocumentView .DocumentCell {
+        display: block;
+        height: 100%;
+        overflow-y: scroll;
     }
 
     .DocumentView .DocumentIndex {
-        width: 30em;
-        max-height: 300px;
-        overflow-y: scroll;
     }
 
     .DocumentView .DocumentContent {
         vertical-align: text-top;
-        overflow-y: scroll;
-        height: 300px;
     }
 
 .DocHyperlink {
