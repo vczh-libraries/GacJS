@@ -24,11 +24,11 @@
     @for (var i = 0; i < symbol.Children.length; i++) {
         var classMember = symbol.Children[i];
         if (classMember.Access === access) {
+            found = true;
             if (symbol.ClassType === ClassTypeOption.Description.Class || access !== AccessOption.Description.Public) {
                 <span class="DocKeyword">@text</span>:<br />
-                found = true;
-                break;
             }
+            break;
         }
     }
 
@@ -84,6 +84,6 @@ else {
     @:{<br />
     @:@RenderMembers(AccessOption.Description.Public, "public")
     @:@RenderMembers(AccessOption.Description.Protected, "protected")
-    @:@RenderMembers(AccessOption.Description.Protected, "private")
+    @:@RenderMembers(AccessOption.Description.Private, "private")
     @:};
 }

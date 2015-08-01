@@ -20,11 +20,14 @@ body {
 
     .DocumentView .DocumentIndex {
         width: 30em;
-        overflow: auto;
+        max-height: 300px;
+        overflow-y: scroll;
     }
 
     .DocumentView .DocumentContent {
         vertical-align: text-top;
+        overflow-y: scroll;
+        height: 300px;
     }
 
 .DocHyperlink {

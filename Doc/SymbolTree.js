@@ -223,7 +223,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             if (this.Document !== null) {
                 this.Document = domParser.parseFromString(this.Document, "text/xml");
             }
-            this.Tags = Att(xml, "Tags").split(";");
+            this.Tags = Att(xml, "Tags", "").split(";");
             this.NameKey = Att(xml, "NameKey", null);
             this.OverloadKey = Att(xml, "OverloadKey", null);
 

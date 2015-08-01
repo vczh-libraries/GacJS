@@ -37,6 +37,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     }
 
     function RenderSymbol(renderType, symbol) {
+        if (TemplateDecl.TestType(symbol)) {
+            symbol = symbol.Element;
+        }
         var model = { renderType: renderType, symbol: symbol };
 
         if (ClassDecl.TestType(symbol)) {
