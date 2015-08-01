@@ -43,7 +43,7 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
     var regexStatementContinue = /^((else\s+if|catch)\s*\(.*\)|(else))\s*\{$/;
     var regexStatementInCode = /^((for|while|if|switch|else\s+if|catch)\s*\(.*\)|(do|try|else))\s*\{$/;
     var regexCommand = /^@(break|continue|throw(\s+.*)?|var\s+.*);$/;
-    var regexFunction = /^@function\s+(\w+)\s*\(\s*(?:(\w+)(?:,\s*(\w+))*)?\s*\)\s*\{$/;
+    var regexFunction = /^@function\s+(\w+)\s*\(\s*(\w+(?:,\s*\w+)*)?\s*\)\s*\{$/;
     var regexNormalCode = /^[a-zA-Z0-9_$.]$/;
     var regexExpressionEnd = /^[a-zA-Z0-9_$}"')\]/]$/;
 
@@ -590,10 +590,11 @@ Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"]
                         state = InFunction;
 
                         var func = { name: matches[1], parameters: [], body: [] };
-                        for (var j = 2; j < matches.length; j++) {
-                            var parameter = matches[j];
-                            if (parameter !== undefined) {
-                                func.parameters.push(parameter);
+                        if (matches[2] !== undefined) {
+                            var regexParameters = /(\w+)/g;
+                            var matchParameter = null;
+                            while ((matchParameter = regexParameters.exec(matches[2])) !== null) {
+                                func.parameters.push(matchParameter[1]);
                             }
                         }
                         functions.push(func);

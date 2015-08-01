@@ -19,6 +19,35 @@
     }
 }
 
+@function RenderMembersOfType(access, types, extraSpace) {
+    @var members = [];
+    @for (var i = 0; i < symbol.Children.length; i++) {
+        var classMember = symbol.Children[i];
+        if (classMember.Access === access) {
+            if (TemplateDecl.TestType(classMember)) {
+                classMember = classMember.Element;
+            }
+            for (var j = 0; j < types.length; j++) {
+                if (types[j].TestType(classMember)) {
+                    members.push(classMember);
+                    break;
+                }
+            }
+        }
+    }
+
+    @for (var i = 0; i < members.length; i++) {
+        var classMember = members[i];
+        @:@RenderSymbol(DocRenderType.Description.ClassMember, classMember)<br />
+        if (extraSpace === true) {
+            <br />
+        }
+    }
+    @if (extraSpace === false && members.length > 0) {
+        <br />
+    }
+}
+
 @function RenderMembers(access, text) {
     @var found = false;
     @for (var i = 0; i < symbol.Children.length; i++) {
@@ -34,12 +63,10 @@
 
     @if (found === true) {
         <div style="display: block; float: left; margin-left: 2em;">
-            @for (var i = 0; i < symbol.Children.length; i++) {
-                var classMember = symbol.Children[i];
-                if (classMember.Access === access) {
-                    @:@RenderSymbol(DocRenderType.Description.ClassMember, classMember)<br />
-                }
-            }
+            @RenderMembersOfType(access, [TypedefDecl], false)
+            @RenderMembersOfType(access, [EnumDecl, ClassDecl], true)
+            @RenderMembersOfType(access, [VarDecl, GroupedFieldDecl], false)
+            @RenderMembersOfType(access, [FuncDecl], true)
         </div>
         <div style="clear: both;"></div>
     }
@@ -85,5 +112,5 @@ else {
     @:@RenderMembers(AccessOption.Description.Public, "public")
     @:@RenderMembers(AccessOption.Description.Protected, "protected")
     @:@RenderMembers(AccessOption.Description.Private, "private")
-    @:};<br />
+    @:};
 }
