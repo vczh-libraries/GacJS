@@ -1,5 +1,37 @@
 @package Doc.SymbolTree
 @package Doc.View
+@package XmlHelper
 
 @var document = model.document;
 @var documentType = model.documentType;
+
+@function RenderDocumentBody() {
+    @for (var i = 0; i < document.childNodes.length; i++) {
+        var xml = document.childNodes[i];
+        if (xml.tagName === undefined) {
+            <span class="DocComment">@xml.textContent</span>
+        }
+        else {
+            <span class="DocComment">@PrintXml(xml)</span>
+        }
+    }
+}
+
+@switch (documentType) {
+    case DocDocumentType.Description.Multiline:
+        <span class="DocComment">/*</span>
+        <br />
+        <div style="margin-left: 2em">
+            @RenderDocumentBody()
+        </div>
+        <span class="DocComment">*/</span>
+        break;
+    case DocDocumentType.Description.Singleline:
+        <span class="DocComment">/*&nbsp;</span>
+        @:@RenderDocumentBody()
+        <span class="DocComment">&nbsp;*/</span>
+        break;
+    case DocDocumentType.Description.Embedded:
+        @:@RenderDocumentBody()
+        break;
+}

@@ -26,6 +26,12 @@ Packages.Define("XmlHelper", function () {
         }
     }
 
+    var xmlSerializer = new XMLSerializer();
+
+    function PrintXml(xml) {
+        return xmlSerializer.serializeToString(xml);
+    }
+
     /********************************************************************************
     Package
     ********************************************************************************/
@@ -33,6 +39,7 @@ Packages.Define("XmlHelper", function () {
     return {
         GetDirectXmlChild: GetDirectXmlChild,
         Att: Att,
+        PrintXml: PrintXml,
     }
 })
 
@@ -220,7 +227,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.Access = AccessOption.Description[Att(xml, "Access")];
             this.Name = Att(xml, "Name", "");
 
-            var xmlDocument= GetDirectXmlChild(xml, "Document")[0];
+            var xmlDocument = GetDirectXmlChild(xml, "Document")[0];
             if (xmlDocument) {
                 var documentContent = xmlDocument.textContent;
                 this.Document = domParser.parseFromString(documentContent, "text/xml");

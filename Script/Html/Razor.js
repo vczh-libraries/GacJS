@@ -3,10 +3,10 @@ API:
     string RazorReIndent(text);
         removes unnecessary spaces before each rows.
 
-    RazorToJs(string razor, string[] defaultPackages);
+    string RazorToJs(string razor, string[] defaultPackages);
         compiles a razor template to a JavaScript function.
 
-    void CompileRazor(string razor, string[] defaultPackages);
+    Func<model, RazorHtml> CompileRazor(string razor, string[] defaultPackages);
         returns a function with a parameter "model", which will return the compiled HTML from the razor template.
 */
 Packages.Define("Html.Razor", ["Class", "Html.RazorHelper", "Html.CompileRazor"], function (__injection__) {
