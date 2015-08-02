@@ -219,10 +219,13 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Virtual(function (xml) {
             this.Access = AccessOption.Description[Att(xml, "Access")];
             this.Name = Att(xml, "Name", "");
-            this.Document = Att(xml, "Document", null);
-            if (this.Document !== null) {
-                this.Document = domParser.parseFromString(this.Document, "text/xml");
+
+            var xmlDocument= GetDirectXmlChild(xml, "Document")[0];
+            if (xmlDocument) {
+                var documentContent = xmlDocument.textContent;
+                this.Document = domParser.parseFromString(documentContent, "text/xml");
             }
+
             this.Tags = Att(xml, "Tags", "").split(";");
             this.NameKey = Att(xml, "NameKey", null);
             this.OverloadKey = Att(xml, "OverloadKey", null);

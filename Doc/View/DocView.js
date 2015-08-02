@@ -73,10 +73,8 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         }
     }
 
-    var domParser = new DOMParser();
-
     function RenderDocument(document, documentType) {
-        var model = { document: domParser.parseFromString(document, "text/xml"), documentType: documentType };
+        var model = { document: document, documentType: documentType };
         return viewDocument(model);
     }
 

@@ -60,3 +60,13 @@ body {
 .DocComment {
     color: purple;
 }
+
+.DocLayoutTable {
+    border-spacing: 0px;
+    border-collapse: separate;
+    margin-left: 2em;
+}
+
+    .DocLayoutTable td {
+        border-width: 0;
+    }

@@ -4,15 +4,32 @@
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 
+@if (symbol.Document !== null) {
+    @:@RenderDocument(symbol.Document, DocDocumentType.Description.Multiline)<br /><br />
+}
+
 @if (symbol.EnumClass === true) {
     <span class="DocKeyword">enum&nbsp;class</span>
 }
 else {
     <span class="DocKeyword">enum</span>
 }
+
 &nbsp;<span class="DocName">@symbol.Name</span><br />
 {<br />
-@for (var i = 0; i < symbol.Children.length; i++) {
-    @:&nbsp;&nbsp;&nbsp;&nbsp;@symbol.Children[i].Name,<br/>
-}
+<table class="DocLayoutTable">
+    @for (var i = 0; i < symbol.Children.length; i++) {
+        var enumItem = symbol.Children[i];
+        <tr>
+            <td>
+                @enumItem.Name,
+            </td>
+            @if (enumItem.Document !== null) {
+                <td>
+                    @RenderDocument(enumItem.Document, DocDocumentType.Description.Singleline)
+                </td>
+            }
+        </tr>
+    }
+</table>
 };
