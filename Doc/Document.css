@@ -56,3 +56,7 @@ body {
 .DocError {
     color: red;
 }
+
+.DocComment {
+    color: purple;
+}

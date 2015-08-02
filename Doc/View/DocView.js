@@ -12,6 +12,12 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         FunctionParameter: 2,
     });
 
+    var DocDocumentType = Enum(PQN("DocDocumentType"), {
+        Multiline: 0,
+        Singleline: 1,
+        Embedded: 2,
+    });
+
     var viewType = null;
     var viewTemplate = null;
     var viewSpecification = null;
@@ -21,6 +27,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     var viewEnum = null;
     var viewClass = null;
     var viewGroupedField = null;
+    var viewDocument = null;
 
     function RenderType(type, continuation) {
         var model = { type: type, continuation: continuation };
@@ -64,6 +71,13 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         else {
             throw new Error("Cannot render symbol of type \"" + symbol.__Type.FullName + "\".");
         }
+    }
+
+    var domParser = new DOMParser();
+
+    function RenderDocument(document, documentType) {
+        var model = { document: domParser.parseFromString(document, "text/xml"), documentType: documentType };
+        return viewDocument(model);
     }
 
     function FindSymbolByOverloadKey(symbol, overloadKey) {
@@ -123,8 +137,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             var asyncEnum = GetResourceAsync("./Doc/View/Enum.razor.html", true);
             var asyncClass = GetResourceAsync("./Doc/View/Class.razor.html", true);
             var asyncGroupedField = GetResourceAsync("./Doc/View/GroupedField.razor.html", true);
+            var asyncDocument = GetResourceAsync("./Doc/View/Document.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass, asyncGroupedField];
+            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass, asyncGroupedField, asyncDocument];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -143,6 +158,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
                 viewEnum = result[6].Razor;
                 viewClass = result[7].Razor;
                 viewGroupedField = result[8].Razor;
+                viewDocument = result[9].Razor;
 
                 taskReady = true;
                 taskPreparing = false;
@@ -169,10 +185,12 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
 
     return {
         DocRenderType: DocRenderType,
+        DocDocumentType: DocDocumentType,
         RenderType: RenderType,
         RenderTemplate: RenderTemplate,
         RenderSpecification: RenderSpecification,
         RenderSymbol: RenderSymbol,
+        RenderDocument: RenderDocument,
         FindSymbolByOverloadKey: FindSymbolByOverloadKey,
         CancelAndRunAfterDocViewReady: CancelAndRunAfterDocViewReady,
     }
