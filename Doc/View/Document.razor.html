@@ -5,9 +5,14 @@
 @var document = model.document;
 @var documentType = model.documentType;
 
-@function RenderDocumentBody() {
-    @for (var i = 0; i < document.childNodes.length; i++) {
-        var xml = document.childNodes[i];
+@var summary = GetDirectXmlChild(GetDirectXmlChild(document, "Document")[0], "summary")[0];
+@if (summary === undefined) {
+    summary = document;
+}
+
+@function RenderDocumentBody(body) {
+    @for (var i = 0; i < body.childNodes.length; i++) {
+        var xml = body.childNodes[i];
         if (xml.tagName === undefined) {
             <span class="DocComment">@xml.textContent</span>
         }
@@ -22,16 +27,16 @@
         <span class="DocComment">/*</span>
         <br />
         <div style="margin-left: 2em">
-            @RenderDocumentBody()
+            @RenderDocumentBody(summary)
         </div>
         <span class="DocComment">*/</span>
         break;
     case DocDocumentType.Description.Singleline:
         <span class="DocComment">/*&nbsp;</span>
-        @:@RenderDocumentBody()
+        @:@RenderDocumentBody(summary)
         <span class="DocComment">&nbsp;*/</span>
         break;
     case DocDocumentType.Description.Embedded:
-        @:@RenderDocumentBody()
+        @:@RenderDocumentBody(summary)
         break;
 }

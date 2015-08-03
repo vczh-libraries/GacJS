@@ -13,9 +13,10 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     });
 
     var DocDocumentType = Enum(PQN("DocDocumentType"), {
-        Multiline: 0,
-        Singleline: 1,
-        Embedded: 2,
+        Header: 0,
+        Multiline: 1,
+        Singleline: 2,
+        Embedded: 3,
     });
 
     var viewType = null;
@@ -74,12 +75,6 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     }
 
     function RenderDocument(document, documentType) {
-
-        var summary = GetDirectXmlChild(GetDirectXmlChild(document, "Document")[0], "summary")[0];
-        if (summary) {
-            document = summary;
-        }
-
         var model = { document: document, documentType: documentType };
         return viewDocument(model);
     }
