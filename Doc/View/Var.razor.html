@@ -4,6 +4,10 @@
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 
+@if (symbol.Document !== null) {
+    @:@RenderDocument(symbol.Document, DocDocumentType.Description.Header)<br /><br />
+}
+
 @if (symbol.Static === true) {
     <span class="DocKeyword">static</span>&nbsp;
 }

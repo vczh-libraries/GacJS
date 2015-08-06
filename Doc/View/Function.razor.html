@@ -1,9 +1,15 @@
 @package Doc.SymbolTree
 @package Doc.View
+@package XmlHelper
 
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
+@var document = (template !== null ? template.Document : symbol.Document);
+
+@if (document !== null) {
+    @:@RenderDocument(document, DocDocumentType.Description.Header)<br /><br />
+}
 
 @function ContFunction(symbol) {
     <span class="DocName">@symbol.Name</span>
@@ -14,14 +20,28 @@
         @:()
     }
     else {
-        @:(<br />
-        for (var i = 0; i < symbol.Type.Parameters.length; i++) {
-            if (i !== 0) {
-                @:,<br />
+        var xmlParams = GetDirectXmlChild(GetDirectXmlChild(document, "Document")[0], "param");
+        @:(
+        <table class="DocLayoutTable">
+            @for (var i = 0; i < symbol.Type.Parameters.length; i++) {
+                var parameter = symbol.Type.Parameters[i];
+                <tr>
+                    <td>
+                        @RenderSymbol(DocRenderType.Description.FunctionParameter, parameter)
+                        @if (i < symbol.Type.Parameters.length - 1) {
+                            @:,
+                        }
+                    </td>
+                    <td>
+                        @var xmlParam = xmlParams.filter(function(x) { return x.getAttribute("name") === parameter.Name; })[0];
+                        @if (xmlParam) {
+                            @:@RenderDocument(xmlParam, DocDocumentType.Description.Singleline)
+                        }
+                    </td>
+                </tr>
             }
-            @:&nbsp;&nbsp;&nbsp;&nbsp;@RenderSymbol(DocRenderType.Description.FunctionParameter, symbol.Type.Parameters[i])
-        }
-        @:<br />)
+        </table>
+        @:)
     }
 }
 

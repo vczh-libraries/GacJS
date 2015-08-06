@@ -23,6 +23,39 @@
 }
 
 @switch (documentType) {
+    case DocDocumentType.Description.Header:
+        var xmlDocument = GetDirectXmlChild(document, "Document")[0];
+        if (xmlDocument) {
+            var xmlSummary = GetDirectXmlChild(xmlDocument, "summary")[0];
+            var xmlReturns = GetDirectXmlChild(xmlDocument, "returns")[0];
+            var xmlTypeParams = GetDirectXmlChild(xmlDocument, "typeparam");
+
+            if (xmlSummary) {
+                <span class="DocComment">/*</span>
+                <div style="margin-left: 2em">
+                    @RenderDocumentBody(xmlSummary)
+                </div>
+
+                if (xmlReturns) {
+                    <br />
+                    <strong><span class="DocComment">Returns</span></strong>
+                    <div style="margin-left: 2em">
+                        @RenderDocumentBody(xmlReturns)
+                    </div>
+                }
+
+                for (var i = 0; i < xmlTypeParams.length; i++) {
+                    var xmlTypeParam = xmlTypeParams[i];
+                    <br />
+                    <strong><span class="DocComment">Type parameter: @xmlTypeParam.getAttribute("name")</span></strong>
+                    <div style="margin-left: 2em">
+                        @RenderDocumentBody(xmlTypeParam)
+                    </div>
+                }
+                <span class="DocComment">*/</span>
+            }
+        }
+        break;
     case DocDocumentType.Description.Multiline:
         <span class="DocComment">/*</span>
         <br />

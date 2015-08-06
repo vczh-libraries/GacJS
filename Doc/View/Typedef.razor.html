@@ -4,6 +4,11 @@
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
+@var document = (template !== null ? template.Document : symbol.Document);
+
+@if (document !== null) {
+    @:@RenderDocument(document, DocDocumentType.Description.Header)<br /><br />
+}
 
 @if (template !== null) {
     @:@RenderTemplate(template)<br />

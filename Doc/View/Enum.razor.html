@@ -5,7 +5,7 @@
 @var symbol = model.symbol;
 
 @if (symbol.Document !== null) {
-    @:@RenderDocument(symbol.Document, DocDocumentType.Description.Multiline)<br /><br />
+    @:@RenderDocument(symbol.Document, DocDocumentType.Description.Header)<br /><br />
 }
 
 @if (symbol.EnumClass === true) {
@@ -16,7 +16,7 @@ else {
 }
 
 &nbsp;<span class="DocName">@symbol.Name</span><br />
-{<br />
+{
 <table class="DocLayoutTable">
     @for (var i = 0; i < symbol.Children.length; i++) {
         var enumItem = symbol.Children[i];
