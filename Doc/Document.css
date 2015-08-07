@@ -69,4 +69,12 @@ body {
 
     .DocLayoutTable td {
         border-width: 0;
+        border-color: lightgray;
+    }
+
+    .DocLayoutTable td.DocClassMemberCell {
+        vertical-align: top;
+        border-top-width: 1px;
+        border-top-style: solid;
+        border-top-color: #F0F0FF;
     }

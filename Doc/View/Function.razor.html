@@ -7,7 +7,7 @@
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
 @var document = (template !== null ? template.Document : symbol.Document);
 
-@if (document !== null) {
+@if (document !== null && renderType === DocRenderType.Description.Detailed) {
     @:@RenderDocument(document, DocDocumentType.Description.Header)<br /><br />
 }
 
@@ -26,18 +26,20 @@
             @for (var i = 0; i < symbol.Type.Parameters.length; i++) {
                 var parameter = symbol.Type.Parameters[i];
                 <tr>
-                    <td>
+                    <td valign="top">
                         @RenderSymbol(DocRenderType.Description.FunctionParameter, parameter)
                         @if (i < symbol.Type.Parameters.length - 1) {
-                            @:,
+                        @:,
                         }
                     </td>
-                    <td>
-                        @var xmlParam = xmlParams.filter(function(x) { return x.getAttribute("name") === parameter.Name; })[0];
-                        @if (xmlParam) {
-                            @:@RenderDocument(xmlParam, DocDocumentType.Description.Singleline)
-                        }
-                    </td>
+                    @if (renderType === DocRenderType.Description.Detailed) {
+                        <td valign="top">
+                            @var xmlParam = xmlParams.filter(function(x) { return x.getAttribute("name") === parameter.Name; })[0];
+                            @if (xmlParam) {
+                                @:@RenderDocument(xmlParam, DocDocumentType.Description.Singleline)
+                            }
+                        </td>
+                    }
                 </tr>
             }
         </table>

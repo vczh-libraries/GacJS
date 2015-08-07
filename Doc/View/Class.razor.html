@@ -4,6 +4,11 @@
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
+@var document = (template !== null ? template.Document : symbol.Document);
+
+@if (document !== null && renderType === DocRenderType.Description.Detailed) {
+    @:@RenderDocument(document, DocDocumentType.Description.Header)<br /><br />
+}
 
 @function RenderAccess(access) {
     @switch (access) {
@@ -38,13 +43,26 @@
 
     @for (var i = 0; i < members.length; i++) {
         var classMember = members[i];
-        @:@RenderSymbol(DocRenderType.Description.ClassMember, classMember)<br />
+        <tr>
+            <td class="DocClassMemberCell">
+                @RenderSymbol(DocRenderType.Description.ClassMember, classMember)
+            </td>
+            <td class="DocClassMemberCell">
+                @if (classMember.Document !== null) {
+                    @:@RenderDocument(classMember.Document, DocDocumentType.Description.Multiline)
+                }
+            </td>
+        </tr>
         if (extraSpace === true) {
-            <br />
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
         }
     }
     @if (extraSpace === false && members.length > 0) {
-        <br />
+        <tr>
+            <td colspan="2">&nbsp;</td>
+        </tr>
     }
 }
 
@@ -62,13 +80,12 @@
     }
 
     @if (found === true) {
-        <div style="display: block; float: left; margin-left: 2em;">
+        <table class="DocLayoutTable">
             @RenderMembersOfType(access, [TypedefDecl], false)
             @RenderMembersOfType(access, [EnumDecl, ClassDecl], true)
             @RenderMembersOfType(access, [VarDecl, GroupedFieldDecl], false)
             @RenderMembersOfType(access, [FuncDecl], true)
-        </div>
-        <div style="clear: both;"></div>
+        </table>
     }
 }
 

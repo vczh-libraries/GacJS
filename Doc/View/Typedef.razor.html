@@ -6,7 +6,7 @@
 @var template = symbol.Parent !== null && TemplateDecl.TestType(symbol.Parent) ? symbol.Parent : null;
 @var document = (template !== null ? template.Document : symbol.Document);
 
-@if (document !== null) {
+@if (document !== null && renderType === DocRenderType.Description.Detailed) {
     @:@RenderDocument(document, DocDocumentType.Description.Header)<br /><br />
 }
 

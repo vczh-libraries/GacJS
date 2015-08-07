@@ -113,7 +113,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
             this.__Static(TypeDecl).Load(xml);
 
             this.Element = LoadType(GetDirectXmlChild(GetDirectXmlChild(xml, "Element")[0])[0]);
-            this.Expression = Att(xml, "Expression");
+            this.Expression = Att(xml, "Expression", "");
         }),
     });
 
@@ -177,7 +177,7 @@ Packages.Define("Doc.SymbolTree", ["Class", "XmlHelper"], function (__injection_
         Load: Public.Override(function (xml) {
             this.__Static(TypeDecl).Load(xml);
 
-            this.Expression = Att(xml, "Expression");
+            this.Expression = Att(xml, "Expression", "");
         }),
     });
 

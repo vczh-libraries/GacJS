@@ -4,7 +4,7 @@
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 
-@if (symbol.Document !== null) {
+@if (symbol.Document !== null && renderType === DocRenderType.Description.Detailed) {
     @:@RenderDocument(symbol.Document, DocDocumentType.Description.Header)<br /><br />
 }
 

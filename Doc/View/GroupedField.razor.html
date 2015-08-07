@@ -19,15 +19,23 @@
     }
 
     @if (found === true) {
-        <div style="display: block; float: left; margin-left: 2em;">
+        <table class="DocLayoutTable">
             @for (var i = 0; i < symbol.Children.length; i++) {
                 var classMember = symbol.Children[i];
                 if (classMember.Access === access) {
-                    @:@RenderSymbol(DocRenderType.Description.ClassMember, classMember)<br />
+                    <tr>
+                        <td class="DocClassMemberCell">
+                            @RenderSymbol(DocRenderType.Description.ClassMember, classMember)
+                        </td>
+                        <td class="DocClassMemberCell">
+                            @if (classMember.Document !== null) {
+                                @:@RenderDocument(classMember.Document, DocDocumentType.Description.Multiline)
+                            }
+                        </td>
+                    </tr>
                 }
             }
-        </div>
-        <div style="clear: both;"></div>
+        </table>
     }
 }
 

@@ -4,7 +4,7 @@
 @var renderType = model.renderType;
 @var symbol = model.symbol;
 
-@if (symbol.Document !== null) {
+@if (symbol.Document !== null && renderType === DocRenderType.Description.Detailed) {
     @:@RenderDocument(symbol.Document, DocDocumentType.Description.Header)<br /><br />
 }
 
@@ -21,12 +21,14 @@ else {
     @for (var i = 0; i < symbol.Children.length; i++) {
         var enumItem = symbol.Children[i];
         <tr>
-            <td>
+            <td valign="top">
                 @enumItem.Name,
             </td>
-            @if (enumItem.Document !== null) {
-                <td>
-                    @RenderDocument(enumItem.Document, DocDocumentType.Description.Singleline)
+            @if (renderType === DocRenderType.Detailed) {
+                <td valign="top">
+                    @if (enumItem.Document !== null) {
+                        @:@RenderDocument(enumItem.Document, DocDocumentType.Description.Singleline)
+                    }
                 </td>
             }
         </tr>
