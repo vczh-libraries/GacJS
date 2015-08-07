@@ -133,7 +133,7 @@ Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resourc
             item.Tags = symbolXml.getAttribute("Tags").split(";");
             item.Key = symbolXml.getAttribute("Key");
             item.DisplayName = symbolXml.getAttribute("DisplayName");
-            item.Doc = symbolXml.getAttribute("Doc") === true;
+            item.Doc = symbolXml.getAttribute("Doc") === "true";
             item.ChildNames = [];
             item.Children = {};
 
