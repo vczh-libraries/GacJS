@@ -43,7 +43,7 @@
     </script>
 
     <script>
-        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.SymbolTree", "Doc.TreeView", "Doc.View", "IO.Resource"], function (__injection__) {
+        Packages.Define("Doc.DocumentPage", ["Class", "Doc.Document", "Doc.SymbolTree", "Doc.TreeView", "Doc.View", "IO.Resource", "Html.Navigation"], function (__injection__) {
             eval(__injection__);
 
             rootContainer = new TreeNodeContainer(true, documentIndex, "Loading ./Doc/Data/nss.xml ...");
@@ -104,16 +104,17 @@
                                 treeNodes.push(treeNode);
 
                                 keyNodeMap[symbol.Key] = treeNode;
-                                BindSymbolNode(treeNode, symbol.Key, symbolIndexFile);
+                                BindSymbolNode(treeNode, symbol.Key, symbol.UrlName, symbolIndexFile);
 
                                 if (hasChildren) {
                                     treeNode.ExpandedChanged.Attach((function () {
                                         var tKey = symbol.Key;
+                                        var tUrlName = symbol.UrlName;
                                         var tIndexFile = indexFile;
                                         var tTreeNode = treeNode;
                                         var sIndexFile = symbolIndexFile;
                                         return function () {
-                                            LoadSymbolNodeChildren(tKey, tIndexFile, tTreeNode, sIndexFile);
+                                            LoadSymbolNodeChildren(tKey, tUrlName, tIndexFile, tTreeNode, sIndexFile);
                                         }
                                     })());
                                 }
@@ -150,20 +151,20 @@
                 return symbolXmls;
             }
 
-            function LoadSymbolNodeChildren(tKey, tIndexFile, tTreeNode, sIndexFile) {
+            function LoadSymbolNodeChildren(tKey, urlName, tIndexFile, tTreeNode, sIndexFile) {
                 if (!nodeLoaded.hasOwnProperty(tKey)) {
                     nodeLoaded[tKey] = null;
 
                     // t(symbol).xml
                     GetResourceAsync(tIndexFile, true).SucceededThen(function (result) {
                         var rootSymbolItem = result.Tree.rootItem;
-                        FillSymbolTree(tTreeNode, rootSymbolItem, sIndexFile);
+                        FillSymbolTree(urlName, tTreeNode, rootSymbolItem, sIndexFile);
                         tTreeNode.RemoveLoadingText();
                     });
                 }
             }
 
-            function FillSymbolTree(parentTreeNode, parentSymbol, sIndexFile) {
+            function FillSymbolTree(urlName, parentTreeNode, parentSymbol, sIndexFile) {
                 for (var i = 0; i < parentSymbol.ChildNames.length; i++) {
                     var displayNameKey = parentSymbol.ChildNames[i];
                     var childSymbols = parentSymbol.Children[displayNameKey];
@@ -179,9 +180,9 @@
                         treeNode.HasDoc = childSymbol.Doc;
 
                         keyNodeMap[childSymbol.Key] = treeNode;
-                        BindSymbolNode(treeNode, childSymbol.Key, sIndexFile);
+                        BindSymbolNode(treeNode, childSymbol.Key, urlName, sIndexFile);
                         treeNodes.push(treeNode);
-                        FillSymbolTree(treeNode, childSymbol, sIndexFile);
+                        FillSymbolTree(urlName, treeNode, childSymbol, sIndexFile);
                     }
 
                     if (treeNodes.length === 1) {
@@ -203,8 +204,8 @@
 
             var xmlSerializer = new XMLSerializer();
 
-            function BindSymbolNode(treeNode, key, sIndexFile) {
-                treeNode.Url = key;
+            function BindSymbolNode(treeNode, key, urlName, sIndexFile) {
+                treeNode.Url = "/index/" + urlName + "/symbol/" + key;
                 treeNode.Clicked.Attach(function () {
                     documentContent.innerHTML = "";
                     documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
@@ -231,6 +232,30 @@
                     });
                 });
             }
+
+            var RootController = Class(PQN("RootController"), INavigationController, {
+
+            });
+
+            var HomeController = Class(PQN("HomeController"), INavigationController, {
+                OnInstalled: Public.Override(function () {
+                    documentContent.innerHTML = "<h1>Welcome to the document and code navigation website for <a target=\"_blank\" href=\"https://github.com/vczh-libraries\">https://github.com/vczh-libraries</a>.</h1>";
+                }),
+            });
+
+            var SymbolController = Class(PQN("SymbolController"), INavigationController, {
+                OnInstalled: Public.Override(function () {
+
+                }),
+
+                IndexKey: Public(""),
+                SymbolKey: Public(""),
+            });
+
+            InitializeNavigation("~", RootController);
+            RegisterNavigationPath("/", HomeController);
+            RegisterNavigationPath("/index/{IndexKey}/symbol/{SymbolKey}", SymbolController);
+            StartNavigation("");
 
             return {
             }

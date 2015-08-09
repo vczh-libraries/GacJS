@@ -127,10 +127,12 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             SetUrl: Private.StrongTyped(__Void, [__String], function (value) {
                 this.url = value;
                 if (this.url !== "") {
-                    return this.titleElement.classList.add("HasUrl");
+                    this.titleElement.setAttribute("href", "#~" + this.url);
+                    this.titleElement.classList.add("HasUrl");
                 }
                 else {
-                    return this.titleElement.classList.remove("HasUrl");
+                    this.titleElement.setAttribute("href", undefined);
+                    this.titleElement.classList.remove("HasUrl");
                 }
             }),
             Url: Public.Property({}),
@@ -140,10 +142,10 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             }),
             SetHasDoc: Private.StrongTyped(__Void, [__Boolean], function (value) {
                 if (value) {
-                    return this.titleElement.classList.add("HasDoc");
+                    this.titleElement.classList.add("HasDoc");
                 }
                 else {
-                    return this.titleElement.classList.remove("HasDoc");
+                    this.titleElement.classList.remove("HasDoc");
                 }
             }),
             HasDoc: Public.Property({}),
@@ -197,7 +199,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                     this.decoratorElement.appendChild(Text("\u00A0"));
                 }
 
-                this.titleElement = Dom("div", this.element);
+                this.titleElement = Dom("a", this.element);
                 this.titleElement.appendChild(Text("\u00A0"));
                 this.titleElement.setAttribute("class", "TreeNodeTitle");
                 this.titleElement.addEventListener("click", function () {
