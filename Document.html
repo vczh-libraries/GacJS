@@ -49,6 +49,7 @@
             rootContainer = new TreeNodeContainer(true, documentIndex, "Loading ./Doc/Data/nss.xml ...");
             keyNodeMap = {};
             nodeLoaded = {};
+            selectedNode = null;
 
             // nss.xml
             GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
@@ -206,6 +207,14 @@
                 treeNode.Clicked.Attach(function () {
                     documentContent.innerHTML = "";
                     documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
+
+                    if (selectedNode !== null) {
+                        selectedNode.Selected = false;
+                    }
+                    selectedNode = treeNode;
+                    selectedNode.Selected = true;
+
+                    // s(Symbol).xml
                     GetResourceAsync(sIndexFile, true).SucceededThen(function (result) {
                         documentContent.innerHTML = "";
                         var symbol = result.Symbol[0];

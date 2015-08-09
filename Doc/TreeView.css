@@ -3,6 +3,15 @@
     padding-left: 0;
 }
 
+    .TreeNodeContainer.Expanded {
+        margin-left: 1.2em;
+    }
+
+    .TreeNodeContainer.Collapsed {
+        display: none;
+    }
+
+
 .TreeNodeDecorator {
     float: left;
     min-width: 2.4em;
@@ -25,6 +34,11 @@
     color: #808080;
 }
 
+    .TreeNodeTitle.Selected {
+        font-weight: bolder;
+        color: #000000;
+    }
+
     .TreeNodeTitle:hover {
         text-decoration: underline;
     }
@@ -37,18 +51,14 @@
             color: #ff5000;
         }
 
+        .TreeNodeTitle.HasDoc.Selected {
+            font-weight: bolder;
+        }
+
 .TreeNodePostfix {
     float: left;
     display: block;
     text-decoration: none;
     color: #808080;
     margin-left: 0.5em;
-}
-
-.Expanded {
-    margin-left: 1.2em;
-}
-
-.Collapsed {
-    display: none;
 }

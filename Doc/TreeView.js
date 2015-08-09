@@ -92,6 +92,7 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
 
             nodeContainer: Private(null),
             expanded: Private(false),
+            selected: Private(false),
             title: Private(""),
             postfix: Private(""),
 
@@ -151,6 +152,17 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             }),
             Expanded: Public.Property({}),
             ExpandedChanged: Public.Event(),
+
+            GetSelected: Private(function () { return this.selected; }),
+            SetSelected: Private.StrongTyped(__Void, [__Boolean], function (value) {
+                if (value) {
+                    this.titleElement.classList.add("Selected");
+                }
+                else {
+                    this.titleElement.classList.remove("Selected");
+                }
+            }),
+            Selected: Public.Property({}),
 
             Clicked: Public.Event(),
 
