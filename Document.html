@@ -47,13 +47,18 @@
             eval(__injection__);
 
             rootContainer = new TreeNodeContainer(true, documentIndex, "Loading ./Doc/Data/nss.xml ...");
-            keyNodeMap = {};
-            nodeLoaded = {};
-            selectedNode = null;
+            var nssObject = null;
+            var keyNodeMap = {};
+            var nodeLoaded = {};
+            var selectedNode = null;
 
-            // nss.xml
-            GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
-                var nsItems = result.Nss.list;
+            function EnsureNssLoaded(nss) {
+                if (nssObject !== null) {
+                    return;
+                }
+
+                nssObject = nss;
+                var nsItems = nssObject.list;
                 for (var i = 0; i < nsItems.length; i++) {
                     var nsItem = nsItems[i];
                     var displayName = nsItem.DisplayName.split(" ");
@@ -76,6 +81,11 @@
                         }
                     })());
                 }
+            }
+
+            // nss.xml
+            GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (result) {
+                EnsureNssLoaded(result.Nss);
             });
 
             function LoadNamespaceNodeChildren(nsKey, nsIndexFile, nsTreeNode) {
@@ -101,10 +111,10 @@
                                 treeNode.Title = displayName[0];
                                 treeNode.Postfix = displayName[1];
                                 treeNode.HasDoc = symbol.Doc;
-                                treeNodes.push(treeNode);
+                                treeNode.Url = "/index/" + symbol.UrlName + "/symbol/" + symbol.Key;
 
+                                treeNodes.push(treeNode);
                                 keyNodeMap[symbol.Key] = treeNode;
-                                BindSymbolNode(treeNode, symbol.Key, symbol.UrlName, symbolIndexFile);
 
                                 if (hasChildren) {
                                     treeNode.ExpandedChanged.Attach((function () {
@@ -178,10 +188,10 @@
                         treeNode.Title = displayName[0];
                         treeNode.Postfix = displayName[1];
                         treeNode.HasDoc = childSymbol.Doc;
+                        treeNode.Url = "/index/" + urlName + "/symbol/" + childSymbol.Key;
 
-                        keyNodeMap[childSymbol.Key] = treeNode;
-                        BindSymbolNode(treeNode, childSymbol.Key, urlName, sIndexFile);
                         treeNodes.push(treeNode);
+                        keyNodeMap[childSymbol.Key] = treeNode;
                         FillSymbolTree(urlName, treeNode, childSymbol, sIndexFile);
                     }
 
@@ -204,12 +214,18 @@
 
             var xmlSerializer = new XMLSerializer();
 
-            function BindSymbolNode(treeNode, key, urlName, sIndexFile) {
-                treeNode.Url = "/index/" + urlName + "/symbol/" + key;
-                treeNode.Clicked.Attach(function () {
-                    documentContent.innerHTML = "";
-                    documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
+            var RootController = Class(PQN("RootController"), INavigationController, {
 
+            });
+
+            var HomeController = Class(PQN("HomeController"), INavigationController, {
+                OnInstalled: Public.Override(function () {
+                    documentContent.innerHTML = "<h1>Welcome to the document and code navigation website for <a target=\"_blank\" href=\"https://github.com/vczh-libraries\">https://github.com/vczh-libraries</a>.</h1>";
+                }),
+            });
+
+            var SymbolController = Class(PQN("SymbolController"), INavigationController, {
+                ShowDocument: Public(function (key, treeNode, sIndexFile) {
                     if (selectedNode !== null) {
                         selectedNode.Selected = false;
                     }
@@ -230,31 +246,49 @@
                                 documentContent.innerHTML = "<span class=\"DocError\">Failed to render the symbol.</span>";
                             });
                     });
-                });
-            }
-
-            var RootController = Class(PQN("RootController"), INavigationController, {
-
-            });
-
-            var HomeController = Class(PQN("HomeController"), INavigationController, {
-                OnInstalled: Public.Override(function () {
-                    documentContent.innerHTML = "<h1>Welcome to the document and code navigation website for <a target=\"_blank\" href=\"https://github.com/vczh-libraries\">https://github.com/vczh-libraries</a>.</h1>";
-                }),
-            });
-
-            var SymbolController = Class(PQN("SymbolController"), INavigationController, {
-                OnInstalled: Public.Override(function () {
-
                 }),
 
-                IndexKey: Public(""),
+                OnInstalled: Public.Override(function () {
+                    var tIndexFile = "./Doc/Data/t(" + this.UrlName + ").xml";
+                    var sIndexFile = "./Doc/Data/s(" + this.UrlName + ").xml";
+                    documentContent.innerHTML = "";
+                    documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));
+
+                    var self = this;
+                    GetResourceAsync("./Doc/Data/nss.xml", true).SucceededThen(function (nssResult) {
+                        EnsureNssLoaded(nssResult.Nss);
+                        GetResourceAsync(tIndexFile, true).SucceededThen(function (tResult) {
+                            var tKey = tResult.Tree.rootItem.Key;
+                            var nsUrl = tResult.Tree.namespaceUrlName;
+                            var nsKey = nssObject.nsUrlKeyMap[nsUrl];
+                            var nsIndexFile = "./Doc/Data/ns(" + nsUrl + ").xml";
+
+                            GetResourceAsync(nsIndexFile, true).SucceededThen(function (nsResult) {
+                                if (!nodeLoaded.hasOwnProperty(nsKey)) {
+                                    LoadNamespaceNodeChildren(nsKey, nsIndexFile, keyNodeMap[nsKey]);
+                                }
+
+                                if (!nodeLoaded.hasOwnProperty(tKey)) {
+                                    LoadSymbolNodeChildren(tKey, self.UrlName, tIndexFile, keyNodeMap[tKey], sIndexFile);
+                                }
+
+                                var treeNode = keyNodeMap[self.SymbolKey];
+                                self.ShowDocument(self.SymbolKey, treeNode, sIndexFile);
+                                while (treeNode = treeNode.Parent) {
+                                    treeNode.Expanded = true;
+                                }
+                            });
+                        });
+                    });
+                }),
+
+                UrlName: Public(""),
                 SymbolKey: Public(""),
             });
 
             InitializeNavigation("~", RootController);
             RegisterNavigationPath("/", HomeController);
-            RegisterNavigationPath("/index/{IndexKey}/symbol/{SymbolKey}", SymbolController);
+            RegisterNavigationPath("/index/{UrlName}/symbol/{SymbolKey}", SymbolController);
             StartNavigation("");
 
             return {

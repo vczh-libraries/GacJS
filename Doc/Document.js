@@ -44,6 +44,7 @@ Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resourc
         Deserialize: Public.Override(function (resource) {
             var list = [];
             var map = {};
+            var nsUrlKeyMap = {};
             var nsXmls = GetDirectXmlChild(resource.firstChild, "Namespace");
             for (var i = 0; i < nsXmls.length; i++) {
                 var nsXml = nsXmls[i];
@@ -55,8 +56,9 @@ Packages.Define("Doc.Document", ["Class", "XmlHelper", "Html.Razor", "IO.Resourc
                     );
                 list.push(item);
                 map[item.Key] = item;
+                nsUrlKeyMap[item.UrlName] = item.Key;
             }
-            return { list: list, map: map };
+            return { list: list, map: map, nsUrlKeyMap: nsUrlKeyMap };
         }),
     });
     RegisterDeserializer(new NssResourceDeserializer());
