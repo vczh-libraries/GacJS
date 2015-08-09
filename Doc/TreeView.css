@@ -39,7 +39,7 @@
         color: #000000;
     }
 
-    .TreeNodeTitle:hover {
+    .TreeNodeTitle.HasUrl:hover {
         text-decoration: underline;
     }
 

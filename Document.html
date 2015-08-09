@@ -204,6 +204,7 @@
             var xmlSerializer = new XMLSerializer();
 
             function BindSymbolNode(treeNode, key, sIndexFile) {
+                treeNode.Url = key;
                 treeNode.Clicked.Attach(function () {
                     documentContent.innerHTML = "";
                     documentContent.appendChild(document.createTextNode("Loading " + sIndexFile + " ..."));

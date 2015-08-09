@@ -91,10 +91,10 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             postfixElement: Private(null),
 
             nodeContainer: Private(null),
-            expanded: Private(false),
-            selected: Private(false),
             title: Private(""),
             postfix: Private(""),
+            url: Private(""),
+            expanded: Private(false),
 
             decoratorElement_OnClick: Private(function () {
                 this.Expanded = !this.Expanded;
@@ -122,6 +122,18 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 this.postfixElement.firstChild.textContent = value;
             }),
             Postfix: Public.Property({}),
+
+            GetUrl: Private(function () { return this.url; }),
+            SetUrl: Private.StrongTyped(__Void, [__String], function (value) {
+                this.url = value;
+                if (this.url !== "") {
+                    return this.titleElement.classList.add("HasUrl");
+                }
+                else {
+                    return this.titleElement.classList.remove("HasUrl");
+                }
+            }),
+            Url: Public.Property({}),
 
             GetHasDoc: Private(function () {
                 return this.titleElement.classList.contains("HasDoc");
@@ -153,7 +165,9 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
             Expanded: Public.Property({}),
             ExpandedChanged: Public.Event(),
 
-            GetSelected: Private(function () { return this.selected; }),
+            GetSelected: Private(function () {
+                return this.titleElement.classList.contains("Selected");
+            }),
             SetSelected: Private.StrongTyped(__Void, [__Boolean], function (value) {
                 if (value) {
                     this.titleElement.classList.add("Selected");
@@ -187,6 +201,9 @@ Packages.Define("Doc.TreeView", ["Class", "IO.Resource", "Doc.Document"], functi
                 this.titleElement.appendChild(Text("\u00A0"));
                 this.titleElement.setAttribute("class", "TreeNodeTitle");
                 this.titleElement.addEventListener("click", function () {
+                    if (self.url === "") {
+                        self.decoratorElement_OnClick();
+                    }
                     self.Clicked.Execute(self.__ExternalReference);
                 }, false);
 
