@@ -65,12 +65,30 @@
     @Render(type.ClassType)::@ContFollow(continuation)
 }
 
+@{
+    function IsNamespaceReference(type) {
+        if (RefTypeDecl.TestType(type) || SubTypeDecl.TestType(type)) {
+            for (var i = 0; i < type.ReferencingOverloadKeys.length; i++) {
+                if (type.ReferencingOverloadKeys[i].indexOf("@ns:") !== -1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
 @function Render(type, continuation) {
     @if (RefTypeDecl.TestType(type)) {
         <span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
     }
     else if (SubTypeDecl.TestType(type)) {
-        @:@Render(type.Parent)::<span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
+        if (IsNamespaceReference(type.Parent)) {
+            @:<span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
+        }
+        else {
+            @:@Render(type.Parent)::<span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
+        }
     }
     else if (DecorateTypeDecl.TestType(type)) {
         switch (type.Decoration) {

@@ -11,7 +11,14 @@
 @if (symbol.Static === true) {
     <span class="DocKeyword">static</span>&nbsp;
 }
-@RenderType(symbol.Type, symbol.Name)
-@if (renderType !== DocRenderType.Description.FunctionParameter) {
-    @:;
+
+@function ContName() {
+    @symbol.Name
+}
+
+@if (renderType === DocRenderType.Description.FunctionParameter) {
+    @:@RenderType(symbol.Type, ContName())
+}
+else {
+    @:@RenderType(symbol.Type, symbol.Name);
 }
