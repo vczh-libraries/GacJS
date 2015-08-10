@@ -78,16 +78,28 @@
     }
 }
 
+@function RenderHyperlinkTypeName(type) {
+    @if (type.Name === "__int8" || type.Name === "__int16" || type.Name === "__int32" || type.Name === "__int64" || type.Name === "char" || type.Name === "wchar_t" || type.Name === "bool" || type.Name === "float" || type.Name === "double" || type.Name === "void" || type.Name === "int" || type.Name === "long") {
+        <span class="DocKeyword">@type.Name</span>
+    }
+    else if (type.ReferencingOverloadKeys.length === 0) {
+        @:@type.Name
+    }
+    else {
+        <a class="DocHyperlink">@type.Name</a>
+    }
+}
+
 @function Render(type, continuation) {
     @if (RefTypeDecl.TestType(type)) {
-        <a class="DocHyperlink">@type.Name</a>@ContFollow(continuation)
+        @:@RenderHyperlinkTypeName(type)@ContFollow(continuation)
     }
     else if (SubTypeDecl.TestType(type)) {
         if (IsNamespaceReference(type.Parent)) {
-            @:<a class="DocHyperlink">@type.Name</a>@ContFollow(continuation)
+            @:@RenderHyperlinkTypeName(type)@ContFollow(continuation)
         }
         else {
-            @:@Render(type.Parent)::<a class="DocHyperlink">@type.Name</a>@ContFollow(continuation)
+            @:@Render(type.Parent)::@RenderHyperlinkTypeName(type)@ContFollow(continuation)
         }
     }
     else if (DecorateTypeDecl.TestType(type)) {
