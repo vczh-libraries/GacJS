@@ -98,6 +98,16 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         return null;
     }
 
+    function OverloadKeyToUrl(key) {
+        var index = key.indexOf("@s:");
+        if (index === -1) {
+            throw new Error("Cannot parse overload key \"" + key + "\".");
+        }
+        var symbolKey = key.substring(0, index);
+        var urlName = key.substring(index + 3, key.length);
+        return "#~/index/" + urlName + "/symbol/" + symbolKey;
+    }
+
     /********************************************************************************
     CancelAndRunAfterDocViewReady
     ********************************************************************************/
@@ -191,6 +201,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         RenderSymbol: RenderSymbol,
         RenderDocument: RenderDocument,
         FindSymbolByOverloadKey: FindSymbolByOverloadKey,
+        OverloadKeyToUrl: OverloadKeyToUrl,
         CancelAndRunAfterDocViewReady: CancelAndRunAfterDocViewReady,
     }
 });
