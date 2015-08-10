@@ -82,11 +82,18 @@
     @if (type.Name === "__int8" || type.Name === "__int16" || type.Name === "__int32" || type.Name === "__int64" || type.Name === "char" || type.Name === "wchar_t" || type.Name === "bool" || type.Name === "float" || type.Name === "double" || type.Name === "void" || type.Name === "int" || type.Name === "long") {
         <span class="DocKeyword">@type.Name</span>
     }
-    else if (type.ReferencingOverloadKeys.length === 0) {
-        @:@type.Name
-    }
     else {
-        <a class="DocHyperlink">@type.Name</a>
+        var keys = type.ReferencingOverloadKeys;
+        switch (keys.length) {
+            case 0:
+                @:@type.Name
+                break;
+            case 1:
+                <a class="DocHyperlink" href="@(OverloadKeyToUrl(keys[0]))">@type.Name</a>
+                break;
+            default:
+                <a class="DocHyperlink">@type.Name</a>
+        }
     }
 }
 
