@@ -15,7 +15,14 @@ else {
     <span class="DocKeyword">enum</span>
 }
 
-&nbsp;<span class="DocName">@symbol.Name</span><br />
+&nbsp;
+@if (renderType === DocRenderType.Description.ClassMember && model.urlName) {
+    <a class="DocName" href="#~/index/@(model.urlName)/symbol/@(symbol.OverloadKey)">@symbol.Name</a>
+}
+else {
+    <span class="DocName">@symbol.Name</span>
+}
+<br />
 {
 <table class="DocLayoutTable">
     @for (var i = 0; i < symbol.Children.length; i++) {
