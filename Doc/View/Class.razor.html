@@ -45,7 +45,7 @@
         var classMember = members[i];
         <tr>
             <td class="DocClassMemberCell">
-                @RenderSymbol(DocRenderType.Description.ClassMember, classMember)
+                @RenderSymbol(DocRenderType.Description.ClassMember, classMember, model.urlName)
             </td>
             <td class="DocClassMemberCell">
                 @if (classMember.Document !== null) {

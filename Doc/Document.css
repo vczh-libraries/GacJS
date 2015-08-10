@@ -37,13 +37,28 @@ body {
     padding: 1em;
 }
 
-.DocHyperlink {
+a.DocHyperlink {
     color: green;
+    cursor: pointer;
+    text-decoration: none;
 }
+
+    a.DocHyperlink:hover {
+        text-decoration: underline;
+    }
 
 .DocName {
     font-weight: bold;
 }
+
+a.DocName {
+    color: black;
+    text-decoration: none;
+}
+
+    a.DocName:hover {
+        text-decoration: underline;
+    }
 
 .DocKeyword {
     color: blue;
@@ -72,9 +87,9 @@ body {
         border-color: lightgray;
     }
 
-    .DocLayoutTable td.DocClassMemberCell {
-        vertical-align: top;
-        border-top-width: 1px;
-        border-top-style: solid;
-        border-top-color: #F0F0FF;
-    }
+        .DocLayoutTable td.DocClassMemberCell {
+            vertical-align: top;
+            border-top-width: 1px;
+            border-top-style: solid;
+            border-top-color: #F0F0FF;
+        }

@@ -45,11 +45,11 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         return viewSpecification(model);
     }
 
-    function RenderSymbol(renderType, symbol) {
+    function RenderSymbol(renderType, symbol, urlName) {
         if (TemplateDecl.TestType(symbol)) {
             symbol = symbol.Element;
         }
-        var model = { renderType: renderType, symbol: symbol };
+        var model = { renderType: renderType, symbol: symbol, urlName: urlName };
 
         if (ClassDecl.TestType(symbol)) {
             return viewClass(model);

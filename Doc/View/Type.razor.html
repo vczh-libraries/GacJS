@@ -80,14 +80,14 @@
 
 @function Render(type, continuation) {
     @if (RefTypeDecl.TestType(type)) {
-        <span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
+        <a class="DocHyperlink">@type.Name</a>@ContFollow(continuation)
     }
     else if (SubTypeDecl.TestType(type)) {
         if (IsNamespaceReference(type.Parent)) {
-            @:<span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
+            @:<a class="DocHyperlink">@type.Name</a>@ContFollow(continuation)
         }
         else {
-            @:@Render(type.Parent)::<span class="DocHyperlink">@type.Name</span>@ContFollow(continuation)
+            @:@Render(type.Parent)::<a class="DocHyperlink">@type.Name</a>@ContFollow(continuation)
         }
     }
     else if (DecorateTypeDecl.TestType(type)) {

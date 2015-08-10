@@ -225,7 +225,7 @@
             });
 
             var SymbolController = Class(PQN("SymbolController"), INavigationController, {
-                ShowDocument: Public(function (key, treeNode, sIndexFile) {
+                ShowDocument: Public(function (key, urlName, treeNode, sIndexFile) {
                     if (selectedNode !== null) {
                         selectedNode.Selected = false;
                     }
@@ -239,7 +239,7 @@
                         var targetChildSymbol = FindSymbolByOverloadKey(symbol, key);
                         CancelAndRunAfterDocViewReady(
                             function () {
-                                var view = RenderSymbol(DocRenderType.Description.Detailed, targetChildSymbol);
+                                var view = RenderSymbol(DocRenderType.Description.Detailed, targetChildSymbol, urlName);
                                 documentContent.innerHTML = view.RawHtml;
                             },
                             function () {
@@ -273,7 +273,7 @@
                                 }
 
                                 var treeNode = keyNodeMap[self.SymbolKey];
-                                self.ShowDocument(self.SymbolKey, treeNode, sIndexFile);
+                                self.ShowDocument(self.SymbolKey, self.UrlName, treeNode, sIndexFile);
                                 while (treeNode = treeNode.Parent) {
                                     treeNode.Expanded = true;
                                 }

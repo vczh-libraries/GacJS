@@ -12,13 +12,22 @@
     <span class="DocKeyword">static</span>&nbsp;
 }
 
-@function ContName() {
+@function ContParameter() {
     @symbol.Name
 }
 
+@function ContName() {
+    @if (renderType === DocRenderType.Description.ClassMember && model.urlName) {
+        <a class="DocName" href="#~/index/@(model.urlName)/symbol/@(symbol.OverloadKey)">@symbol.Name</a>
+    }
+    else {
+        <span class="DocName">@symbol.Name</span>
+    }
+}
+
 @if (renderType === DocRenderType.Description.FunctionParameter) {
-    @:@RenderType(symbol.Type, ContName())
+    @:@RenderType(symbol.Type, ContParameter())
 }
 else {
-    @:@RenderType(symbol.Type, symbol.Name);
+    @:@RenderType(symbol.Type, ContName());
 }
