@@ -22,23 +22,29 @@ else {
 else {
     <span class="DocName">@symbol.Name</span>
 }
-<br />
-{
-<table class="DocLayoutTable">
-    @for (var i = 0; i < symbol.Children.length; i++) {
+
+@if (renderType === DocRenderType.Description.ClassMember) {
+    @:;
+}
+else {
+    <br />
+    {
+    <table class="DocLayoutTable">
+        @for (var i = 0; i < symbol.Children.length; i++) {
         var enumItem = symbol.Children[i];
         <tr>
             <td valign="top">
                 @enumItem.Name,
             </td>
             @if (renderType === DocRenderType.Detailed) {
-                <td valign="top">
-                    @if (enumItem.Document !== null) {
-                        @:@RenderDocument(enumItem.Document, DocDocumentType.Description.Singleline)
-                    }
-                </td>
+            <td valign="top">
+                @if (enumItem.Document !== null) {
+                @:@RenderDocument(enumItem.Document, DocDocumentType.Description.Singleline)
+                }
+            </td>
             }
         </tr>
-    }
-</table>
-};
+        }
+    </table>
+    };
+}

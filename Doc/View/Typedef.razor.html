@@ -10,10 +10,19 @@
     @:@RenderDocument(document, DocDocumentType.Description.Header)<br /><br />
 }
 
+@function RenderName() {
+    @if (renderType === DocRenderType.Description.ClassMember && model.urlName) {
+        <a class="DocName" href="#~/index/@(model.urlName)/symbol/@(symbol.OverloadKey)">@symbol.Name</a>
+    }
+    else {
+        <span class="DocName">@symbol.Name</span>
+    }
+}
+
 @if (template !== null) {
     @:@RenderTemplate(template)<br />
-    <span class="DocKeyword">using</span>@RenderSpecification(template)&nbsp;<span class="DocName">@symbol.Name</span>&nbsp;=&nbsp;@RenderType(symbol.Type, null);
+    <span class="DocKeyword">using</span>@RenderSpecification(template)&nbsp;@(RenderName())&nbsp;=&nbsp;@RenderType(symbol.Type, null);
 }
 else {
-    <span class="DocKeyword">typedef</span>&nbsp;@RenderType(symbol.Type, symbol.Name);
+    <span class="DocKeyword">typedef</span>&nbsp;@RenderType(symbol.Type, RenderName());
 }
