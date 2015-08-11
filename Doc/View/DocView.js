@@ -111,7 +111,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         }
     }
 
-    window.UseTooltip = "javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget, null);";
+    window.UseTooltip = "onclick=\"javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget, null);\"";
 
     function FindSymbolByOverloadKey(symbol, overloadKey) {
         if (symbol.OverloadKey === overloadKey) {
