@@ -97,7 +97,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         tooltipElement.style.top = offsetY + "px";
         tooltipElement.innerHTML = view.RawHtml;
 
-        tooltipElement.addEventListener("mouseout", function (event) {
+        tooltipElement.addEventListener("mouseleave", function (event) {
             HideTooltip();
         }, false);
 
@@ -110,6 +110,8 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             tooltipElement.removeNode(true);
         }
     }
+
+    window.UseTooltip = "javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget, null);";
 
     function FindSymbolByOverloadKey(symbol, overloadKey) {
         if (symbol.OverloadKey === overloadKey) {
