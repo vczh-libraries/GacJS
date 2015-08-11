@@ -39,7 +39,7 @@ body {
 
 .Tooltip {
     display: block;
-    position: absolute;
+    position: fixed;
     height: 0.8em;
 }
 

@@ -93,12 +93,14 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         var bodyRect = document.body.parentElement.getBoundingClientRect();
         var offsetX = elementRect.left - bodyRect.left;
         var offsetY = elementRect.top - bodyRect.top;
+        var scrollX = document.body.scrollLeft + document.body.parentElement.scrollLeft;
+        var scrollY = document.body.scrollTop + document.body.parentElement.scrollTop;
 
         var tooltipElement = document.createElement("div");
         tooltipElement.id = "GACJS_tooltip";
         tooltipElement.classList.add("Tooltip");
-        tooltipElement.style.left = offsetX + "px";
-        tooltipElement.style.top = offsetY + "px";
+        tooltipElement.style.left = (offsetX - scrollX) + "px";
+        tooltipElement.style.top = (offsetY - scrollY) + "px";
         tooltipElement.innerHTML = view.RawHtml;
 
         tooltipElement.addEventListener("mouseleave", function (event) {
