@@ -1,5 +1,5 @@
 
-Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay", "XmlHelper"], function (__injection__) {
+Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay", "XmlHelper", "Html.RazorHelper"], function (__injection__) {
     eval(__injection__);
 
     /********************************************************************************
@@ -80,9 +80,13 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         return viewDocument(model);
     }
 
-    function ShowTooltip(element, content) {
+    function ShowTooltip(element) {
         HideTooltip();
-        var model = { element: element, content: content };
+        var tooltipContent = document.body.getElementsByClassName("TooltipContent")[0];
+        if (!tooltipContent) {
+            return;
+        }
+        var model = { element: element, content: new RazorHtml(tooltipContent.innerHTML) };
         var view = viewTooltip(model);
 
         var elementRect = element.getBoundingClientRect();
@@ -111,7 +115,8 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         }
     }
 
-    window.UseTooltip = "onclick=\"javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget, null);\"";
+    window.UseTooltip = "onclick=\"javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget);\"";
+    window.DisplayTooltip = "class=\"TooltipContent\"";
 
     function FindSymbolByOverloadKey(symbol, overloadKey) {
         if (symbol.OverloadKey === overloadKey) {

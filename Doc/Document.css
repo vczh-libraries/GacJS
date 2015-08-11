@@ -77,8 +77,13 @@ body {
 .TooltipContainer {
     margin-top: calc(0.5em - 1px);
     border: 1px solid black;
+    padding: 0.5em;
     background-color: cornsilk;
     z-index: 0;
+}
+
+.TooltipContent {
+    display: none;
 }
 
 a.DocHyperlink {
