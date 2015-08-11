@@ -96,6 +96,11 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         tooltipElement.style.left = offsetX + "px";
         tooltipElement.style.top = offsetY + "px";
         tooltipElement.innerHTML = view.RawHtml;
+
+        tooltipElement.addEventListener("mouseout", function (event) {
+            HideTooltip();
+        }, false);
+
         element.appendChild(tooltipElement);
     }
 
