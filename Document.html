@@ -220,7 +220,15 @@
 
             var HomeController = Class(PQN("HomeController"), INavigationController, {
                 OnInstalled: Public.Override(function () {
-                    documentContent.innerHTML = "<h1>Welcome to the document and code navigation website for <a target=\"_blank\" href=\"https://github.com/vczh-libraries\">https://github.com/vczh-libraries</a>.</h1>";
+                    if (selectedNode !== null) {
+                        selectedNode.Selected = false;
+                        selectedNode = null;
+                    }
+
+                    GetResourceAsync("./Doc/Home.razor.html", true).SucceededThen(function (result) {
+                        var view = result.Razor({});
+                        documentContent.innerHTML = view.RawHtml;
+                    });
                 }),
             });
 
