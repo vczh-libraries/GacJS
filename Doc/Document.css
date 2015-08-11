@@ -37,6 +37,11 @@ body {
     padding: 1em;
 }
 
+.DocumentTooltip {
+    display: block;
+    position: absolute;
+}
+
 a.DocHyperlink {
     color: green;
     cursor: pointer;

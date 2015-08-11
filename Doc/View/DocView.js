@@ -29,6 +29,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     var viewClass = null;
     var viewGroupedField = null;
     var viewDocument = null;
+    var viewTooltip = null;
 
     function RenderType(type, continuation) {
         var model = { type: type, continuation: continuation };
@@ -77,6 +78,32 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     function RenderDocument(document, documentType) {
         var model = { document: document, documentType: documentType };
         return viewDocument(model);
+    }
+
+    function ShowTooltip(element, content) {
+        HideTooltip();
+        var model = { element: element, content: content };
+        var view = viewTooltip(model);
+
+        var elementRect = element.getBoundingClientRect();
+        var bodyRect = document.body.parentElement.getBoundingClientRect();
+        var offsetX = elementRect.left - bodyRect.left;
+        var offsetY = elementRect.top - bodyRect.top;
+
+        var tooltipElement = document.createElement("div");
+        tooltipElement.id = "GACJS_tooltip";
+        tooltipElement.classList.add("DocumentTooltip");
+        tooltipElement.style.left = offsetX + "px";
+        tooltipElement.style.top = offsetY + "px";
+        tooltipElement.innerHTML = view.RawHtml;
+        element.appendChild(tooltipElement);
+    }
+
+    function HideTooltip() {
+        var tooltipElement = document.getElementById("GACJS_tooltip");
+        if (tooltipElement) {
+            tooltipElement.removeNode(true);
+        }
     }
 
     function FindSymbolByOverloadKey(symbol, overloadKey) {
@@ -147,8 +174,9 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
             var asyncClass = GetResourceAsync("./Doc/View/Class.razor.html", true);
             var asyncGroupedField = GetResourceAsync("./Doc/View/GroupedField.razor.html", true);
             var asyncDocument = GetResourceAsync("./Doc/View/Document.razor.html", true);
+            var asyncTooltip = GetResourceAsync("./Doc/View/Tooltip.razor.html", true);
 
-            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass, asyncGroupedField, asyncDocument];
+            var asyncTasks = [asyncType, asyncTemplate, asyncSpecification, asyncTypedef, asyncVar, asyncFunction, asyncEnum, asyncClass, asyncGroupedField, asyncDocument, asyncTooltip];
             WaitAll(asyncTasks).Then(function (result) {
                 for (var i = 0; i < result.length; i++) {
                     if (DelayException.TestType(result[i])) {
@@ -168,6 +196,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
                 viewClass = result[7].Razor;
                 viewGroupedField = result[8].Razor;
                 viewDocument = result[9].Razor;
+                viewTooltip = result[10].Razor;
 
                 taskReady = true;
                 taskPreparing = false;
@@ -200,6 +229,8 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         RenderSpecification: RenderSpecification,
         RenderSymbol: RenderSymbol,
         RenderDocument: RenderDocument,
+        ShowTooltip: ShowTooltip,
+        HideTooltip: HideTooltip,
         FindSymbolByOverloadKey: FindSymbolByOverloadKey,
         OverloadKeyToUrl: OverloadKeyToUrl,
         CancelAndRunAfterDocViewReady: CancelAndRunAfterDocViewReady,
