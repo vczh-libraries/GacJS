@@ -111,7 +111,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
     function HideTooltip() {
         var tooltipElement = document.getElementById("GACJS_tooltip");
         if (tooltipElement) {
-            tooltipElement.removeNode(true);
+            tooltipElement.parentElement.removeChild(tooltipElement);
         }
     }
 
