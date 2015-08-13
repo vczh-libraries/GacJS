@@ -96,16 +96,18 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         var scrollX = document.body.scrollLeft + document.body.parentElement.scrollLeft;
         var scrollY = document.body.scrollTop + document.body.parentElement.scrollTop;
 
+        var tooltipContentElement = document.createElement("div");
+        tooltipContentElement.innerHTML = view.RawHtml;
+        tooltipContentElement.addEventListener("mouseleave", function (event) {
+            HideTooltip();
+        }, false);
+
         var tooltipElement = document.createElement("div");
         tooltipElement.id = "GACJS_tooltip";
         tooltipElement.classList.add("Tooltip");
         tooltipElement.style.left = (offsetX - scrollX) + "px";
         tooltipElement.style.top = (offsetY - scrollY) + "px";
-        tooltipElement.innerHTML = view.RawHtml;
-
-        tooltipElement.addEventListener("mouseleave", function (event) {
-            //HideTooltip();
-        }, false);
+        tooltipElement.appendChild(tooltipContentElement);
 
         element.appendChild(tooltipElement);
     }
