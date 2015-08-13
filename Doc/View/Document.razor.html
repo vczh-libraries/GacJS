@@ -10,6 +10,23 @@
     summary = document;
 }
 
+@function RenderHyperlinkItem(link) {
+    @var key = link.getAttribute("cref");
+    @var display = OverloadKeyToDisplay(key);
+    <a class="DocHyperlink" href="@(OverloadKeyToUrl(key))">@display</a>
+}
+
+@function TooltipContent(links) {
+    <div class="DocText">
+        This hyper-link contains multiple targets:
+        <ul>
+            @for (var i = 0; i < links.length; i++) {
+                <li>@RenderHyperlinkItem(links[i])</li>
+            }
+        </ul>
+    </div>
+}
+
 @function RenderDocumentBody(body) {
     @for (var i = 0; i < body.childNodes.length; i++) {
         var xml = body.childNodes[i];
@@ -54,6 +71,21 @@
                     }
                 }
                 <span class="DocComment" style="margin-left: @(indent/2)em">@line.substring(k, line.length)</span>
+            }
+        }
+        else if (xml.tagName === "links") {
+            var links = GetDirectXmlChild(xml, "link");
+            if (links.length === 0) {
+                <span class="DocComment">@PrintXml(xml)</span>
+            }
+            else if (links.length === 1) {
+                @:@RenderHyperlinkItem(links[0])
+            }
+            else {
+                <span onclick="@(UseTooltip)">
+                    <a class="DocHyperlink">@OverloadKeyToDisplay(links[0].getAttribute("cref"))</a>
+                    <div @(DisplayTooltip) style="cursor: initial;">@TooltipContent(links)</div>
+                </span>
             }
         }
         else {
