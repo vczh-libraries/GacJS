@@ -82,7 +82,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
 
     function ShowTooltip(element) {
         HideTooltip();
-        var tooltipContent = document.body.getElementsByClassName("TooltipContent")[0];
+        var tooltipContent = element.getElementsByClassName("TooltipContent")[0];
         if (!tooltipContent) {
             return;
         }
@@ -104,7 +104,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         tooltipElement.innerHTML = view.RawHtml;
 
         tooltipElement.addEventListener("mouseleave", function (event) {
-            HideTooltip();
+            //HideTooltip();
         }, false);
 
         element.appendChild(tooltipElement);
@@ -117,7 +117,7 @@ Packages.Define("Doc.View", ["Class", "Doc.SymbolTree", "IO.Resource", "IO.Delay
         }
     }
 
-    window.UseTooltip = "onclick=\"javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget);\"";
+    window.UseTooltip = "javascript:Packages.Packages['Doc.View'].ShowTooltip(event.currentTarget);";
     window.DisplayTooltip = "class=\"TooltipContent\"";
 
     function FindSymbolByOverloadKey(symbol, overloadKey) {

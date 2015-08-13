@@ -86,6 +86,19 @@ body {
     display: none;
 }
 
+.DocText {
+    color: black;
+}
+
+.DocNonSymbolHyperlink {
+    color: blue;
+    text-decoration: none;
+}
+
+a.DocNonSymbolHyperlink:hover {
+    text-decoration: underline;
+}
+
 a.DocHyperlink {
     color: green;
     cursor: pointer;
