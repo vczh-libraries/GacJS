@@ -838,6 +838,7 @@ Packages.Define("Html.Navigation", ["Class"], function (__injection__) {
         if (hash[0] === "#") {
             hash = hash.substring(1, hash.length);
         }
+        hash = decodeURIComponent(hash);
         if (hash.length > hashFlag.length) {
             if (hash.substring(0, hashFlag.length + 1) === hashFlag + "/") {
                 var path = hash.substring(hashFlag.length + 1, hash.length);
