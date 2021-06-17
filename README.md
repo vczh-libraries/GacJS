@@ -4,7 +4,9 @@
 
 Running GacUI in Browsers!
 
-### Notice
+## Source code is abondoned. This repo will be used to port GacUI to WebAssembly. All content will be deleted later.
+
+## Notice
 
 Some content is under development. I will keep all code compatible across browsers by only testing the code using the **latest version of IE, Firefox and Chrome**. After Windows 10 releases, Edge will be included.
 
@@ -12,14 +14,14 @@ In the future, GacGen.exe can translate GacUI XML resource files to javascript c
 
 This project's priority is not very high. The first step is to re-implement GacUI's layout system using javascript, and then use it to develop the GacUI document generator with C++ and XML comments.
 
-### Running test pages
+## Running test pages
 
 Running test pages is very simple, just follow the steps:
 * Clone this repo to your disk.
 * Create a web site on the cloned folder using IIS.
 * Launch http://127.0.0.1:< port >/Entrance.html according to your configuration.
 
-### Content
+## Content
 
 * **[Package.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Package.js)** : A package infrastructure. All JavaScript components in this project will be build as packages. You don't need to worry about the order -- except that **Package.js** should be the first one -- when including coupled JavaScript files in your HTML document.
 * **[Test.js](https://github.com/vczh-libraries/GacJS/blob/master/Script/Test.js)** : A very simple unit test framework, that only me will use it.
