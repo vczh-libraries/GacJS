@@ -5,6 +5,30 @@ import { Schema } from './AST';
 const __dirname = import.meta.dirname;
 
 function fixIndentation(code: string): string {
+    // Break code into lines
+    const lines = code.split('\n');
+    
+    const processedLines: string[] = [];
+    
+    for (const line of lines) {
+        // Check if line is only spaces - if so, remove it
+        if (line.trim() === '') {
+            continue;
+        }
+        
+        // Check if line begins with zero or more spaces followed by '|'
+        const match = line.match(/^(\s*)\|(.*)$/);
+        if (match) {
+            // Remove the spaces before '|' and keep the content after '|'
+            processedLines.push(match[2]);
+        } else {
+            // Line doesn't match the expected pattern, throw error
+            throw new Error(`Invalid line format: "${line}". Expected line to be empty or start with spaces followed by '|'.`);
+        }
+    }
+    
+    // Join them back to a string
+    return processedLines.join('\r\n');
 }
 
 function generateTypes(schema: Schema): string {
@@ -82,6 +106,7 @@ ${generateTypes(schema)}
 ${generateRequests(schema)}
 ${generateResponses(schema)}
 ${generateEvents(schema)}
+|
     `);
 }
 
