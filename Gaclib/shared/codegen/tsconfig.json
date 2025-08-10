@@ -13,7 +13,10 @@
         "outDir": "./lib",
         "noEmitOnError": true,
         "noUnusedLocals": true,
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "types": [
+            "node"
+        ]
     },
     "include": [
         "src/**/*.ts",
