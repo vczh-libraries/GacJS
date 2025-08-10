@@ -5,7 +5,7 @@
     "type": "module",
     "main": "./lib/src/index.js",
     "scripts": {
-        "build": "rimraf ./lib && eslint && tsc"
+        "build": "rimraf ./lib && eslint --fix && tsc && node ./lib/index.js"
     },
     "license": "Apache-2.0",
     "devDependencies": {

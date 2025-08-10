@@ -23,7 +23,11 @@ export default tseslint.config(
         rules: {
             "@typescript-eslint/no-base-to-string": "off",
             "@typescript-eslint/no-empty-object-type": "off",
-            "@typescript-eslint/restrict-template-expressions": "off"
+            "@typescript-eslint/restrict-template-expressions": "off",
+            "quotes": ["error", "single", {
+                "avoidEscape": true,
+                "allowTemplateLiterals": true
+            }]
         }
     }
 );

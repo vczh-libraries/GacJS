@@ -1,1 +1,3 @@
-export interface Something { }
+import { generateRemoteProtocol } from './remote-protocol/index.js';
+
+generateRemoteProtocol();
