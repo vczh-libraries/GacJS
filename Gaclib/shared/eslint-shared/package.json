@@ -1,0 +1,8 @@
+{
+    "name": "eslint-shared",
+    "version": "0.0.1",
+    "description": "Shared eslint rules",
+    "type": "module",
+    "main": "eslint.config.mjs",
+    "private": true
+}
