@@ -10,7 +10,7 @@
     },
     "license": "Apache-2.0",
     "devDependencies": {
-        "eslint-shared": "^0.0.1"
+        "@gaclib-shared/eslint-shared": "^0.0.1"
     },
     "dependencies": {
         "@gaclib/remote-protocol": "^0.0.1"

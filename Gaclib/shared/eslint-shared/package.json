@@ -1,5 +1,5 @@
 {
-    "name": "eslint-shared",
+    "name": "@gaclib-shared/eslint-shared",
     "version": "0.0.1",
     "description": "Shared eslint rules",
     "type": "module",

@@ -1,4 +1,4 @@
-import eslintShared from 'eslint-shared';
+import eslintShared from '@gaclib-shared/eslint-shared';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
