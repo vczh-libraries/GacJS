@@ -19,12 +19,12 @@ export interface ReferenceType {
 
 export interface OptionalType {
     '$ast': 'OptionalType';
-    element: TypeReference;
+    element: Type;
 }
 
 export interface ArrayType {
     '$ast': 'ArrayType';
-    element: TypeReference;
+    element: Type;
 }
 
 export interface ArrayMapType {
@@ -35,15 +35,15 @@ export interface ArrayMapType {
 
 export interface MapType {
     '$ast': 'MapType';
-    element: TypeReference;
-    keyType: TypeReference;
+    element: Type;
+    keyType: Type;
 }
 
-export type TypeReference = PrimitiveType | ReferenceType | ArrayType | MapType | ArrayMapType | OptionalType;
+export type Type = PrimitiveType | ReferenceType | ArrayType | MapType | ArrayMapType | OptionalType;
 
 // Declaration
 
-export interface DeclarationBase {
+export interface _DeclarationCommon {
     attributes: Attribute[];
     name: string;
 }
@@ -53,7 +53,7 @@ export interface EnumMember {
     name: string;
 }
 
-export interface EnumDecl extends DeclarationBase {
+export interface EnumDecl extends _DeclarationCommon {
     '$ast': 'EnumDecl';
     members: EnumMember[];
 }
@@ -63,7 +63,7 @@ export interface UnionMember {
     name: string;
 }
 
-export interface UnionDecl extends DeclarationBase {
+export interface UnionDecl extends _DeclarationCommon {
     '$ast': 'UnionDecl';
     members: UnionMember[];
 }
@@ -71,10 +71,10 @@ export interface UnionDecl extends DeclarationBase {
 export interface StructMember {
     '$ast': 'StructMember';
     name: string;
-    type: TypeReference;
+    type: Type;
 }
 
-export interface StructDecl extends DeclarationBase {
+export interface StructDecl extends _DeclarationCommon {
     '$ast': 'StructDecl';
     members: StructMember[];
     type: 'Struct' | 'Class';
@@ -82,15 +82,15 @@ export interface StructDecl extends DeclarationBase {
 
 export interface MessageRequest {
     '$ast': 'MessageRequest';
-    type: TypeReference;
+    type: Type;
 }
 
 export interface MessageResponse {
     '$ast': 'MessageResponse';
-    type: TypeReference;
+    type: Type;
 }
 
-export interface MessageDecl extends DeclarationBase {
+export interface MessageDecl extends _DeclarationCommon {
     '$ast': 'MessageDecl';
     request: MessageRequest | null;
     response: MessageResponse | null;
@@ -98,10 +98,10 @@ export interface MessageDecl extends DeclarationBase {
 
 export interface EventRequest {
     '$ast': 'EventRequest';
-    type: TypeReference;
+    type: Type;
 }
 
-export interface EventDecl extends DeclarationBase {
+export interface EventDecl extends _DeclarationCommon {
     '$ast': 'EventDecl';
     request: EventRequest | null;
 }
