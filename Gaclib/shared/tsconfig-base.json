@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "es2022",
+            "dom"
+        ],
+        "module": "es2022",
+        "moduleResolution": "bundler",
+        "target": "es2022",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "noEmitOnError": true,
+        "noUnusedLocals": true,
+        "strictNullChecks": true,
+        "types": [
+            "node"
+        ]
+    }
+}

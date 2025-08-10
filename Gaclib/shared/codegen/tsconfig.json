@@ -1,26 +1,10 @@
 {
     "compilerOptions": {
-        "lib": [
-            "es2022",
-            "dom"
-        ],
-        "module": "es2022",
-        "moduleResolution": "bundler",
-        "target": "es2022",
-        "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
         "outDir": "./lib",
-        "noEmitOnError": true,
-        "noUnusedLocals": true,
-        "strictNullChecks": true,
-        "types": [
-            "node"
-        ]
     },
+    "extends": "../tsconfig-base.json",
     "include": [
-        "src/**/*.ts",
-        "test/**/*.ts"
+        "src/**/*.ts"
     ],
     "exclude": [
         "node_modules",
