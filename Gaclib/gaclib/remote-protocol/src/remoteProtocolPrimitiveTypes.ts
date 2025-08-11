@@ -1,14 +1,20 @@
-export type _Boolean = boolean;
-export type _Integer = number;
-export type _Float = number;
-export type _Double = number;
-export type _String = string;
-export type _Char = string;
-export type _Color = string; // #FFFFFF
-export type _Binary = string; // base64 encoded
+export type Boolean = boolean;
+export type Integer = number;
+export type Float = number;
+export type Double = number;
+export type String = string;
+export type Char = string;
+export type Color = string; // #FFFFFF
+export type Binary = string; // base64 encoded
+
+export type Ptr<T> = T | null;
+export type List<T> = T[];
+export type ArrayMap<T, Key extends string> = T extends Record<Key, any> ? T[] : never;
+export type Dictionary<K, T> = [[K, T]];
+export type Variant<Ts extends unknown[]> = { [I in keyof Ts]: [I, Ts[I]]; }[number];
 
 // GacUI\Source\GuiTypes.h
-export enum _Key {
+export enum Key {
     /*
      * Virtual Keys, Standard Set
      */
@@ -139,7 +145,7 @@ export enum _Key {
     KEY_F24 = 0x87,
     KEY_NUMLOCK = 0x90,
     KEY_SCROLL = 0x91,
-    
+
     /*
      * Fujitsu/OASYS kbd definitions
      */
