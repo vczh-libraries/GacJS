@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "Website Entry",
     "type": "module",
-    "main": "./lib/src/index.js",
+    "main": "./lib/index.js",
     "scripts": {
         "build": "rimraf ./lib && eslint --fix && tsc && node ./lib/esbuild.js"
     },
