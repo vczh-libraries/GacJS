@@ -9,9 +9,14 @@
 </head>
 
 <body>
-    Hello, world!
+    <div class="gacui-container">
+        <!-- Content goes here -->
+    </div>
     <script lang="javascript">
-        //indexView.renderIndexView(document.title, document.body);
+        document.addEventListener('DOMContentLoaded', async () => {
+            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.body);
+            client.start();
+        });
     </script>
 </body>
 

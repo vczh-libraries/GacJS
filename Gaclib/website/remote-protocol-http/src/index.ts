@@ -8,7 +8,7 @@ import {
     EventToJson
 } from '@gaclib/remote-protocol';
 
-export interface RemoteProtocolHttpClient {
+export interface IRemoteProtocolHttpClient {
     get responses(): IRemoteProtocolResponses;
     get events(): IRemoteProtocolEvents;
     start(): void;
@@ -19,7 +19,7 @@ interface ConnectResponse {
     response: string;
 }
 
-class HttpClientImpl implements RemoteProtocolHttpClient {
+class HttpClientImpl implements IRemoteProtocolHttpClient {
     public responses: IRemoteProtocolResponses;
     public events: IRemoteProtocolEvents;
 
@@ -32,20 +32,18 @@ class HttpClientImpl implements RemoteProtocolHttpClient {
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     sendRequest(invoking: ProtocolInvoking): void {
-        throw new Error('Not implemented');
     }
 
     start(): void {
-        throw new Error('Not implemented');
     }
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function sendConnect(url: string): Promise<ConnectResponse> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented (sendConnect)');
 }
 
-export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<RemoteProtocolHttpClient> {
+export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolHttpClient> {
     const urls = await sendConnect(`${host}/GacUIRemoting/Connect`);
     const impl = new HttpClientImpl(requests, urls);
     return impl;

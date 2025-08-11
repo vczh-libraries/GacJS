@@ -2,3 +2,10 @@ body {
     font-family: Segoe UI;
     background-color: #FFFFFF;
 }
+
+.gacui-container {
+    width: 640px;
+    height: 480px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
