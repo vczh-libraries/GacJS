@@ -35,25 +35,33 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     }
 
     async start(): Promise<void> {
-        // Start infinite loop to continuously query for requests
         while (true) {
+            let response: Response;
+            let responseText: string;
+            
             try {
-                const response = await fetch(`${this.host}${this.urls.request}`, {
+                response = await fetch(`${this.host}${this.urls.request}`, {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' }
                 });
-
-                if (response.status === 200) {
-                    const responseText = await response.text();
-                    const protocolInvoking = JSON.parse(responseText) as ProtocolInvoking;
-                    jsonToRequest(protocolInvoking, this.requests);
+                
+                if (response.status !== 200) {
+                    continue;
                 }
-                // Ignore HTTP errors and continue the loop
+                
+                responseText = await response.text();
             } catch {
-                // Ignore any HTTP-related errors and continue the loop
                 continue;
             }
+
+            const protocolInvoking = JSON.parse(responseText) as ProtocolInvoking;
+            jsonToRequest(protocolInvoking, this.requests);
         }
+    }
+
+    stop(): void{
+        // TODO: to break start() infinite loop
+        throw new Error('Not Implemented (stop)');
     }
 }
 
