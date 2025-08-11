@@ -1,12 +1,52 @@
-import * as SCHEMA from '@gaclib/remote-protocol';
+import {
+    IRemoteProtocolRequests,
+    IRemoteProtocolResponses,
+    IRemoteProtocolEvents,
+    ProtocolInvoking,
+    ProtocolInvokingHandler,
+    ResponseToJson,
+    EventToJson
+} from '@gaclib/remote-protocol';
 
 export interface RemoteProtocolHttpClient {
-    get responses(): SCHEMA.IRemoteProtocolResponses;
-    get events(): SCHEMA.IRemoteProtocolEvents;
+    get responses(): IRemoteProtocolResponses;
+    get events(): IRemoteProtocolEvents;
     start(): void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function connectHttpServer(host: string, requests: SCHEMA.IRemoteProtocolRequests): Promise<RemoteProtocolHttpClient> {
+interface ConnectResponse {
+    request: string;
+    response: string;
+}
+
+class HttpClientImpl implements RemoteProtocolHttpClient {
+    public responses: IRemoteProtocolResponses;
+    public events: IRemoteProtocolEvents;
+
+    // @ts-expect-error: TS6138
+    constructor(private requests: IRemoteProtocolRequests, private urls: ConnectResponse) {
+        const callback: ProtocolInvokingHandler = (invoking => this.sendRequest(invoking));
+        this.responses = new ResponseToJson(callback);
+        this.events = new EventToJson(callback);
+    }
+
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    sendRequest(invoking: ProtocolInvoking): void {
+        throw new Error('Not implemented');
+    }
+
+    start(): void {
+        throw new Error('Not implemented');
+    }
+}
+
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+function sendConnect(url: string): Promise<ConnectResponse> {
     throw new Error('Not implemented');
+}
+
+export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<RemoteProtocolHttpClient> {
+    const urls = await sendConnect(`${host}/GacUIRemoting/Connect`);
+    const impl = new HttpClientImpl(requests, urls);
+    return impl;
 }
