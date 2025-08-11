@@ -12,9 +12,19 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |    if (pi.semantic === 'Message') {
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return decl.response ? '' : `|            case '${decl.name}':
-            |                receiver.Request${decl.name}(${!decl.request ? '' : `(<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`});
-            |                break;`
+        if (decl.request) {
+            return decl.response ? '' : `|            case '${decl.name}':
+|                if (!pi.arguments) {
+|                    throw new Error('Missing arguments for request: ' + pi.name);
+|                }
+|                receiver.Request${decl.name}((<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments));
+|                break;`
+        }
+        else {
+            return decl.response ? '' : `|            case '${decl.name}':
+|                receiver.Request${decl.name}();
+|                break;`
+        }
     }).join('\n')}
 |            default: throw new Error('Invalid message name: ' + pi.name);
 |        }
@@ -24,9 +34,19 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |        }
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return !decl.response ? '' : `|            case '${decl.name}':
-            |                receiver.Request${decl.name}(pi.id${!decl.request ? '' : `, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`});
-            |                break;`
+        if (decl.request) {
+            return !decl.response ? '' : `|            case '${decl.name}':
+|                if (!pi.arguments) {
+|                    throw new Error('Missing arguments for request: ' + pi.name);
+|                }
+|                receiver.Request${decl.name}(pi.id, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments));
+|                break;`
+        }
+        else {
+            return !decl.response ? '' : `|            case '${decl.name}':
+|                receiver.Request${decl.name}(pi.id);
+|                break;`
+        }
     }).join('\n')}
 |            default: throw new Error('Invalid request name: ' + pi.name);
 |        }
