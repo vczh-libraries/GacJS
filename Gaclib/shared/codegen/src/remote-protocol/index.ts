@@ -48,7 +48,7 @@ function refToString(element: string, classNames: string[]): string {
 function typeToString(t: Type, classNames: string[]): string {
     switch (t['$ast']) {
         case 'PrimitiveType':
-            return `<TYPES.${t.type}>`;
+            return `TYPES.${t.type}`;
         case 'ReferenceType':
             return refToString(t.name, classNames);
         case 'OptionalType':
@@ -56,7 +56,7 @@ function typeToString(t: Type, classNames: string[]): string {
         case 'ArrayType':
             return `TYPES.List<${typeToString(t.element, classNames)}>`;
         case 'ArrayMapType':
-            return `TYPES.ArrayMap<${refToString(t.element, classNames)}, ${t.keyField}>`;
+            return `TYPES.ArrayMap<${refToString(t.element, classNames)}, '${t.keyField}'>`;
         case 'MapType':
             return `TYPES.Dictionary<${typeToString(t.keyType, classNames)}, ${typeToString(t.element, classNames)}>`;
     }
@@ -66,7 +66,7 @@ function generateEnums(schema: Schema): string {
     return schema.declarations.filter(decl => decl['$ast'] === 'EnumDecl').map(decl => `
         |
         |export enum ${decl.name} {
-        ${decl.members.map(member => `|   ${member.name} = '${member.name}'`).join(',\n')}
+        ${decl.members.map(member => `|   ${member.name} = '${member.name}',`).join('\n')}
         |}
     `).join('\n');
 }
@@ -87,31 +87,31 @@ function generateStructs(schema: Schema, classNames: string[]): string {
     `).join('\n');
 }
 
-function generateRequests(schema: Schema, classNames: string[]): string {
+function generateRequests(schema: Schema): string {
     return `
 |
 |export interface IRemoteProtocolRequests {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(() => {
         return ''
     }).join('\n')}
 |}`;
 }
 
-function generateResponses(schema: Schema, classNames: string[]): string {
+function generateResponses(schema: Schema): string {
     return `
 |
 |export interface IRemoteProtocolResponses {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(() => {
         return ''
     }).join('\n')}
 |}`;
 }
 
-function generateEvents(schema: Schema, classNames: string[]): string {
+function generateEvents(schema: Schema): string {
     return `
 |
 |export interface IRemoteProtocolEvents {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
+    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(() => {
         return ''
     }).join('\n')}
 |}`;
@@ -124,9 +124,9 @@ function generateSchema(schema: Schema): string {
 ${generateEnums(schema)}
 ${generateUnions(schema, classNames)}
 ${generateStructs(schema, classNames)}
-${generateRequests(schema, classNames)}
-${generateResponses(schema, classNames)}
-${generateEvents(schema, classNames)}
+${generateRequests(schema)}
+${generateResponses(schema)}
+${generateEvents(schema)}
 |
 `);
 }
