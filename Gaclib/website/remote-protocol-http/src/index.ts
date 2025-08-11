@@ -36,12 +36,11 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
 
     async start(): Promise<void> {
         while (true) {
-            let response: Response;
             let responseText: string;
             
             try {
-                response = await fetch(`${this.host}${this.urls.request}`, {
-                    method: 'GET',
+                const response = await fetch(`${this.host}${this.urls.request}`, {
+                    method: 'POST',
                     headers: { 'Accept': 'application/json' }
                 });
                 
@@ -93,7 +92,7 @@ async function sendConnect(host: string, url: string): Promise<ConnectResponse> 
 }
 
 export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolHttpClient> {
-    const urls = await sendConnect(`http://${host}`, '/GacUIRemoting/Connect');
+    const urls = await sendConnect(host, '/GacUIRemoting/Connect');
     const impl = new HttpClientImpl(requests, host, urls);
     return impl;
 }
