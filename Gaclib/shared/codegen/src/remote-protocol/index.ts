@@ -66,7 +66,7 @@ function generateEnums(schema: Schema): string {
     return schema.declarations.filter(decl => decl['$ast'] === 'EnumDecl').map(decl => `
         |
         |export enum ${decl.name} {
-        ${decl.members.map(member => `|   ${member.name} = '${member.name}',`).join('\n')}
+        ${decl.members.map(member => `|    ${member.name} = '${member.name}',`).join('\n')}
         |}
     `).join('\n');
 }
@@ -82,7 +82,7 @@ function generateStructs(schema: Schema, classNames: string[]): string {
     return schema.declarations.filter(decl => decl['$ast'] === 'StructDecl').map(decl => `
         |
         |export interface ${decl.name} {
-        ${decl.members.map(member => `|   ${member.name}: ${typeToString(member.type, classNames)};`).join('\n')}
+        ${decl.members.map(member => `|    ${member.name}: ${typeToString(member.type, classNames)};`).join('\n')}
         |}
     `).join('\n');
 }
