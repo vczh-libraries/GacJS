@@ -102,6 +102,8 @@ ${schema.declarations.map(decl => {
 
 function generateSchema(schema: Schema): string {
     return fixIndentation(`
+|import * as TYPES from './remoteProtocolPrimitiveTypes.js';
+|
 ${generateTypes(schema)}
 ${generateRequests(schema)}
 ${generateResponses(schema)}
