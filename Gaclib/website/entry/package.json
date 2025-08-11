@@ -5,7 +5,7 @@
     "type": "module",
     "main": "./lib/src/index.js",
     "scripts": {
-        "build": "rimraf ./lib && eslint --fix && tsc"
+        "build": "rimraf ./lib && eslint --fix && tsc && node ./lib/esbuild.js"
     },
     "license": "Apache-2.0",
     "devDependencies": {
@@ -14,6 +14,7 @@
     "dependencies": {
         "@gaclib/remote-protocol": "^0.0.1",
         "@gaclib/renderer": "^0.0.1",
-        "@gaclib-website/remote-protocol-http": "^0.0.1"
+        "@gaclib-website/remote-protocol-http": "^0.0.1",
+        "esbuild": "0.25.8"
     }
 }

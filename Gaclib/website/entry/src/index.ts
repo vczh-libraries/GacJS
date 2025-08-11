@@ -1,1 +1,2 @@
-export interface Something { }
+export function doSomething(): void {
+}
