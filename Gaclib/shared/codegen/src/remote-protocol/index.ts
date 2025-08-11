@@ -105,12 +105,12 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |}`;
 }
 
-function generateResponses(schema: Schema): string {
+function generateResponses(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolResponses {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(() => {
-        return ''
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+        return !decl.response ? '' : `|    Respond${decl.name}(response: ${typeToString(decl.response.type, classNames)}): void;`;
     }).join('\n')}
 |}`;
 }
@@ -133,7 +133,7 @@ ${generateEnums(schema)}
 ${generateUnions(schema, classNames)}
 ${generateStructs(schema, classNames)}
 ${generateRequests(schema, classNames)}
-${generateResponses(schema)}
+${generateResponses(schema, classNames)}
 ${generateEvents(schema)}
 |
 `);

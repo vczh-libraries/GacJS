@@ -470,6 +470,13 @@ export interface IRemoteProtocolRequests {
 }
 
 export interface IRemoteProtocolResponses {
+    RespondControllerGetFontConfig(response: FontConfig): void;
+    RespondControllerGetScreenConfig(response: ScreenConfig): void;
+    RespondWindowGetBounds(response: WindowSizingConfig): void;
+    RespondIOIsKeyPressing(response: TYPES.Boolean): void;
+    RespondIOIsKeyToggled(response: TYPES.Boolean): void;
+    RespondImageCreated(response: ImageMetadata): void;
+    RespondRendererEndRendering(response: ElementMeasurings): void;
 }
 
 export interface IRemoteProtocolEvents {
