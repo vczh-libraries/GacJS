@@ -422,6 +422,51 @@ export interface UnitTest_RenderingTrace {
 }
 
 export interface IRemoteProtocolRequests {
+    RequestControllerGetFontConfig(id: number): void;
+    RequestControllerGetScreenConfig(id: number): void;
+    RequestControllerConnectionEstablished(): void;
+    RequestControllerConnectionStopped(): void;
+    RequestWindowGetBounds(id: number): void;
+    RequestWindowNotifySetTitle(request: TYPES.String): void;
+    RequestWindowNotifySetEnabled(request: TYPES.Boolean): void;
+    RequestWindowNotifySetTopMost(request: TYPES.Boolean): void;
+    RequestWindowNotifySetShowInTaskBar(request: TYPES.Boolean): void;
+    RequestWindowNotifySetCustomFrameMode(request: TYPES.Boolean): void;
+    RequestWindowNotifySetMaximizedBox(request: TYPES.Boolean): void;
+    RequestWindowNotifySetMinimizedBox(request: TYPES.Boolean): void;
+    RequestWindowNotifySetBorder(request: TYPES.Boolean): void;
+    RequestWindowNotifySetSizeBox(request: TYPES.Boolean): void;
+    RequestWindowNotifySetIconVisible(request: TYPES.Boolean): void;
+    RequestWindowNotifySetTitleBar(request: TYPES.Boolean): void;
+    RequestWindowNotifySetBounds(request: NativeRect): void;
+    RequestWindowNotifySetClientSize(request: NativeSize): void;
+    RequestWindowNotifyActivate(): void;
+    RequestWindowNotifyShow(request: WindowShowing): void;
+    RequestIOUpdateGlobalShortcutKey(request: TYPES.List<GlobalShortcutKey>): void;
+    RequestIORequireCapture(): void;
+    RequestIOReleaseCapture(): void;
+    RequestIOIsKeyPressing(id: number, request: TYPES.Key): void;
+    RequestIOIsKeyToggled(id: number, request: TYPES.Key): void;
+    RequestRendererUpdateElement_SolidBorder(request: ElementDesc_SolidBorder): void;
+    RequestRendererUpdateElement_SinkBorder(request: ElementDesc_SinkBorder): void;
+    RequestRendererUpdateElement_SinkSplitter(request: ElementDesc_SinkSplitter): void;
+    RequestRendererUpdateElement_SolidBackground(request: ElementDesc_SolidBackground): void;
+    RequestRendererUpdateElement_GradientBackground(request: ElementDesc_GradientBackground): void;
+    RequestRendererUpdateElement_InnerShadow(request: ElementDesc_InnerShadow): void;
+    RequestRendererUpdateElement_Polygon(request: ElementDesc_Polygon): void;
+    RequestRendererUpdateElement_SolidLabel(request: ElementDesc_SolidLabel): void;
+    RequestImageCreated(id: number, request: ImageCreation): void;
+    RequestImageDestroyed(request: TYPES.Integer): void;
+    RequestRendererUpdateElement_ImageFrame(request: ElementDesc_ImageFrame): void;
+    RequestRendererCreated(request: TYPES.List<RendererCreation>): void;
+    RequestRendererDestroyed(request: TYPES.List<TYPES.Integer>): void;
+    RequestRendererBeginRendering(request: ElementBeginRendering): void;
+    RequestRendererBeginBoundary(request: ElementBoundary): void;
+    RequestRendererRenderElement(request: ElementRendering): void;
+    RequestRendererEndBoundary(): void;
+    RequestRendererEndRendering(id: number): void;
+    RequestRendererRenderDom(request: TYPES.Ptr<RenderingDom>): void;
+    RequestRendererRenderDomDiff(request: RenderingDom_DiffsInOrder): void;
 }
 
 export interface IRemoteProtocolResponses {
