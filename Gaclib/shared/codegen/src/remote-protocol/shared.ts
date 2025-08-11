@@ -38,7 +38,7 @@ export function collectClassNames(schema: Schema): string[] {
 }
 
 export function refToString(element: string, classNames: string[], prefix: string = ''): string {
-    return classNames.includes(element) ? `TYPES.Ptr<${prefix}${element}>` : `${prefix}${element}`;
+    return classNames.includes(element) ? `${prefix}TYPES.Ptr<${prefix}${element}>` : `${prefix}${element}`;
 }
 
 export function typeToString(t: Type, classNames: string[], prefix: string = ''): string {

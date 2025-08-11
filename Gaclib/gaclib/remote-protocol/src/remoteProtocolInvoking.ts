@@ -48,19 +48,22 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
             case 'RendererBeginBoundary': receiver.RequestRendererBeginBoundary((<SCHEMA.ElementBoundary>pi.arguments)); break;
             case 'RendererRenderElement': receiver.RequestRendererRenderElement((<SCHEMA.ElementRendering>pi.arguments)); break;
             case 'RendererEndBoundary': receiver.RequestRendererEndBoundary(); break;
-            case 'RendererRenderDom': receiver.RequestRendererRenderDom((<TYPES.Ptr<SCHEMA.RenderingDom>>pi.arguments)); break;
+            case 'RendererRenderDom': receiver.RequestRendererRenderDom((<SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>>pi.arguments)); break;
             case 'RendererRenderDomDiff': receiver.RequestRendererRenderDomDiff((<SCHEMA.RenderingDom_DiffsInOrder>pi.arguments)); break;
             default: throw new Error('Invalid message name: ' + pi.name);
         }
     } else if (pi.semantic === 'Request') {
+        if (!pi.id) {
+            throw new Error('Missing id for request: ' + pi.name);
+        }
         switch (pi.name) {
-            case 'ControllerGetFontConfig': receiver.RequestControllerGetFontConfig((<number>pi.id)); break;
-            case 'ControllerGetScreenConfig': receiver.RequestControllerGetScreenConfig((<number>pi.id)); break;
-            case 'WindowGetBounds': receiver.RequestWindowGetBounds((<number>pi.id)); break;
-            case 'IOIsKeyPressing': receiver.RequestIOIsKeyPressing((<number>pi.id), (<SCHEMA.TYPES.Key>pi.arguments)); break;
-            case 'IOIsKeyToggled': receiver.RequestIOIsKeyToggled((<number>pi.id), (<SCHEMA.TYPES.Key>pi.arguments)); break;
-            case 'ImageCreated': receiver.RequestImageCreated((<number>pi.id), (<SCHEMA.ImageCreation>pi.arguments)); break;
-            case 'RendererEndRendering': receiver.RequestRendererEndRendering((<number>pi.id)); break;
+            case 'ControllerGetFontConfig': receiver.RequestControllerGetFontConfig(pi.id); break;
+            case 'ControllerGetScreenConfig': receiver.RequestControllerGetScreenConfig(pi.id); break;
+            case 'WindowGetBounds': receiver.RequestWindowGetBounds(pi.id); break;
+            case 'IOIsKeyPressing': receiver.RequestIOIsKeyPressing(pi.id, (<SCHEMA.TYPES.Key>pi.arguments)); break;
+            case 'IOIsKeyToggled': receiver.RequestIOIsKeyToggled(pi.id, (<SCHEMA.TYPES.Key>pi.arguments)); break;
+            case 'ImageCreated': receiver.RequestImageCreated(pi.id, (<SCHEMA.ImageCreation>pi.arguments)); break;
+            case 'RendererEndRendering': receiver.RequestRendererEndRendering(pi.id); break;
             default: throw new Error('Invalid request name: ' + pi.name);
         }
     } else {

@@ -17,9 +17,12 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |            default: throw new Error('Invalid message name: ' + pi.name);
 |        }
 |    } else if (pi.semantic === 'Request') {
+|        if (!pi.id) {
+|            throw new Error('Missing id for request: ' + pi.name);
+|        }
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return !decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}((<number>pi.id)${!decl.request ? '' : `, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`}); break;`
+        return !decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(pi.id${!decl.request ? '' : `, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`}); break;`
     }).join('\n')}
 |            default: throw new Error('Invalid request name: ' + pi.name);
 |        }
