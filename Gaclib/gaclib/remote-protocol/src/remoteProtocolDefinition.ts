@@ -1,4 +1,5 @@
 import * as TYPES from './remoteProtocolPrimitiveTypes.js';
+export * as TYPES from './remoteProtocolPrimitiveTypes.js';
 
 export enum WindowHitTestResult {
     BorderNoSizing = 'BorderNoSizing',
