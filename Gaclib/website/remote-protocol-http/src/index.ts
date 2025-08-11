@@ -13,6 +13,7 @@ export interface IRemoteProtocolHttpClient {
     get responses(): IRemoteProtocolResponses;
     get events(): IRemoteProtocolEvents;
     start(): Promise<void>;
+    stop(): void;
 }
 
 interface ConnectResponse {
@@ -25,29 +26,44 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     public events: IRemoteProtocolEvents;
 
     constructor(private requests: IRemoteProtocolRequests, private host: string, private urls: ConnectResponse) {
-        const callback: ProtocolInvokingHandler = (invoking => this.sendRequest(invoking));
+        const callback: ProtocolInvokingHandler = (invoking => {
+            this.sendRequest(invoking).catch(error => {
+                console.error('Failed to send request:', error);
+            });
+        });
         this.responses = new ResponseToJson(callback);
         this.events = new EventToJson(callback);
     }
 
-    sendRequest(invoking: ProtocolInvoking): void {
-        throw new Error(JSON.stringify(invoking, undefined, 4));
+    async sendRequest(invoking: ProtocolInvoking): Promise<void> {
+        const response = await fetch(`${this.host}${this.urls.response}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify([invoking])
+        });
+
+        if (response.status !== 200) {
+            throw new Error(`[${response.status}: ${response.statusText}]: ${this.host}${this.urls.response}`);
+        }
     }
 
     async start(): Promise<void> {
         while (true) {
             let responseText: string;
-            
+
             try {
                 const response = await fetch(`${this.host}${this.urls.request}`, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json' }
                 });
-                
+
                 if (response.status !== 200) {
                     continue;
                 }
-                
+
                 responseText = await response.text();
             } catch {
                 continue;
@@ -58,37 +74,24 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         }
     }
 
-    stop(): void{
+    stop(): void {
         // TODO: to break start() infinite loop
         throw new Error('Not Implemented (stop)');
     }
 }
 
 async function sendConnect(host: string, url: string): Promise<ConnectResponse> {
-    let response: Response;
-    try {
-        response = await fetch(`${host}${url}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-    } catch (error) {
-        if (error instanceof TypeError) {
-            throw new Error(`Failed to connect to ${url}`, { cause: error });
-        } else {
-            throw error;
-        }
-    }
+    const response = await fetch(`${host}${url}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    });
 
-    if (response.status === 200) {
-        try {
-            const responseText = await response.text();
-            return JSON.parse(responseText) as ConnectResponse;
-        } catch (error) {
-            throw new Error(`Failed to parse response JSON from ${url}`, { cause: error });
-        }
-    } else {
+    if (response.status !== 200) {
         throw new Error(`[${response.status}: ${response.statusText}]: ${url}`);
     }
+
+    const responseText = await response.text();
+    return JSON.parse(responseText) as ConnectResponse;
 }
 
 export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolHttpClient> {
