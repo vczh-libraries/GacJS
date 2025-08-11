@@ -62,21 +62,27 @@ function typeToString(t: Type, classNames: string[]): string {
     }
 }
 
-function generateTypes(schema: Schema, classNames: string[]): string {
+function generateEnums(schema: Schema, classNames: string[]): string {
     return `
-${schema.declarations.map(decl => {
-        switch (decl['$ast']) {
-            case 'EnumDecl':
-                return '';
-            case 'UnionDecl':
-                return '';
-            case 'StructDecl':
-                return '';
-            default:
-                return '';
-        }
-    }).join('\n')
-        }
+    ${schema.declarations.filter(decl => decl['$ast'] === 'EnumDecl').map(decl => {
+        return ''
+    }).join('\n')}
+    `;
+}
+
+function generateUnions(schema: Schema, classNames: string[]): string {
+    return `
+    ${schema.declarations.filter(decl => decl['$ast'] === 'UnionDecl').map(decl => {
+        return ''
+    }).join('\n')}
+    `;
+}
+
+function generateStructs(schema: Schema, classNames: string[]): string {
+    return `
+    ${schema.declarations.filter(decl => decl['$ast'] === 'StructDecl').map(decl => {
+        return ''
+    }).join('\n')}
     `;
 }
 
@@ -84,51 +90,30 @@ function generateRequests(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolRequests {
-${schema.declarations.map(decl => {
-        switch (decl['$ast']) {
-            case 'MessageDecl':
-                return '';
-            default:
-                return '';
-        }
-    }).join('\n')
-        }
-|}
-    `;
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+        return ''
+    }).join('\n')}
+|}`;
 }
 
 function generateResponses(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolResponses {
-${schema.declarations.map(decl => {
-        switch (decl['$ast']) {
-            case 'MessageDecl':
-                return '';
-            default:
-                return '';
-        }
-    }).join('\n')
-        }
-|}
-    `;
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+        return ''
+    }).join('\n')}
+|}`;
 }
 
 function generateEvents(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolEvents {
-${schema.declarations.map(decl => {
-        switch (decl['$ast']) {
-            case 'EventDecl':
-                return '';
-            default:
-                return '';
-        }
-    }).join('\n')
-        }
-|}
-    `;
+    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
+        return ''
+    }).join('\n')}
+|}`;
 }
 
 function generateSchema(schema: Schema): string {
@@ -136,12 +121,14 @@ function generateSchema(schema: Schema): string {
     return fixIndentation(`
 |import * as TYPES from './remoteProtocolPrimitiveTypes.js';
 |
-${generateTypes(schema, classNames)}
+${generateEnums(schema, classNames)}
+${generateUnions(schema, classNames)}
+${generateStructs(schema, classNames)}
 ${generateRequests(schema, classNames)}
 ${generateResponses(schema, classNames)}
 ${generateEvents(schema, classNames)}
 |
-    `);
+`);
 }
 
 export function generateRemoteProtocol() {
