@@ -53,7 +53,7 @@ function generateResponses(schema: Schema, classNames: string[]): string {
 |
 |export interface IRemoteProtocolResponses {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return !decl.response ? '' : `|    Respond${decl.name}(responseArgs: ${typeToString(decl.response.type, classNames)}): void;`;
+        return !decl.response ? '' : `|    Respond${decl.name}(id: number, responseArgs: ${typeToString(decl.response.type, classNames)}): void;`;
     }).join('\n')}
 |}`;
 }

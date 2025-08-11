@@ -63,7 +63,13 @@ function generateResponses(schema: Schema, classNames: string[]): string {
 |    constructor(private callback: ProtocolInvokingHandler) { }
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         return !decl.response ? '' : `|
-            |    Respond${decl.name}(responseArgs: ${typeToString(decl.response.type, classNames, 'SCHEMA.')}): void {
+            |    Respond${decl.name}(id: number, responseArgs: ${typeToString(decl.response.type, classNames, 'SCHEMA.')}): void {
+            |        this.callback({
+            |            semantic: 'Response',
+            |            id,
+            |            name: '${decl.name}',
+            |            arguments: responseArgs,
+            |        });
             |    }`;
     }).join('\n')}
 |}`;
@@ -77,6 +83,11 @@ function generateEvents(schema: Schema, classNames: string[]): string {
     ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
         return `|
             |    On${decl.name}(${!decl.request ? '' : `eventArgs: ${typeToString(decl.request.type, classNames, 'SCHEMA.')}`}): void {
+            |        this.callback({
+            |            semantic: 'Event',
+            |            name: '${decl.name}',
+            ${!decl.request ? '' : `|            arguments: eventArgs,`}
+            |        });
             |    }`;
     }).join('\n')}
 |}`;

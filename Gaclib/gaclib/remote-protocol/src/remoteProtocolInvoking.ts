@@ -269,25 +269,67 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
 export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
     constructor(private callback: ProtocolInvokingHandler) { }
 
-    RespondControllerGetFontConfig(responseArgs: SCHEMA.FontConfig): void {
+    RespondControllerGetFontConfig(id: number, responseArgs: SCHEMA.FontConfig): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'ControllerGetFontConfig',
+            arguments: responseArgs,
+        });
     }
 
-    RespondControllerGetScreenConfig(responseArgs: SCHEMA.ScreenConfig): void {
+    RespondControllerGetScreenConfig(id: number, responseArgs: SCHEMA.ScreenConfig): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'ControllerGetScreenConfig',
+            arguments: responseArgs,
+        });
     }
 
-    RespondWindowGetBounds(responseArgs: SCHEMA.WindowSizingConfig): void {
+    RespondWindowGetBounds(id: number, responseArgs: SCHEMA.WindowSizingConfig): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'WindowGetBounds',
+            arguments: responseArgs,
+        });
     }
 
-    RespondIOIsKeyPressing(responseArgs: SCHEMA.TYPES.Boolean): void {
+    RespondIOIsKeyPressing(id: number, responseArgs: SCHEMA.TYPES.Boolean): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'IOIsKeyPressing',
+            arguments: responseArgs,
+        });
     }
 
-    RespondIOIsKeyToggled(responseArgs: SCHEMA.TYPES.Boolean): void {
+    RespondIOIsKeyToggled(id: number, responseArgs: SCHEMA.TYPES.Boolean): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'IOIsKeyToggled',
+            arguments: responseArgs,
+        });
     }
 
-    RespondImageCreated(responseArgs: SCHEMA.ImageMetadata): void {
+    RespondImageCreated(id: number, responseArgs: SCHEMA.ImageMetadata): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'ImageCreated',
+            arguments: responseArgs,
+        });
     }
 
-    RespondRendererEndRendering(responseArgs: SCHEMA.ElementMeasurings): void {
+    RespondRendererEndRendering(id: number, responseArgs: SCHEMA.ElementMeasurings): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'RendererEndRendering',
+            arguments: responseArgs,
+        });
     }
 }
 
@@ -295,59 +337,148 @@ export class EventToJson implements SCHEMA.IRemoteProtocolEvents {
     constructor(private callback: ProtocolInvokingHandler) { }
 
     OnControllerConnect(): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'ControllerConnect',
+        });
     }
 
     OnControllerDisconnect(): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'ControllerDisconnect',
+        });
     }
 
     OnControllerRequestExit(): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'ControllerRequestExit',
+        });
     }
 
     OnControllerForceExit(): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'ControllerForceExit',
+        });
     }
 
     OnControllerScreenUpdated(eventArgs: SCHEMA.ScreenConfig): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'ControllerScreenUpdated',
+            arguments: eventArgs,
+        });
     }
 
     OnWindowBoundsUpdated(eventArgs: SCHEMA.WindowSizingConfig): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'WindowBoundsUpdated',
+            arguments: eventArgs,
+        });
     }
 
     OnWindowActivatedUpdated(eventArgs: SCHEMA.TYPES.Boolean): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'WindowActivatedUpdated',
+            arguments: eventArgs,
+        });
     }
 
     OnIOGlobalShortcutKey(eventArgs: SCHEMA.TYPES.Integer): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOGlobalShortcutKey',
+            arguments: eventArgs,
+        });
     }
 
     OnIOButtonDown(eventArgs: SCHEMA.IOMouseInfoWithButton): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOButtonDown',
+            arguments: eventArgs,
+        });
     }
 
     OnIOButtonDoubleClick(eventArgs: SCHEMA.IOMouseInfoWithButton): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOButtonDoubleClick',
+            arguments: eventArgs,
+        });
     }
 
     OnIOButtonUp(eventArgs: SCHEMA.IOMouseInfoWithButton): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOButtonUp',
+            arguments: eventArgs,
+        });
     }
 
     OnIOHWheel(eventArgs: SCHEMA.IOMouseInfo): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOHWheel',
+            arguments: eventArgs,
+        });
     }
 
     OnIOVWheel(eventArgs: SCHEMA.IOMouseInfo): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOVWheel',
+            arguments: eventArgs,
+        });
     }
 
     OnIOMouseMoving(eventArgs: SCHEMA.IOMouseInfo): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOMouseMoving',
+            arguments: eventArgs,
+        });
     }
 
     OnIOMouseEntered(): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOMouseEntered',
+        });
     }
 
     OnIOMouseLeaved(): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOMouseLeaved',
+        });
     }
 
     OnIOKeyDown(eventArgs: SCHEMA.IOKeyInfo): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOKeyDown',
+            arguments: eventArgs,
+        });
     }
 
     OnIOKeyUp(eventArgs: SCHEMA.IOKeyInfo): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOKeyUp',
+            arguments: eventArgs,
+        });
     }
 
     OnIOChar(eventArgs: SCHEMA.IOCharInfo): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOChar',
+            arguments: eventArgs,
+        });
     }
 }
