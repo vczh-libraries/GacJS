@@ -12,7 +12,9 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |    if (pi.semantic === 'Message') {
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(${!decl.request ? '' : `(<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`}); break;`
+        return decl.response ? '' : `|            case '${decl.name}':
+            |                receiver.Request${decl.name}(${!decl.request ? '' : `(<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`});
+            |                break;`
     }).join('\n')}
 |            default: throw new Error('Invalid message name: ' + pi.name);
 |        }
@@ -22,7 +24,9 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |        }
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return !decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(pi.id${!decl.request ? '' : `, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`}); break;`
+        return !decl.response ? '' : `|            case '${decl.name}':
+            |                receiver.Request${decl.name}(pi.id${!decl.request ? '' : `, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`});
+            |                break;`
     }).join('\n')}
 |            default: throw new Error('Invalid request name: ' + pi.name);
 |        }
@@ -65,7 +69,7 @@ function generateInvoking(schema: Schema): string {
 |
 |export interface ProtocolInvoking {
 |    semantic: 'Message' | 'Request' | 'Response' | 'Event';
-|    id? : number;
+|    id?: number;
 |    name: string;
 |    arguments?: {};
 |}
