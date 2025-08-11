@@ -19,7 +19,6 @@ rendering a remote GUI in HTML via DOM and Canvas.
 - This repo uses `yarn` and `npm` to build.
 - The root of the workspace is defined in `Gaclib/package.json`.
   - Call `yarn build` in `Gaclib` to build the whole workspace.
-  - Call `npm run build` in each package to build only the package.
   - If your working directory in the repo root, you needs `cd Gaclib; yarn build`.
 
 ## for Copilot in Visual Studio Code

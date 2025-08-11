@@ -30,46 +30,39 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         this.events = new EventToJson(callback);
     }
 
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     sendRequest(invoking: ProtocolInvoking): void {
+        throw new Error(JSON.stringify(invoking, undefined, 4));
     }
 
     start(): void {
+        throw new Error(JSON.stringify(this.urls, undefined, 4));
     }
 }
 
 async function sendConnect(url: string): Promise<ConnectResponse> {
-    return new Promise<ConnectResponse>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                if (xhr.status === 200) {
-                    try {
-                        const parsedResponse = (<ConnectResponse>JSON.parse(xhr.responseText));
-                        resolve(parsedResponse);
-                    } catch (error) {
-                        reject(new Error(`Failed to parse response JSON: ${error}`));
-                    }
-                } else {
-                    reject(new Error(`[${xhr.status}: ${xhr.statusText}]: ${url}`));
-                }
-            }
-        };
+    let response: Response;
+    try {
+        response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+    } catch (error) {
+        if (error instanceof TypeError) {
+            throw new Error(`Failed to connect to ${url}`, { cause: error });
+        } else {
+            throw error;
+        }
+    }
 
-        xhr.onerror = function () {
-            reject(new Error(`[ERROR]: ${url}`));
-        };
-
-        xhr.ontimeout = function () {
-            reject(new Error(`[TIMEOUT]: ${url}`));
-        };
-        
-        xhr.open('GET', url, true);
-        xhr.timeout = 30000; // 30 second timeout
-        xhr.setRequestHeader('Accept', 'application/json');
-        xhr.send();
-    });
+    if (response.status === 200) {
+        try {
+            return await response.json() as ConnectResponse;
+        } catch (error) {
+            throw new Error(`Failed to parse response JSON from ${url}`, { cause: error });
+        }
+    } else {
+        throw new Error(`[${response.status}: ${response.statusText}]: ${url}`);
+    }
 }
 
 export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolHttpClient> {
