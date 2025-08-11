@@ -17,6 +17,7 @@ rendering a remote GUI in HTML via DOM and Canvas.
 # General Instruction
 
 - This repo uses `yarn` and `npm` to build.
+  - My `build` will always call `eslint`, do not call `npx eslint`.
 - The root of the workspace is defined in `Gaclib/package.json`.
   - Call `yarn build` in `Gaclib` to build the whole workspace.
   - If your working directory in the repo root, you needs `cd Gaclib; yarn build`.

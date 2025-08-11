@@ -31,13 +31,12 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     }
 
     // IRemoteProtocolRequests implementation
-    /* eslint-disable @typescript-eslint/no-unused-vars */
     RequestControllerGetFontConfig(id: number): void {
-        throw new Error('Not Implemented (RequestControllerGetFontConfig)');
+        throw new Error(`Not Implemented (RequestControllerGetFontConfig)\nID: ${id}`);
     }
 
     RequestControllerGetScreenConfig(id: number): void {
-        throw new Error('Not Implemented (RequestControllerGetScreenConfig)');
+        throw new Error(`Not Implemented (RequestControllerGetScreenConfig)\nID: ${id}`);
     }
 
     RequestControllerConnectionEstablished(): void {
@@ -49,59 +48,59 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     }
 
     RequestWindowGetBounds(id: number): void {
-        throw new Error('Not Implemented (RequestWindowGetBounds)');
+        throw new Error(`Not Implemented (RequestWindowGetBounds)\nID: ${id}`);
     }
 
     RequestWindowNotifySetTitle(requestArgs: SCHEMA.TYPES.String): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetTitle)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetTitle)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetEnabled(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetEnabled)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetEnabled)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetTopMost(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetTopMost)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetTopMost)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetShowInTaskBar(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetShowInTaskBar)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetShowInTaskBar)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetCustomFrameMode(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetCustomFrameMode)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetCustomFrameMode)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetMaximizedBox(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetMaximizedBox)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetMaximizedBox)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetMinimizedBox(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetMinimizedBox)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetMinimizedBox)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetBorder(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetBorder)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetBorder)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetSizeBox(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetSizeBox)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetSizeBox)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetIconVisible(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetIconVisible)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetIconVisible)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetTitleBar(requestArgs: SCHEMA.TYPES.Boolean): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetTitleBar)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetTitleBar)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetBounds(requestArgs: SCHEMA.NativeRect): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetBounds)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetBounds)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifySetClientSize(requestArgs: SCHEMA.NativeSize): void {
-        throw new Error('Not Implemented (RequestWindowNotifySetClientSize)');
+        throw new Error(`Not Implemented (RequestWindowNotifySetClientSize)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestWindowNotifyActivate(): void {
@@ -109,11 +108,11 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     }
 
     RequestWindowNotifyShow(requestArgs: SCHEMA.WindowShowing): void {
-        throw new Error('Not Implemented (RequestWindowNotifyShow)');
+        throw new Error(`Not Implemented (RequestWindowNotifyShow)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestIOUpdateGlobalShortcutKey(requestArgs: SCHEMA.TYPES.List<SCHEMA.GlobalShortcutKey>): void {
-        throw new Error('Not Implemented (RequestIOUpdateGlobalShortcutKey)');
+        throw new Error(`Not Implemented (RequestIOUpdateGlobalShortcutKey)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestIORequireCapture(): void {
@@ -125,75 +124,75 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     }
 
     RequestIOIsKeyPressing(id: number, requestArgs: SCHEMA.TYPES.Key): void {
-        throw new Error('Not Implemented (RequestIOIsKeyPressing)');
+        throw new Error(`Not Implemented (RequestIOIsKeyPressing)\nID: ${id}\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestIOIsKeyToggled(id: number, requestArgs: SCHEMA.TYPES.Key): void {
-        throw new Error('Not Implemented (RequestIOIsKeyToggled)');
+        throw new Error(`Not Implemented (RequestIOIsKeyToggled)\nID: ${id}\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_SolidBorder(requestArgs: SCHEMA.ElementDesc_SolidBorder): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_SolidBorder)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_SolidBorder)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_SinkBorder(requestArgs: SCHEMA.ElementDesc_SinkBorder): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_SinkBorder)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_SinkBorder)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_SinkSplitter(requestArgs: SCHEMA.ElementDesc_SinkSplitter): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_SinkSplitter)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_SinkSplitter)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_SolidBackground(requestArgs: SCHEMA.ElementDesc_SolidBackground): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_SolidBackground)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_SolidBackground)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_GradientBackground(requestArgs: SCHEMA.ElementDesc_GradientBackground): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_GradientBackground)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_GradientBackground)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_InnerShadow(requestArgs: SCHEMA.ElementDesc_InnerShadow): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_InnerShadow)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_InnerShadow)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_Polygon(requestArgs: SCHEMA.ElementDesc_Polygon): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_Polygon)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_Polygon)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_SolidLabel)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_SolidLabel)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestImageCreated(id: number, requestArgs: SCHEMA.ImageCreation): void {
-        throw new Error('Not Implemented (RequestImageCreated)');
+        throw new Error(`Not Implemented (RequestImageCreated)\nID: ${id}\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestImageDestroyed(requestArgs: SCHEMA.TYPES.Integer): void {
-        throw new Error('Not Implemented (RequestImageDestroyed)');
+        throw new Error(`Not Implemented (RequestImageDestroyed)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {
-        throw new Error('Not Implemented (RequestRendererUpdateElement_ImageFrame)');
+        throw new Error(`Not Implemented (RequestRendererUpdateElement_ImageFrame)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererCreated(requestArgs: SCHEMA.TYPES.List<SCHEMA.RendererCreation>): void {
-        throw new Error('Not Implemented (RequestRendererCreated)');
+        throw new Error(`Not Implemented (RequestRendererCreated)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererDestroyed(requestArgs: SCHEMA.TYPES.List<SCHEMA.TYPES.Integer>): void {
-        throw new Error('Not Implemented (RequestRendererDestroyed)');
+        throw new Error(`Not Implemented (RequestRendererDestroyed)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {
-        throw new Error('Not Implemented (RequestRendererBeginRendering)');
+        throw new Error(`Not Implemented (RequestRendererBeginRendering)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererBeginBoundary(requestArgs: SCHEMA.ElementBoundary): void {
-        throw new Error('Not Implemented (RequestRendererBeginBoundary)');
+        throw new Error(`Not Implemented (RequestRendererBeginBoundary)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererRenderElement(requestArgs: SCHEMA.ElementRendering): void {
-        throw new Error('Not Implemented (RequestRendererRenderElement)');
+        throw new Error(`Not Implemented (RequestRendererRenderElement)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererEndBoundary(): void {
@@ -201,17 +200,16 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     }
 
     RequestRendererEndRendering(id: number): void {
-        throw new Error('Not Implemented (RequestRendererEndRendering)');
+        throw new Error(`Not Implemented (RequestRendererEndRendering)\nID: ${id}`);
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {
-        throw new Error('Not Implemented (RequestRendererRenderDom)');
+        throw new Error(`Not Implemented (RequestRendererRenderDom)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
-        throw new Error('Not Implemented (RequestRendererRenderDomDiff)');
+        throw new Error(`Not Implemented (RequestRendererRenderDomDiff)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
-    /* eslint-enable @typescript-eslint/no-unused-vars */
 }
 
 export function createRenderer(settings: GacUISettings): IGacUIHtmlRenderer {
