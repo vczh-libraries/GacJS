@@ -62,28 +62,29 @@ function typeToString(t: Type, classNames: string[]): string {
     }
 }
 
-function generateEnums(schema: Schema, classNames: string[]): string {
-    return `
-    ${schema.declarations.filter(decl => decl['$ast'] === 'EnumDecl').map(decl => {
-        return ''
-    }).join('\n')}
-    `;
+function generateEnums(schema: Schema): string {
+    return schema.declarations.filter(decl => decl['$ast'] === 'EnumDecl').map(decl => `
+        |
+        |export enum ${decl.name} {
+        ${decl.members.map(member => `|   ${member.name} = '${member.name}'`).join(',\n')}
+        |}
+    `).join('\n');
 }
 
 function generateUnions(schema: Schema, classNames: string[]): string {
-    return `
-    ${schema.declarations.filter(decl => decl['$ast'] === 'UnionDecl').map(decl => {
-        return ''
-    }).join('\n')}
-    `;
+    return schema.declarations.filter(decl => decl['$ast'] === 'UnionDecl').map(decl => `
+        |
+        |export type ${decl.name} = TYPES.Variant<[${decl.members.map(member => refToString(member.name, classNames)).join(', ')}]>;
+    `).join('\n');
 }
 
 function generateStructs(schema: Schema, classNames: string[]): string {
-    return `
-    ${schema.declarations.filter(decl => decl['$ast'] === 'StructDecl').map(decl => {
-        return ''
-    }).join('\n')}
-    `;
+    return schema.declarations.filter(decl => decl['$ast'] === 'StructDecl').map(decl => `
+        |
+        |export interface ${decl.name} {
+        ${decl.members.map(member => `|   ${member.name}: ${typeToString(member.type, classNames)};`).join('\n')}
+        |}
+    `).join('\n');
 }
 
 function generateRequests(schema: Schema, classNames: string[]): string {
@@ -120,8 +121,7 @@ function generateSchema(schema: Schema): string {
     const classNames = collectClassNames(schema);
     return fixIndentation(`
 |import * as TYPES from './remoteProtocolPrimitiveTypes.js';
-|
-${generateEnums(schema, classNames)}
+${generateEnums(schema)}
 ${generateUnions(schema, classNames)}
 ${generateStructs(schema, classNames)}
 ${generateRequests(schema, classNames)}
