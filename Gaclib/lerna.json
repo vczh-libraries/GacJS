@@ -1,6 +1,8 @@
 {
     "packages": [
-        "packages/*"
+        "shared/*",
+        "gaclib/*",
+        "website/*"
     ],
     "npmClient": "yarn",
     "useWorkspaces": true,

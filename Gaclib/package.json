@@ -14,8 +14,9 @@
   "license": "Apache-2.0",
   "workspaces": {
     "packages": [
+      "shared/*",
       "gaclib/*",
-      "shared/*"
+      "website/*"
     ]
   },
   "devDependencies": {
