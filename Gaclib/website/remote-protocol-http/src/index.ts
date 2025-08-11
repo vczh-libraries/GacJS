@@ -52,17 +52,17 @@ async function sendConnect(url: string): Promise<ConnectResponse> {
                         reject(new Error(`Failed to parse response JSON: ${error}`));
                     }
                 } else {
-                    reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    reject(new Error(`[${xhr.status}: ${xhr.statusText}]: ${url}`));
                 }
             }
         };
 
         xhr.onerror = function () {
-            reject(new Error('Network error occurred'));
+            reject(new Error(`[ERROR]: ${url}`));
         };
 
         xhr.ontimeout = function () {
-            reject(new Error('Request timeout'));
+            reject(new Error(`[TIMEOUT]: ${url}`));
         };
         
         xhr.open('GET', url, true);
