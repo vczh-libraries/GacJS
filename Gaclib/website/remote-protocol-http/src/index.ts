@@ -24,7 +24,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     public events: IRemoteProtocolEvents;
 
     // @ts-expect-error: TS6138
-    constructor(private requests: IRemoteProtocolRequests, private urls: ConnectResponse) {
+    constructor(private requests: IRemoteProtocolRequests, private host: string, private urls: ConnectResponse) {
         const callback: ProtocolInvokingHandler = (invoking => this.sendRequest(invoking));
         this.responses = new ResponseToJson(callback);
         this.events = new EventToJson(callback);
@@ -39,10 +39,10 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     }
 }
 
-async function sendConnect(url: string): Promise<ConnectResponse> {
+async function sendConnect(host: string, url: string): Promise<ConnectResponse> {
     let response: Response;
     try {
-        response = await fetch(url, {
+        response = await fetch(`${host}${url}`, {
             method: 'GET',
             headers: { 'Accept': 'application/json' }
         });
@@ -66,7 +66,7 @@ async function sendConnect(url: string): Promise<ConnectResponse> {
 }
 
 export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolHttpClient> {
-    const urls = await sendConnect(`http://${host}/GacUIRemoting/Connect`);
-    const impl = new HttpClientImpl(requests, urls);
+    const urls = await sendConnect(`http://${host}`, '/GacUIRemoting/Connect');
+    const impl = new HttpClientImpl(requests, host, urls);
     return impl;
 }
