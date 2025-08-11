@@ -5,11 +5,17 @@
     "type": "module",
     "main": "./lib/index.js",
     "scripts": {
-        "build": "rimraf ./lib && eslint --fix && tsc && copyfiles -u 1 assets/* lib/dist/ && node ./lib/esbuild.js"
+        "build-ts": "rimraf ./lib && eslint --fix && tsc",
+        "build-assets": "copyfiles -u 1 assets/* lib/dist/",
+        "esbuild-dev": "node ./lib/esbuild.js",
+        "esbuild-ship": "node ./lib/esbuild.js --ship",
+        "build": "npm-run-all2 -s build-ts build-assets esbuild-dev",
+        "build-ship": "npm-run-all2 -s build-ts build-assets esbuild-ship"
     },
     "license": "Apache-2.0",
     "devDependencies": {
-        "@gaclib-shared/eslint-shared": "^0.0.1"
+        "@gaclib-shared/eslint-shared": "^0.0.1",
+        "npm-run-all2": "^8.0.4"
     },
     "dependencies": {
         "@gaclib/remote-protocol": "^0.0.1",
