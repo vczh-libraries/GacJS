@@ -4,6 +4,7 @@ import {
     IRemoteProtocolEvents,
     ProtocolInvoking,
     ProtocolInvokingHandler,
+    jsonToRequest,
     ResponseToJson,
     EventToJson
 } from '@gaclib/remote-protocol';
@@ -11,7 +12,7 @@ import {
 export interface IRemoteProtocolHttpClient {
     get responses(): IRemoteProtocolResponses;
     get events(): IRemoteProtocolEvents;
-    start(): void;
+    start(): Promise<void>;
 }
 
 interface ConnectResponse {
@@ -23,7 +24,6 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     public responses: IRemoteProtocolResponses;
     public events: IRemoteProtocolEvents;
 
-    // @ts-expect-error: TS6138
     constructor(private requests: IRemoteProtocolRequests, private host: string, private urls: ConnectResponse) {
         const callback: ProtocolInvokingHandler = (invoking => this.sendRequest(invoking));
         this.responses = new ResponseToJson(callback);
@@ -34,8 +34,26 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         throw new Error(JSON.stringify(invoking, undefined, 4));
     }
 
-    start(): void {
-        throw new Error(JSON.stringify(this.urls, undefined, 4));
+    async start(): Promise<void> {
+        // Start infinite loop to continuously query for requests
+        while (true) {
+            try {
+                const response = await fetch(`${this.host}${this.urls.request}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (response.status === 200) {
+                    const responseText = await response.text();
+                    const protocolInvoking = JSON.parse(responseText) as ProtocolInvoking;
+                    jsonToRequest(protocolInvoking, this.requests);
+                }
+                // Ignore HTTP errors and continue the loop
+            } catch {
+                // Ignore any HTTP-related errors and continue the loop
+                continue;
+            }
+        }
     }
 }
 
@@ -56,7 +74,8 @@ async function sendConnect(host: string, url: string): Promise<ConnectResponse> 
 
     if (response.status === 200) {
         try {
-            return await response.json() as ConnectResponse;
+            const responseText = await response.text();
+            return JSON.parse(responseText) as ConnectResponse;
         } catch (error) {
             throw new Error(`Failed to parse response JSON from ${url}`, { cause: error });
         }

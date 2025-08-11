@@ -15,7 +15,7 @@
     <script lang="javascript">
         document.addEventListener('DOMContentLoaded', async () => {
             const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.body);
-            client.start();
+            client.start(); // Don't await - let it run in background
         });
     </script>
 </body>
