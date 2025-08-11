@@ -114,7 +114,16 @@ export enum RenderingDom_DiffType {
     Modified = 'Modified',
 }
 
-export type UnitTest_ElementDescVariant = TYPES.Variant<[ElementDesc_SolidBorder, ElementDesc_SinkBorder, ElementDesc_SinkSplitter, ElementDesc_SolidBackground, ElementDesc_GradientBackground, ElementDesc_InnerShadow, ElementDesc_Polygon, ElementDesc_SolidLabel, ElementDesc_ImageFrame]>;
+export type UnitTest_ElementDescVariant =
+    | [0, ElementDesc_SolidBorder]
+    | [1, ElementDesc_SinkBorder]
+    | [2, ElementDesc_SinkSplitter]
+    | [3, ElementDesc_SolidBackground]
+    | [4, ElementDesc_GradientBackground]
+    | [5, ElementDesc_InnerShadow]
+    | [6, ElementDesc_Polygon]
+    | [7, ElementDesc_SolidLabel]
+    | [8, ElementDesc_ImageFrame];
 
 export interface NativeCoordinate {
     value: TYPES.Integer;

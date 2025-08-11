@@ -12,7 +12,6 @@ export type Nullable<T> = T | null;
 export type List<T> = T[];
 export type ArrayMap<T, Key extends string> = T extends Record<Key, any> ? T[] : never;
 export type Dictionary<K, T> = [[K, T]];
-export type Variant<Ts extends unknown[]> = { [I in keyof Ts]: [I, Ts[I]]; }[number];
 
 // GacUI\Source\GuiTypes.h
 export enum Key {

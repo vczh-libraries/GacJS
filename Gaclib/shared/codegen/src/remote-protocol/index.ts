@@ -74,7 +74,8 @@ function generateEnums(schema: Schema): string {
 function generateUnions(schema: Schema, classNames: string[]): string {
     return schema.declarations.filter(decl => decl['$ast'] === 'UnionDecl').map(decl => `
         |
-        |export type ${decl.name} = TYPES.Variant<[${decl.members.map(member => refToString(member.name, classNames)).join(', ')}]>;
+        |export type ${decl.name} =
+        ${decl.members.map((member, index) => `|    | [${index}, ${refToString(member.name, classNames)}]`).join('\n')};
     `).join('\n');
 }
 
