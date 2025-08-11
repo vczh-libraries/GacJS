@@ -98,7 +98,7 @@ function generateRequests(schema: Schema, classNames: string[]): string {
             params.push('id: number');
         }
         if (decl.request) {
-            params.push(`request: ${typeToString(decl.request.type, classNames)}`);
+            params.push(`requestArgs: ${typeToString(decl.request.type, classNames)}`);
         }
         return `|    Request${decl.name}(${params.join(', ')}): void;`;
     }).join('\n')}
@@ -110,17 +110,17 @@ function generateResponses(schema: Schema, classNames: string[]): string {
 |
 |export interface IRemoteProtocolResponses {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return !decl.response ? '' : `|    Respond${decl.name}(response: ${typeToString(decl.response.type, classNames)}): void;`;
+        return !decl.response ? '' : `|    Respond${decl.name}(responseArgs: ${typeToString(decl.response.type, classNames)}): void;`;
     }).join('\n')}
 |}`;
 }
 
-function generateEvents(schema: Schema): string {
+function generateEvents(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolEvents {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(() => {
-        return ''
+    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
+        return `|    On${decl.name}(${!decl.request ? '' : `eventArgs: ${typeToString(decl.request.type, classNames)}`}): void;`;
     }).join('\n')}
 |}`;
 }
@@ -134,7 +134,7 @@ ${generateUnions(schema, classNames)}
 ${generateStructs(schema, classNames)}
 ${generateRequests(schema, classNames)}
 ${generateResponses(schema, classNames)}
-${generateEvents(schema)}
+${generateEvents(schema, classNames)}
 |
 `);
 }
