@@ -55,5 +55,7 @@ export function typeToString(t: Type, classNames: string[]): string {
             return `TYPES.ArrayMap<${refToString(t.element, classNames)}, '${t.keyField}'>`;
         case 'MapType':
             return `TYPES.Dictionary<${typeToString(t.keyType, classNames)}, ${typeToString(t.element, classNames)}>`;
+        default:
+            throw new Error(`Unknown type: ${t['$ast']}`);
     }
 }

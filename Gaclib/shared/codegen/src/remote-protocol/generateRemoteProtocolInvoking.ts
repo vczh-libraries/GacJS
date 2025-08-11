@@ -9,8 +9,23 @@ function generateRequests(schema: Schema): string {
     return `
 |
 |export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProtocolRequests): void {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(() => {
+|    if (pi.semantic === 'Message') {
+|        switch (pi.name) {
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+        return decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(${!decl.request ? '' : 'pi.arguments'}); break;`
     }).join('\n')}
+|            default: throw new Error('Invalid message name: ' + pi.name);
+|        }
+|    } else if (pi.semantic === 'Request') {
+|        switch (pi.name) {
+    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+        return !decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(pi.id${!decl.request ? '' : ', pi.arguments'}); break;`
+    }).join('\n')}
+|            default: throw new Error('Invalid request name: ' + pi.name);
+|        }
+|    } else {
+|        throw new Error('Invalid semantic type for request: ' + pi.semantic);
+|    }
 |}`;
 }
 
@@ -18,7 +33,7 @@ function generateResponses(schema: Schema, classNames: string[]): string {
     return `
 |
 |export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
-|    constructor(private callback: ProtocolInvokingHandler) {}
+|    constructor(private callback: ProtocolInvokingHandler) { }
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         return !decl.response ? '' : `|
             |    Respond${decl.name}(responseArgs: SCHEMA.${typeToString(decl.response.type, classNames)}): void {
@@ -31,7 +46,7 @@ function generateEvents(schema: Schema, classNames: string[]): string {
     return `
 |
 |export class EventToJson implements SCHEMA.IRemoteProtocolEvents {
-|    constructor(private callback: ProtocolInvokingHandler) {}
+|    constructor(private callback: ProtocolInvokingHandler) { }
     ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
         return `|
             |    On${decl.name}(${!decl.request ? '' : `eventArgs: SCHEMA.${typeToString(decl.request.type, classNames)}`}): void {
