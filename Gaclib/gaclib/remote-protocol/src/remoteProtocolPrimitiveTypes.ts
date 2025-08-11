@@ -8,6 +8,7 @@ export type Color = string; // #FFFFFF
 export type Binary = string; // base64 encoded
 
 export type Ptr<T> = T | null;
+export type Nullable<T> = T | null;
 export type List<T> = T[];
 export type ArrayMap<T, Key extends string> = T extends Record<Key, any> ? T[] : never;
 export type Dictionary<K, T> = [[K, T]];

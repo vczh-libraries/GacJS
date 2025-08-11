@@ -1,21 +1,21 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Schema } from './AST';
+import { Schema, Type } from './AST';
 
 const __dirname = import.meta.dirname;
 
 function fixIndentation(code: string): string {
     // Break code into lines
     const lines = code.split('\n');
-    
+
     const processedLines: string[] = [];
-    
+
     for (const line of lines) {
         // Check if line is only spaces - if so, remove it
         if (line.trim() === '') {
             continue;
         }
-        
+
         // Check if line begins with zero or more spaces followed by '|'
         const match = line.match(/^(\s*)\|(.*)$/);
         if (match) {
@@ -26,12 +26,43 @@ function fixIndentation(code: string): string {
             throw new Error(`Invalid line format: "${line}". Expected line to be empty or start with spaces followed by '|'.`);
         }
     }
-    
+
     // Join them back to a string
     return processedLines.join('\r\n');
 }
 
-function generateTypes(schema: Schema): string {
+function collectClassNames(schema: Schema): string[] {
+    const classNames: string[] = [];
+    schema.declarations.forEach(decl => {
+        if (decl['$ast'] === 'StructDecl' && decl.type === 'Class') {
+            classNames.push(decl.name);
+        }
+    });
+    return classNames;
+}
+
+function refToString(element: string, classNames: string[]): string {
+    return classNames.includes(element) ? `TYPES.Ptr<${element}>` : element;
+}
+
+function typeToString(t: Type, classNames: string[]): string {
+    switch (t['$ast']) {
+        case 'PrimitiveType':
+            return `<TYPES.${t.type}>`;
+        case 'ReferenceType':
+            return refToString(t.name, classNames);
+        case 'OptionalType':
+            return `TYPES.Nullable<${typeToString(t.element, classNames)}>`;
+        case 'ArrayType':
+            return `TYPES.List<${typeToString(t.element, classNames)}>`;
+        case 'ArrayMapType':
+            return `TYPES.ArrayMap<${refToString(t.element, classNames)}, ${t.keyField}>`;
+        case 'MapType':
+            return `TYPES.Dictionary<${typeToString(t.keyType, classNames)}, ${typeToString(t.element, classNames)}>`;
+    }
+}
+
+function generateTypes(schema: Schema, classNames: string[]): string {
     return `
 ${schema.declarations.map(decl => {
         switch (decl['$ast']) {
@@ -49,7 +80,7 @@ ${schema.declarations.map(decl => {
     `;
 }
 
-function generateRequests(schema: Schema): string {
+function generateRequests(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolRequests {
@@ -66,7 +97,7 @@ ${schema.declarations.map(decl => {
     `;
 }
 
-function generateResponses(schema: Schema): string {
+function generateResponses(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolResponses {
@@ -83,7 +114,7 @@ ${schema.declarations.map(decl => {
     `;
 }
 
-function generateEvents(schema: Schema): string {
+function generateEvents(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolEvents {
@@ -101,13 +132,14 @@ ${schema.declarations.map(decl => {
 }
 
 function generateSchema(schema: Schema): string {
+    const classNames = collectClassNames(schema);
     return fixIndentation(`
 |import * as TYPES from './remoteProtocolPrimitiveTypes.js';
 |
-${generateTypes(schema)}
-${generateRequests(schema)}
-${generateResponses(schema)}
-${generateEvents(schema)}
+${generateTypes(schema, classNames)}
+${generateRequests(schema, classNames)}
+${generateResponses(schema, classNames)}
+${generateEvents(schema, classNames)}
 |
     `);
 }
