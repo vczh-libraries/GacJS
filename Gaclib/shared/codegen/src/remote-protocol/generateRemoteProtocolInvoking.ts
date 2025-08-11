@@ -5,21 +5,21 @@ import { collectClassNames, fixIndentation, typeToString } from './shared.js';
 
 const __dirname = import.meta.dirname;
 
-function generateRequests(schema: Schema): string {
+function generateRequests(schema: Schema, classNames: string[]): string {
     return `
 |
 |export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProtocolRequests): void {
 |    if (pi.semantic === 'Message') {
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(${!decl.request ? '' : 'pi.arguments'}); break;`
+        return decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(${!decl.request ? '' : `(<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`}); break;`
     }).join('\n')}
 |            default: throw new Error('Invalid message name: ' + pi.name);
 |        }
 |    } else if (pi.semantic === 'Request') {
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
-        return !decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}(pi.id${!decl.request ? '' : ', pi.arguments'}); break;`
+        return !decl.response ? '' : `|            case '${decl.name}': receiver.Request${decl.name}((<number>pi.id)${!decl.request ? '' : `, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments)`}); break;`
     }).join('\n')}
 |            default: throw new Error('Invalid request name: ' + pi.name);
 |        }
@@ -36,7 +36,7 @@ function generateResponses(schema: Schema, classNames: string[]): string {
 |    constructor(private callback: ProtocolInvokingHandler) { }
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         return !decl.response ? '' : `|
-            |    Respond${decl.name}(responseArgs: SCHEMA.${typeToString(decl.response.type, classNames)}): void {
+            |    Respond${decl.name}(responseArgs: ${typeToString(decl.response.type, classNames, 'SCHEMA.')}): void {
             |    }`;
     }).join('\n')}
 |}`;
@@ -49,7 +49,7 @@ function generateEvents(schema: Schema, classNames: string[]): string {
 |    constructor(private callback: ProtocolInvokingHandler) { }
     ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
         return `|
-            |    On${decl.name}(${!decl.request ? '' : `eventArgs: SCHEMA.${typeToString(decl.request.type, classNames)}`}): void {
+            |    On${decl.name}(${!decl.request ? '' : `eventArgs: ${typeToString(decl.request.type, classNames, 'SCHEMA.')}`}): void {
             |    }`;
     }).join('\n')}
 |}`;
@@ -68,7 +68,7 @@ function generateInvoking(schema: Schema): string {
 |}
 |
 |export type ProtocolInvokingHandler = (invoking: ProtocolInvoking) => void;
-${generateRequests(schema)}
+${generateRequests(schema, classNames)}
 ${generateResponses(schema, classNames)}
 ${generateEvents(schema, classNames)}
 |
