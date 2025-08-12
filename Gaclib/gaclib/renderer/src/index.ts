@@ -8,17 +8,33 @@ export interface IGacUIHtmlRenderer {
 export interface GacUISettings {
     width: number;
     height: number;
-    target: Element;
+    target: HTMLElement;
+    fontConfig: SCHEMA.FontConfig;
 }
 
 class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
-    // @ts-expect-error: TS6133
     private _responses: SCHEMA.IRemoteProtocolResponses;
     // @ts-expect-error: TS6133
     private _events: SCHEMA.IRemoteProtocolEvents;
 
-    constructor(private settings: GacUISettings) {
-        this.settings.target.textContent='Starting GacUI HTML Renderer ...';
+    private _screenConfig: SCHEMA.ScreenConfig;
+
+    constructor(private _settings: GacUISettings) {
+        this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
+
+        const bounds: SCHEMA.NativeRect = {
+            x1: { value: 0 },
+            y1: { value: 0 },
+            x2: { value: _settings.width },
+            y2: { value: _settings.height }
+        };
+
+        this._screenConfig = {
+            bounds,
+            clientBounds: bounds,
+            scalingX: 1,
+            scalingY: 1
+        };
     }
 
     get requests(): SCHEMA.IRemoteProtocolRequests {
@@ -35,11 +51,11 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
      ***************************************************************************************/
 
     RequestControllerGetFontConfig(id: number): void {
-        throw new Error(`Not Implemented (RequestControllerGetFontConfig)\nID: ${id}`);
+        this._responses.RespondControllerGetFontConfig(id, this._settings.fontConfig);
     }
 
     RequestControllerGetScreenConfig(id: number): void {
-        throw new Error(`Not Implemented (RequestControllerGetScreenConfig)\nID: ${id}`);
+        this._responses.RespondControllerGetScreenConfig(id, this._screenConfig);
     }
 
     RequestControllerConnectionEstablished(): void {
@@ -60,14 +76,6 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
 
     RequestWindowNotifySetTitle(requestArgs: SCHEMA.TYPES.String): void {
         throw new Error(`Not Implemented (RequestWindowNotifySetTitle)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
-    }
-
-    RequestWindowNotifySetBounds(requestArgs: SCHEMA.NativeRect): void {
-        throw new Error(`Not Implemented (RequestWindowNotifySetBounds)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
-    }
-
-    RequestWindowNotifySetClientSize(requestArgs: SCHEMA.NativeSize): void {
-        throw new Error(`Not Implemented (RequestWindowNotifySetClientSize)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     /****************************************************************************************
@@ -162,11 +170,20 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
         throw new Error(`Not Implemented (RequestRendererRenderDomDiff)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+
     /****************************************************************************************
      * MainWindow (ignored)
      ***************************************************************************************/
 
-    /* eslint-disable @typescript-eslint/no-unused-vars */
+    RequestWindowNotifySetBounds(requestArgs: SCHEMA.NativeRect): void {
+        // ignored
+    }
+
+    RequestWindowNotifySetClientSize(requestArgs: SCHEMA.NativeSize): void {
+        // ignored
+    }
+
     RequestWindowNotifySetEnabled(requestArgs: SCHEMA.TYPES.Boolean): void {
         // ignored
     }
@@ -247,6 +264,25 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
         throw new Error('Should not be called (RequestRendererEndBoundary)');
     }
     /* eslint-enable @typescript-eslint/no-unused-vars */
+}
+
+export function generateFontConfig(target: HTMLElement): SCHEMA.FontConfig {
+    const styles = window.getComputedStyle(target);
+
+    const defaultFont: SCHEMA.FontProperties = {
+        fontFamily: styles.fontFamily,
+        size: 12,
+        bold: false,
+        italic: false,
+        underline: false,
+        strikeline: false,
+        antialias: false,
+        verticalAntialias: false,
+    };
+    return {
+        defaultFont,
+        supportedFonts: [defaultFont.fontFamily],
+    };
 }
 
 export function createRenderer(settings: GacUISettings): IGacUIHtmlRenderer {
