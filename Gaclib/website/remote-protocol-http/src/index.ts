@@ -65,8 +65,11 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
                 continue;
             }
 
-            const protocolInvoking = JSON.parse(responseText) as ProtocolInvoking;
-            jsonToRequest(protocolInvoking, this.requests);
+            const requests = JSON.parse(responseText) as string[];
+            for (const request of requests) {
+                const protocolInvoking = JSON.parse(request) as ProtocolInvoking;
+                jsonToRequest(protocolInvoking, this.requests);
+            }
         }
     }
 
