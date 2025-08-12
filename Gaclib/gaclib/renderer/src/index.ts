@@ -43,11 +43,11 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     }
 
     RequestControllerConnectionEstablished(): void {
-        throw new Error('Not Implemented (RequestControllerConnectionEstablished)');
+        // ignored
     }
 
     RequestControllerConnectionStopped(): void {
-        throw new Error('Not Implemented (RequestControllerConnectionStopped)');
+        // TODO: report back to the caller
     }
 
     /****************************************************************************************
