@@ -8,4 +8,5 @@ body {
     height: 480px;
     overflow: hidden;
     box-sizing: border-box;
+    position: relative;
 }

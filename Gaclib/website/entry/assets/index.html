@@ -18,6 +18,30 @@
             client.start(); // Don't await - let it run in background
         });
     </script>
+
+    <div id="gacui-screen" class="gacui-container" style="background-color: blue;">
+      <div
+        style="position:absolute; box-sizing: border-box; overflow:hidden; left:0px; top:0px; width:100px; height:100px; outline:1px dashed white; outline-offset:-1px; mix-blend-mode: difference;"
+      >
+        <div
+          style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
+        ></div>
+      </div>
+      <div
+        style="position:absolute; box-sizing: border-box; overflow:hidden; left:100px; top:0px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
+      >
+        <div
+          style="position:absolute; box-sizing: border-box; overflow:hidden; left:-10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
+        ></div>
+      </div>
+      <div
+        style="position:absolute; box-sizing: border-box; overflow:hidden; left:0px; top:100px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
+      >
+        <div
+          style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:-10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
+        ></div>
+      </div>
+    </div>
 </body>
 
 </html>
