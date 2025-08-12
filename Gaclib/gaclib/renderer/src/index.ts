@@ -25,5 +25,7 @@ export function createRenderer(settings: GacUISettings): IGacUIHtmlRenderer {
     return new GacUIHtmlRendererImpl(settings);
 }
 
-export { GacUIHtmlRendererImpl } from './GacUIHtmlRendererImpl';
-export { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
+export * from './interfaces';
+export * from './GacUIHtmlRendererImpl';
+export * from './interfaces';
+export * from './elementStyles';
