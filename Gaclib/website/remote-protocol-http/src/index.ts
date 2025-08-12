@@ -27,9 +27,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
 
     constructor(private requests: IRemoteProtocolRequests, private host: string, private urls: ConnectResponse) {
         const callback: ProtocolInvokingHandler = (invoking => {
-            this.sendRequest(invoking).catch(error => {
-                console.error('Failed to send request:', error);
-            });
+            this.sendRequest(invoking).catch(error => { throw error; });
         });
         this.responses = new ResponseToJson(callback);
         this.events = new EventToJson(callback);
@@ -38,11 +36,8 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     async sendRequest(invoking: ProtocolInvoking): Promise<void> {
         const response = await fetch(`${this.host}${this.urls.response}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify([invoking])
+            headers: { 'Content-Type': 'application/json; charset=utf8' },
+            body: JSON.stringify([JSON.stringify(invoking)])
         });
 
         if (response.status !== 200) {
@@ -51,13 +46,14 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     }
 
     async start(): Promise<void> {
+        this.events.OnControllerConnect();
         while (true) {
             let responseText: string;
 
             try {
                 const response = await fetch(`${this.host}${this.urls.request}`, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 'Accept': 'application/json; charset=utf8' }
                 });
 
                 if (response.status !== 200) {
@@ -83,7 +79,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
 async function sendConnect(host: string, url: string): Promise<ConnectResponse> {
     const response = await fetch(`${host}${url}`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json; charset=utf8' }
     });
 
     if (response.status !== 200) {
