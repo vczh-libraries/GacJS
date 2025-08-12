@@ -14,7 +14,6 @@ export interface GacUISettings {
 
 class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
-    // @ts-expect-error: TS6133
     private _events: SCHEMA.IRemoteProtocolEvents;
 
     private _screenConfig: SCHEMA.ScreenConfig;
@@ -61,6 +60,18 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
         this._events = events;
     }
 
+    private _areBoundsEqual(a: SCHEMA.NativeRect, b: SCHEMA.NativeRect): boolean {
+        return a.x1.value === b.x1.value &&
+            a.y1.value === b.y1.value &&
+            a.x2.value === b.x2.value &&
+            a.y2.value === b.y2.value;
+    }
+
+    private _areSizeEqual(a: SCHEMA.NativeSize, b: SCHEMA.NativeRect): boolean {
+        return a.x.value === (b.x2.value - b.x1.value) &&
+            a.y.value === (b.y2.value - b.y1.value);
+    }
+
     /****************************************************************************************
      * Controller
      ***************************************************************************************/
@@ -91,6 +102,18 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
 
     RequestWindowNotifySetTitle(requestArgs: SCHEMA.TYPES.String): void {
         document.title = requestArgs;
+    }
+
+    RequestWindowNotifySetBounds(requestArgs: SCHEMA.NativeRect): void {
+        if (!this._areBoundsEqual(requestArgs, this._windowConfig.bounds)) {
+            this._events.OnWindowBoundsUpdated(this._windowConfig);
+        }
+    }
+
+    RequestWindowNotifySetClientSize(requestArgs: SCHEMA.NativeSize): void {
+        if (!this._areSizeEqual(requestArgs, this._windowConfig.clientBounds)) {
+            this._events.OnWindowBoundsUpdated(this._windowConfig);
+        }
     }
 
     /****************************************************************************************
@@ -190,14 +213,6 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     /****************************************************************************************
      * MainWindow (ignored)
      ***************************************************************************************/
-
-    RequestWindowNotifySetBounds(requestArgs: SCHEMA.NativeRect): void {
-        // ignored
-    }
-
-    RequestWindowNotifySetClientSize(requestArgs: SCHEMA.NativeSize): void {
-        // ignored
-    }
 
     RequestWindowNotifySetEnabled(requestArgs: SCHEMA.TYPES.Boolean): void {
         // ignored
