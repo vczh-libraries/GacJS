@@ -14,7 +14,7 @@ function generateRequests(schema: Schema, classNames: string[]): string {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         if (decl.request) {
             return decl.response ? '' : `|            case '${decl.name}':
-|                if (!pi.arguments) {
+|                if (pi.arguments === undefined) {
 |                    throw new Error('Missing arguments for request: ' + pi.name);
 |                }
 |                receiver.Request${decl.name}((<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments));
@@ -29,14 +29,14 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |            default: throw new Error('Invalid message name: ' + pi.name);
 |        }
 |    } else if (pi.semantic === 'Request') {
-|        if (!pi.id) {
+|        if (pi.id === undefined) {
 |            throw new Error('Missing id for request: ' + pi.name);
 |        }
 |        switch (pi.name) {
     ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         if (decl.request) {
             return !decl.response ? '' : `|            case '${decl.name}':
-|                if (!pi.arguments) {
+|                if (pi.arguments === undefined) {
 |                    throw new Error('Missing arguments for request: ' + pi.name);
 |                }
 |                receiver.Request${decl.name}(pi.id, (<${typeToString(decl.request.type, classNames, 'SCHEMA.')}>pi.arguments));

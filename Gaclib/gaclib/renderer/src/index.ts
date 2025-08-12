@@ -18,6 +18,7 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
     private _events: SCHEMA.IRemoteProtocolEvents;
 
     private _screenConfig: SCHEMA.ScreenConfig;
+    private _windowConfig: SCHEMA.WindowSizingConfig;
 
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
@@ -29,12 +30,26 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
             y2: { value: _settings.height }
         };
 
+        const customFramePadding: SCHEMA.NativeMargin = {
+            left: { value: 0 },
+            top: { value: 0 },
+            right: { value: 0 },
+            bottom: { value: 0 },
+        }
+
         this._screenConfig = {
             bounds,
             clientBounds: bounds,
             scalingX: 1,
             scalingY: 1
         };
+
+        this._windowConfig = {
+            bounds,
+            clientBounds: bounds,
+            sizeState: SCHEMA.WindowSizeState.Maximized,
+            customFramePadding,
+        }
     }
 
     get requests(): SCHEMA.IRemoteProtocolRequests {
@@ -71,11 +86,11 @@ class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtoco
      ***************************************************************************************/
 
     RequestWindowGetBounds(id: number): void {
-        throw new Error(`Not Implemented (RequestWindowGetBounds)\nID: ${id}`);
+        this._responses.RespondWindowGetBounds(id, this._windowConfig);
     }
 
     RequestWindowNotifySetTitle(requestArgs: SCHEMA.TYPES.String): void {
-        throw new Error(`Not Implemented (RequestWindowNotifySetTitle)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        document.title = requestArgs;
     }
 
     /****************************************************************************************

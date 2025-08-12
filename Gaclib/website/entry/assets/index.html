@@ -9,12 +9,12 @@
 </head>
 
 <body>
-    <div class="gacui-container">
+    <div id="gacui-screen" class="gacui-container">
         <!-- Content goes here -->
     </div>
     <script lang="javascript">
         document.addEventListener('DOMContentLoaded', async () => {
-            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.body);
+            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.getElementById('gacui-screen'));
             client.start(); // Don't await - let it run in background
         });
     </script>
