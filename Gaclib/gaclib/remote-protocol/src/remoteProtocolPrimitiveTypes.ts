@@ -9,9 +9,9 @@ export type Binary = string; // base64 encoded
 
 export type Ptr<T> = T | null;
 export type Nullable<T> = T | null;
-export type List<T> = T[];
-export type ArrayMap<T, Key extends string> = T extends Record<Key, {}> ? T[] : never;
-export type Dictionary<K, T> = [[K, T]];
+export type List<T> = T[] | null;
+export type ArrayMap<T, Key extends string> = (T extends Record<Key, {}> ? T[] : never) | null;
+export type Dictionary<K, T> = [[K, T]] | null;
 
 // GacUI\Source\GuiTypes.h
 export enum Key {
@@ -241,7 +241,7 @@ export enum Key {
     /*
      * Additionals
      */
-/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
+    /* eslint-disable @typescript-eslint/no-duplicate-enum-values */
     KEY_OEM_1 = 0xBA,               /* ';:' for US */
     KEY_OEM_2 = 0xBF,               /* '/?' for US */
     KEY_OEM_3 = 0xC0,               /* '`~' for US */
@@ -250,5 +250,5 @@ export enum Key {
     KEY_OEM_6 = 0xDD,               /* ']}' for US */
     KEY_OEM_7 = 0xDE,               /* ''"' for US */
     KEY_HANJA = 0x19,
-/* eslint-enable @typescript-eslint/no-duplicate-enum-values */
+    /* eslint-enable @typescript-eslint/no-duplicate-enum-values */
 }
