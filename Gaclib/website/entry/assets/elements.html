@@ -225,13 +225,27 @@
       type: 'FocusRectangle'
     });
     GacUIHtmlRenderer.applyTypedStyle(_N, { x1: 350, y1: 250, x2: 450, y2: 350 }, {
-      type: 'FocusRectangle'
+      type: 'InnerShadow',
+      desc: {
+        shadowColor: '#FF0000',
+        thickness: 9
+      }
     });
     GacUIHtmlRenderer.applyTypedStyle(_O, { x1: 250, y1: 350, x2: 350, y2: 450 }, {
-      type: 'FocusRectangle'
+      type: 'SinkSplitter',
+      desc: {
+        leftTopColor: '#00FF00',
+        rightBottomColor: '#008800',
+        direction: 'Horizontal'
+      }
     });
     GacUIHtmlRenderer.applyTypedStyle(_P, { x1: 350, y1: 350, x2: 450, y2: 450 }, {
-      type: 'FocusRectangle'
+      type: 'SinkSplitter',
+      desc: {
+        leftTopColor: '#0000FF',
+        rightBottomColor: '#000088',
+        direction: 'Vertical'
+      }
     });
     initInnerElements(_M1, _N1, _O1, _P1, '#FFFF00');
   </script>
