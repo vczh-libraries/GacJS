@@ -77,7 +77,7 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, type: 
         }
 
         const elementBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: bounds.x2 - bounds.x1, y2: bounds.y2 - bounds.y1 };
-        element.style.cssText = `z-index:-1; ${getStyle_Bounds(elementBounds)} ${getStyle_FocusRectangle_Border()}`;
+        element.style.cssText = `${getStyle_Bounds(elementBounds)} ${getStyle_FocusRectangle_Border()}`;
     }
     else {
         let kindStyle: string;
