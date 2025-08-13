@@ -80,8 +80,24 @@ function ensureExtraBorderElement(target: HTMLElement): HTMLElement {
     return element;
 }
 
+function ensureNoExtraBorderElement(target: HTMLElement): void {
+    const element: HTMLElement = target[ExtraBorderNodeName] as unknown as HTMLElement;
+    if (element) {
+        target.removeChild(element);
+        delete target[ExtraBorderNodeName];
+    }
+}
+
 export function hasExtraBorderElement(target: HTMLElement): boolean {
     return !!target[ExtraBorderNodeName];
+}
+
+interface ElementDescWithShape {
+    shape: SCHEMA.ElementShape;
+};
+
+function applyTypedStyle_WithoutExtraBorder<TDesc>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
+    target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle(desc)}`;
 }
 
 function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
@@ -89,6 +105,15 @@ function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, bounds: SCH
     const element: HTMLElement = ensureExtraBorderElement(target);
     const elementBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: bounds.x2 - bounds.x1, y2: bounds.y2 - bounds.y1 };
     element.style.cssText = `${getStyle_Bounds(elementBounds)} ${getStyle(desc)}`;
+}
+
+function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
+    if (desc.shape.shapeType === SCHEMA.ElementShapeType.Rectangle) {
+        ensureNoExtraBorderElement(target);
+        applyTypedStyle_WithoutExtraBorder(target, bounds, desc, getStyle);
+    } else {
+        applyTypedStyle_WithExtraBorder(target, bounds, desc, getStyle);
+    }
 }
 
 export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedDesc: TypedElementDesc): void {
@@ -101,31 +126,31 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             applyTypedStyle_WithExtraBorder(target, bounds, undefined, getStyle_FocusRectangle_Border);
             return;
         case SCHEMA.RendererType.SolidBorder:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidBorder_Border);
+            applyTypedStyle_WithShapedBorder(target, bounds, typedDesc.desc, getStyle_SolidBorder_Border);
             break;
         case SCHEMA.RendererType.SolidBackground:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidBackground_Border);
+            applyTypedStyle_WithShapedBorder(target, bounds, typedDesc.desc, getStyle_SolidBackground_Border);
             break;
         case SCHEMA.RendererType.GradientBackground:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_GradientBackground_Border);
+            applyTypedStyle_WithShapedBorder(target, bounds, typedDesc.desc, getStyle_GradientBackground_Border);
             break;
         case SCHEMA.RendererType.SinkBorder:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SinkBorder(typedDesc.desc)}`;
+            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkBorder);
             break;
         case SCHEMA.RendererType.SinkSplitter:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SinkSplitter(typedDesc.desc)}`;
+            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkSplitter);
             break;
         case SCHEMA.RendererType.InnerShadow:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_InnerShadow(typedDesc.desc)}`;
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
             break;
         case SCHEMA.RendererType.SolidLabel:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SolidLabel(typedDesc.desc)}`;
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidLabel);
             break;
         case SCHEMA.RendererType.Polygon:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_Polygon(typedDesc.desc)}`;
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_Polygon);
             break;
         case SCHEMA.RendererType.ImageFrame:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_ImageFrame(typedDesc.desc)}`;
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_ImageFrame);
             break;
         default:
             throw new Error(`Unsupported renderer type: ${elementType}`);
