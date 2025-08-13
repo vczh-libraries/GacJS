@@ -11,3 +11,7 @@
 - Implement cas styles for image and text.
   - SolidLable may not need extra border element as each of them will set font explicitly.
 - Implement remote protocol rendering.
+- Handle remote exception.
+- Complete a demo, website and C++ renderer connect to Core in turns.
+  - in each turn do something and it will be taken to the next. (already doable with multiple C++ renderers).
+  - record as GIF
