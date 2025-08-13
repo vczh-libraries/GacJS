@@ -55,21 +55,18 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     throw new Error('getStyle_ImageFrame not implemented');
 }
 
-export type ElementDesc =
-    | SCHEMA.ElementDesc_SolidBorder
-    | SCHEMA.ElementDesc_SinkBorder
-    | SCHEMA.ElementDesc_SinkSplitter
-    | SCHEMA.ElementDesc_SolidBackground
-    | SCHEMA.ElementDesc_GradientBackground
-    | SCHEMA.ElementDesc_InnerShadow
-    | SCHEMA.ElementDesc_Polygon
-    | SCHEMA.ElementDesc_SolidLabel
-    | SCHEMA.ElementDesc_ImageFrame
-
-export interface TypedElementDesc {
-    type: SCHEMA.RendererType;
-    desc?: ElementDesc;
-}
+export type TypedElementDesc =
+    | { type: SCHEMA.RendererType.Raw }
+    | { type: SCHEMA.RendererType.FocusRectangle }
+    | { type: SCHEMA.RendererType.SolidBorder; desc: SCHEMA.ElementDesc_SolidBorder }
+    | { type: SCHEMA.RendererType.SinkBorder; desc: SCHEMA.ElementDesc_SinkBorder }
+    | { type: SCHEMA.RendererType.SinkSplitter; desc: SCHEMA.ElementDesc_SinkSplitter }
+    | { type: SCHEMA.RendererType.SolidBackground; desc: SCHEMA.ElementDesc_SolidBackground }
+    | { type: SCHEMA.RendererType.GradientBackground; desc: SCHEMA.ElementDesc_GradientBackground }
+    | { type: SCHEMA.RendererType.InnerShadow; desc: SCHEMA.ElementDesc_InnerShadow }
+    | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel }
+    | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
+    | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame };
 
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
 
@@ -95,6 +92,7 @@ function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, bounds: SCH
 }
 
 export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedDesc: TypedElementDesc): void {
+    const elementType: string = typedDesc.type;
     switch (typedDesc.type) {
         case SCHEMA.RendererType.Raw:
             target.style.cssText = getStyle_Bounds(bounds);
@@ -103,34 +101,34 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             applyTypedStyle_WithExtraBorder(target, bounds, undefined, getStyle_FocusRectangle_Border);
             return;
         case SCHEMA.RendererType.SolidBorder:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc as SCHEMA.ElementDesc_SolidBorder, getStyle_SolidBorder_Border);
+            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidBorder_Border);
             break;
         case SCHEMA.RendererType.SolidBackground:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc as SCHEMA.ElementDesc_SolidBackground, getStyle_SolidBackground_Border);
+            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidBackground_Border);
             break;
         case SCHEMA.RendererType.GradientBackground:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc as SCHEMA.ElementDesc_GradientBackground, getStyle_GradientBackground_Border);
+            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_GradientBackground_Border);
             break;
         case SCHEMA.RendererType.SinkBorder:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SinkBorder(typedDesc.desc as SCHEMA.ElementDesc_SinkBorder)}`;
+            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SinkBorder(typedDesc.desc)}`;
             break;
         case SCHEMA.RendererType.SinkSplitter:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SinkSplitter(typedDesc.desc as SCHEMA.ElementDesc_SinkSplitter)}`;
+            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SinkSplitter(typedDesc.desc)}`;
             break;
         case SCHEMA.RendererType.InnerShadow:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_InnerShadow(typedDesc.desc as SCHEMA.ElementDesc_InnerShadow)}`;
+            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_InnerShadow(typedDesc.desc)}`;
             break;
         case SCHEMA.RendererType.SolidLabel:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SolidLabel(typedDesc.desc as SCHEMA.ElementDesc_SolidLabel)}`;
+            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_SolidLabel(typedDesc.desc)}`;
             break;
         case SCHEMA.RendererType.Polygon:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_Polygon(typedDesc.desc as SCHEMA.ElementDesc_Polygon)}`;
+            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_Polygon(typedDesc.desc)}`;
             break;
         case SCHEMA.RendererType.ImageFrame:
-            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_ImageFrame(typedDesc.desc as SCHEMA.ElementDesc_ImageFrame)}`;
+            target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle_ImageFrame(typedDesc.desc)}`;
             break;
         default:
-            throw new Error(`Unsupported renderer type: ${typedDesc.type}`);
+            throw new Error(`Unsupported renderer type: ${elementType}`);
     }
 }
 
