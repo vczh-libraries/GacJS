@@ -19,7 +19,7 @@ function getStyle_BorderRadius(shape: SCHEMA.ElementShape): string {
         case SCHEMA.ElementShapeType.RoundRect:
             return ` border-radius: ${shape.radiusX}px / ${shape.radiusY}px;`;
         default:
-            throw new Error(`Unsupported shape type: ${shape.shapeType}`);
+            throw new Error(`Unsupported ElementShapeType: ${shape.shapeType}`);
     }
 }
 
@@ -32,7 +32,24 @@ function getStyle_SolidBackground_Border(desc: SCHEMA.ElementDesc_SolidBackgroun
 }
 
 function getStyle_GradientBackground_Border(desc: SCHEMA.ElementDesc_GradientBackground): string {
-    return `background-color: ${desc.leftTopColor};${getStyle_BorderRadius(desc.shape)}`;
+    let side: string;
+    switch (desc.direction) {
+        case SCHEMA.ElementGradientrDirection.Horizontal:
+            side = 'right';
+            break;
+        case SCHEMA.ElementGradientrDirection.Vertical:
+            side = 'bottom';
+            break;
+        case SCHEMA.ElementGradientrDirection.Slash:
+            side = 'left bottom';
+            break;
+        case SCHEMA.ElementGradientrDirection.Backslash:
+            side = 'right bottom';
+            break;
+        default:
+            throw new Error(`Unsupported ElementGradientrDirection: ${desc.direction}`);
+    }
+    return `background: linear-gradient(to ${side}, ${desc.leftTopColor} 0%, ${desc.rightBottomColor} 100%);${getStyle_BorderRadius(desc.shape)}`;
 }
 
 function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
