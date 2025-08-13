@@ -35,6 +35,19 @@
     <div id="_H">
       <div id="_H1"></div>
     </div>
+
+    <div id="_I">
+      <div id="_I1"></div>
+    </div>
+    <div id="_J">
+      <div id="_J1"></div>
+    </div>
+    <div id="_K">
+      <div id="_K1"></div>
+    </div>
+    <div id="_L">
+      <div id="_L1"></div>
+    </div>
   </div>
 
   <script lang="javascript">
@@ -134,6 +147,53 @@
       }
     });
     initInnerElements(_E1, _F1, _G1, _H1, '#FFFF00');
+
+    const _I = document.getElementById('_I');
+    const _I1 = document.getElementById('_I1');
+    const _J = document.getElementById('_J');
+    const _J1 = document.getElementById('_J1');
+    const _K = document.getElementById('_K');
+    const _K1 = document.getElementById('_K1');
+    const _L = document.getElementById('_L');
+    const _L1 = document.getElementById('_L1');
+
+    GacUIHtmlRenderer.applyTypedStyle(_I, { x1: 250, y1: 0, x2: 350, y2: 100 }, {
+      type: 'GradientBackground',
+      desc: {
+        leftTopColor: '#000000',
+        rightBottomColor: '#888888',
+        direction: 'Horizontal',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_J, { x1: 350, y1: 0, x2: 450, y2: 100 }, {
+      type: 'GradientBackground',
+      desc: {
+        leftTopColor: '#FF0000',
+        rightBottomColor: '#880000',
+        direction: 'Vertical',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_K, { x1: 250, y1: 100, x2: 350, y2: 200 }, {
+      type: 'GradientBackground',
+      desc: {
+        leftTopColor: '#00FF00',
+        rightBottomColor: '#008800',
+        direction: 'Slash',
+        shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
+      }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_L, { x1: 350, y1: 100, x2: 450, y2: 200 }, {
+      type: 'GradientBackground',
+      desc: {
+        leftTopColor: '#0000FF',
+        rightBottomColor: '#000088',
+        direction: 'Backslash',
+        shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
+      }
+    });
+    initInnerElements(_I1, _J1, _K1, _L1, '#FFFF00');
   </script>
 </body>
 

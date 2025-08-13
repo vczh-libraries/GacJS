@@ -32,7 +32,7 @@ function getStyle_SolidBackground_Border(desc: SCHEMA.ElementDesc_SolidBackgroun
 }
 
 function getStyle_GradientBackground_Border(desc: SCHEMA.ElementDesc_GradientBackground): string {
-    throw new Error('getStyle_GradientBackground not implemented');
+    return `background-color: ${desc.leftTopColor};${getStyle_BorderRadius(desc.shape)}`;
 }
 
 function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
