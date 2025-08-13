@@ -53,7 +53,7 @@ function getStyle_GradientBackground_Border(desc: SCHEMA.ElementDesc_GradientBac
 }
 
 function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
-    throw new Error('getStyle_SinkBorder not implemented');
+    return `border-style: solid; border-left-color: ${desc.leftTopColor}; border-top-color: ${desc.leftTopColor}; border-right-color: ${desc.rightBottomColor}; border-bottom-color: ${desc.rightBottomColor};`;
 }
 
 function getStyle_SinkSplitter(desc: SCHEMA.ElementDesc_SinkSplitter): string {
@@ -159,7 +159,7 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkBorder);
             break;
         case SCHEMA.RendererType.SinkSplitter:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkSplitter);
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkSplitter);
             break;
         case SCHEMA.RendererType.InnerShadow:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
@@ -171,7 +171,7 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_ImageFrame);
             break;
         case SCHEMA.RendererType.SolidLabel:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidLabel_Border);
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidLabel_Border);
             break;
         default:
             throw new Error(`Unsupported renderer type: ${elementType}`);

@@ -123,7 +123,11 @@
 
 
     GacUIHtmlRenderer.applyTypedStyle(_E, { x1: 0, y1: 250, x2: 100, y2: 350 }, {
-      type: 'FocusRectangle'
+      type: 'SinkBorder',
+      desc: {
+        leftTopColor: '#000000',
+        rightBottomColor: '#888888'
+      }
     });
     GacUIHtmlRenderer.applyTypedStyle(_F, { x1: 100, y1: 250, x2: 200, y2: 350 }, {
       type: 'SolidBackground',
