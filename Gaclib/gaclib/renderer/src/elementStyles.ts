@@ -28,7 +28,7 @@ function getStyle_SolidBorder_Border(desc: SCHEMA.ElementDesc_SolidBorder): stri
 }
 
 function getStyle_SolidBackground_Border(desc: SCHEMA.ElementDesc_SolidBackground): string {
-    throw new Error('getStyle_SolidBackground not implemented');
+    return `background-color: ${desc.backgroundColor};${getStyle_BorderRadius(desc.shape)}`;
 }
 
 function getStyle_GradientBackground_Border(desc: SCHEMA.ElementDesc_GradientBackground): string {

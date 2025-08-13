@@ -22,6 +22,19 @@
     <div id="_D">
       <div id="_D1"></div>
     </div>
+
+    <div id="_E">
+      <div id="_E1"></div>
+    </div>
+    <div id="_F">
+      <div id="_F1"></div>
+    </div>
+    <div id="_G">
+      <div id="_G1"></div>
+    </div>
+    <div id="_H">
+      <div id="_H1"></div>
+    </div>
   </div>
 
   <script lang="javascript">
@@ -85,6 +98,42 @@
       }
     });
     initInnerElements(_A1, _B1, _C1, _D1, '#FFFF00');
+
+    const _E = document.getElementById('_E');
+    const _E1 = document.getElementById('_E1');
+    const _F = document.getElementById('_F');
+    const _F1 = document.getElementById('_F1');
+    const _G = document.getElementById('_G');
+    const _G1 = document.getElementById('_G1');
+    const _H = document.getElementById('_H');
+    const _H1 = document.getElementById('_H1');
+
+
+    GacUIHtmlRenderer.applyTypedStyle(_E, { x1: 0, y1: 250, x2: 100, y2: 350 }, {
+      type: 'FocusRectangle'
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_F, { x1: 100, y1: 250, x2: 200, y2: 350 }, {
+      type: 'SolidBackground',
+      desc: {
+        backgroundColor: '#FF0000',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_G, { x1: 0, y1: 350, x2: 100, y2: 450 }, {
+      type: 'SolidBackground',
+      desc: {
+        backgroundColor: '#00FF00',
+        shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
+      }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_H, { x1: 100, y1: 350, x2: 200, y2: 450 }, {
+      type: 'SolidBackground',
+      desc: {
+        backgroundColor: '#0000FF',
+        shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
+      }
+    });
+    initInnerElements(_E1, _F1, _G1, _H1, '#FFFF00');
   </script>
 </body>
 
