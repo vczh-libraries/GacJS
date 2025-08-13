@@ -72,9 +72,6 @@ const inputDomJsonBinaryTree: SCHEMA.RenderingDom = {
 };
 
 /*
- * basic style: position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:10px; width:50px; height:50px;
- * 
- * FocusRectangle: outline:1px dashed white; outline-offset:1px; mix-blend-mode: difference;
  * SolidBorder:
  *   Rectangle=outline:1px solid COLOR; outline-offset:-1px;
  *   Ellipse=outline:1px solid COLOR; outline-offset:-1px; border-radius: 50%;

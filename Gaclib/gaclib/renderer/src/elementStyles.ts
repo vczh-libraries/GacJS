@@ -11,7 +11,16 @@ export function getStyle_FocusRectangle_Border(): string {
 }
 
 export function getStyle_SolidBorder(desc: SCHEMA.ElementDesc_SolidBorder): string {
-    throw new Error('getStyle_SolidBorder not implemented');
+    switch (desc.shape.shapeType) {
+        case SCHEMA.ElementShapeType.Rectangle:
+            return `outline:1px solid ${desc.borderColor}; outline-offset:-1px;`;
+        case SCHEMA.ElementShapeType.Ellipse:
+            return `outline:1px solid ${desc.borderColor}; outline-offset:-1px; border-radius: 50%;`;
+        case SCHEMA.ElementShapeType.RoundRect:
+            return `outline:1px solid ${desc.borderColor}; outline-offset:-1px; border-radius: ${desc.shape.radiusX}px ${desc.shape.radiusY}px;`;
+        default:
+            throw new Error(`Unsupported shape type: ${desc.shape.shapeType}`);
+    }
 }
 
 export function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {

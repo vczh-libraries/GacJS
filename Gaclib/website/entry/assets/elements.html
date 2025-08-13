@@ -11,35 +11,61 @@
 <body>
   <div id="gacui-screen" class="gacui-container" style="background-color: rgb(129, 45, 226);">
     <div id="_A">
-      <div id="_A1"
-        style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
-      </div>
+      <div id="_A1"></div>
     </div>
-    <div id="_B"
-      style="position:absolute; box-sizing: border-box; overflow:hidden; left:100px; top:0px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
-      <div id="_B1"
-        style="position:absolute; box-sizing: border-box; overflow:hidden; left:-10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
-      </div>
+    <div id="_B">
+      <div id="_B1"></div>
     </div>
-    <div id="_C"
-      style="position:absolute; box-sizing: border-box; overflow:hidden; left:0px; top:100px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
-      <div id="_C1"
-        style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:-10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
-      </div>
+    <div id="_C">
+      <div id="_C1"></div>
+    </div>
+    <div id="_D">
+      <div id="_D1"></div>
     </div>
   </div>
 
   <script lang="javascript">
+    function initInnerElements(_A1, _B1, _C1, _D1) {
+      GacUIHtmlRenderer.applyTypedStyle(_A1, { x1: 10, y1: 10, x2: 110, y2: 110 }, 'SolidBorder', {
+        borderColor: '#FF0000',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      });
+      GacUIHtmlRenderer.applyTypedStyle(_B1, { x1: -10, y1: 10, x2: 90, y2: 110 }, 'SolidBorder', {
+        borderColor: '#FF0000',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      });
+      GacUIHtmlRenderer.applyTypedStyle(_C1, { x1: 10, y1: -10, x2: 110, y2: 90 }, 'SolidBorder', {
+        borderColor: '#FF0000',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      });
+      GacUIHtmlRenderer.applyTypedStyle(_D1, { x1: -10, y1: -10, x2: 90, y2: 90 }, 'SolidBorder', {
+        borderColor: '#FF0000',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      });
+    }
     const _A = document.getElementById('_A');
     const _A1 = document.getElementById('_A1');
     const _B = document.getElementById('_B');
     const _B1 = document.getElementById('_B1');
     const _C = document.getElementById('_C');
     const _C1 = document.getElementById('_C1');
+    const _D = document.getElementById('_D');
+    const _D1 = document.getElementById('_D1');
 
-    const b_A = { x1: 0, y1: 0, x2: 100, y2: 100 };
-
-    GacUIHtmlRenderer.applyTypedStyle(_A, b_A, 'FocusRectangle');
+    GacUIHtmlRenderer.applyTypedStyle(_A, { x1: 0, y1: 0, x2: 100, y2: 100 }, 'FocusRectangle');
+    GacUIHtmlRenderer.applyTypedStyle(_B, { x1: 100, y1: 0, x2: 200, y2: 100 }, 'SolidBorder', {
+      borderColor: '#FF0000',
+      shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_C, { x1: 0, y1: 100, x2: 100, y2: 200 }, 'SolidBorder', {
+      borderColor: '#00FF00',
+      shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_D, { x1: 100, y1: 100, x2: 200, y2: 200 }, 'SolidBorder', {
+      borderColor: '#0000FF',
+      shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
+    });
+    initInnerElements(_A1, _B1, _C1, _D1);
   </script>
 </body>
 
