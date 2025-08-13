@@ -12,3 +12,6 @@ export async function runGacUI(target: HTMLElement): Promise<[IGacUIHtmlRenderer
     renderer.init(client.responses, client.events);
     return [renderer, client];
 }
+
+// for testing in elements.html
+export { applyTypedStyle, } from '@gaclib/renderer';

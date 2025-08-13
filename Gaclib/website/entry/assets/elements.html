@@ -2,36 +2,45 @@
 <html>
 
 <head>
-    <title>starter-lit-html</title>
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="./global.css" />
-    <script src="/index.js"></script>
+  <title>starter-lit-html</title>
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="./global.css" />
+  <script src="/index.js"></script>
 </head>
 
 <body>
-    <div id="gacui-screen" class="gacui-container" style="background-color: rgb(129, 45, 226);">
-      <div
-        style="position:absolute; box-sizing: border-box; overflow:hidden; left:0px; top:0px; width:100px; height:100px; outline:1px dashed white; outline-offset:-1px; mix-blend-mode: difference;"
-      >
-        <div
-          style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
-        ></div>
-      </div>
-      <div
-        style="position:absolute; box-sizing: border-box; overflow:hidden; left:100px; top:0px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
-      >
-        <div
-          style="position:absolute; box-sizing: border-box; overflow:hidden; left:-10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
-        ></div>
-      </div>
-      <div
-        style="position:absolute; box-sizing: border-box; overflow:hidden; left:0px; top:100px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
-      >
-        <div
-          style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:-10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;"
-        ></div>
+  <div id="gacui-screen" class="gacui-container" style="background-color: rgb(129, 45, 226);">
+    <div id="_A">
+      <div id="_A1"
+        style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
       </div>
     </div>
+    <div id="_B"
+      style="position:absolute; box-sizing: border-box; overflow:hidden; left:100px; top:0px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
+      <div id="_B1"
+        style="position:absolute; box-sizing: border-box; overflow:hidden; left:-10px; top:10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
+      </div>
+    </div>
+    <div id="_C"
+      style="position:absolute; box-sizing: border-box; overflow:hidden; left:0px; top:100px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
+      <div id="_C1"
+        style="position:absolute; box-sizing: border-box; overflow:hidden; left:10px; top:-10px; width:100px; height:100px; outline:1px solid red; outline-offset:-1px;">
+      </div>
+    </div>
+  </div>
+
+  <script lang="javascript">
+    const _A = document.getElementById('_A');
+    const _A1 = document.getElementById('_A1');
+    const _B = document.getElementById('_B');
+    const _B1 = document.getElementById('_B1');
+    const _C = document.getElementById('_C');
+    const _C1 = document.getElementById('_C1');
+
+    const b_A = { x1: 0, y1: 0, x2: 100, y2: 100 };
+
+    GacUIHtmlRenderer.applyTypedStyle(_a, b_A, 'FocusRectangle');
+  </script>
 </body>
 
 </html>
