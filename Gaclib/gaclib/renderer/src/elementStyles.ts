@@ -10,17 +10,21 @@ function getStyle_FocusRectangle_Border(): string {
     return 'outline:1px dashed white; outline-offset:-1px; mix-blend-mode: difference;';
 }
 
-function getStyle_SolidBorder_Border(desc: SCHEMA.ElementDesc_SolidBorder): string {
-    switch (desc.shape.shapeType) {
+function getStyle_BorderRadius(shape: SCHEMA.ElementShape): string {
+    switch (shape.shapeType) {
         case SCHEMA.ElementShapeType.Rectangle:
-            return `outline:1px solid ${desc.borderColor}; outline-offset:-1px;`;
+            return '';
         case SCHEMA.ElementShapeType.Ellipse:
-            return `outline:1px solid ${desc.borderColor}; outline-offset:-1px; border-radius: 50%;`;
+            return ` border-radius: 50%;`;
         case SCHEMA.ElementShapeType.RoundRect:
-            return `outline:1px solid ${desc.borderColor}; outline-offset:-1px; border-radius: ${desc.shape.radiusX}px ${desc.shape.radiusY}px;`;
+            return ` border-radius: ${shape.radiusX}px / ${shape.radiusY}px;`;
         default:
-            throw new Error(`Unsupported shape type: ${desc.shape.shapeType}`);
+            throw new Error(`Unsupported shape type: ${shape.shapeType}`);
     }
+}
+
+function getStyle_SolidBorder_Border(desc: SCHEMA.ElementDesc_SolidBorder): string {
+    return `outline:1px solid ${desc.borderColor}; outline-offset:-1px;${getStyle_BorderRadius(desc.shape)}`;
 }
 
 function getStyle_SolidBackground_Border(desc: SCHEMA.ElementDesc_SolidBackground): string {
