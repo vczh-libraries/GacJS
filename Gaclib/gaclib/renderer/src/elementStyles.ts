@@ -43,16 +43,16 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     throw new Error('getStyle_InnerShadow not implemented');
 }
 
-function getStyle_SolidLabel(desc: SCHEMA.ElementDesc_SolidLabel): string {
-    throw new Error('getStyle_SolidLabel not implemented');
-}
-
 function getStyle_Polygon(desc: SCHEMA.ElementDesc_Polygon): string {
     throw new Error('getStyle_Polygon not implemented');
 }
 
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     throw new Error('getStyle_ImageFrame not implemented');
+}
+
+function getStyle_SolidLabel_Border(desc: SCHEMA.ElementDesc_SolidLabel): string {
+    throw new Error('getStyle_SolidLabel not implemented');
 }
 
 export type TypedElementDesc =
@@ -143,14 +143,14 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
         case SCHEMA.RendererType.InnerShadow:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
             break;
-        case SCHEMA.RendererType.SolidLabel:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidLabel);
-            break;
         case SCHEMA.RendererType.Polygon:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_Polygon);
             break;
         case SCHEMA.RendererType.ImageFrame:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_ImageFrame);
+            break;
+        case SCHEMA.RendererType.SolidLabel:
+            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidLabel_Border);
             break;
         default:
             throw new Error(`Unsupported renderer type: ${elementType}`);

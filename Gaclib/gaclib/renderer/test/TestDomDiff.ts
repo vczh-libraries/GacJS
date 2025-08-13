@@ -71,15 +71,6 @@ const inputDomJsonBinaryTree: SCHEMA.RenderingDom = {
     }]
 };
 
-/*
- * SolidBorder:
- *   Rectangle=outline:1px solid COLOR; outline-offset:-1px;
- *   Ellipse=outline:1px solid COLOR; outline-offset:-1px; border-radius: 50%;
- *   RoundRect=outline:1px solid COLOR; outline-offset:-1px; border-radius: 5px 10px;
- * 
- * https://playcode.io/html
- */
-
 test(`EmptyTest`, () => {
     assert.isTrue(true);
 });
