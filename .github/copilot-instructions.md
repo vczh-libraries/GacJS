@@ -29,3 +29,4 @@ rendering a remote GUI in HTML via DOM and Canvas.
   - You must use `\` instead of `/` on paths.
   - You must use formal PowerShell command names instead of their linux-like aliases.
   - You must use `;` instead of `&&` for executing multiple commands in order.
+- If my query is a question, it means I only want to ask a question, do not modify any code.

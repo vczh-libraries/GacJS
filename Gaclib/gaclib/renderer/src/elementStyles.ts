@@ -6,12 +6,8 @@ export function getStyle_Bounds(bounds: SCHEMA.Rect): string {
     return `background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden; left:${bounds.x1}px; top:${bounds.y1}px; width:${bounds.x2 - bounds.x1}px; height:${bounds.y2 - bounds.y1}px;`;
 }
 
-export function getStyle_FocusRectangle(): string {
+export function getStyle_FocusRectangle_Border(): string {
     return 'outline:1px dashed white; outline-offset:-1px; mix-blend-mode: difference;';
-}
-
-export function getStyle_Raw(): string {
-    return '';
 }
 
 export function getStyle_SolidBorder(desc: SCHEMA.ElementDesc_SolidBorder): string {
@@ -67,49 +63,59 @@ export interface TypedElementDesc {
 }
 
 export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, type: SCHEMA.RendererType, desc?: ElementDesc): void {
-    const commonStyle = getStyle_Bounds(bounds);
-
-    let kindStyle: string;
-
-    switch (type) {
-        case SCHEMA.RendererType.FocusRectangle:
-            kindStyle = getStyle_FocusRectangle();
-            break;
-        case SCHEMA.RendererType.Raw:
-            kindStyle = getStyle_Raw();
-            break;
-        case SCHEMA.RendererType.SolidBorder:
-            kindStyle = getStyle_SolidBorder(desc as SCHEMA.ElementDesc_SolidBorder);
-            break;
-        case SCHEMA.RendererType.SinkBorder:
-            kindStyle = getStyle_SinkBorder(desc as SCHEMA.ElementDesc_SinkBorder);
-            break;
-        case SCHEMA.RendererType.SinkSplitter:
-            kindStyle = getStyle_SinkSplitter(desc as SCHEMA.ElementDesc_SinkSplitter);
-            break;
-        case SCHEMA.RendererType.SolidBackground:
-            kindStyle = getStyle_SolidBackground(desc as SCHEMA.ElementDesc_SolidBackground);
-            break;
-        case SCHEMA.RendererType.GradientBackground:
-            kindStyle = getStyle_GradientBackground(desc as SCHEMA.ElementDesc_GradientBackground);
-            break;
-        case SCHEMA.RendererType.InnerShadow:
-            kindStyle = getStyle_InnerShadow(desc as SCHEMA.ElementDesc_InnerShadow);
-            break;
-        case SCHEMA.RendererType.SolidLabel:
-            kindStyle = getStyle_SolidLabel(desc as SCHEMA.ElementDesc_SolidLabel);
-            break;
-        case SCHEMA.RendererType.Polygon:
-            kindStyle = getStyle_Polygon(desc as SCHEMA.ElementDesc_Polygon);
-            break;
-        case SCHEMA.RendererType.ImageFrame:
-            kindStyle = getStyle_ImageFrame(desc as SCHEMA.ElementDesc_ImageFrame);
-            break;
-        default:
-            throw new Error(`Unsupported renderer type: ${type}`);
+    if (type === SCHEMA.RendererType.Raw) {
+        target.style.cssText = getStyle_Bounds(bounds);
     }
+    else if (type === SCHEMA.RendererType.FocusRectangle) {
+        target.style.cssText = getStyle_Bounds(bounds);
 
-    target.style.cssText = `${commonStyle} ${kindStyle}`;
+        let element: HTMLElement = target['$GacUI-FocusRectangle-Border'] as unknown as HTMLElement;
+        if (!element) {
+            element = document.createElement('div');
+            target.insertBefore(element, target.firstChild);
+            target['$GacUI-FocusRectangle-Border'] = element;
+        }
+
+        const elementBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: bounds.x2 - bounds.x1, y2: bounds.y2 - bounds.y1 };
+        element.style.cssText = `z-index:-1; ${getStyle_Bounds(elementBounds)} ${getStyle_FocusRectangle_Border()}`;
+    }
+    else {
+        let kindStyle: string;
+
+        switch (type) {
+            case SCHEMA.RendererType.SolidBorder:
+                kindStyle = getStyle_SolidBorder(desc as SCHEMA.ElementDesc_SolidBorder);
+                break;
+            case SCHEMA.RendererType.SinkBorder:
+                kindStyle = getStyle_SinkBorder(desc as SCHEMA.ElementDesc_SinkBorder);
+                break;
+            case SCHEMA.RendererType.SinkSplitter:
+                kindStyle = getStyle_SinkSplitter(desc as SCHEMA.ElementDesc_SinkSplitter);
+                break;
+            case SCHEMA.RendererType.SolidBackground:
+                kindStyle = getStyle_SolidBackground(desc as SCHEMA.ElementDesc_SolidBackground);
+                break;
+            case SCHEMA.RendererType.GradientBackground:
+                kindStyle = getStyle_GradientBackground(desc as SCHEMA.ElementDesc_GradientBackground);
+                break;
+            case SCHEMA.RendererType.InnerShadow:
+                kindStyle = getStyle_InnerShadow(desc as SCHEMA.ElementDesc_InnerShadow);
+                break;
+            case SCHEMA.RendererType.SolidLabel:
+                kindStyle = getStyle_SolidLabel(desc as SCHEMA.ElementDesc_SolidLabel);
+                break;
+            case SCHEMA.RendererType.Polygon:
+                kindStyle = getStyle_Polygon(desc as SCHEMA.ElementDesc_Polygon);
+                break;
+            case SCHEMA.RendererType.ImageFrame:
+                kindStyle = getStyle_ImageFrame(desc as SCHEMA.ElementDesc_ImageFrame);
+                break;
+            default:
+                throw new Error(`Unsupported renderer type: ${type}`);
+        }
+
+        target.style.cssText = `${getStyle_Bounds(bounds)} ${kindStyle}`;
+    }
 }
 
 export function applyStyle(target: HTMLElement, node: SCHEMA.RenderingDom, descOfElements: Map<number, TypedElementDesc>): void {
