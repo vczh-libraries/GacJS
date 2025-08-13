@@ -26,21 +26,29 @@
 
   <script lang="javascript">
     function initInnerElements(_A1, _B1, _C1, _D1) {
-      GacUIHtmlRenderer.applyTypedStyle(_A1, { x1: 10, y1: 10, x2: 110, y2: 110 }, 'SolidBorder', {
-        borderColor: '#FF0000',
-        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      GacUIHtmlRenderer.applyTypedStyle(_A1, { x1: 10, y1: 10, x2: 110, y2: 110 }, {
+        type: 'SolidBorder', desc: {
+          borderColor: '#FF0000',
+          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+        }
       });
-      GacUIHtmlRenderer.applyTypedStyle(_B1, { x1: -10, y1: 10, x2: 90, y2: 110 }, 'SolidBorder', {
-        borderColor: '#FF0000',
-        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      GacUIHtmlRenderer.applyTypedStyle(_B1, { x1: -10, y1: 10, x2: 90, y2: 110 }, {
+        type: 'SolidBorder', desc: {
+          borderColor: '#FF0000',
+          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+        }
       });
-      GacUIHtmlRenderer.applyTypedStyle(_C1, { x1: 10, y1: -10, x2: 110, y2: 90 }, 'SolidBorder', {
-        borderColor: '#FF0000',
-        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      GacUIHtmlRenderer.applyTypedStyle(_C1, { x1: 10, y1: -10, x2: 110, y2: 90 }, {
+        type: 'SolidBorder', desc: {
+          borderColor: '#FF0000',
+          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+        }
       });
-      GacUIHtmlRenderer.applyTypedStyle(_D1, { x1: -10, y1: -10, x2: 90, y2: 90 }, 'SolidBorder', {
-        borderColor: '#FF0000',
-        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      GacUIHtmlRenderer.applyTypedStyle(_D1, { x1: -10, y1: -10, x2: 90, y2: 90 }, {
+        type: 'SolidBorder', desc: {
+          borderColor: '#FF0000',
+          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+        }
       });
     }
     const _A = document.getElementById('_A');
@@ -52,18 +60,29 @@
     const _D = document.getElementById('_D');
     const _D1 = document.getElementById('_D1');
 
-    GacUIHtmlRenderer.applyTypedStyle(_A, { x1: 0, y1: 0, x2: 100, y2: 100 }, 'FocusRectangle');
-    GacUIHtmlRenderer.applyTypedStyle(_B, { x1: 100, y1: 0, x2: 200, y2: 100 }, 'SolidBorder', {
-      borderColor: '#FF0000',
-      shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+    GacUIHtmlRenderer.applyTypedStyle(_A, { x1: 0, y1: 0, x2: 100, y2: 100 }, {
+      type: 'FocusRectangle'
     });
-    GacUIHtmlRenderer.applyTypedStyle(_C, { x1: 0, y1: 100, x2: 100, y2: 200 }, 'SolidBorder', {
-      borderColor: '#00FF00',
-      shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
+    GacUIHtmlRenderer.applyTypedStyle(_B, { x1: 100, y1: 0, x2: 200, y2: 100 }, {
+      type: 'SolidBorder',
+      desc: {
+        borderColor: '#FF0000',
+        shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+      }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_D, { x1: 100, y1: 100, x2: 200, y2: 200 }, 'SolidBorder', {
-      borderColor: '#0000FF',
-      shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
+    GacUIHtmlRenderer.applyTypedStyle(_C, { x1: 0, y1: 100, x2: 100, y2: 200 }, {
+      type: 'SolidBorder',
+      desc: {
+        borderColor: '#00FF00',
+        shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
+      }
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_D, { x1: 100, y1: 100, x2: 200, y2: 200 }, {
+      type: 'SolidBorder',
+      desc: {
+        borderColor: '#0000FF',
+        shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
+      }
     });
     initInnerElements(_A1, _B1, _C1, _D1);
   </script>
