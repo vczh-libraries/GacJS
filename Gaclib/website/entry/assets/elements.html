@@ -48,6 +48,19 @@
     <div id="_L">
       <div id="_L1"></div>
     </div>
+
+    <div id="_M">
+      <div id="_M1"></div>
+    </div>
+    <div id="_N">
+      <div id="_N1"></div>
+    </div>
+    <div id="_O">
+      <div id="_O1"></div>
+    </div>
+    <div id="_P">
+      <div id="_P1"></div>
+    </div>
   </div>
 
   <script lang="javascript">
@@ -198,6 +211,29 @@
       }
     });
     initInnerElements(_I1, _J1, _K1, _L1, '#FFFF00');
+
+    const _M = document.getElementById('_M');
+    const _M1 = document.getElementById('_M1');
+    const _N = document.getElementById('_N');
+    const _N1 = document.getElementById('_N1');
+    const _O = document.getElementById('_O');
+    const _O1 = document.getElementById('_O1');
+    const _P = document.getElementById('_P');
+    const _P1 = document.getElementById('_P1');
+
+    GacUIHtmlRenderer.applyTypedStyle(_M, { x1: 250, y1: 250, x2: 350, y2: 350 }, {
+      type: 'FocusRectangle'
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_N, { x1: 350, y1: 250, x2: 450, y2: 350 }, {
+      type: 'FocusRectangle'
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_O, { x1: 250, y1: 350, x2: 350, y2: 450 }, {
+      type: 'FocusRectangle'
+    });
+    GacUIHtmlRenderer.applyTypedStyle(_P, { x1: 350, y1: 350, x2: 450, y2: 450 }, {
+      type: 'FocusRectangle'
+    });
+    initInnerElements(_M1, _N1, _O1, _P1, '#FFFF00');
   </script>
 </body>
 

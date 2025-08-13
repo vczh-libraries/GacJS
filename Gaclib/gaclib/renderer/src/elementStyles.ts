@@ -1,7 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 export function getStyle_Bounds(bounds: SCHEMA.Rect): string {
     return `background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden; left:${bounds.x1}px; top:${bounds.y1}px; width:${bounds.x2 - bounds.x1}px; height:${bounds.y2 - bounds.y1}px;`;
 }
@@ -56,22 +54,27 @@ function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
     return `border-style: solid; border-left-color: ${desc.leftTopColor}; border-top-color: ${desc.leftTopColor}; border-right-color: ${desc.rightBottomColor}; border-bottom-color: ${desc.rightBottomColor};`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_SinkSplitter(desc: SCHEMA.ElementDesc_SinkSplitter): string {
     throw new Error('getStyle_SinkSplitter not implemented');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     throw new Error('getStyle_InnerShadow not implemented');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_Polygon(desc: SCHEMA.ElementDesc_Polygon): string {
     throw new Error('getStyle_Polygon not implemented');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     throw new Error('getStyle_ImageFrame not implemented');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_SolidLabel_Border(desc: SCHEMA.ElementDesc_SolidLabel): string {
     throw new Error('getStyle_SolidLabel not implemented');
 }
