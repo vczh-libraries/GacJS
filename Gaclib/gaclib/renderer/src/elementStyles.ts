@@ -57,16 +57,26 @@ function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
     return `border-style: solid; border-left-color: ${desc.leftTopColor}; border-top-color: ${desc.leftTopColor}; border-right-color: ${desc.rightBottomColor}; border-bottom-color: ${desc.rightBottomColor};`;
 }
 
+function getStyle_SinkSplitter_Extra(desc: SCHEMA.ElementDesc_SinkSplitter): string {
+    switch (desc.direction) {
+        case SCHEMA.ElementSplitterDirection.Horizontal:
+            return `${CommonStyle} width: 100%; height: 2px; top: 0; bottom: 0; margin: auto; border-top: 1px solid ${desc.leftTopColor}; border-bottom: 1px solid ${desc.rightBottomColor};`;
+        case SCHEMA.ElementSplitterDirection.Vertical:
+            return `${CommonStyle} width: 2px; height: 100%; left: 0; right: 0; margin: auto; border-left: 1px solid ${desc.leftTopColor}; border-right: 1px solid ${desc.rightBottomColor};`;
+        default:
+            throw new Error(`Unsupported ElementSplitterDirection: ${desc.direction}`);
+    }
+}
+
+function getStyle_Polygon_Extra(desc: SCHEMA.ElementDesc_Polygon): string {
+    return `${CommonStyle} left: 0; top: 0; right: 0; bottom: 0; margin: auto; width: ${desc.size.x}px; height: ${desc.size.y}px; border: 1px solid ${desc.borderColor}; background-color: ${desc.backgroundColor}; clip-path: polygon(${(<SCHEMA.Point[]>desc.points).map(point => `${point.x}px ${point.y}px`).join(', ')});`;
+}
+
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     const dirs = ['left', 'top', 'right', 'bottom'];
     const background = `${dirs.map((_dir, i) => `linear-gradient(to ${dirs[(i + 2) % 4]}, ${desc.shadowColor} 0px, transparent ${desc.thickness}px), `).join('')}transparent`;
     const position = `${dirs.map(dir => `${dir} center`).join(', ')}`;
     return `background: ${background}; position: ${position};`;
-}
-
- 
-function getStyle_Polygon_Border(desc: SCHEMA.ElementDesc_Polygon): string {
-    return `width: ${desc.size.x}px; height: ${desc.size.y}px; border: 1px solid ${desc.borderColor}; background-color: ${desc.backgroundColor}; clip-path: polygon(${(<SCHEMA.Point[]>desc.points).map(point => `${point.x}px ${point.y}px`).join(', ')});`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -163,31 +173,22 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             {
                 target.style.cssText = getStyle_Bounds(bounds);
                 const element: HTMLElement = ensureExtraBorderElement(target);
-                switch (typedDesc.desc.direction) {
-                    case SCHEMA.ElementSplitterDirection.Horizontal:
-                        element.style.cssText = `${CommonStyle} width: 100%; height: 2px; top: 0; bottom: 0; margin: auto; border-top: 1px solid ${typedDesc.desc.leftTopColor}; border-bottom: 1px solid ${typedDesc.desc.rightBottomColor};`;
-                        break;
-                    case SCHEMA.ElementSplitterDirection.Vertical:
-                        element.style.cssText = `${CommonStyle} width: 2px; height: 100%; left: 0; right: 0; margin: auto; border-left: 1px solid ${typedDesc.desc.leftTopColor}; border-right: 1px solid ${typedDesc.desc.rightBottomColor};`;
-                        break;
-                    default:
-                        throw new Error(`Unsupported ElementSplitterDirection: ${typedDesc.desc.direction}`);
-                }
+                element.style.cssText = getStyle_SinkSplitter_Extra(typedDesc.desc);
             }
-            break;
-        case SCHEMA.RendererType.InnerShadow:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
             break;
         case SCHEMA.RendererType.Polygon:
             {
                 target.style.cssText = getStyle_Bounds(bounds);
                 if (typedDesc.desc.points) {
                     const element: HTMLElement = ensureExtraBorderElement(target);
-                    element.style.cssText = `${CommonStyle} left: 0; top: 0; right: 0; bottom: 0; margin: auto; ${getStyle_Polygon_Border(typedDesc.desc)}`;
+                    element.style.cssText = getStyle_Polygon_Extra(typedDesc.desc);
                 } else {
                     ensureNoExtraBorderElement(target);
                 }
             }
+            break;
+        case SCHEMA.RendererType.InnerShadow:
+            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
             break;
         case SCHEMA.RendererType.ImageFrame:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_ImageFrame);
