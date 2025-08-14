@@ -1,7 +1,10 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 
+const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
+const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
+
 export function getStyle_Bounds(bounds: SCHEMA.Rect): string {
-    return `background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden; left:${bounds.x1}px; top:${bounds.y1}px; width:${bounds.x2 - bounds.x1}px; height:${bounds.y2 - bounds.y1}px;`;
+    return `${CommonStyle} left:${bounds.x1}px; top:${bounds.y1}px; width:${bounds.x2 - bounds.x1}px; height:${bounds.y2 - bounds.y1}px;`;
 }
 
 function getStyle_FocusRectangle_Border(): string {
@@ -54,11 +57,6 @@ function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
     return `border-style: solid; border-left-color: ${desc.leftTopColor}; border-top-color: ${desc.leftTopColor}; border-right-color: ${desc.rightBottomColor}; border-bottom-color: ${desc.rightBottomColor};`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getStyle_SinkSplitter(desc: SCHEMA.ElementDesc_SinkSplitter): string {
-    throw new Error('getStyle_SinkSplitter not implemented');
-}
-
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     const dirs = ['left', 'top', 'right', 'bottom'];
     const background = `${dirs.map((_dir, i) => `linear-gradient(to ${dirs[(i + 2) % 4]}, ${desc.shadowColor} 0px, transparent ${desc.thickness}px), `).join('')}transparent`;
@@ -94,7 +92,6 @@ export type TypedElementDesc =
     | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
     | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame };
 
-const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
 
 function ensureExtraBorderElement(target: HTMLElement): HTMLElement {
     let element: HTMLElement = target[ExtraBorderNodeName] as unknown as HTMLElement;
@@ -129,8 +126,7 @@ function applyTypedStyle_WithoutExtraBorder<TDesc>(target: HTMLElement, bounds: 
 function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
     target.style.cssText = getStyle_Bounds(bounds);
     const element: HTMLElement = ensureExtraBorderElement(target);
-    const elementBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: bounds.x2 - bounds.x1, y2: bounds.y2 - bounds.y1 };
-    element.style.cssText = `${getStyle_Bounds(elementBounds)} ${getStyle(desc)}`;
+    element.style.cssText = `${CommonStyle} left: 0px; top: 0px; width: 100%; height: 100%; ${getStyle(desc)}`;
 }
 
 function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
@@ -164,7 +160,20 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkBorder);
             break;
         case SCHEMA.RendererType.SinkSplitter:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkSplitter);
+            {
+                target.style.cssText = getStyle_Bounds(bounds);
+                const element: HTMLElement = ensureExtraBorderElement(target);
+                switch (typedDesc.desc.direction) {
+                    case SCHEMA.ElementSplitterDirection.Horizontal:
+                        element.style.cssText = `${CommonStyle} width: 100%; height: 2px; top: 0; bottom: 0; margin: auto; border-style: solid; border-top-color: ${typedDesc.desc.leftTopColor}; border-bottom-color: ${typedDesc.desc.rightBottomColor};`;
+                        break;
+                    case SCHEMA.ElementSplitterDirection.Vertical:
+                        element.style.cssText = `${CommonStyle} width: 2px; height: 100%; left: 0; right: 0; margin: auto; border-style: solid; border-left-color: ${typedDesc.desc.leftTopColor}; border-right-color: ${typedDesc.desc.rightBottomColor};`;
+                        break;
+                    default:
+                        throw new Error(`Unsupported ElementSplitterDirection: ${typedDesc.desc.direction}`);
+                }
+            }
             break;
         case SCHEMA.RendererType.InnerShadow:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
