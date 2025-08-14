@@ -209,6 +209,8 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
                     polygonElement.setAttribute('stroke', typedDesc.desc.borderColor);
                     polygonElement.setAttribute('stroke-width', '1');
                     polygonElement.setAttribute('points', typedDesc.desc.points.map(p => `${p.x},${p.y}`).join(' '));
+                } else {
+                    ensureNoExtraBorder(target);
                 }
             }
             break;
