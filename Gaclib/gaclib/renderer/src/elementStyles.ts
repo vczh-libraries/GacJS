@@ -59,9 +59,11 @@ function getStyle_SinkSplitter(desc: SCHEMA.ElementDesc_SinkSplitter): string {
     throw new Error('getStyle_SinkSplitter not implemented');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
-    throw new Error('getStyle_InnerShadow not implemented');
+    const dirs = ['left', 'top', 'right', 'bottom'];
+    const background = `${dirs.map((_dir, i) => `linear-gradient(to ${dirs[(i + 2) % 4]}, ${desc.shadowColor} 0px, transparent ${desc.thickness}px), `).join('')}transparent`;
+    const position = `${dirs.map(dir => `${dir} center`).join(', ')}`;
+    return `background: ${background}; position: ${position};`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
