@@ -69,7 +69,10 @@ function getStyle_SinkSplitter_Extra(desc: SCHEMA.ElementDesc_SinkSplitter): str
 }
 
 function getStyle_Polygon_Extra(desc: SCHEMA.ElementDesc_Polygon): string {
-    return `${CommonStyle} left: 0; top: 0; right: 0; bottom: 0; margin: auto; width: ${desc.size.x}px; height: ${desc.size.y}px; border: 1px solid ${desc.borderColor}; background-color: ${desc.backgroundColor}; clip-path: polygon(${(<SCHEMA.Point[]>desc.points).map(point => `${point.x}px ${point.y}px`).join(', ')});`;
+    const layoutStyle = `inset: 0; margin: auto; width: ${desc.size.x}px; height: ${desc.size.y}px;`;
+    const colorStyle = `filter: drop-shadow(0 0 1px ${desc.borderColor}); background-color: ${desc.backgroundColor};`;
+    const polygonStyle = `clip-path: polygon(${(<SCHEMA.Point[]>desc.points).map(point => `${point.x}px ${point.y}px`).join(', ')});`;
+    return `${CommonStyle} ${layoutStyle} ${colorStyle} ${polygonStyle}`;
 }
 
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
