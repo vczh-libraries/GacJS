@@ -22,6 +22,12 @@ rendering a remote GUI in HTML via DOM and Canvas.
   - Call `yarn build` in `Gaclib` to build the whole workspace.
   - If your working directory in the repo root, you needs `cd Gaclib; yarn build`.
 
+## TypeScript/JavaScript coding guidelines
+
+- Always prefer strict testing, like `===` instead of `==`.
+- Do not use `if (x)`, unless `x` is a boolean or nullable type.
+  - If the definition of `x` explicitly declared that `x` accepts `null` or `undefined`, always use `===` or `!==` instead.
+
 ## for Copilot in Visual Studio Code
 
 - You are on Windows running in Visual Studio Code

@@ -4,10 +4,6 @@ const CommonStyle = 'background-color: none; display: block; position:absolute; 
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
 const SvgNS = 'http://www.w3.org/2000/svg';
 
-export function getStyle_Bounds(bounds: SCHEMA.Rect): string {
-    return `${CommonStyle} left:${bounds.x1}px; top:${bounds.y1}px; width:${bounds.x2 - bounds.x1}px; height:${bounds.y2 - bounds.y1}px;`;
-}
-
 function getStyle_FocusRectangle_Border(): string {
     return 'outline:1px dashed white; outline-offset:-1px; mix-blend-mode: difference;';
 }
@@ -136,56 +132,61 @@ interface ElementDescWithShape {
     shape: SCHEMA.ElementShape;
 };
 
-function applyTypedStyle_WithoutExtraBorder<TDesc>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
-    target.style.cssText = `${getStyle_Bounds(bounds)} ${getStyle(desc)}`;
+function applyTypedStyle_WithoutExtraBorder<TDesc>(target: HTMLElement, desc: TDesc, getStyle: (desc: TDesc) => string): void {
+    target.style.cssText = `${CommonStyle} ${getStyle(desc)}`;
 }
 
-function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
-    target.style.cssText = getStyle_Bounds(bounds);
+function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, desc: TDesc, getStyle: (desc: TDesc) => string): void {
+    target.style.cssText = CommonStyle;
     const element: HTMLElement = ensureExtraBorderDiv(target);
     element.style.cssText = `${CommonStyle} left: 0px; top: 0px; width: 100%; height: 100%; ${getStyle(desc)}`;
 }
 
-function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
+function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(target: HTMLElement, desc: TDesc, getStyle: (desc: TDesc) => string): void {
     if (desc.shape.shapeType === SCHEMA.ElementShapeType.Rectangle) {
         ensureNoExtraBorder(target);
-        applyTypedStyle_WithoutExtraBorder(target, bounds, desc, getStyle);
+        applyTypedStyle_WithoutExtraBorder(target, desc, getStyle);
     } else {
-        applyTypedStyle_WithExtraBorder(target, bounds, desc, getStyle);
+        applyTypedStyle_WithExtraBorder(target, desc, getStyle);
     }
 }
 
-export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedDesc: TypedElementDesc): void {
+export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc): void {
+    const savedLeft = target.style.left;
+    const savedTop = target.style.top;
+    const savedWidth = target.style.width;
+    const savedHeight = target.style.height;
+
     const elementType: string = typedDesc.type;
     switch (typedDesc.type) {
         case SCHEMA.RendererType.Raw:
-            target.style.cssText = getStyle_Bounds(bounds);
-            return;
+            target.style.cssText = CommonStyle;
+            break;
         case SCHEMA.RendererType.FocusRectangle:
-            applyTypedStyle_WithExtraBorder(target, bounds, undefined, getStyle_FocusRectangle_Border);
-            return;
+            applyTypedStyle_WithExtraBorder(target, undefined, getStyle_FocusRectangle_Border);
+            break;
         case SCHEMA.RendererType.SolidBorder:
-            applyTypedStyle_WithShapedBorder(target, bounds, typedDesc.desc, getStyle_SolidBorder_Border);
+            applyTypedStyle_WithShapedBorder(target, typedDesc.desc, getStyle_SolidBorder_Border);
             break;
         case SCHEMA.RendererType.SolidBackground:
-            applyTypedStyle_WithShapedBorder(target, bounds, typedDesc.desc, getStyle_SolidBackground_Border);
+            applyTypedStyle_WithShapedBorder(target, typedDesc.desc, getStyle_SolidBackground_Border);
             break;
         case SCHEMA.RendererType.GradientBackground:
-            applyTypedStyle_WithShapedBorder(target, bounds, typedDesc.desc, getStyle_GradientBackground_Border);
+            applyTypedStyle_WithShapedBorder(target, typedDesc.desc, getStyle_GradientBackground_Border);
             break;
         case SCHEMA.RendererType.SinkBorder:
-            applyTypedStyle_WithExtraBorder(target, bounds, typedDesc.desc, getStyle_SinkBorder);
+            applyTypedStyle_WithExtraBorder(target, typedDesc.desc, getStyle_SinkBorder);
             break;
         case SCHEMA.RendererType.SinkSplitter:
             {
-                target.style.cssText = getStyle_Bounds(bounds);
+                target.style.cssText = CommonStyle;
                 const element: HTMLElement = ensureExtraBorderDiv(target);
                 element.style.cssText = getStyle_SinkSplitter_Extra(typedDesc.desc);
             }
             break;
         case SCHEMA.RendererType.Polygon:
             {
-                target.style.cssText = getStyle_Bounds(bounds);
+                target.style.cssText = CommonStyle;
                 if (typedDesc.desc.points) {
                     let svgElement = target[ExtraBorderNodeName] as unknown as SVGSVGElement;
                     if (!(svgElement instanceof SVGSVGElement)) {
@@ -215,32 +216,35 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             }
             break;
         case SCHEMA.RendererType.InnerShadow:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
+            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_InnerShadow);
             break;
         case SCHEMA.RendererType.ImageFrame:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_ImageFrame);
+            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_ImageFrame);
             break;
         case SCHEMA.RendererType.SolidLabel:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_SolidLabel_Border);
+            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_SolidLabel_Border);
             break;
         default:
             throw new Error(`Unsupported renderer type: ${elementType}`);
     }
+
+    if (savedLeft !== '') {
+        target.style.left = savedLeft;
+    }
+    if (savedTop !== '') {
+        target.style.top = savedTop;
+    }
+    if (savedWidth !== '') {
+        target.style.width = savedWidth;
+    }
+    if (savedHeight !== '') {
+        target.style.height = savedHeight;
+    }
 }
 
-export function applyStyle(target: HTMLElement, node: SCHEMA.RenderingDom, descOfElements: Map<number, TypedElementDesc>): void {
-    if (node.content.element !== null) {
-        const elementId = node.content.element;
-        const elementDesc = descOfElements.get(elementId);
-
-        if (!elementDesc) {
-            throw new Error(`Element of the specified id does not exist: ${elementId}`);
-        }
-
-        applyTypedStyle(target, node.content.bounds, elementDesc);
-    } else {
-        // Apply only bounds style when there's no element
-        const commonStyle = getStyle_Bounds(node.content.bounds);
-        target.style.cssText = commonStyle;
-    }
+export function applyBounds(target: HTMLElement, bounds: SCHEMA.Rect): void {
+    target.style.left = `${bounds.x1}px`;
+    target.style.top = `${bounds.y1}px`;
+    target.style.width = `${bounds.x2 - bounds.x1}px`;
+    target.style.height = `${bounds.y2 - bounds.y1}px`;
 }

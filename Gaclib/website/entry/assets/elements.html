@@ -65,25 +65,30 @@
 
   <script lang="javascript">
     function initInnerElements(_A1, _B1, _C1, _D1, borderColor) {
-      GacUIHtmlRenderer.applyTypedStyle(_A1, { x1: 10, y1: 10, x2: 110, y2: 110 }, {
+      GacUIHtmlRenderer.applyBounds(_A1, { x1: 10, y1: 10, x2: 110, y2: 110 });
+      GacUIHtmlRenderer.applyBounds(_B1, { x1: -10, y1: 10, x2: 90, y2: 110 });
+      GacUIHtmlRenderer.applyBounds(_C1, { x1: 10, y1: -10, x2: 110, y2: 90 });
+      GacUIHtmlRenderer.applyBounds(_D1, { x1: -10, y1: -10, x2: 90, y2: 90 });
+
+      GacUIHtmlRenderer.applyTypedStyle(_A1, {
         type: 'SolidBorder', desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
       });
-      GacUIHtmlRenderer.applyTypedStyle(_B1, { x1: -10, y1: 10, x2: 90, y2: 110 }, {
+      GacUIHtmlRenderer.applyTypedStyle(_B1, {
         type: 'SolidBorder', desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
       });
-      GacUIHtmlRenderer.applyTypedStyle(_C1, { x1: 10, y1: -10, x2: 110, y2: 90 }, {
+      GacUIHtmlRenderer.applyTypedStyle(_C1, {
         type: 'SolidBorder', desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
       });
-      GacUIHtmlRenderer.applyTypedStyle(_D1, { x1: -10, y1: -10, x2: 90, y2: 90 }, {
+      GacUIHtmlRenderer.applyTypedStyle(_D1, {
         type: 'SolidBorder', desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
@@ -91,90 +96,102 @@
       });
     }
     const _A = document.getElementById('_A');
-    const _A1 = document.getElementById('_A1');
     const _B = document.getElementById('_B');
-    const _B1 = document.getElementById('_B1');
     const _C = document.getElementById('_C');
-    const _C1 = document.getElementById('_C1');
     const _D = document.getElementById('_D');
-    const _D1 = document.getElementById('_D1');
 
-    GacUIHtmlRenderer.applyTypedStyle(_A, { x1: 0, y1: 0, x2: 100, y2: 100 }, {
+    GacUIHtmlRenderer.applyBounds(_A, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    GacUIHtmlRenderer.applyBounds(_B, { x1: 100, y1: 0, x2: 200, y2: 100 });
+    GacUIHtmlRenderer.applyBounds(_C, { x1: 0, y1: 100, x2: 100, y2: 200 });
+    GacUIHtmlRenderer.applyBounds(_D, { x1: 100, y1: 100, x2: 200, y2: 200 });
+
+    GacUIHtmlRenderer.applyTypedStyle(_A, {
       type: 'FocusRectangle'
     });
-    GacUIHtmlRenderer.applyTypedStyle(_B, { x1: 100, y1: 0, x2: 200, y2: 100 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_B, {
       type: 'SolidBorder',
       desc: {
         borderColor: '#FF0000',
         shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_C, { x1: 0, y1: 100, x2: 100, y2: 200 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_C, {
       type: 'SolidBorder',
       desc: {
         borderColor: '#00FF00',
         shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_D, { x1: 100, y1: 100, x2: 200, y2: 200 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_D, {
       type: 'SolidBorder',
       desc: {
         borderColor: '#0000FF',
         shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
       }
     });
-    initInnerElements(_A1, _B1, _C1, _D1, '#FFFF00');
+    initInnerElements(
+      document.getElementById('_A1'),
+      document.getElementById('_B1'),
+      document.getElementById('_C1'),
+      document.getElementById('_D1'),
+      '#FFFF00');
 
     const _E = document.getElementById('_E');
-    const _E1 = document.getElementById('_E1');
     const _F = document.getElementById('_F');
-    const _F1 = document.getElementById('_F1');
     const _G = document.getElementById('_G');
-    const _G1 = document.getElementById('_G1');
     const _H = document.getElementById('_H');
-    const _H1 = document.getElementById('_H1');
 
+    GacUIHtmlRenderer.applyBounds(_E, { x1: 0, y1: 250, x2: 100, y2: 350 });
+    GacUIHtmlRenderer.applyBounds(_F, { x1: 100, y1: 250, x2: 200, y2: 350 });
+    GacUIHtmlRenderer.applyBounds(_G, { x1: 0, y1: 350, x2: 100, y2: 450 });
+    GacUIHtmlRenderer.applyBounds(_H, { x1: 100, y1: 350, x2: 200, y2: 450 });
 
-    GacUIHtmlRenderer.applyTypedStyle(_E, { x1: 0, y1: 250, x2: 100, y2: 350 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_E, {
       type: 'SinkBorder',
       desc: {
         leftTopColor: '#000000',
         rightBottomColor: '#888888'
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_F, { x1: 100, y1: 250, x2: 200, y2: 350 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_F, {
       type: 'SolidBackground',
       desc: {
         backgroundColor: '#FF0000',
         shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_G, { x1: 0, y1: 350, x2: 100, y2: 450 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_G, {
       type: 'SolidBackground',
       desc: {
         backgroundColor: '#00FF00',
         shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_H, { x1: 100, y1: 350, x2: 200, y2: 450 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_H, {
       type: 'SolidBackground',
       desc: {
         backgroundColor: '#0000FF',
         shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
       }
     });
-    initInnerElements(_E1, _F1, _G1, _H1, '#FFFF00');
+    initInnerElements(
+      document.getElementById('_E1'),
+      document.getElementById('_F1'),
+      document.getElementById('_G1'),
+      document.getElementById('_H1'),
+      '#FFFF00');
 
     const _I = document.getElementById('_I');
-    const _I1 = document.getElementById('_I1');
     const _J = document.getElementById('_J');
-    const _J1 = document.getElementById('_J1');
     const _K = document.getElementById('_K');
-    const _K1 = document.getElementById('_K1');
     const _L = document.getElementById('_L');
-    const _L1 = document.getElementById('_L1');
 
-    GacUIHtmlRenderer.applyTypedStyle(_I, { x1: 250, y1: 0, x2: 350, y2: 100 }, {
+    GacUIHtmlRenderer.applyBounds(_I, { x1: 250, y1: 0, x2: 350, y2: 100 });
+    GacUIHtmlRenderer.applyBounds(_J, { x1: 350, y1: 0, x2: 450, y2: 100 });
+    GacUIHtmlRenderer.applyBounds(_K, { x1: 250, y1: 100, x2: 350, y2: 200 });
+    GacUIHtmlRenderer.applyBounds(_L, { x1: 350, y1: 100, x2: 450, y2: 200 });
+
+    GacUIHtmlRenderer.applyTypedStyle(_I, {
       type: 'GradientBackground',
       desc: {
         leftTopColor: '#000000',
@@ -183,7 +200,7 @@
         shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_J, { x1: 350, y1: 0, x2: 450, y2: 100 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_J, {
       type: 'GradientBackground',
       desc: {
         leftTopColor: '#FF0000',
@@ -192,7 +209,7 @@
         shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_K, { x1: 250, y1: 100, x2: 350, y2: 200 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_K, {
       type: 'GradientBackground',
       desc: {
         leftTopColor: '#00FF00',
@@ -201,7 +218,7 @@
         shape: { shapeType: 'Ellipse', radiusX: 0, radiusY: 0 }
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_L, { x1: 350, y1: 100, x2: 450, y2: 200 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_L, {
       type: 'GradientBackground',
       desc: {
         leftTopColor: '#0000FF',
@@ -210,18 +227,24 @@
         shape: { shapeType: 'RoundRect', radiusX: 20, radiusY: 30 }
       }
     });
-    initInnerElements(_I1, _J1, _K1, _L1, '#FFFF00');
+    initInnerElements(
+      document.getElementById('_I1'),
+      document.getElementById('_J1'),
+      document.getElementById('_K1'),
+      document.getElementById('_L1'),
+      '#FFFF00');
 
     const _M = document.getElementById('_M');
-    const _M1 = document.getElementById('_M1');
     const _N = document.getElementById('_N');
-    const _N1 = document.getElementById('_N1');
     const _O = document.getElementById('_O');
-    const _O1 = document.getElementById('_O1');
     const _P = document.getElementById('_P');
-    const _P1 = document.getElementById('_P1');
 
-    GacUIHtmlRenderer.applyTypedStyle(_M, { x1: 250, y1: 250, x2: 350, y2: 350 }, {
+    GacUIHtmlRenderer.applyBounds(_M, { x1: 250, y1: 250, x2: 350, y2: 350 });
+    GacUIHtmlRenderer.applyBounds(_N, { x1: 350, y1: 250, x2: 450, y2: 350 });
+    GacUIHtmlRenderer.applyBounds(_O, { x1: 250, y1: 350, x2: 350, y2: 450 });
+    GacUIHtmlRenderer.applyBounds(_P, { x1: 350, y1: 350, x2: 450, y2: 450 });
+
+    GacUIHtmlRenderer.applyTypedStyle(_M, {
       type: 'Polygon',
       desc: {
         size: { x: 50, y: 50 },
@@ -234,14 +257,14 @@
         ]
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_N, { x1: 350, y1: 250, x2: 450, y2: 350 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_N, {
       type: 'InnerShadow',
       desc: {
         shadowColor: '#FF0000',
         thickness: 9
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_O, { x1: 250, y1: 350, x2: 350, y2: 450 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_O, {
       type: 'SinkSplitter',
       desc: {
         leftTopColor: '#00FF00',
@@ -249,7 +272,7 @@
         direction: 'Horizontal'
       }
     });
-    GacUIHtmlRenderer.applyTypedStyle(_P, { x1: 350, y1: 350, x2: 450, y2: 450 }, {
+    GacUIHtmlRenderer.applyTypedStyle(_P, {
       type: 'SinkSplitter',
       desc: {
         leftTopColor: '#0000FF',
@@ -257,7 +280,12 @@
         direction: 'Vertical'
       }
     });
-    initInnerElements(_M1, _N1, _O1, _P1, '#FFFF00');
+    initInnerElements(
+      document.getElementById('_M1'),
+      document.getElementById('_N1'),
+      document.getElementById('_O1'),
+      document.getElementById('_P1'),
+      '#FFFF00');
   </script>
 </body>
 
