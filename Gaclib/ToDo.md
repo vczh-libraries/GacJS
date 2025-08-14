@@ -1,6 +1,6 @@
 # ToDo
 
-- Implement css styles for elements except image and label.
+- Implement Polygon.
 - Create a IVirtualDom for mocking HTMLElement, 1:1 mappings.
 - Implement the HTML provider and test it in elements.html, but not considering extra clipping (validBounds).
 - Create unit test for RenderingDom -> IVirtualDom.
