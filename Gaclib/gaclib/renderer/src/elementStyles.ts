@@ -165,10 +165,10 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
                 const element: HTMLElement = ensureExtraBorderElement(target);
                 switch (typedDesc.desc.direction) {
                     case SCHEMA.ElementSplitterDirection.Horizontal:
-                        element.style.cssText = `${CommonStyle} width: 100%; height: 2px; top: 0; bottom: 0; margin: auto; border-style: solid; border-top-color: ${typedDesc.desc.leftTopColor}; border-bottom-color: ${typedDesc.desc.rightBottomColor};`;
+                        element.style.cssText = `${CommonStyle} width: 100%; height: 2px; top: 0; bottom: 0; margin: auto; border-top: 1px solid ${typedDesc.desc.leftTopColor}; border-bottom: 1px solid ${typedDesc.desc.rightBottomColor};`;
                         break;
                     case SCHEMA.ElementSplitterDirection.Vertical:
-                        element.style.cssText = `${CommonStyle} width: 2px; height: 100%; left: 0; right: 0; margin: auto; border-style: solid; border-left-color: ${typedDesc.desc.leftTopColor}; border-right-color: ${typedDesc.desc.rightBottomColor};`;
+                        element.style.cssText = `${CommonStyle} width: 2px; height: 100%; left: 0; right: 0; margin: auto; border-left: 1px solid ${typedDesc.desc.leftTopColor}; border-right: 1px solid ${typedDesc.desc.rightBottomColor};`;
                         break;
                     default:
                         throw new Error(`Unsupported ElementSplitterDirection: ${typedDesc.desc.direction}`);
