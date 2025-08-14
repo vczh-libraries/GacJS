@@ -222,7 +222,17 @@
     const _P1 = document.getElementById('_P1');
 
     GacUIHtmlRenderer.applyTypedStyle(_M, { x1: 250, y1: 250, x2: 350, y2: 350 }, {
-      type: 'FocusRectangle'
+      type: 'Polygon',
+      desc: {
+        size: { x: 50, y: 50 },
+        borderColor: '#000000',
+        backgroundColor: '#FFFFFF',
+        points: [
+          { x: 25, y: 0 },
+          { x: 0, y: 50 },
+          { x: 50, y: 50 }
+        ]
+      }
     });
     GacUIHtmlRenderer.applyTypedStyle(_N, { x1: 350, y1: 250, x2: 450, y2: 350 }, {
       type: 'InnerShadow',

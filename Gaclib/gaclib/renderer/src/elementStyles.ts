@@ -64,9 +64,9 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     return `background: ${background}; position: ${position};`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getStyle_Polygon(desc: SCHEMA.ElementDesc_Polygon): string {
-    throw new Error('getStyle_Polygon not implemented');
+ 
+function getStyle_Polygon_Border(desc: SCHEMA.ElementDesc_Polygon): string {
+    return `width: ${desc.size.x}px; height: ${desc.size.y}px; border: 1px solid ${desc.borderColor}; background-color: ${desc.backgroundColor}; clip-path: polygon(${(<SCHEMA.Point[]>desc.points).map(point => `${point.x}px ${point.y}px`).join(', ')});`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -179,7 +179,15 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_InnerShadow);
             break;
         case SCHEMA.RendererType.Polygon:
-            applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_Polygon);
+            {
+                target.style.cssText = getStyle_Bounds(bounds);
+                if (typedDesc.desc.points) {
+                    const element: HTMLElement = ensureExtraBorderElement(target);
+                    element.style.cssText = `${CommonStyle} left: 0; top: 0; right: 0; bottom: 0; margin: auto; ${getStyle_Polygon_Border(typedDesc.desc)}`;
+                } else {
+                    ensureNoExtraBorderElement(target);
+                }
+            }
             break;
         case SCHEMA.RendererType.ImageFrame:
             applyTypedStyle_WithoutExtraBorder(target, bounds, typedDesc.desc, getStyle_ImageFrame);
