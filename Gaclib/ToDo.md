@@ -15,3 +15,9 @@
 - Complete a demo, website and C++ renderer connect to Core in turns.
   - in each turn do something and it will be taken to the next. (already doable with multiple C++ renderers).
   - record as GIF
+
+## Further Experiments
+
+- Canvas instead of DOM.
+  - https://github.com/WICG/canvas-formatted-text/blob/main/README.md
+  - layout provider could not be done until this is implemented.
