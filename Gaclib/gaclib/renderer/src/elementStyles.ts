@@ -2,6 +2,7 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
+const SvgNS = 'http://www.w3.org/2000/svg';
 
 export function getStyle_Bounds(bounds: SCHEMA.Rect): string {
     return `${CommonStyle} left:${bounds.x1}px; top:${bounds.y1}px; width:${bounds.x2 - bounds.x1}px; height:${bounds.y2 - bounds.y1}px;`;
@@ -68,13 +69,6 @@ function getStyle_SinkSplitter_Extra(desc: SCHEMA.ElementDesc_SinkSplitter): str
     }
 }
 
-function getStyle_Polygon_Extra(desc: SCHEMA.ElementDesc_Polygon): string {
-    const layoutStyle = `inset: 0; margin: auto; width: ${desc.size.x}px; height: ${desc.size.y}px;`;
-    const colorStyle = `filter: drop-shadow(0 0 1px ${desc.borderColor}); background-color: ${desc.backgroundColor};`;
-    const polygonStyle = `clip-path: polygon(${(<SCHEMA.Point[]>desc.points).map(point => `${point.x}px ${point.y}px`).join(', ')});`;
-    return `${CommonStyle} ${layoutStyle} ${colorStyle} ${polygonStyle}`;
-}
-
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     const dirs = ['left', 'top', 'right', 'bottom'];
     const background = `${dirs.map((_dir, i) => `linear-gradient(to ${dirs[(i + 2) % 4]}, ${desc.shadowColor} 0px, transparent ${desc.thickness}px), `).join('')}transparent`;
@@ -105,27 +99,37 @@ export type TypedElementDesc =
     | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
     | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame };
 
-
-function ensureExtraBorderElement(target: HTMLElement): HTMLElement {
-    let element: HTMLElement = target[ExtraBorderNodeName] as unknown as HTMLElement;
-    if (!element) {
-        element = document.createElement('div');
-        target.insertBefore(element, target.firstChild);
-        target[ExtraBorderNodeName] = element;
-    }
-    return element;
+export function hasExtraBorder(target: HTMLElement): boolean {
+    return !!target[ExtraBorderNodeName];
 }
 
-function ensureNoExtraBorderElement(target: HTMLElement): void {
-    const element: HTMLElement = target[ExtraBorderNodeName] as unknown as HTMLElement;
+function ensureNoExtraBorder(target: HTMLElement): void {
+    const element = target[ExtraBorderNodeName] as unknown as Element;
     if (element) {
         target.removeChild(element);
         delete target[ExtraBorderNodeName];
     }
 }
 
-export function hasExtraBorderElement(target: HTMLElement): boolean {
-    return !!target[ExtraBorderNodeName];
+function setExtraBorder(target: HTMLElement, element: Element): void {
+    if (hasExtraBorder(target)) {
+        throw new Error('setExtraBorder cannot be called when an extra border element already exists');
+    }
+    target.insertBefore(element, target.firstChild);
+    target[ExtraBorderNodeName] = element;
+}
+
+function ensureExtraBorderDiv(target: HTMLElement): HTMLElement {
+    let element: HTMLElement | undefined = target[ExtraBorderNodeName] as unknown as HTMLElement;
+    if (element && (element.tagName.toLowerCase() !== 'div' || !(element instanceof HTMLElement))) {
+        ensureNoExtraBorder(target);
+        element = undefined;
+    }
+    if (!element) {
+        element = document.createElement('div');
+        setExtraBorder(target, element);
+    }
+    return element;
 }
 
 interface ElementDescWithShape {
@@ -138,13 +142,13 @@ function applyTypedStyle_WithoutExtraBorder<TDesc>(target: HTMLElement, bounds: 
 
 function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
     target.style.cssText = getStyle_Bounds(bounds);
-    const element: HTMLElement = ensureExtraBorderElement(target);
+    const element: HTMLElement = ensureExtraBorderDiv(target);
     element.style.cssText = `${CommonStyle} left: 0px; top: 0px; width: 100%; height: 100%; ${getStyle(desc)}`;
 }
 
 function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(target: HTMLElement, bounds: SCHEMA.Rect, desc: TDesc, getStyle: (desc: TDesc) => string): void {
     if (desc.shape.shapeType === SCHEMA.ElementShapeType.Rectangle) {
-        ensureNoExtraBorderElement(target);
+        ensureNoExtraBorder(target);
         applyTypedStyle_WithoutExtraBorder(target, bounds, desc, getStyle);
     } else {
         applyTypedStyle_WithExtraBorder(target, bounds, desc, getStyle);
@@ -175,7 +179,7 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
         case SCHEMA.RendererType.SinkSplitter:
             {
                 target.style.cssText = getStyle_Bounds(bounds);
-                const element: HTMLElement = ensureExtraBorderElement(target);
+                const element: HTMLElement = ensureExtraBorderDiv(target);
                 element.style.cssText = getStyle_SinkSplitter_Extra(typedDesc.desc);
             }
             break;
@@ -183,10 +187,28 @@ export function applyTypedStyle(target: HTMLElement, bounds: SCHEMA.Rect, typedD
             {
                 target.style.cssText = getStyle_Bounds(bounds);
                 if (typedDesc.desc.points) {
-                    const element: HTMLElement = ensureExtraBorderElement(target);
-                    element.style.cssText = getStyle_Polygon_Extra(typedDesc.desc);
-                } else {
-                    ensureNoExtraBorderElement(target);
+                    let svgElement = target[ExtraBorderNodeName] as unknown as SVGSVGElement;
+                    if (!(svgElement instanceof SVGSVGElement)) {
+                        ensureNoExtraBorder(target);
+                        svgElement = document.createElementNS(SvgNS, 'svg');
+                        setExtraBorder(target, svgElement);
+                    }
+
+                    svgElement.setAttribute('width', `${typedDesc.desc.size.x}`);
+                    svgElement.setAttribute('height', `${typedDesc.desc.size.y}`);
+                    svgElement.setAttribute('viewBox', `0 0 ${typedDesc.desc.size.x} ${typedDesc.desc.size.y}`);
+                    svgElement.style.cssText = `${CommonStyle} inset: 0; margin: auto; width: ${typedDesc.desc.size.x}px; height: ${typedDesc.desc.size.y}px;`;
+
+                    let polygonElement = svgElement.childNodes[0] as unknown as SVGPolygonElement;
+                    if (!polygonElement || svgElement.childNodes.length !== 1 || !(polygonElement instanceof SVGPolygonElement)) {
+                        polygonElement = document.createElementNS(SvgNS, 'polygon');
+                        svgElement.replaceChildren(polygonElement);
+                    }
+
+                    polygonElement.setAttribute('fill', typedDesc.desc.backgroundColor);
+                    polygonElement.setAttribute('stroke', typedDesc.desc.borderColor);
+                    polygonElement.setAttribute('stroke-width', '1');
+                    polygonElement.setAttribute('points', typedDesc.desc.points.map(p => `${p.x},${p.y}`).join(' '));
                 }
             }
             break;
