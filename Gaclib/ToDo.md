@@ -5,6 +5,7 @@
 - Create unit test for RenderingDom -> IVirtualDom.
   - Consider validBounds.
   - Apply diff.
+- Add a package to copy all GacUISrc/UnitText snapsnots and render in Snapshots.html
 - Make a more complicated case in elements.xml.
   - Considering adding tabs.
 - Implement cas styles for image and text.
