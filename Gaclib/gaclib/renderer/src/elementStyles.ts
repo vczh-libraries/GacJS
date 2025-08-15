@@ -179,7 +179,18 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     } else {
         textElement.replaceChildren();
     }
-    textElement.textContent = textContent;
+
+    // For multi-line ellipsis, we need an inner container with -webkit-box display
+    if (desc.ellipse && desc.wrapLine) {
+        let innerElement = textElement.childNodes[0] as unknown as HTMLDivElement;
+        if (!innerElement || textElement.childNodes.length !== 1 || !(innerElement instanceof HTMLDivElement)) {
+            innerElement = document.createElement('div');
+            textElement.replaceChildren(innerElement);
+        }
+        innerElement.textContent = textContent;
+    } else {
+        textElement.textContent = textContent;
+    }
 
     {
         let verticalAlignStyle: string;
@@ -225,20 +236,24 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
 
         let formatStyle = '';
-        let flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;';
+        const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;';
 
         if (!desc.ellipse) {
             formatStyle = `text-overflow: clip; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-        } else if (!desc.multiline) {
-            formatStyle = `text-overflow: ellipsis; white-space: nowrap;`;
+            textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
         } else {
-            // Multi-line ellipsis using -webkit-line-clamp
-            // Note: -webkit-line-clamp requires display: -webkit-box, which conflicts with flex item
-            formatStyle = `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 999; overflow: hidden; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'}; width: 100%; height: 100%;`;
-            flexItemStyle = ''; // Don't use flex properties when using -webkit-box
+            if (!desc.wrapLine) {
+                // Single line ellipsis
+                formatStyle = `text-overflow: ellipsis; white-space: pre; overflow: hidden;`;
+                textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
+            } else {
+                // Multi-line ellipsis: textElement is flex item, inner element uses -webkit-box
+                textElement.style.cssText = `overflow:hidden; ${flexItemStyle}`;
+                const innerElement = textElement.childNodes[0] as HTMLDivElement;
+                const innerFormatStyle = `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 999; overflow: hidden; white-space: pre-wrap; word-wrap: break-word; width: 100%; height: 100%;`;
+                innerElement.style.cssText = `${fontStyle} ${innerFormatStyle}`;
+            }
         }
-
-        textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
     }
 }
 
