@@ -13,71 +13,81 @@
     style="background-color: rgb(129, 45, 226); width: 935px; height: 755px;">
   </div>
 
-  <script lang="javascript">
+  <button onclick="useWebkitLineClamp(false)">Default</button>
+  <button onclick="useWebkitLineClamp(true)">useWebkitLineClamp</button>
 
-    const containerDiv = document.getElementById('gacui-screen');
+  <script lang="javascript">
     const alignmentX = ['Left', 'Center', 'Right'];
     const alignmentY = ['Top', 'Center', 'Bottom'];
 
-    /**********************************************************************
-     * SolidLabel (wrapLine and ellipse)
-     **********************************************************************/
+    function reloadSolidLabels() {
 
-    const font = {
-      fontFamily: 'Segoe UI',
-      size: 12,
-      bold: false,
-      italic: false,
-      underline: false,
-      strikeline: false
-    };
+      const containerDiv = document.getElementById('gacui-screen');
+      containerDiv.replaceChildren();
 
-    for (let h = 0; h < 3; h++) {
-      for (let v = 0; v < 3; v++) {
-        const groupDiv = document.createElement('div');
-        containerDiv.appendChild(groupDiv);
-        GacUIHtmlRenderer.applyBounds(groupDiv, { x1: 5 + h * 310, y1: 5 + v * 250, x2: (h + 1) * 310, y2: (v + 1) * 250 });
-        GacUIHtmlRenderer.applyTypedStyle(groupDiv, {
-          type: 'SolidBorder',
-          desc: {
-            borderColor: '#FFFFFF',
-            shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
-          }
-        });
+      const font = {
+        fontFamily: 'Segoe UI',
+        size: 12,
+        bold: false,
+        italic: false,
+        underline: false,
+        strikeline: false
+      };
 
-        for (let x = 0; x < 2; x++) {
-          for (let y = 0; y < 4; y++) {
-            const borderDiv = document.createElement('div');
-            groupDiv.appendChild(borderDiv);
-            GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 5 + x * 150, y1: 5 + y * 60, x2: 150 + x * 150, y2: 60 + y * 60 });
-            GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
-              type: 'SolidBorder',
-              desc: {
-                borderColor: '#000000',
-                shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
-              }
-            });
+      for (let h = 0; h < 3; h++) {
+        for (let v = 0; v < 3; v++) {
+          const groupDiv = document.createElement('div');
+          containerDiv.appendChild(groupDiv);
+          GacUIHtmlRenderer.applyBounds(groupDiv, { x1: 5 + h * 310, y1: 5 + v * 250, x2: (h + 1) * 310, y2: (v + 1) * 250 });
+          GacUIHtmlRenderer.applyTypedStyle(groupDiv, {
+            type: 'SolidBorder',
+            desc: {
+              borderColor: '#FFFFFF',
+              shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+            }
+          });
 
-            const imageDiv = document.createElement('div');
-            borderDiv.appendChild(imageDiv);
-            GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 144, y2: 54 });
-            GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
-              type: 'SolidLabel',
-              desc: {
-                horizontalAlignment: alignmentX[h],
-                verticalAlignment: alignmentY[v],
-                textColor: '#FFFF80',
-                wrapLine: x === 1,
-                ellipse: y % 2 === 1,
-                multiline: y >= 2,
-                text: 'Here is some example of SolidLabel element.\r\nGacUI is now rendering in a Browser!',
-                font
-              }
-            });
+          for (let x = 0; x < 2; x++) {
+            for (let y = 0; y < 4; y++) {
+              const borderDiv = document.createElement('div');
+              groupDiv.appendChild(borderDiv);
+              GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 5 + x * 150, y1: 5 + y * 60, x2: 150 + x * 150, y2: 60 + y * 60 });
+              GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
+                type: 'SolidBorder',
+                desc: {
+                  borderColor: '#000000',
+                  shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+                }
+              });
+
+              const imageDiv = document.createElement('div');
+              borderDiv.appendChild(imageDiv);
+              GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 144, y2: 54 });
+              GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
+                type: 'SolidLabel',
+                desc: {
+                  horizontalAlignment: alignmentX[h],
+                  verticalAlignment: alignmentY[v],
+                  textColor: '#FFFF80',
+                  wrapLine: x === 1,
+                  ellipse: y % 2 === 1,
+                  multiline: y >= 2,
+                  text: 'Here is some example of SolidLabel element.\r\nGacUI is now rendering in a Browser!',
+                  font
+                }
+              });
+            }
           }
         }
       }
     }
+
+    function useWebkitLineClamp(use) {
+      GacUIHtmlRenderer.applyFeatureGates({ useWebkitLineClamp: use });
+      reloadSolidLabels();
+    }
+
+    reloadSolidLabels();
   </script>
 </body>
 

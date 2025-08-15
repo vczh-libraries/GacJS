@@ -1,4 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
+import { getFeatureGates } from './featureGates';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
@@ -171,6 +172,9 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.text to exist.');
     }
 
+    const ellipseWithWrapLine = desc.ellipse && desc.wrapLine;
+    const useWebkitLineClamp = getFeatureGates().useWebkitLineClamp;
+
     const textContent = desc.multiline ? desc.text : desc.text.replaceAll('\r', '').split('\n').join(' ');
     let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
     if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof HTMLDivElement)) {
@@ -180,7 +184,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         textElement.replaceChildren();
     }
 
-    if (!desc.ellipse || !desc.wrapLine) {
+    if (!ellipseWithWrapLine || !useWebkitLineClamp) {
         textElement.textContent = textContent;
     }
 
@@ -229,7 +233,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
         const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
 
-        if (!desc.ellipse || !desc.wrapLine) {
+        if (!ellipseWithWrapLine || !useWebkitLineClamp) {
             const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             textElement.style.cssText = `overflow:hidden; ${fontStyle} ${formatStyle} ${flexItemStyle}`;
         } else {
@@ -238,7 +242,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             const webkitElement = document.createElement('div');
             textElement.replaceChildren(webkitElement);
             webkitElement.textContent = textContent;
-            
+
             const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; ${fontStyle} ${formatStyle}`;
         }

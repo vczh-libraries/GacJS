@@ -14,4 +14,4 @@ export async function runGacUI(target: HTMLElement): Promise<[IGacUIHtmlRenderer
 }
 
 // for testing in elements.html
-export { applyBounds, applyTypedStyle } from '@gaclib/renderer';
+export { applyBounds, applyTypedStyle, applyFeatureGates } from '@gaclib/renderer';
