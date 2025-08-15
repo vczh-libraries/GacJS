@@ -9,7 +9,8 @@
 </head>
 
 <body>
-  <div id="gacui-screen" class="gacui-container" style="background-color: rgb(129, 45, 226);">
+  <div id="gacui-screen" class="gacui-container"
+    style="background-color: rgb(129, 45, 226); width: 800px; height: 800px;">
     <div id="_A">
       <div id="_A1"></div>
     </div>
@@ -71,25 +72,29 @@
       GacUIHtmlRenderer.applyBounds(_D1, { x1: -10, y1: -10, x2: 90, y2: 90 });
 
       GacUIHtmlRenderer.applyTypedStyle(_A1, {
-        type: 'SolidBorder', desc: {
+        type: 'SolidBorder',
+        desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
       });
       GacUIHtmlRenderer.applyTypedStyle(_B1, {
-        type: 'SolidBorder', desc: {
+        type: 'SolidBorder',
+        desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
       });
       GacUIHtmlRenderer.applyTypedStyle(_C1, {
-        type: 'SolidBorder', desc: {
+        type: 'SolidBorder',
+        desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
       });
       GacUIHtmlRenderer.applyTypedStyle(_D1, {
-        type: 'SolidBorder', desc: {
+        type: 'SolidBorder',
+        desc: {
           borderColor,
           shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
         }
@@ -286,6 +291,106 @@
       document.getElementById('_O1'),
       document.getElementById('_P1'),
       '#FFFF00');
+
+    const imageData1 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8\/9hAAABpUlEQVR4nKWSMXLUQBBF37ioQhupRcISSZsRihOsHEGRIG4gTmCTEa4jTIRu4A0hYsnIrL2BOIGGBOxoeiIN0RC4vF5sLxvwq7qmuv\/Ur99\/xsQY+R88+BfZftOGQCMJBQkW6AXauhJ7fcfscrD4pJ3xfu5i9AQAVASRBESkbF5ciWwcvPmwjvnj9HDRlF1z2nfGmLkbo\/eXPgXFjRGZllRPQa3toCwADgDalRUCaGDZvO\/bbGLmGsB7nwK4Ma5FUHO5Tr\/\/MCnJjdMDgOO6UBLB\/87y7NHsaAi5V2tBFTe6t\/2yrkSo3Bi9G51XFf1LAEADqF6ds6lJ3c\/hq4vxsF\/WLcBqUdssm6UE4OF9rxDABigASeDZy9ev8jRt76SbCBj0joAGEBS9sHRWIUAf7PmiOTIAZbMqsklGNjGpqus2gjHGe+vLuZPtPn\/+sare2dic2rg9P2AH6uomKIAiL1sRwbnhZHu+8yNdo2m1sNZWWTY7i27wq7aUbX6ng002F1pkT2Znqhb7q29u83sFZCqFc8OJG4as\/9ysbvN7V9iHvQ724Q+vreVhBisRLgAAAABJRU5ErkJggg==';
+    const imageData2 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8\/9hAAABkUlEQVR4nKWTMXLTQBSGv\/VkBlPpqaCOcgJ8A8QJ0BFU0iFOgKgpMA0tOoJyAuSOjlWXUu5Mtb+GGSzTLAVxcJyJM8BX7czu\/+\/b\/711MUb+h7P9ou2UAZVgwUSmiVqirUvTKQMXY6TtlA2Sl0ATArC5ITCDqi6tuc9gBjBInSborqD74q3v+\/POe7s2XFYfVQA0nRbPX\/fxjgFAv06Tcb1KzFDYxpUk+n6VjDuX6CdNuRxKfzW0TKJpZUcV2BBCGEMIazNy3xQ5UMdtGH3Xoh045z6NY3rO3CiLP7nMuM3Q1sUA4JtiydyK+CNcXtiYgKHJYLqd6e8uTMLmYJAdbpZFLrdzL\/wGJBgkDO4aaCPvXPrMpRdJltc2dLUALlfrr\/sbNQGI456eAZhZPX7TKzMjBCuABuDz+6eu7WRFfv8szACWVaawDR+YG2ZZfXjglBiuB2lP\/rKVc2kStvFt9sTa9t3CnxLfVLBHG2VxG9fpY\/dG37V4SAwHfwHAt6WALK98ZY\/sOPCHn\/AvHA\/SX\/MLDlzOb38RC9sAAAAASUVORK5CYII=';
+    const imageData3 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8\/9hAAABi0lEQVR4nKWTMU4cMRSG\/xlRgFLYW6FUbG4wnCDcYPYGbE6QPcI0KOmYklSZMl2cE8QlHTMVdNjVaiMk\/68Iu5tAXooEKbM7oEhYcvP0+\/P\/\/mdnqornrHyz4Jyvm08u\/FMqQgis3tXuvwCBbETkoHrfjAGAK0y6Lpqw4CAAqrq16zOnpx8\/N6pqr+eJ01mlxpjxkHZnCHqwbyTGeNy2bZB1Zkg+msEggEt47KL05+1RXAg0JSEZhrTDgEWoo0hJ8jVJcEn\/mIOtEAFgNpv69OdWYNfCviyGAwSQbb6D6QkL5Kjkh5R6m75keVaqqgBwTHT+w1EPtrN1+AU8SfDKC1cs7LiQ0d7IkDzGOhBAD9BrgTkrWYuRRWdkLQZAO9obGVV9pZreiMjbJzPI8qzUpR7qnR4+mAIA3MMiBYuBQfRDXAH4TuAnCoBo3Yz6K3VyEy\/kW3earr\/KJqCXgd7+FUtEml9EAKCw5qWrCcAWk+pJACXUXIYK89ZaU9QA4M8mDTBptrw\/tP3c7\/wbJFUJL+sPMIsAAAAASUVORK5CYII=';
+    const imageDatas = [imageData1, imageData2, imageData3];
+    const alignmentX = ['Left', 'Center', 'Right'];
+    const alignmentY = ['Top', 'Center', 'Bottom'];
+
+    const containerDiv = document.getElementById('gacui-screen');
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const borderDiv = document.createElement('div');
+        containerDiv.appendChild(borderDiv);
+        GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500 + i * 40, y1: 50 + j * 40, x2: 535 + i * 40, y2: 85 + j * 40 });
+        GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
+          type: 'SolidBorder',
+          desc: {
+            borderColor: '#000000',
+            shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+          }
+        });
+
+        const imageDiv = document.createElement('div');
+        borderDiv.appendChild(imageDiv);
+        GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 34, y2: 34 });
+        GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
+          type: 'ImageFrame',
+          desc: {
+            horizontalAlignment: alignmentX[j],
+            verticalAlignment: alignmentY[i],
+            stretch: true,
+            enabled: true,
+            imageCreation: {
+              imageData: imageDatas[i],
+              imageDataOmitted: false
+            }
+          }
+        });
+      }
+    }
+
+    {
+      const borderDiv = document.createElement('div');
+      containerDiv.appendChild(borderDiv);
+      GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500, y1: 5, x2: 615, y2: 45 });
+      GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
+        type: 'SolidBorder',
+        desc: {
+          borderColor: '#000000',
+          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+        }
+      });
+
+      const imageDiv = document.createElement('div');
+      borderDiv.appendChild(imageDiv);
+      GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 114, y2: 39 });
+      GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
+        type: 'ImageFrame',
+        desc: {
+          horizontalAlignment: 'Center',
+          verticalAlignment: 'Center',
+          stretch: true,
+          enabled: true,
+          imageCreation: {
+            imageData: imageData1,
+            imageDataOmitted: false
+          }
+        }
+      });
+    }
+
+    {
+      const borderDiv = document.createElement('div');
+      containerDiv.appendChild(borderDiv);
+      GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500, y1: 170, x2: 615, y2: 210 });
+      GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
+        type: 'SolidBorder',
+        desc: {
+          borderColor: '#000000',
+          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+        }
+      });
+
+      const imageDiv = document.createElement('div');
+      borderDiv.appendChild(imageDiv);
+      GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 114, y2: 39 });
+      GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
+        type: 'ImageFrame',
+        desc: {
+          horizontalAlignment: 'Center',
+          verticalAlignment: 'Center',
+          stretch: true,
+          enabled: false,
+          imageCreation: {
+            imageData: imageData3,
+            imageDataOmitted: false
+          }
+        }
+      });
+    }
   </script>
 </body>
 

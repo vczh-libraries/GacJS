@@ -72,8 +72,13 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     return `background: ${background}; position: ${position};`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
+    if (!desc.imageCreation) {
+        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation to exist.');
+    }
+    if (desc.imageCreation.imageDataOmitted) {
+        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation.imageDataOmitted to be false.');
+    }
     throw new Error('getStyle_ImageFrame not implemented');
 }
 
