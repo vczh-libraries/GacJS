@@ -211,7 +211,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         const alignmentStyle = `display: flex; ${verticalAlignStyle} ${horizontalAlignStyle}`;
         const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
 
-        textDiv.style.cssText = `overflow:hidden; ${sizeStyle} ${alignmentStyle}`;
+        textDiv.style.cssText = `overflow:hidden; ${alignmentStyle} ${sizeStyle}`;
     }
 
     {
@@ -224,28 +224,9 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         }
         const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
 
-        let formatStyle = '';
+        const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
         const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
-
-        if (!desc.ellipse) {
-            formatStyle = `text-overflow: clip; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-            textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
-        } else if (!desc.wrapLine) {
-            // Single line ellipsis
-            formatStyle = `text-overflow: ellipsis; white-space: pre; overflow: hidden;`;
-            textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
-        } else {
-            // Multi-line ellipsis: textElement is flex item, inner element uses -webkit-box
-            textElement.textContent = '';
-
-            const innerElement = document.createElement('div');
-            textElement.replaceChildren(innerElement);
-            innerElement.textContent = textContent;
-
-            textElement.style.cssText = `overflow:hidden; ${flexItemStyle}`;
-            const innerFormatStyle = `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 999; overflow: hidden; white-space: pre-wrap; word-wrap: break-word; width: 100%; height: 100%;`;
-            innerElement.style.cssText = `${fontStyle} ${innerFormatStyle}`;
-        }
+        textElement.style.cssText = `overflow:hidden; ${fontStyle} ${formatStyle} ${flexItemStyle}`;
     }
 }
 
