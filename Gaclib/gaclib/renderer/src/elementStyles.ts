@@ -209,13 +209,13 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         let horizontalAlignStyle: string;
         switch (desc.horizontalAlignment) {
             case SCHEMA.ElementHorizontalAlignment.Center:
-                horizontalAlignStyle = 'justify-content: center;';
+                horizontalAlignStyle = 'text-align: center;';
                 break;
             case SCHEMA.ElementHorizontalAlignment.Right:
-                horizontalAlignStyle = 'justify-content: flex-end;';
+                horizontalAlignStyle = 'text-align: right;';
                 break;
             default:
-                horizontalAlignStyle = 'justify-content: flex-start;';
+                horizontalAlignStyle = 'text-align: left;';
                 break;
         }
 
@@ -236,7 +236,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
 
         let formatStyle = '';
-        const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;';
+        const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
 
         if (!desc.ellipse) {
             formatStyle = `text-overflow: clip; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
