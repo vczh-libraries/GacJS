@@ -113,9 +113,56 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     return `background-image: url(data:${contentType};base64,${desc.imageCreation.imageData}); ${positionStyle} ${filterStyle}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getStyle_SolidLabel_Border(desc: SCHEMA.ElementDesc_SolidLabel): string {
-    throw new Error('getStyle_SolidLabel not implemented');
+function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_Polygon): void {
+    svgElement.setAttribute('width', `${desc.size.x}`);
+    svgElement.setAttribute('height', `${desc.size.y}`);
+    svgElement.setAttribute('viewBox', `0 0 ${desc.size.x} ${desc.size.y}`);
+    svgElement.style.cssText = `${CommonStyle} inset: 0; margin: auto; width: ${desc.size.x}px; height: ${desc.size.y}px;`;
+
+    let polygonElement = svgElement.childNodes[0] as unknown as SVGPolygonElement;
+    if (!polygonElement || svgElement.childNodes.length !== 1 || !(polygonElement instanceof SVGPolygonElement)) {
+        polygonElement = document.createElementNS(SvgNS, 'polygon');
+        svgElement.replaceChildren(polygonElement);
+    }
+
+    polygonElement.setAttribute('fill', desc.backgroundColor);
+    polygonElement.setAttribute('stroke', desc.borderColor);
+    polygonElement.setAttribute('stroke-width', '1');
+    polygonElement.setAttribute('points', (<SCHEMA.Point[]>desc.points).map(p => `${p.x},${p.y}`).join(' '));
+}
+
+function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
+    if (!desc.font) {
+        throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.font to exist.');
+    }
+    if (!desc.text) {
+        throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.text to exist.');
+    }
+
+    const textContent = desc.multiline ? desc.text.replaceAll('\r', '').split('\n').join(' ') : desc.text;
+    let textElement = textDiv.childNodes[0] as unknown as Text;
+    if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof Text)) {
+        textElement = document.createTextNode(textContent);
+        textDiv.replaceChildren(textElement);
+    } else {
+        textElement.textContent = textContent;
+    }
+
+
+    const textDecorations: string[] = [];
+    if (desc.font.underline) {
+        textDecorations.push('underline');
+    }
+    if (desc.font.strikeline) {
+        textDecorations.push('line-through');
+    }
+    const fontStyle = `color: ${desc.textColor}; fontFamily: ${desc.font.fontFamily}; fontSize: ${desc.font.size}px; fontWeight: ${desc.font.bold ? 'bold' : 'normal'}; fontStyle: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+
+    const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
+    const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'normal' : 'pre'};`;
+    const alignmentStyle = `text-align: ${desc.horizontalAlignment.toLowerCase()}; vertical-align: ${desc.verticalAlignment === SCHEMA.ElementVerticalAlignment.Center ? 'middle' : desc.verticalAlignment.toLowerCase()};`;
+
+    textDiv.style.cssText = `${CommonStyle} ${fontStyle} ${sizeStyle} ${formatStyle} ${alignmentStyle}`;
 }
 
 export type TypedElementDesc =
@@ -143,7 +190,7 @@ function ensureNoExtraBorder(target: HTMLElement): void {
     }
 }
 
-function setExtraBorder(target: HTMLElement, element: Element): void {
+function setExtraBorder(target: HTMLElement, element: Node): void {
     if (hasExtraBorder(target)) {
         throw new Error('setExtraBorder cannot be called when an extra border element already exists');
     }
@@ -220,6 +267,12 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
                 element.style.cssText = getStyle_SinkSplitter_Extra(typedDesc.desc);
             }
             break;
+        case SCHEMA.RendererType.InnerShadow:
+            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_InnerShadow);
+            break;
+        case SCHEMA.RendererType.ImageFrame:
+            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_ImageFrame);
+            break;
         case SCHEMA.RendererType.Polygon:
             {
                 target.style.cssText = CommonStyle;
@@ -230,35 +283,23 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
                         svgElement = document.createElementNS(SvgNS, 'svg');
                         setExtraBorder(target, svgElement);
                     }
-
-                    svgElement.setAttribute('width', `${typedDesc.desc.size.x}`);
-                    svgElement.setAttribute('height', `${typedDesc.desc.size.y}`);
-                    svgElement.setAttribute('viewBox', `0 0 ${typedDesc.desc.size.x} ${typedDesc.desc.size.y}`);
-                    svgElement.style.cssText = `${CommonStyle} inset: 0; margin: auto; width: ${typedDesc.desc.size.x}px; height: ${typedDesc.desc.size.y}px;`;
-
-                    let polygonElement = svgElement.childNodes[0] as unknown as SVGPolygonElement;
-                    if (!polygonElement || svgElement.childNodes.length !== 1 || !(polygonElement instanceof SVGPolygonElement)) {
-                        polygonElement = document.createElementNS(SvgNS, 'polygon');
-                        svgElement.replaceChildren(polygonElement);
-                    }
-
-                    polygonElement.setAttribute('fill', typedDesc.desc.backgroundColor);
-                    polygonElement.setAttribute('stroke', typedDesc.desc.borderColor);
-                    polygonElement.setAttribute('stroke-width', '1');
-                    polygonElement.setAttribute('points', typedDesc.desc.points.map(p => `${p.x},${p.y}`).join(' '));
+                    initializePolygon(svgElement, typedDesc.desc);
                 } else {
                     ensureNoExtraBorder(target);
                 }
             }
             break;
-        case SCHEMA.RendererType.InnerShadow:
-            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_InnerShadow);
-            break;
-        case SCHEMA.RendererType.ImageFrame:
-            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_ImageFrame);
-            break;
         case SCHEMA.RendererType.SolidLabel:
-            applyTypedStyle_WithoutExtraBorder(target, typedDesc.desc, getStyle_SolidLabel_Border);
+            {
+                target.style.cssText = CommonStyle;
+                let textDiv = target[ExtraBorderNodeName] as unknown as HTMLDivElement;
+                if (!(textDiv instanceof HTMLDivElement)) {
+                    ensureNoExtraBorder(target);
+                    textDiv = document.createElement('div');
+                    setExtraBorder(target, textDiv);
+                }
+                initializeText(textDiv, typedDesc.desc);
+            }
             break;
         default:
             throw new Error(`Unsupported renderer type: ${elementType}`);

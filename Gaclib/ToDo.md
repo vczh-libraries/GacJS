@@ -8,8 +8,6 @@
 - Add a package to copy all GacUISrc/UnitText snapsnots and render in Snapshots.html
 - Make a more complicated case in elements.xml.
   - Considering adding tabs.
-- Implement cas styles for text.
-  - SolidLable may not need extra border element as each of them will set font explicitly.
 - Implement remote protocol rendering.
 - Handle remote exception.
 - Complete a demo, website and C++ renderer connect to Core in turns.
