@@ -171,7 +171,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.text to exist.');
     }
 
-    const textContent = desc.multiline ? desc.text.replaceAll('\r', '').split('\n').join(' ') : desc.text;
+    const textContent = desc.multiline ? desc.text : desc.text.replaceAll('\r', '').split('\n').join(' ');
     let textElement = textDiv.childNodes[0] as unknown as Text;
     if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof Text)) {
         textElement = document.createTextNode(textContent);
