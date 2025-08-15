@@ -188,11 +188,38 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     if (desc.font.strikeline) {
         textDecorations.push('line-through');
     }
-    const fontStyle = `color: ${desc.textColor}; fontFamily: ${desc.font.fontFamily}; fontSize: ${desc.font.size}px; fontWeight: ${desc.font.bold ? 'bold' : 'normal'}; fontStyle: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+    const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
 
     const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
     const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'normal' : 'pre'};`;
-    const alignmentStyle = `text-align: ${desc.horizontalAlignment.toLowerCase()}; vertical-align: ${desc.verticalAlignment === SCHEMA.ElementVerticalAlignment.Center ? 'middle' : desc.verticalAlignment.toLowerCase()};`;
+
+    let verticalAlignStyle: string;
+    switch (desc.verticalAlignment) {
+        case SCHEMA.ElementVerticalAlignment.Center:
+            verticalAlignStyle = 'align-items: center;';
+            break;
+        case SCHEMA.ElementVerticalAlignment.Bottom:
+            verticalAlignStyle = 'align-items: flex-end;';
+            break;
+        default:
+            verticalAlignStyle = 'align-items: flex-start;';
+            break;
+    }
+
+    let horizontalAlignStyle: string;
+    switch (desc.horizontalAlignment) {
+        case SCHEMA.ElementHorizontalAlignment.Center:
+            horizontalAlignStyle = 'justify-content: center;';
+            break;
+        case SCHEMA.ElementHorizontalAlignment.Right:
+            horizontalAlignStyle = 'justify-content: flex-end;';
+            break;
+        default:
+            horizontalAlignStyle = 'justify-content: flex-start;';
+            break;
+    }
+
+    const alignmentStyle = `display: flex; ${verticalAlignStyle} ${horizontalAlignStyle}`;
 
     textDiv.style.cssText = `${CommonStyle} ${fontStyle} ${sizeStyle} ${formatStyle} ${alignmentStyle}`;
 }
