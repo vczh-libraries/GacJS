@@ -4,9 +4,17 @@ const CommonStyle = 'background-color: none; display: block; position:absolute; 
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
 const SvgNS = 'http://www.w3.org/2000/svg';
 
+/**********************************************************************
+ * FocusRectangle
+ **********************************************************************/
+
 function getStyle_FocusRectangle_Border(): string {
     return 'outline:1px dashed white; outline-offset:-1px; mix-blend-mode: difference;';
 }
+
+/**********************************************************************
+ * Element with Shape
+ **********************************************************************/
 
 function getStyle_BorderRadius(shape: SCHEMA.ElementShape): string {
     switch (shape.shapeType) {
@@ -50,9 +58,17 @@ function getStyle_GradientBackground_Border(desc: SCHEMA.ElementDesc_GradientBac
     return `background: linear-gradient(to ${side}, ${desc.leftTopColor} 0%, ${desc.rightBottomColor} 100%);${getStyle_BorderRadius(desc.shape)}`;
 }
 
+/**********************************************************************
+ * SinkBorder
+ **********************************************************************/
+
 function getStyle_SinkBorder(desc: SCHEMA.ElementDesc_SinkBorder): string {
     return `border-style: solid; border-left-color: ${desc.leftTopColor}; border-top-color: ${desc.leftTopColor}; border-right-color: ${desc.rightBottomColor}; border-bottom-color: ${desc.rightBottomColor};`;
 }
+
+/**********************************************************************
+ * SinkSplitter
+ **********************************************************************/
 
 function getStyle_SinkSplitter_Extra(desc: SCHEMA.ElementDesc_SinkSplitter): string {
     switch (desc.direction) {
@@ -65,12 +81,20 @@ function getStyle_SinkSplitter_Extra(desc: SCHEMA.ElementDesc_SinkSplitter): str
     }
 }
 
+/**********************************************************************
+ * InnerShadow
+ **********************************************************************/
+
 function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
     const dirs = ['left', 'top', 'right', 'bottom'];
     const background = `${dirs.map((_dir, i) => `linear-gradient(to ${dirs[(i + 2) % 4]}, ${desc.shadowColor} 0px, transparent ${desc.thickness}px), `).join('')}transparent`;
     const position = `${dirs.map(dir => `${dir} center`).join(', ')}`;
     return `background: ${background}; position: ${position};`;
 }
+
+/**********************************************************************
+ * ImageFrame
+ **********************************************************************/
 
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     if (!desc.imageCreation) {
@@ -113,6 +137,10 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     return `background-image: url(data:${contentType};base64,${desc.imageCreation.imageData}); ${positionStyle} ${filterStyle}`;
 }
 
+/**********************************************************************
+ * Polygon
+ **********************************************************************/
+
 function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_Polygon): void {
     svgElement.setAttribute('width', `${desc.size.x}`);
     svgElement.setAttribute('height', `${desc.size.y}`);
@@ -130,6 +158,10 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
     polygonElement.setAttribute('stroke-width', '1');
     polygonElement.setAttribute('points', (<SCHEMA.Point[]>desc.points).map(p => `${p.x},${p.y}`).join(' '));
 }
+
+/**********************************************************************
+ * SolidLabel
+ **********************************************************************/
 
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
     if (!desc.font) {
@@ -165,18 +197,9 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     textDiv.style.cssText = `${CommonStyle} ${fontStyle} ${sizeStyle} ${formatStyle} ${alignmentStyle}`;
 }
 
-export type TypedElementDesc =
-    | { type: SCHEMA.RendererType.Raw }
-    | { type: SCHEMA.RendererType.FocusRectangle }
-    | { type: SCHEMA.RendererType.SolidBorder; desc: SCHEMA.ElementDesc_SolidBorder }
-    | { type: SCHEMA.RendererType.SinkBorder; desc: SCHEMA.ElementDesc_SinkBorder }
-    | { type: SCHEMA.RendererType.SinkSplitter; desc: SCHEMA.ElementDesc_SinkSplitter }
-    | { type: SCHEMA.RendererType.SolidBackground; desc: SCHEMA.ElementDesc_SolidBackground }
-    | { type: SCHEMA.RendererType.GradientBackground; desc: SCHEMA.ElementDesc_GradientBackground }
-    | { type: SCHEMA.RendererType.InnerShadow; desc: SCHEMA.ElementDesc_InnerShadow }
-    | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel }
-    | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
-    | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame };
+/**********************************************************************
+ * ExtraBorder Element Operations
+ **********************************************************************/
 
 export function hasExtraBorder(target: HTMLElement): boolean {
     return !!target[ExtraBorderNodeName];
@@ -199,21 +222,18 @@ function setExtraBorder(target: HTMLElement, element: Node): void {
 }
 
 function ensureExtraBorderDiv(target: HTMLElement): HTMLElement {
-    let element: HTMLElement | undefined = target[ExtraBorderNodeName] as unknown as HTMLElement;
-    if (element && (element.tagName.toLowerCase() !== 'div' || !(element instanceof HTMLElement))) {
+    let element: HTMLDivElement = target[ExtraBorderNodeName] as unknown as HTMLDivElement;
+    if (!(element instanceof HTMLDivElement)) {
         ensureNoExtraBorder(target);
-        element = undefined;
-    }
-    if (!element) {
         element = document.createElement('div');
         setExtraBorder(target, element);
     }
     return element;
 }
 
-interface ElementDescWithShape {
-    shape: SCHEMA.ElementShape;
-};
+/**********************************************************************
+ * ExtraBorder Style Operations
+ **********************************************************************/
 
 function applyTypedStyle_WithoutExtraBorder<TDesc>(target: HTMLElement, desc: TDesc, getStyle: (desc: TDesc) => string): void {
     target.style.cssText = `${CommonStyle} ${getStyle(desc)}`;
@@ -225,6 +245,10 @@ function applyTypedStyle_WithExtraBorder<TDesc>(target: HTMLElement, desc: TDesc
     element.style.cssText = `${CommonStyle} left: 0px; top: 0px; width: 100%; height: 100%; ${getStyle(desc)}`;
 }
 
+interface ElementDescWithShape {
+    shape: SCHEMA.ElementShape;
+};
+
 function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(target: HTMLElement, desc: TDesc, getStyle: (desc: TDesc) => string): void {
     if (desc.shape.shapeType === SCHEMA.ElementShapeType.Rectangle) {
         ensureNoExtraBorder(target);
@@ -233,6 +257,23 @@ function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(ta
         applyTypedStyle_WithExtraBorder(target, desc, getStyle);
     }
 }
+
+/**********************************************************************
+ * applyTypedStyle
+ **********************************************************************/
+
+export type TypedElementDesc =
+    | { type: SCHEMA.RendererType.Raw }
+    | { type: SCHEMA.RendererType.FocusRectangle }
+    | { type: SCHEMA.RendererType.SolidBorder; desc: SCHEMA.ElementDesc_SolidBorder }
+    | { type: SCHEMA.RendererType.SolidBackground; desc: SCHEMA.ElementDesc_SolidBackground }
+    | { type: SCHEMA.RendererType.GradientBackground; desc: SCHEMA.ElementDesc_GradientBackground }
+    | { type: SCHEMA.RendererType.SinkBorder; desc: SCHEMA.ElementDesc_SinkBorder }
+    | { type: SCHEMA.RendererType.SinkSplitter; desc: SCHEMA.ElementDesc_SinkSplitter }
+    | { type: SCHEMA.RendererType.InnerShadow; desc: SCHEMA.ElementDesc_InnerShadow }
+    | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame }
+    | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
+    | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel };
 
 export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc): void {
     const savedLeft = target.style.left;
@@ -292,12 +333,7 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
         case SCHEMA.RendererType.SolidLabel:
             {
                 target.style.cssText = CommonStyle;
-                let textDiv = target[ExtraBorderNodeName] as unknown as HTMLDivElement;
-                if (!(textDiv instanceof HTMLDivElement)) {
-                    ensureNoExtraBorder(target);
-                    textDiv = document.createElement('div');
-                    setExtraBorder(target, textDiv);
-                }
+                const textDiv = ensureExtraBorderDiv(target);
                 initializeText(textDiv, typedDesc.desc);
             }
             break;
@@ -318,6 +354,10 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
         target.style.height = savedHeight;
     }
 }
+
+/**********************************************************************
+ * applyTypedStyle
+ **********************************************************************/
 
 export function applyBounds(target: HTMLElement, bounds: SCHEMA.Rect): void {
     target.style.left = `${bounds.x1}px`;
