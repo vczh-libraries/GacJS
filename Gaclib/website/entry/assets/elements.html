@@ -319,12 +319,12 @@
         GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
           type: 'ImageFrame',
           desc: {
-            horizontalAlignment: alignmentX[j],
-            verticalAlignment: alignmentY[i],
-            stretch: true,
-            enabled: true,
+            horizontalAlignment: alignmentX[i],
+            verticalAlignment: alignmentY[j],
+            stretch: false,
+            enabled: (i + j) % 2 === 0,
             imageCreation: {
-              imageData: imageDatas[i],
+              imageData: imageDatas[j],
               imageDataOmitted: false
             }
           }
@@ -356,36 +356,6 @@
           enabled: true,
           imageCreation: {
             imageData: imageData1,
-            imageDataOmitted: false
-          }
-        }
-      });
-    }
-
-    {
-      const borderDiv = document.createElement('div');
-      containerDiv.appendChild(borderDiv);
-      GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500, y1: 170, x2: 615, y2: 210 });
-      GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
-        type: 'SolidBorder',
-        desc: {
-          borderColor: '#000000',
-          shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
-        }
-      });
-
-      const imageDiv = document.createElement('div');
-      borderDiv.appendChild(imageDiv);
-      GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 114, y2: 39 });
-      GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
-        type: 'ImageFrame',
-        desc: {
-          horizontalAlignment: 'Center',
-          verticalAlignment: 'Center',
-          stretch: true,
-          enabled: false,
-          imageCreation: {
-            imageData: imageData3,
             imageDataOmitted: false
           }
         }

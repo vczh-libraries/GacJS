@@ -79,7 +79,38 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     if (desc.imageCreation.imageDataOmitted) {
         throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation.imageDataOmitted to be false.');
     }
-    throw new Error('getStyle_ImageFrame not implemented');
+
+    let contentType: string;
+    const bin = atob(desc.imageCreation.imageData);
+    if (bin.substring(0, 2) === 'BM') {
+        contentType = 'image/bmp';
+    } else if (bin.substring(0, 6) === 'GIF87a' || bin.substring(0, 6) === 'GIF89a') {
+        contentType = 'image/gif';
+    } else if (bin.substring(0, 4) === '\x89PNG') {
+        contentType = 'image/png';
+    } else if (bin.substring(0, 2) === 'II' || bin.substring(0, 2) === 'MM') {
+        contentType = 'image/tiff';
+    } else if (bin.substring(0, 2) === '\xFF\xD8') {
+        contentType = 'image/jpeg';
+    } else if (bin.substring(0, 4) === '\x00\x00\x01\x00' || bin.substring(0, 4) === '\x00\x00\x02\x00') {
+        contentType = 'image/vnd.microsoft.icon';
+    } else {
+        throw new Error('Unsupported image format');
+    }
+
+    let positionStyle: string;
+    if (desc.stretch) {
+        positionStyle = `background-repeat: no-repeat; background-origin: border-box; background-size: 100% 100%;`;
+    } else {
+        positionStyle = `background-position-x: ${desc.horizontalAlignment.toLowerCase()}; background-position-y: ${desc.verticalAlignment.toLowerCase()}; background-repeat: no-repeat;`;
+    }
+
+    let filterStyle = '';
+    if (desc.enabled === false) {
+        filterStyle = `filter: grayscale(100%);`;
+    }
+
+    return `background-image: url(data:${contentType};base64,${desc.imageCreation.imageData}); ${positionStyle} ${filterStyle}`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
