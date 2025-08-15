@@ -223,8 +223,20 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             textDecorations.push('line-through');
         }
         const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
-        const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-        const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;';
+
+        let formatStyle = '';
+        let flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;';
+
+        if (!desc.ellipse) {
+            formatStyle = `text-overflow: clip; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+        } else if (!desc.multiline) {
+            formatStyle = `text-overflow: ellipsis; white-space: nowrap;`;
+        } else {
+            // Multi-line ellipsis using -webkit-line-clamp
+            // Note: -webkit-line-clamp requires display: -webkit-box, which conflicts with flex item
+            formatStyle = `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 999; overflow: hidden; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'}; width: 100%; height: 100%;`;
+            flexItemStyle = ''; // Don't use flex properties when using -webkit-box
+        }
 
         textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
     }
