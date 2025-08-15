@@ -179,7 +179,10 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     } else {
         textElement.replaceChildren();
     }
-    textElement.textContent = textContent;
+
+    if (!desc.ellipse || !desc.wrapLine) {
+        textElement.textContent = textContent;
+    }
 
     {
         let verticalAlignStyle: string;
@@ -222,11 +225,23 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         if (desc.font.strikeline) {
             textDecorations.push('line-through');
         }
-        const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
 
-        const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+        const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
         const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
-        textElement.style.cssText = `overflow:hidden; ${fontStyle} ${formatStyle} ${flexItemStyle}`;
+
+        if (!desc.ellipse || !desc.wrapLine) {
+            const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+            textElement.style.cssText = `overflow:hidden; ${fontStyle} ${formatStyle} ${flexItemStyle}`;
+        } else {
+            textElement.style.cssText = `overflow:hidden; ${flexItemStyle}`;
+
+            const webkitElement = document.createElement('div');
+            textElement.replaceChildren(webkitElement);
+            webkitElement.textContent = textContent;
+            
+            const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+            webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; ${fontStyle} ${formatStyle}`;
+        }
     }
 }
 

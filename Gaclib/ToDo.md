@@ -16,7 +16,10 @@
 
 ## Known Issues
 
-- In `SolidLabel`, `Ellipse` does not render with `WrapLine`.
+- Gaclib\gaclib\renderer\src\elementStyles.ts
+  - There is a branch in `initializeText`, for both activated `Ellipse` and `WrapLine`.
+    - If we delete this branch, '...' won't render
+    - If we keep this branch, '...' won't render only in right alignment, and the line number is fixed.
 
 ## Further Experiments
 
