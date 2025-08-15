@@ -1,13 +1,14 @@
 # ToDo
 
-- Create a IVirtualDom for mocking HTMLElement, 1:1 mappings.
-- Implement the HTML provider and test it in elements.html, but not considering extra clipping (validBounds).
-- Create unit test for RenderingDom -> IVirtualDom.
-  - Consider validBounds.
-  - Apply diff.
+- Create a `IVirtualDom` for mocking `HTMLElement`, 1:1 mappings.
+  - Implement the HTML provider and test it in elements.html
+  - Implement the unit test provider mock
+- Implement `RenderingDom` -> `IVirtualDom` but not consider `validArea` yet.
+- Create unit test for `RenderingDom` -> `IVirtualDom`.
+  - Consider `validArea`.
+  - Apply `RenderingDom_Diff` to `RenderingDom` and incrementally update `IVirtualDom`.
 - Add a package to copy all GacUISrc/UnitText snapsnots and render in Snapshots.html
-- Make a more complicated case in elements.xml.
-  - Considering adding tabs.
+- `snapshot.html` to render snapshots, will clickable but not collapsible tree view at the left.
 - Implement remote protocol rendering.
 - Handle remote exception.
 - Complete a demo, website and C++ renderer connect to Core in turns.
