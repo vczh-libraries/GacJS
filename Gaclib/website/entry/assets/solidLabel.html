@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>GacUI Elements</title>
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="stylesheet" type="text/css" href="./global.css" />
+  <script src="/index.js"></script>
+</head>
+
+<body>
+  <div id="gacui-screen" class="gacui-container"
+    style="background-color: rgb(129, 45, 226); width: 800px; height: 800px;">
+  </div>
+
+  <script lang="javascript">
+
+    const containerDiv = document.getElementById('gacui-screen');
+    const alignmentX = ['Left', 'Center', 'Right'];
+    const alignmentY = ['Top', 'Center', 'Bottom'];
+
+    /**********************************************************************
+     * SolidLabel (wrapLine and ellipse)
+     **********************************************************************/
+
+    const font = {
+      fontFamily: 'Segoe UI',
+      size: 12,
+      bold: false,
+      italic: false,
+      underline: false,
+      strikeline: false
+    };
+
+    for (let m = 0; m < 2; m++) {
+      for (let x = 0; x < 2; x++) {
+        for (let y = 0; y < 2; y++) {
+          const borderDiv = document.createElement('div');
+          containerDiv.appendChild(borderDiv);
+          GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500 + x * 150, y1: m * 150 + 400 + y * 60, x2: 645 + x * 150, y2: m * 150 + 455 + y * 60 });
+          GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
+            type: 'SolidBorder',
+            desc: {
+              borderColor: '#000000',
+              shape: { shapeType: 'Rectangle', radiusX: 0, radiusY: 0 }
+            }
+          });
+
+          const imageDiv = document.createElement('div');
+          borderDiv.appendChild(imageDiv);
+          GacUIHtmlRenderer.applyBounds(imageDiv, { x1: 1, y1: 1, x2: 144, y2: 54 });
+          GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
+            type: 'SolidLabel',
+            desc: {
+              horizontalAlignment: 'Left',
+              verticalAlignment: 'Top',
+              textColor: '#FFFF80',
+              wrapLine: x === 1,
+              ellipse: y === 1,
+              multiline: m === 1,
+              text: 'Here is some example of SolidLabel element.\r\nGacUI is now rendering in a Browser!',
+              font
+            }
+          });
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
