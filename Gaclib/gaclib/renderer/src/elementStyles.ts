@@ -179,18 +179,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     } else {
         textElement.replaceChildren();
     }
-
-    // For multi-line ellipsis, we need an inner container with -webkit-box display
-    if (desc.ellipse && desc.wrapLine) {
-        let innerElement = textElement.childNodes[0] as unknown as HTMLDivElement;
-        if (!innerElement || textElement.childNodes.length !== 1 || !(innerElement instanceof HTMLDivElement)) {
-            innerElement = document.createElement('div');
-            textElement.replaceChildren(innerElement);
-        }
-        innerElement.textContent = textContent;
-    } else {
-        textElement.textContent = textContent;
-    }
+    textElement.textContent = textContent;
 
     {
         let verticalAlignStyle: string;
@@ -241,18 +230,21 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         if (!desc.ellipse) {
             formatStyle = `text-overflow: clip; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
+        } else if (!desc.wrapLine) {
+            // Single line ellipsis
+            formatStyle = `text-overflow: ellipsis; white-space: pre; overflow: hidden;`;
+            textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
         } else {
-            if (!desc.wrapLine) {
-                // Single line ellipsis
-                formatStyle = `text-overflow: ellipsis; white-space: pre; overflow: hidden;`;
-                textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
-            } else {
-                // Multi-line ellipsis: textElement is flex item, inner element uses -webkit-box
-                textElement.style.cssText = `overflow:hidden; ${flexItemStyle}`;
-                const innerElement = textElement.childNodes[0] as HTMLDivElement;
-                const innerFormatStyle = `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 999; overflow: hidden; white-space: pre-wrap; word-wrap: break-word; width: 100%; height: 100%;`;
-                innerElement.style.cssText = `${fontStyle} ${innerFormatStyle}`;
-            }
+            // Multi-line ellipsis: textElement is flex item, inner element uses -webkit-box
+            textElement.textContent = '';
+
+            const innerElement = document.createElement('div');
+            textElement.replaceChildren(innerElement);
+            innerElement.textContent = textContent;
+
+            textElement.style.cssText = `overflow:hidden; ${flexItemStyle}`;
+            const innerFormatStyle = `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 999; overflow: hidden; white-space: pre-wrap; word-wrap: break-word; width: 100%; height: 100%;`;
+            innerElement.style.cssText = `${fontStyle} ${innerFormatStyle}`;
         }
     }
 }
