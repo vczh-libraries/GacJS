@@ -164,6 +164,12 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
  * SolidLabel
  **********************************************************************/
 
+function updateWebkitLineClamp(textDiv: HTMLElement, webkitElement: HTMLElement): void {
+    const lineHeight = parseFloat(webkitElement.style.lineHeight) * (parseFloat(webkitElement.style.fontSize));
+    const lineClamp = Math.floor(textDiv.clientHeight / lineHeight);
+    webkitElement.style.webkitLineClamp = `${lineClamp}`;
+}
+
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
     if (!desc.font) {
         throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.font to exist.');
@@ -230,7 +236,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             textDecorations.push('line-through');
         }
 
-        const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+        const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; line-height: 1.4; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
         const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
 
         if (!ellipseWithWrapLine || !useWebkitLineClamp) {
@@ -244,7 +250,9 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             webkitElement.textContent = textContent;
 
             const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-            webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; ${fontStyle} ${formatStyle}`;
+            webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; ${fontStyle} ${formatStyle}`;
+
+            updateWebkitLineClamp(textDiv, webkitElement);
         }
     }
 }
