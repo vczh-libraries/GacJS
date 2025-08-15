@@ -65,6 +65,13 @@
   </div>
 
   <script lang="javascript">
+
+    const containerDiv = document.getElementById('gacui-screen');
+
+    /**********************************************************************
+     * Graphics
+     **********************************************************************/
+
     function initInnerElements(_A1, _B1, _C1, _D1, borderColor) {
       GacUIHtmlRenderer.applyBounds(_A1, { x1: 10, y1: 10, x2: 110, y2: 110 });
       GacUIHtmlRenderer.applyBounds(_B1, { x1: -10, y1: 10, x2: 90, y2: 110 });
@@ -299,12 +306,15 @@
     const alignmentX = ['Left', 'Center', 'Right'];
     const alignmentY = ['Top', 'Center', 'Bottom'];
 
-    const containerDiv = document.getElementById('gacui-screen');
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
+    /**********************************************************************
+     * ImageFrame
+     **********************************************************************/
+
+    for (let x = 0; x < 3; x++) {
+      for (let y = 0; y < 3; y++) {
         const borderDiv = document.createElement('div');
         containerDiv.appendChild(borderDiv);
-        GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500 + i * 40, y1: 50 + j * 40, x2: 535 + i * 40, y2: 85 + j * 40 });
+        GacUIHtmlRenderer.applyBounds(borderDiv, { x1: 500 + x * 40, y1: 50 + y * 40, x2: 535 + x * 40, y2: 85 + y * 40 });
         GacUIHtmlRenderer.applyTypedStyle(borderDiv, {
           type: 'SolidBorder',
           desc: {
@@ -319,12 +329,12 @@
         GacUIHtmlRenderer.applyTypedStyle(imageDiv, {
           type: 'ImageFrame',
           desc: {
-            horizontalAlignment: alignmentX[i],
-            verticalAlignment: alignmentY[j],
+            horizontalAlignment: alignmentX[x],
+            verticalAlignment: alignmentY[y],
             stretch: false,
-            enabled: (i + j) % 2 === 0,
+            enabled: (x + y) % 2 === 0,
             imageCreation: {
-              imageData: imageDatas[j],
+              imageData: imageDatas[y],
               imageDataOmitted: false
             }
           }
@@ -361,6 +371,10 @@
         }
       });
     }
+
+    /**********************************************************************
+     * SolidLabel
+     **********************************************************************/
   </script>
 </body>
 
