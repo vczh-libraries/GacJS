@@ -224,8 +224,9 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         }
         const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
         const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+        const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 0; min-height: 0;';
 
-        textElement.style.cssText = `position:absolute; overflow:hidden; flex: 0 0 100%; ${fontStyle} ${formatStyle}`;
+        textElement.style.cssText = `overflow:hidden; ${flexItemStyle} ${fontStyle} ${formatStyle}`;
     }
 }
 
