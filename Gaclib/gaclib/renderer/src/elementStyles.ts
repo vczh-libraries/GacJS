@@ -191,7 +191,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
 
     const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
-    const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'normal' : 'pre'};`;
+    const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
 
     let verticalAlignStyle: string;
     switch (desc.verticalAlignment) {
