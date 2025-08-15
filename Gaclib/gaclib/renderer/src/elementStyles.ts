@@ -164,7 +164,10 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
  * SolidLabel
  **********************************************************************/
 
-function updateWebkitLineClamp(textDiv: HTMLElement, webkitElement: HTMLElement): void {
+const WebkitElementName = '$GacUI-WebkitElement';
+
+function updateWebkitLineClamp(textDiv: HTMLElement): void {
+    const webkitElement = textDiv[WebkitElementName] as unknown as HTMLDivElement;
     const lineHeight = parseFloat(webkitElement.style.lineHeight) * (parseFloat(webkitElement.style.fontSize));
     const lineClamp = Math.floor(textDiv.clientHeight / lineHeight);
     webkitElement.style.webkitLineClamp = `${lineClamp}`;
@@ -180,6 +183,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
 
     const ellipseWithWrapLine = desc.ellipse && desc.wrapLine;
     const useWebkitLineClamp = getFeatureGates().useWebkitLineClamp;
+    delete textDiv[WebkitElementName];
 
     const textContent = desc.multiline ? desc.text : desc.text.replaceAll('\r', '').split('\n').join(' ');
     let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
@@ -247,12 +251,14 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
 
             const webkitElement = document.createElement('div');
             textElement.replaceChildren(webkitElement);
+            textDiv[WebkitElementName] = webkitElement;
+
             webkitElement.textContent = textContent;
 
             const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; ${fontStyle} ${formatStyle}`;
 
-            updateWebkitLineClamp(textDiv, webkitElement);
+            updateWebkitLineClamp(textDiv);
         }
     }
 }
