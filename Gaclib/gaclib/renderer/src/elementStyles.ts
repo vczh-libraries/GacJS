@@ -172,56 +172,61 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     }
 
     const textContent = desc.multiline ? desc.text : desc.text.replaceAll('\r', '').split('\n').join(' ');
-    let textElement = textDiv.childNodes[0] as unknown as Text;
-    if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof Text)) {
-        textElement = document.createTextNode(textContent);
+    let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
+    if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof HTMLDivElement)) {
+        textElement = document.createElement('div');
         textDiv.replaceChildren(textElement);
     } else {
-        textElement.textContent = textContent;
+        textElement.replaceChildren();
+    }
+    textElement.textContent = textContent;
+
+    {
+        let verticalAlignStyle: string;
+        switch (desc.verticalAlignment) {
+            case SCHEMA.ElementVerticalAlignment.Center:
+                verticalAlignStyle = 'align-items: center;';
+                break;
+            case SCHEMA.ElementVerticalAlignment.Bottom:
+                verticalAlignStyle = 'align-items: flex-end;';
+                break;
+            default:
+                verticalAlignStyle = 'align-items: flex-start;';
+                break;
+        }
+
+        let horizontalAlignStyle: string;
+        switch (desc.horizontalAlignment) {
+            case SCHEMA.ElementHorizontalAlignment.Center:
+                horizontalAlignStyle = 'justify-content: center;';
+                break;
+            case SCHEMA.ElementHorizontalAlignment.Right:
+                horizontalAlignStyle = 'justify-content: flex-end;';
+                break;
+            default:
+                horizontalAlignStyle = 'justify-content: flex-start;';
+                break;
+        }
+
+        const alignmentStyle = `display: flex; ${verticalAlignStyle} ${horizontalAlignStyle}`;
+        const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
+
+        textDiv.style.cssText = `overflow:hidden; ${sizeStyle} ${alignmentStyle}`;
     }
 
+    {
+        const textDecorations: string[] = [];
+        if (desc.font.underline) {
+            textDecorations.push('underline');
+        }
+        if (desc.font.strikeline) {
+            textDecorations.push('line-through');
+        }
+        const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+        const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
 
-    const textDecorations: string[] = [];
-    if (desc.font.underline) {
-        textDecorations.push('underline');
+        textElement.style.cssText = `position:absolute; overflow:hidden; flex: 0 0 100%; ${fontStyle} ${formatStyle}`;
     }
-    if (desc.font.strikeline) {
-        textDecorations.push('line-through');
-    }
-    const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
-
-    const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
-    const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-
-    let verticalAlignStyle: string;
-    switch (desc.verticalAlignment) {
-        case SCHEMA.ElementVerticalAlignment.Center:
-            verticalAlignStyle = 'align-items: center;';
-            break;
-        case SCHEMA.ElementVerticalAlignment.Bottom:
-            verticalAlignStyle = 'align-items: flex-end;';
-            break;
-        default:
-            verticalAlignStyle = 'align-items: flex-start;';
-            break;
-    }
-
-    let horizontalAlignStyle: string;
-    switch (desc.horizontalAlignment) {
-        case SCHEMA.ElementHorizontalAlignment.Center:
-            horizontalAlignStyle = 'justify-content: center;';
-            break;
-        case SCHEMA.ElementHorizontalAlignment.Right:
-            horizontalAlignStyle = 'justify-content: flex-end;';
-            break;
-        default:
-            horizontalAlignStyle = 'justify-content: flex-start;';
-            break;
-    }
-
-    const alignmentStyle = `display: flex; ${verticalAlignStyle} ${horizontalAlignStyle}`;
-
-    textDiv.style.cssText = `${CommonStyle} ${fontStyle} ${sizeStyle} ${formatStyle} ${alignmentStyle}`;
 }
 
 /**********************************************************************
