@@ -41,7 +41,7 @@ export interface IVirtualDomProvider {
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
 
 export interface VirtualDomRecord {
-    root: IVirtualDom;
+    roots: IVirtualDom[];
     doms: VirtualDomMap;
 }
 
