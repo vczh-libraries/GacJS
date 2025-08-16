@@ -67,6 +67,22 @@ function collectIds(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord)
     }
 }
 
+function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
+    // Process children
+    const children: IVirtualDom[] = [];
+    if (renderingDom.children) {
+        for (const child of renderingDom.children) {
+            if (child !== null) {
+                const childVirtualDom = createVirtualDom(renderingDom, child, record, provider);
+                children.push(childVirtualDom);
+            }
+        }
+    }
+
+    // Update children on the target virtual DOM
+    virtualDom.updateChildren(children);
+}
+
 function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
     // Calculate relative bounds (offset from parent)
     const parentRenderingBounds = parentRenderingDom.content.bounds;
@@ -108,19 +124,8 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
         record.elementToDoms.set(renderingDom.content.element, virtualDom);
     }
 
-    // Process children
-    const children: IVirtualDom[] = [];
-    if (renderingDom.children) {
-        for (const child of renderingDom.children) {
-            if (child !== null) {
-                const childVirtualDom = createVirtualDom(renderingDom, child, record, provider);
-                children.push(childVirtualDom);
-            }
-        }
-    }
-
-    // Update children on the virtual DOM
-    virtualDom.updateChildren(children);
+    // Process and update children
+    processAndUpdateChildren(renderingDom, virtualDom, record, provider);
 
     return virtualDom;
 }
@@ -153,19 +158,8 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
     // First, traverse the entire tree to verify no duplicate IDs
     collectIds(renderingDom, record);
 
-    // Process all children of the root
-    const children: IVirtualDom[] = [];
-    if (renderingDom.children) {
-        for (const child of renderingDom.children) {
-            if (child !== null) {
-                const childVirtualDom = createVirtualDom(renderingDom, child, record, provider);
-                children.push(childVirtualDom);
-            }
-        }
-    }
-
-    // Update children on the screen
-    record.screen.updateChildren(children);
+    // Process and update children on the screen
+    processAndUpdateChildren(renderingDom, record.screen, record, provider);
 
     // Return the result
     return record;
