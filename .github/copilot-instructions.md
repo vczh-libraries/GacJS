@@ -14,14 +14,17 @@ This repo contains TypeScript code for building a website,
 implementing an HTTP client to communicate with a remote server,
 rendering a remote GUI in HTML via DOM and Canvas.
 
-# General Instruction
+# Validation after Code Change
 
 - This repo uses `yarn` and `npm` to build.
-  - My `build` will always call `eslint`, do not call `npx eslint`.
-- The root of the workspace is defined in `Gaclib/package.json`.
-  - Call `yarn build` in `Gaclib` to build the whole workspace.
-  - If your working directory in the repo root, you needs `cd Gaclib; yarn build`.
-- Call `yarn test` to run all test cases. `yarn test` does not automatically build the code. You should always build before running test cases.
+- The root of the workspace is defined in `(repo-root)/Gaclib/package.json`.
+- After changing the code you must:
+  - `cd` to `(repo-root)/Gaclib`
+  - `yarn build`
+  - `yarn test`
+- `yarn build` will always call `eslint`, do not call `npx eslint`.
+- `yarn test` will always call `vitest`, do not call `npx vitest`.
+  - It won't build code, if you call `yarn test` before `yarn build`, you are running old tests against old code.
 
 ## TypeScript/JavaScript coding guidelines
 
