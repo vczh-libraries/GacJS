@@ -45,6 +45,10 @@ export interface VirtualDomRecord {
     doms: VirtualDomMap;
 }
 
+function collectIds(renderingDom: SCHEMA.RenderingDom, doms: VirtualDomMap): void {
+    throw new Error('Not implemented');
+}
+
 function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom, doms: VirtualDomMap, provider: IVirtualDomProvider): IVirtualDom {
     throw new Error('Not implemented');
 }
