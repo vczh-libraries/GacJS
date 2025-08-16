@@ -1,5 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { getFeatureGates } from '../featureGates';
+import { TypedElementDesc } from '../virtualDom';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
@@ -331,19 +332,6 @@ function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(ta
  * applyTypedStyle
  **********************************************************************/
 
-export type TypedElementDesc =
-    | { type: SCHEMA.RendererType.Raw }
-    | { type: SCHEMA.RendererType.FocusRectangle }
-    | { type: SCHEMA.RendererType.SolidBorder; desc: SCHEMA.ElementDesc_SolidBorder }
-    | { type: SCHEMA.RendererType.SolidBackground; desc: SCHEMA.ElementDesc_SolidBackground }
-    | { type: SCHEMA.RendererType.GradientBackground; desc: SCHEMA.ElementDesc_GradientBackground }
-    | { type: SCHEMA.RendererType.SinkBorder; desc: SCHEMA.ElementDesc_SinkBorder }
-    | { type: SCHEMA.RendererType.SinkSplitter; desc: SCHEMA.ElementDesc_SinkSplitter }
-    | { type: SCHEMA.RendererType.InnerShadow; desc: SCHEMA.ElementDesc_InnerShadow }
-    | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame }
-    | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
-    | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel };
-
 export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc): void {
     const savedLeft = target.style.left;
     const savedTop = target.style.top;
@@ -425,7 +413,7 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
 }
 
 /**********************************************************************
- * applyTypedStyle
+ * applyBounds
  **********************************************************************/
 
 export function applyBounds(target: HTMLElement, bounds: SCHEMA.Rect): void {
