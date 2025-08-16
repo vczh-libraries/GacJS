@@ -44,12 +44,14 @@ export type ElementMap = Map<SCHEMA.TYPES.Integer, TypedElementDesc>;
 export interface VirtualDomRecord {
     screen: IVirtualDom;
     doms: VirtualDomMap;
+    elementToDoms: VirtualDomMap;
+    elements: ElementMap;
 }
 
-function collectIds(renderingDom: SCHEMA.RenderingDom, doms: VirtualDomMap): void {
+function collectIds(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord): void {
     // Collect all IDs in the tree and verify no duplicates
-    if (doms.has(renderingDom.id)) {
-        throw new Error(`Duplicate ID found: ${renderingDom.id}`);
+    if (record.doms.has(renderingDom.id)) {
+        throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
     }
 
     // Note: We don't add to doms here, just verify uniqueness
@@ -59,13 +61,13 @@ function collectIds(renderingDom: SCHEMA.RenderingDom, doms: VirtualDomMap): voi
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                collectIds(child, doms);
+                collectIds(child, record);
             }
         }
     }
 }
 
-function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom, doms: VirtualDomMap, elements: ElementMap, provider: IVirtualDomProvider): IVirtualDom {
+function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
     // Calculate relative bounds (offset from parent)
     const parentBounds = parent.bounds;
     const relativeBounds: SCHEMA.Rect = {
@@ -78,8 +80,11 @@ function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom
     // Create TypedElementDesc from element ID if present
     let typedDesc: TypedElementDesc | undefined = undefined;
     if (renderingDom.content.element !== null && renderingDom.content.element !== undefined) {
-        // Look up the element in the provided element map
-        typedDesc = elements.get(renderingDom.content.element);
+        // Look up the element in the provided element map with error checking
+        typedDesc = record.elements.get(renderingDom.content.element);
+        if (typedDesc === undefined) {
+            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} not found in ElementMap`);
+        }
     }
 
     // Create the virtual DOM node
@@ -92,14 +97,23 @@ function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom
     );
 
     // Add to the doms map
-    doms.set(renderingDom.id, virtualDom);
+    record.doms.set(renderingDom.id, virtualDom);
+
+    // Add to elementToDoms map if this DOM has an element
+    if (renderingDom.content.element !== null && renderingDom.content.element !== undefined) {
+        // Ensure 1:1 mapping - element should not already exist in elementToDoms
+        if (record.elementToDoms.has(renderingDom.content.element)) {
+            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
+        }
+        record.elementToDoms.set(renderingDom.content.element, virtualDom);
+    }
 
     // Process children
     const children: IVirtualDom[] = [];
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(virtualDom, child, doms, elements, provider);
+                const childVirtualDom = createVirtualDom(virtualDom, child, record, provider);
                 children.push(childVirtualDom);
             }
         }
@@ -125,31 +139,36 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
         renderingDom.content.validArea.y1 !== 0 ||
         renderingDom.content.validArea.x2 !== 0 ||
         renderingDom.content.validArea.y2 !== 0) {
-        throw new Error('Root renderingDom does not match expected screen format');
+        throw new Error('Root RenderingDom does not match expected screen format');
     }
 
-    // Create the doms map and collect all IDs to verify uniqueness
-    const doms: VirtualDomMap = new Map();
+    // Create the screen virtual DOM - it has special handling since it's the root
+    const screen = provider.createSimpleDom(renderingDom.id, renderingDom.content.bounds);
+
+    // Create the VirtualDomRecord with all required maps
+    const record: VirtualDomRecord = {
+        screen,
+        doms: new Map(),
+        elementToDoms: new Map(),
+        elements
+    };
 
     // First, traverse the entire tree to verify no duplicate IDs
     // Skip the root itself in the ID collection
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                collectIds(child, doms);
+                collectIds(child, record);
             }
         }
     }
-
-    // Create the screen virtual DOM - it has special handling since it's the root
-    const screen = provider.createSimpleDom(renderingDom.id, renderingDom.content.bounds);
 
     // Process all children of the root
     const children: IVirtualDom[] = [];
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(screen, child, doms, elements, provider);
+                const childVirtualDom = createVirtualDom(screen, child, record, provider);
                 children.push(childVirtualDom);
             }
         }
@@ -159,8 +178,5 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
     screen.updateChildren(children);
 
     // Return the result
-    return {
-        screen,
-        doms
-    };
+    return record;
 }
