@@ -2,7 +2,7 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 import { IVirtualDom, IVirtualDomProvider, TypedElementDesc } from '../src/virtualDom';
 
 class VirtualDomMock implements IVirtualDom {
-    private _parent: IVirtualDom | undefined;
+    private _parent: VirtualDomMock | undefined;
     private _children: IVirtualDom[];
 
     constructor(
@@ -32,22 +32,54 @@ class VirtualDomMock implements IVirtualDom {
         this._bounds = bounds;
     }
 
-    updateChildren(children: IVirtualDom[]): void {
-        // Clear existing parent references
-        for (const child of this._children) {
-            if (child instanceof VirtualDomMock) {
-                child._parent = undefined;
+    private isRootOfSelf(child: VirtualDomMock): boolean {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        let current: VirtualDomMock = this;
+        while (true) {
+            if (!current._parent) {
+                return current === child;
+            }
+            current = current._parent;
+        }
+    }
+
+    private updateParent(child: VirtualDomMock, newParent: VirtualDomMock | undefined): void {
+        const oldParent = child._parent;
+
+        if (oldParent !== undefined && oldParent !== newParent) {
+            const index = oldParent._children.indexOf(child);
+            if (index !== -1) {
+                oldParent._children.splice(index, 1);
             }
         }
 
-        // Create a copy of the children array as required
+        child._parent = newParent;
+    }
+
+    updateChildren(children: IVirtualDom[]): void {
+        for (const child of children) {
+            if (!(child instanceof VirtualDomMock)) {
+                throw new Error('All children must be VirtualDomMock instances');
+            }
+            if (child === this) {
+                throw new Error('Child cannot be this node itself');
+            }
+            if (child._parent !== undefined && child._parent !== this) {
+                throw new Error('Child already has a different parent');
+            }
+            if (this.isRootOfSelf(child)) {
+                throw new Error('Child cannot be the root of this node');
+            }
+        }
+
+        for (const child of this._children) {
+            this.updateParent(child as VirtualDomMock, undefined);
+        }
+
         this._children = [...children];
 
-        // Set parent references for new children
         for (const child of this._children) {
-            if (child instanceof VirtualDomMock) {
-                child._parent = this;
-            }
+            this.updateParent(child as VirtualDomMock, this);
         }
     }
 }
