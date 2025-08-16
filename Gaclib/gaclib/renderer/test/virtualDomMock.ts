@@ -11,7 +11,7 @@ class VirtualDomMock implements IVirtualDom {
         private _bounds: SCHEMA.Rect,
         public readonly hitTestResult: SCHEMA.WindowHitTestResult | undefined,
         public readonly cursor: SCHEMA.WindowSystemCursorType | undefined,
-        public readonly typedDesc: TypedElementDesc | undefined
+        private _typedDesc: TypedElementDesc | undefined
     ) {
         this._parent = undefined;
         this._children = [];
@@ -25,12 +25,33 @@ class VirtualDomMock implements IVirtualDom {
         return this._bounds;
     }
 
+    get typedDesc(): TypedElementDesc | undefined {
+        return this._typedDesc;
+    }
+
     get children(): ReadonlyArray<IVirtualDom> {
         return this._children;
     }
 
     updateBounds(bounds: SCHEMA.Rect): void {
         this._bounds = bounds;
+    }
+
+    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+        // Only allow undefined to undefined, or same type updates
+        if (this._typedDesc === undefined && typedDesc !== undefined) {
+            throw new Error('Cannot change typedDesc from undefined to defined.');
+        }
+        if (this._typedDesc !== undefined && typedDesc === undefined) {
+            throw new Error('Cannot change typedDesc from defined to undefined.');
+        }
+        if (typedDesc !== undefined && this._typedDesc !== undefined) {
+            // Ensure the type part is not changed, only the desc part can change
+            if (typedDesc.type !== this._typedDesc.type) {
+                throw new Error('Cannot change the type of typedDesc, only the desc part can be updated.');
+            }
+            this._typedDesc = typedDesc;
+        }
     }
 
     private isRootOfSelf(child: VirtualDomMock): boolean {
@@ -145,20 +166,10 @@ test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock inst
     const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
 
     // Create a mock object that implements IVirtualDom but is not VirtualDomMock
-    const fakeDom = {
-        id: 2,
-        parent: undefined,
-        bounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
-        children: [],
-        hitTestResult: undefined,
-        cursor: undefined,
-        typedDesc: undefined,
-        updateBounds: () => { },
-        updateChildren: () => { }
-    };
+    const fakeDom = {} as unknown as IVirtualDom;
 
     assert.throws(() => {
-        parent.updateChildren([fakeDom as IVirtualDom]);
+        parent.updateChildren([fakeDom]);
     }, 'All children must be VirtualDomMock instances.');
 });
 
@@ -312,4 +323,142 @@ test('VirtualDomMock.updateChildren works with empty array', () => {
     parent.updateChildren([]);
     assert.isUndefined(child.parent);
     expect(parent.children).toEqual([]);
+});
+
+test('VirtualDomMock.updateTypedDesc updates typedDesc correctly', () => {
+    const provider = new VirtualDomProviderMock();
+    const initialDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 1,
+            borderColor: '#FF0000',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const newDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 1,
+            borderColor: '#00FF00',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 5, radiusY: 5 }
+        }
+    };
+
+    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+
+    assert.deepEqual(dom.typedDesc, initialDesc);
+
+    dom.updateTypedDesc(newDesc);
+
+    assert.deepEqual(dom.typedDesc, newDesc);
+});
+
+test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
+    const provider = new VirtualDomProviderMock();
+
+    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, undefined) as VirtualDomMock;
+
+    assert.isUndefined(dom.typedDesc);
+
+    dom.updateTypedDesc(undefined);
+
+    assert.isUndefined(dom.typedDesc);
+});
+
+test('VirtualDomMock.updateTypedDesc throws when trying to set from undefined to defined', () => {
+    const provider = new VirtualDomProviderMock();
+    const newDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBackground,
+        desc: {
+            id: 1,
+            backgroundColor: '#808080',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+
+    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, undefined) as VirtualDomMock;
+
+    assert.isUndefined(dom.typedDesc);
+
+    assert.throws(() => {
+        dom.updateTypedDesc(newDesc);
+    }, 'Cannot change typedDesc from undefined to defined.');
+
+    // Verify original typedDesc is unchanged
+    assert.isUndefined(dom.typedDesc);
+});
+
+test('VirtualDomMock.updateTypedDesc throws when trying to set from defined to undefined', () => {
+    const provider = new VirtualDomProviderMock();
+    const initialDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.FocusRectangle
+    };
+
+    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+
+    assert.deepEqual(dom.typedDesc, initialDesc);
+
+    assert.throws(() => {
+        dom.updateTypedDesc(undefined);
+    }, 'Cannot change typedDesc from defined to undefined.');
+
+    // Verify original typedDesc is unchanged
+    assert.deepEqual(dom.typedDesc, initialDesc);
+});
+
+test('VirtualDomMock.updateTypedDesc throws when trying to change type', () => {
+    const provider = new VirtualDomProviderMock();
+    const initialDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 1,
+            borderColor: '#FF0000',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const differentTypeDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBackground,
+        desc: {
+            id: 1,
+            backgroundColor: '#00FF00',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+
+    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+
+    assert.throws(() => {
+        dom.updateTypedDesc(differentTypeDesc);
+    }, 'Cannot change the type of typedDesc, only the desc part can be updated.');
+
+    // Verify original typedDesc is unchanged
+    assert.deepEqual(dom.typedDesc, initialDesc);
+});
+
+test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', () => {
+    const provider = new VirtualDomProviderMock();
+    const initialDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 1,
+            borderColor: '#FF0000',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const updatedDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 1,
+            borderColor: '#00FF00',
+            shape: { shapeType: SCHEMA.ElementShapeType.Ellipse, radiusX: 5, radiusY: 10 }
+        }
+    };
+
+    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+
+    assert.deepEqual(dom.typedDesc, initialDesc);
+
+    dom.updateTypedDesc(updatedDesc);
+
+    assert.deepEqual(dom.typedDesc, updatedDesc);
 });

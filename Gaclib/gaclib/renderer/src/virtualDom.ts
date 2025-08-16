@@ -23,6 +23,7 @@ export interface IVirtualDom {
     get children(): ReadonlyArray<IVirtualDom>;
     updateBounds(bounds: SCHEMA.Rect): void;
     updateChildren(children: IVirtualDom[]): void;
+    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void;
 }
 
 export interface IVirtualDomProvider {
@@ -32,4 +33,7 @@ export interface IVirtualDomProvider {
         hitTestResult: SCHEMA.WindowHitTestResult | undefined,
         cursor: SCHEMA.WindowSystemCursorType | undefined,
         typedDesc: TypedElementDesc | undefined): IVirtualDom;
+    createSimpleDom(
+        id: SCHEMA.TYPES.Integer,
+        bounds: SCHEMA.Rect): IVirtualDom;
 }
