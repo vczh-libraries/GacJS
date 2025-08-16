@@ -1,6 +1,5 @@
 # ToDo
 
-- Do not need `ResizeObserver` since size and font are set explicitly, there is no automatic layout. Export a function instead.
 - Create a `IVirtualDom` for mocking `HTMLElement`, 1:1 mappings.
   - Implement the HTML provider and test it in elements.html
   - Implement the unit test provider mock

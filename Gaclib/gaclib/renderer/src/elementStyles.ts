@@ -165,19 +165,14 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
  **********************************************************************/
 
 const WebkitElementName = '$GacUI-WebkitElement';
-const solidLabelResizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-    for (const entry of entries) {
-        if (entry.target instanceof HTMLElement) {
-            updateWebkitLineClamp(entry.target);
-        }
-    }
-});
 
-function updateWebkitLineClamp(textDiv: HTMLElement): void {
+export function onSolidLabelResized(textDiv: HTMLElement): void {
     const webkitElement = textDiv[WebkitElementName] as unknown as HTMLDivElement;
-    const lineHeight = parseFloat(webkitElement.style.lineHeight) * (parseFloat(webkitElement.style.fontSize));
-    const lineClamp = Math.floor(textDiv.clientHeight / lineHeight);
-    webkitElement.style.webkitLineClamp = `${lineClamp}`;
+    if (webkitElement) {
+        const lineHeight = parseFloat(webkitElement.style.lineHeight) * (parseFloat(webkitElement.style.fontSize));
+        const lineClamp = Math.floor(textDiv.clientHeight / lineHeight);
+        webkitElement.style.webkitLineClamp = `${lineClamp}`;
+    }
 }
 
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
@@ -192,7 +187,6 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     const useWebkitLineClamp = getFeatureGates().useWebkitLineClamp;
 
     delete textDiv[WebkitElementName];
-    solidLabelResizeObserver.unobserve(textDiv);
 
     const textContent = desc.multiline ? desc.text : desc.text.replaceAll('\r', '').split('\n').join(' ');
     let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
@@ -267,8 +261,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; ${fontStyle} ${formatStyle}`;
 
-            updateWebkitLineClamp(textDiv);
-            solidLabelResizeObserver.observe(textDiv);
+            onSolidLabelResized(textDiv);
         }
     }
 }
