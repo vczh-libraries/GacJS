@@ -133,7 +133,8 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
 // IMPORTANT: RenderingDomContent.bounds are global but IVirtualDom.bounds is the offset to its parent
 export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, provider: IVirtualDomProvider): VirtualDomRecord {
     // Verify that this is the screen (root) element
-    if (renderingDom.content.hitTestResult !== null ||
+    if (renderingDom.id !== -1 ||
+        renderingDom.content.hitTestResult !== null ||
         renderingDom.content.cursor !== null ||
         renderingDom.content.element !== null ||
         renderingDom.content.bounds.x1 !== 0 ||
