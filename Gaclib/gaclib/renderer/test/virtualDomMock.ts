@@ -4,7 +4,7 @@ import { assert, test } from 'vitest';
 
 class VirtualDomMock implements IVirtualDom {
     private _parent: VirtualDomMock | undefined;
-    private _children: IVirtualDom[];
+    private _children: VirtualDomMock[];
 
     constructor(
         public readonly id: SCHEMA.TYPES.Integer,
@@ -44,19 +44,6 @@ class VirtualDomMock implements IVirtualDom {
         }
     }
 
-    private updateParent(child: VirtualDomMock, newParent: VirtualDomMock | undefined): void {
-        const oldParent = child._parent;
-
-        if (oldParent !== undefined && oldParent !== newParent) {
-            const index = oldParent._children.indexOf(child);
-            if (index !== -1) {
-                oldParent._children.splice(index, 1);
-            }
-        }
-
-        child._parent = newParent;
-    }
-
     updateChildren(children: IVirtualDom[]): void {
         for (const child of children) {
             if (!(child instanceof VirtualDomMock)) {
@@ -74,13 +61,13 @@ class VirtualDomMock implements IVirtualDom {
         }
 
         for (const child of this._children) {
-            this.updateParent(child as VirtualDomMock, undefined);
+            child._parent = undefined;
         }
 
-        this._children = [...children];
+        this._children = [...children] as VirtualDomMock[];
 
         for (const child of this._children) {
-            this.updateParent(child as VirtualDomMock, this);
+            child._parent = this;
         }
     }
 }
