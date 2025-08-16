@@ -28,4 +28,4 @@ export function createRenderer(settings: GacUISettings): IGacUIHtmlRenderer {
 export * from './interfaces';
 export * from './featureGates';
 export * from './GacUIHtmlRendererImpl';
-export * from './elementStyles';
+export * from './domRenderer/elementStyles';

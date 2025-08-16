@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { getFeatureGates } from './featureGates';
+import { getFeatureGates } from '../featureGates';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
 const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
