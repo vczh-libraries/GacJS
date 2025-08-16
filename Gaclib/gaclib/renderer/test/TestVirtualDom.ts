@@ -325,7 +325,7 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Verify the screen (root)
-    assert.strictEqual(result.screen.id, 1);
+    assert.strictEqual(result.screen.id, -1);
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
     assert.strictEqual(result.screen.children.length, 2);
