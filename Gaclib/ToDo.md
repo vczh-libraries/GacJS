@@ -1,6 +1,7 @@
 # ToDo
 
 - `IVirtualDomProvider`
+  - Should allow `IVirtualDom` to change `element` freely, delete the limitation, because composition can always change element. The limitation should apply to update requests.
   - Implement the HTML `IVirtualDomProvider` and test it in elements.html
   - Implement `RenderingDom` -> `IVirtualDom` but not consider `validArea` yet.
   - Consider `validArea` in `createVirtualDomFromRenderingDom`.
