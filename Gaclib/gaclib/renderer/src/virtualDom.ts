@@ -67,7 +67,7 @@ function collectIds(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord)
     }
 }
 
-function createVirtualDom(parentVirtualDom: IVirtualDom, parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
+function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
     // Calculate relative bounds (offset from parent)
     const parentRenderingBounds = parentRenderingDom.content.bounds;
     const relativeBounds: SCHEMA.Rect = {
@@ -79,7 +79,7 @@ function createVirtualDom(parentVirtualDom: IVirtualDom, parentRenderingDom: SCH
 
     // Create TypedElementDesc from element ID if present
     let typedDesc: TypedElementDesc | undefined = undefined;
-    if (renderingDom.content.element !== null && renderingDom.content.element !== undefined) {
+    if (renderingDom.content.element !== null) {
         // Look up the element in the provided element map with error checking
         typedDesc = record.elements.get(renderingDom.content.element);
         if (typedDesc === undefined) {
@@ -100,7 +100,7 @@ function createVirtualDom(parentVirtualDom: IVirtualDom, parentRenderingDom: SCH
     record.doms.set(renderingDom.id, virtualDom);
 
     // Add to elementToDoms map if this DOM has an element
-    if (renderingDom.content.element !== null && renderingDom.content.element !== undefined) {
+    if (renderingDom.content.element !== null) {
         // Ensure 1:1 mapping - element should not already exist in elementToDoms
         if (record.elementToDoms.has(renderingDom.content.element)) {
             throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
@@ -113,7 +113,7 @@ function createVirtualDom(parentVirtualDom: IVirtualDom, parentRenderingDom: SCH
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(virtualDom, renderingDom, child, record, provider);
+                const childVirtualDom = createVirtualDom(renderingDom, child, record, provider);
                 children.push(childVirtualDom);
             }
         }
@@ -142,40 +142,30 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
         throw new Error('Root RenderingDom does not match expected screen format');
     }
 
-    // Create the screen virtual DOM - it has special handling since it's the root
-    const screen = provider.createSimpleDom(renderingDom.id, renderingDom.content.bounds);
-
     // Create the VirtualDomRecord with all required maps
     const record: VirtualDomRecord = {
-        screen,
+        screen: provider.createSimpleDom(renderingDom.id, renderingDom.content.bounds),
         doms: new Map(),
         elementToDoms: new Map(),
         elements
     };
 
     // First, traverse the entire tree to verify no duplicate IDs
-    // Skip the root itself in the ID collection
-    if (renderingDom.children) {
-        for (const child of renderingDom.children) {
-            if (child !== null) {
-                collectIds(child, record);
-            }
-        }
-    }
+    collectIds(renderingDom, record);
 
     // Process all children of the root
     const children: IVirtualDom[] = [];
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(screen, renderingDom, child, record, provider);
+                const childVirtualDom = createVirtualDom(renderingDom, child, record, provider);
                 children.push(childVirtualDom);
             }
         }
     }
 
     // Update children on the screen
-    screen.updateChildren(children);
+    record.screen.updateChildren(children);
 
     // Return the result
     return record;
