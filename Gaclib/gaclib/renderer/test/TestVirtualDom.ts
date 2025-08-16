@@ -4,9 +4,9 @@ import { VirtualDomProviderMock } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
 // Helper function to create a valid root RenderingDom with zero bounds
-function createRootRenderingDom(id: SCHEMA.TYPES.Integer): SCHEMA.RenderingDom {
+function createRootRenderingDom(): SCHEMA.RenderingDom {
     return {
-        id,
+        id: -1,
         content: {
             hitTestResult: null,
             cursor: null,
@@ -50,7 +50,7 @@ function createChildRenderingDom(
 test('createVirtualDomFromRenderingDom - root node with no children', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const rootDom = createRootRenderingDom(-1);
+    const rootDom = createRootRenderingDom();
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
@@ -69,17 +69,8 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-negative-one ID)', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const invalidRootDom: SCHEMA.RenderingDom = {
-        id: 0, // Invalid ID, should be -1
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: null
-    };
+    const invalidRootDom = createRootRenderingDom();
+    invalidRootDom.id = 0; // Invalid ID, should be -1
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
@@ -89,17 +80,8 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-nega
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero bounds)', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const invalidRootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 10, y1: 20, x2: 30, y2: 40 }, // Non-zero bounds
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: null
-    };
+    const invalidRootDom = createRootRenderingDom();
+    invalidRootDom.content.bounds = { x1: 10, y1: 20, x2: 30, y2: 40 }; // Non-zero bounds
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
@@ -109,17 +91,8 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null hitTestResult)', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const invalidRootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: SCHEMA.WindowHitTestResult.Client, // Non-null hitTestResult
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: null
-    };
+    const invalidRootDom = createRootRenderingDom();
+    invalidRootDom.content.hitTestResult = SCHEMA.WindowHitTestResult.Client; // Non-null hitTestResult
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
@@ -129,17 +102,8 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null element)', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const invalidRootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: 123, // Non-null element
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: null
-    };
+    const invalidRootDom = createRootRenderingDom();
+    invalidRootDom.content.element = 123; // Non-null element
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
@@ -149,17 +113,8 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null cursor)', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const invalidRootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: SCHEMA.WindowSystemCursorType.Arrow, // Non-null cursor
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: null
-    };
+    const invalidRootDom = createRootRenderingDom();
+    invalidRootDom.content.cursor = SCHEMA.WindowSystemCursorType.Arrow; // Non-null cursor
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
@@ -169,17 +124,8 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero validArea)', () => {
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
-    const invalidRootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 10, y1: 20, x2: 30, y2: 40 } // Non-zero validArea
-        },
-        children: null
-    };
+    const invalidRootDom = createRootRenderingDom();
+    invalidRootDom.content.validArea = { x1: 10, y1: 20, x2: 30, y2: 40 }; // Non-zero validArea
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
@@ -190,26 +136,17 @@ test('createVirtualDomFromRenderingDom - throws on duplicate RenderingDom IDs', 
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
     
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: [
-            createChildRenderingDom(
-                2,
-                createRenderingDomContent({ x1: 10, y1: 10, x2: 110, y2: 110 })
-            ),
-            createChildRenderingDom(
-                2, // Duplicate ID - should throw
-                createRenderingDomContent({ x1: 200, y1: 10, x2: 300, y2: 110 })
-            )
-        ]
-    };
+    const rootDom = createRootRenderingDom();
+    rootDom.children = [
+        createChildRenderingDom(
+            2,
+            createRenderingDomContent({ x1: 10, y1: 10, x2: 110, y2: 110 })
+        ),
+        createChildRenderingDom(
+            2, // Duplicate ID - should throw
+            createRenderingDomContent({ x1: 200, y1: 10, x2: 300, y2: 110 })
+        )
+    ];
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(rootDom, elements, provider);
@@ -221,27 +158,18 @@ test('createVirtualDomFromRenderingDom - throws on missing element in ElementMap
     const elements: ElementMap = new Map();
     // Note: elements map is empty, but child references element ID 100
     
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: [
-            createChildRenderingDom(
-                2,
-                createRenderingDomContent(
-                    { x1: 10, y1: 10, x2: 110, y2: 110 },
-                    null,
-                    null,
-                    100 // Element ID not in map
-                )
+    const rootDom = createRootRenderingDom();
+    rootDom.children = [
+        createChildRenderingDom(
+            2,
+            createRenderingDomContent(
+                { x1: 10, y1: 10, x2: 110, y2: 110 },
+                null,
+                null,
+                100 // Element ID not in map
             )
-        ]
-    };
+        )
+    ];
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(rootDom, elements, provider);
@@ -254,36 +182,27 @@ test('createVirtualDomFromRenderingDom - throws on duplicate element mapping', (
     const elements: ElementMap = new Map();
     elements.set(100, focusRectangleDesc);
     
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: [
-            createChildRenderingDom(
-                2,
-                createRenderingDomContent(
-                    { x1: 10, y1: 10, x2: 110, y2: 110 },
-                    null,
-                    null,
-                    100 // Element ID
-                )
-            ),
-            createChildRenderingDom(
-                3,
-                createRenderingDomContent(
-                    { x1: 200, y1: 10, x2: 300, y2: 110 },
-                    null,
-                    null,
-                    100 // Same element ID - should throw
-                )
+    const rootDom = createRootRenderingDom();
+    rootDom.children = [
+        createChildRenderingDom(
+            2,
+            createRenderingDomContent(
+                { x1: 10, y1: 10, x2: 110, y2: 110 },
+                null,
+                null,
+                100 // Element ID
             )
-        ]
-    };
+        ),
+        createChildRenderingDom(
+            3,
+            createRenderingDomContent(
+                { x1: 200, y1: 10, x2: 300, y2: 110 },
+                null,
+                null,
+                100 // Same element ID - should throw
+            )
+        )
+    ];
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(rootDom, elements, provider);
@@ -328,64 +247,55 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     // Create tree structure: root(a(b(c,d)), e)
     // Global bounds: Root: (0,0,0,0), A: (100,100,300,300), B: (120,120,280,280), 
     //                C: (130,130,180,180), D: (200,200,270,270), E: (400,100,600,300)
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1, // root
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
+    const rootDom = createRootRenderingDom();
+    rootDom.children = [
+        { // a
+            id: 2,
+            content: createRenderingDomContent(
+                { x1: 100, y1: 100, x2: 300, y2: 300 },
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Arrow,
+                101
+            ),
+            children: [
+                { // b
+                    id: 3,
+                    content: createRenderingDomContent(
+                        { x1: 120, y1: 120, x2: 280, y2: 280 },
+                        null,
+                        null,
+                        102
+                    ),
+                    children: [
+                        { // c
+                            id: 4,
+                            content: createRenderingDomContent(
+                                { x1: 130, y1: 130, x2: 180, y2: 180 }
+                            ),
+                            children: null
+                        },
+                        { // d
+                            id: 5,
+                            content: createRenderingDomContent(
+                                { x1: 200, y1: 200, x2: 270, y2: 270 },
+                                null,
+                                null,
+                                103
+                            ),
+                            children: null
+                        }
+                    ]
+                }
+            ]
         },
-        children: [
-            { // a
-                id: 2,
-                content: createRenderingDomContent(
-                    { x1: 100, y1: 100, x2: 300, y2: 300 },
-                    SCHEMA.WindowHitTestResult.Client,
-                    SCHEMA.WindowSystemCursorType.Arrow,
-                    101
-                ),
-                children: [
-                    { // b
-                        id: 3,
-                        content: createRenderingDomContent(
-                            { x1: 120, y1: 120, x2: 280, y2: 280 },
-                            null,
-                            null,
-                            102
-                        ),
-                        children: [
-                            { // c
-                                id: 4,
-                                content: createRenderingDomContent(
-                                    { x1: 130, y1: 130, x2: 180, y2: 180 }
-                                ),
-                                children: null
-                            },
-                            { // d
-                                id: 5,
-                                content: createRenderingDomContent(
-                                    { x1: 200, y1: 200, x2: 270, y2: 270 },
-                                    null,
-                                    null,
-                                    103
-                                ),
-                                children: null
-                            }
-                        ]
-                    }
-                ]
-            },
-            { // e
-                id: 6,
-                content: createRenderingDomContent(
-                    { x1: 400, y1: 100, x2: 600, y2: 300 }
-                ),
-                children: null
-            }
-        ]
-    };
+        { // e
+            id: 6,
+            content: createRenderingDomContent(
+                { x1: 400, y1: 100, x2: 600, y2: 300 }
+            ),
+            children: null
+        }
+    ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
@@ -477,41 +387,32 @@ test('createVirtualDomFromRenderingDom - complex bounds calculation with multipl
     const elements: ElementMap = new Map();
     
     // Create a 3-level nested structure with specific bounds for testing
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1, // Root at (0,0,0,0)
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: [
-            {
-                id: 2, // Level 1: Global (100,200,600,700)
-                content: createRenderingDomContent(
-                    { x1: 100, y1: 200, x2: 600, y2: 700 }
-                ),
-                children: [
-                    {
-                        id: 3, // Level 2: Global (150,250,550,650)
-                        content: createRenderingDomContent(
-                            { x1: 150, y1: 250, x2: 550, y2: 650 }
-                        ),
-                        children: [
-                            {
-                                id: 4, // Level 3: Global (200,300,500,600)
-                                content: createRenderingDomContent(
-                                    { x1: 200, y1: 300, x2: 500, y2: 600 }
-                                ),
-                                children: null
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    };
+    const rootDom = createRootRenderingDom();
+    rootDom.children = [
+        {
+            id: 2, // Level 1: Global (100,200,600,700)
+            content: createRenderingDomContent(
+                { x1: 100, y1: 200, x2: 600, y2: 700 }
+            ),
+            children: [
+                {
+                    id: 3, // Level 2: Global (150,250,550,650)
+                    content: createRenderingDomContent(
+                        { x1: 150, y1: 250, x2: 550, y2: 650 }
+                    ),
+                    children: [
+                        {
+                            id: 4, // Level 3: Global (200,300,500,600)
+                            content: createRenderingDomContent(
+                                { x1: 200, y1: 300, x2: 500, y2: 600 }
+                            ),
+                            children: null
+                        }
+                    ]
+                }
+            ]
+        }
+    ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
