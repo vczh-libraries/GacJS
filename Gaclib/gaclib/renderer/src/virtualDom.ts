@@ -37,3 +37,14 @@ export interface IVirtualDomProvider {
         id: SCHEMA.TYPES.Integer,
         bounds: SCHEMA.Rect): IVirtualDom;
 }
+
+export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
+
+export interface VirtualDomRecord {
+    root: IVirtualDom;
+    doms: VirtualDomMap;
+}
+
+export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, provider: IVirtualDomProvider): VirtualDomRecord {
+    throw new Error('Not implemented');
+}
