@@ -41,10 +41,15 @@ export interface IVirtualDomProvider {
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
 
 export interface VirtualDomRecord {
-    roots: IVirtualDom[];
+    screen: IVirtualDom;
     doms: VirtualDomMap;
 }
 
+function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom, doms: VirtualDomMap, provider: IVirtualDomProvider): IVirtualDom {
+    throw new Error('Not implemented');
+}
+
+// IMPORTANT: RenderingDomContent.bounds are global but IVirtualDom.bounds is the offset to its parent
 export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, provider: IVirtualDomProvider): VirtualDomRecord {
     throw new Error('Not implemented');
 }
