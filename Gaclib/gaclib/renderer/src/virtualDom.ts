@@ -48,24 +48,7 @@ export interface VirtualDomRecord {
     elements: ElementMap;
 }
 
-function collectIds(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord): void {
-    // Collect all IDs in the tree and verify no duplicates
-    if (record.doms.has(renderingDom.id)) {
-        throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
-    }
 
-    // Note: We don't add to doms here, just verify uniqueness
-    // The actual creation happens in createVirtualDom
-
-    // Recursively collect from children
-    if (renderingDom.children) {
-        for (const child of renderingDom.children) {
-            if (child !== null) {
-                collectIds(child, record);
-            }
-        }
-    }
-}
 
 function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
     // Process children
@@ -84,6 +67,11 @@ function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom:
 }
 
 function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
+    // Check for duplicate IDs
+    if (record.doms.has(renderingDom.id)) {
+        throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
+    }
+
     // Calculate relative bounds (offset from parent)
     const parentRenderingBounds = parentRenderingDom.content.bounds;
     const relativeBounds: SCHEMA.Rect = {
@@ -155,9 +143,6 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
         elementToDoms: new Map(),
         elements
     };
-
-    // First, traverse the entire tree to verify no duplicate IDs
-    collectIds(renderingDom, record);
 
     // Process and update children on the screen
     processAndUpdateChildren(renderingDom, record.screen, record, provider);

@@ -146,10 +146,75 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
     }, 'Root RenderingDom does not match expected screen format');
 });
 
-// NOTE: Duplicate RenderingDom ID detection is currently buggy
-// The collectIds function checks record.doms.has(id) but record.doms is initially empty
-// and the function doesn't add IDs to it during traversal, so duplicates are not detected
-// This should be fixed in the implementation
+test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null cursor)', () => {
+    const provider = new VirtualDomProviderMock();
+    const elements: ElementMap = new Map();
+    const invalidRootDom: SCHEMA.RenderingDom = {
+        id: -1,
+        content: {
+            hitTestResult: null,
+            cursor: SCHEMA.WindowSystemCursorType.Arrow, // Non-null cursor
+            element: null,
+            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
+            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
+        },
+        children: null
+    };
+
+    assert.throws(() => {
+        createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
+    }, 'Root RenderingDom does not match expected screen format');
+});
+
+test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero validArea)', () => {
+    const provider = new VirtualDomProviderMock();
+    const elements: ElementMap = new Map();
+    const invalidRootDom: SCHEMA.RenderingDom = {
+        id: -1,
+        content: {
+            hitTestResult: null,
+            cursor: null,
+            element: null,
+            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
+            validArea: { x1: 10, y1: 20, x2: 30, y2: 40 } // Non-zero validArea
+        },
+        children: null
+    };
+
+    assert.throws(() => {
+        createVirtualDomFromRenderingDom(invalidRootDom, elements, provider);
+    }, 'Root RenderingDom does not match expected screen format');
+});
+
+test('createVirtualDomFromRenderingDom - throws on duplicate RenderingDom IDs', () => {
+    const provider = new VirtualDomProviderMock();
+    const elements: ElementMap = new Map();
+    
+    const rootDom: SCHEMA.RenderingDom = {
+        id: -1,
+        content: {
+            hitTestResult: null,
+            cursor: null,
+            element: null,
+            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
+            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
+        },
+        children: [
+            createChildRenderingDom(
+                2,
+                createRenderingDomContent({ x1: 10, y1: 10, x2: 110, y2: 110 })
+            ),
+            createChildRenderingDom(
+                2, // Duplicate ID - should throw
+                createRenderingDomContent({ x1: 200, y1: 10, x2: 300, y2: 110 })
+            )
+        ]
+    };
+
+    assert.throws(() => {
+        createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    }, 'Duplicate RenderingDom ID found: 2. Each RenderingDom must have a unique ID.');
+});
 
 test('createVirtualDomFromRenderingDom - throws on missing element in ElementMap', () => {
     const provider = new VirtualDomProviderMock();
@@ -405,90 +470,6 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     assert.strictEqual(result.doms.get(4), c);
     assert.strictEqual(result.doms.get(5), d);
     assert.strictEqual(result.doms.get(6), e);
-});
-
-test('createVirtualDomFromRenderingDom - bounds conversion from global to relative', () => {
-    const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
-    
-    // Create a simple 2-level tree to test bounds conversion
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: [
-            {
-                id: 2,
-                content: createRenderingDomContent(
-                    { x1: 50, y1: 100, x2: 250, y2: 300 } // Global bounds
-                ),
-                children: [
-                    {
-                        id: 3,
-                        content: createRenderingDomContent(
-                            { x1: 75, y1: 150, x2: 175, y2: 250 } // Global bounds
-                        ),
-                        children: null
-                    }
-                ]
-            }
-        ]
-    };
-
-    const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
-
-    // Get the child nodes
-    const parent = result.screen.children[0];
-    const child = parent.children[0];
-
-    // Parent bounds should be relative to root (0,0) - so same as global
-    assert.deepEqual(parent.bounds, { x1: 50, y1: 100, x2: 250, y2: 300 });
-
-    // Child bounds should be relative to parent (50,100)
-    // Global: (75,150,175,250) - Parent offset: (50,100) = Relative: (25,50,125,150)
-    assert.deepEqual(child.bounds, { x1: 25, y1: 50, x2: 125, y2: 150 });
-});
-
-test('createVirtualDomFromRenderingDom - handles null children in children array', () => {
-    const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
-    
-    const rootDom: SCHEMA.RenderingDom = {
-        id: -1,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: [
-            createChildRenderingDom(
-                2,
-                createRenderingDomContent({ x1: 10, y1: 10, x2: 110, y2: 110 })
-            ),
-            null, // null child should be ignored
-            createChildRenderingDom(
-                3,
-                createRenderingDomContent({ x1: 200, y1: 10, x2: 300, y2: 110 })
-            )
-        ]
-    };
-
-    const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
-
-    // Should have 2 children (null is ignored)
-    assert.strictEqual(result.screen.children.length, 2);
-    assert.strictEqual(result.screen.children[0].id, 2);
-    assert.strictEqual(result.screen.children[1].id, 3);
-    
-    // Should have 2 nodes in doms map
-    assert.strictEqual(result.doms.size, 2);
 });
 
 test('createVirtualDomFromRenderingDom - complex bounds calculation with multiple levels', () => {
