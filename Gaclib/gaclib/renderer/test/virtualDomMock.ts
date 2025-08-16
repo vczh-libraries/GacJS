@@ -95,6 +95,13 @@ export class VirtualDomProviderMock implements IVirtualDomProvider {
     ): IVirtualDom {
         return new VirtualDomMock(id, bounds, hitTestResult, cursor, typedDesc);
     }
+
+    createSimpleDom(
+        id: SCHEMA.TYPES.Integer,
+        bounds: SCHEMA.Rect
+    ): VirtualDomMock {
+        return new VirtualDomMock(id, bounds, undefined, undefined, undefined);
+    }
 }
 
 test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct arguments', () => {
@@ -137,7 +144,7 @@ test('VirtualDomMock.updateBounds updates bounds correctly', () => {
     const initialBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 10, y2: 10 };
     const newBounds: SCHEMA.Rect = { x1: 5, y1: 5, x2: 15, y2: 15 };
 
-    const dom = provider.createDom(1, initialBounds, undefined, undefined, undefined) as VirtualDomMock;
+    const dom = provider.createSimpleDom(1, initialBounds);
 
     assert.deepEqual(dom.bounds, initialBounds);
 
@@ -148,7 +155,7 @@ test('VirtualDomMock.updateBounds updates bounds correctly', () => {
 
 test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock instance', () => {
     const provider = new VirtualDomProviderMock();
-    const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
 
     // Create a mock object that implements IVirtualDom but is not VirtualDomMock
     const fakeDom = {
@@ -170,7 +177,7 @@ test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock inst
 
 test('VirtualDomMock.updateChildren throws when child is this node itself', () => {
     const provider = new VirtualDomProviderMock();
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
+    const dom = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
 
     assert.throws(() => {
         dom.updateChildren([dom]);
@@ -179,9 +186,9 @@ test('VirtualDomMock.updateChildren throws when child is this node itself', () =
 
 test('VirtualDomMock.updateChildren throws when child already has a different parent', () => {
     const provider = new VirtualDomProviderMock();
-    const parent1 = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const parent2 = provider.createDom(2, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child = provider.createDom(3, { x1: 0, y1: 0, x2: 50, y2: 50 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent1 = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const parent2 = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const child = provider.createSimpleDom(3, { x1: 0, y1: 0, x2: 50, y2: 50 });
 
     parent1.updateChildren([child]);
 
@@ -192,9 +199,9 @@ test('VirtualDomMock.updateChildren throws when child already has a different pa
 
 test('VirtualDomMock.updateChildren throws when child is the root of this node', () => {
     const provider = new VirtualDomProviderMock();
-    const root = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const parent = provider.createDom(2, { x1: 0, y1: 0, x2: 80, y2: 80 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child = provider.createDom(3, { x1: 0, y1: 0, x2: 60, y2: 60 }, undefined, undefined, undefined) as VirtualDomMock;
+    const root = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const parent = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 80, y2: 80 });
+    const child = provider.createSimpleDom(3, { x1: 0, y1: 0, x2: 60, y2: 60 });
 
     // Create hierarchy: root -> parent -> child
     root.updateChildren([parent]);
@@ -208,9 +215,9 @@ test('VirtualDomMock.updateChildren throws when child is the root of this node',
 
 test('VirtualDomMock.updateChildren correctly sets parent and children relationships', () => {
     const provider = new VirtualDomProviderMock();
-    const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 40, y2: 40 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child2 = provider.createDom(3, { x1: 50, y1: 50, x2: 90, y2: 90 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const child1 = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 40, y2: 40 });
+    const child2 = provider.createSimpleDom(3, { x1: 50, y1: 50, x2: 90, y2: 90 });
 
     // Initially all nodes have no parent and no children
     assert.isUndefined(parent.parent);
@@ -234,10 +241,10 @@ test('VirtualDomMock.updateChildren correctly sets parent and children relations
 
 test('VirtualDomMock.updateChildren correctly reorders children', () => {
     const provider = new VirtualDomProviderMock();
-    const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child2 = provider.createDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child3 = provider.createDom(4, { x1: 80, y1: 80, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const child1 = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 });
+    const child2 = provider.createSimpleDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 });
+    const child3 = provider.createSimpleDom(4, { x1: 80, y1: 80, x2: 100, y2: 100 });
 
     // Set initial order
     parent.updateChildren([child1, child2, child3]);
@@ -255,11 +262,11 @@ test('VirtualDomMock.updateChildren correctly reorders children', () => {
 
 test('VirtualDomMock.updateChildren works with mixed root nodes and original children', () => {
     const provider = new VirtualDomProviderMock();
-    const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 25, y2: 25 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child2 = provider.createDom(3, { x1: 30, y1: 30, x2: 55, y2: 55 }, undefined, undefined, undefined) as VirtualDomMock;
-    const newChild1 = provider.createDom(4, { x1: 60, y1: 60, x2: 85, y2: 85 }, undefined, undefined, undefined) as VirtualDomMock;
-    const newChild2 = provider.createDom(5, { x1: 90, y1: 90, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const child1 = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 25, y2: 25 });
+    const child2 = provider.createSimpleDom(3, { x1: 30, y1: 30, x2: 55, y2: 55 });
+    const newChild1 = provider.createSimpleDom(4, { x1: 60, y1: 60, x2: 85, y2: 85 });
+    const newChild2 = provider.createSimpleDom(5, { x1: 90, y1: 90, x2: 100, y2: 100 });
 
     // Set initial children
     parent.updateChildren([child1, child2]);
@@ -282,10 +289,10 @@ test('VirtualDomMock.updateChildren works with mixed root nodes and original chi
 
 test('VirtualDomMock.updateChildren removes old children when setting new ones', () => {
     const provider = new VirtualDomProviderMock();
-    const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const oldChild1 = provider.createDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 }, undefined, undefined, undefined) as VirtualDomMock;
-    const oldChild2 = provider.createDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 }, undefined, undefined, undefined) as VirtualDomMock;
-    const newChild = provider.createDom(4, { x1: 80, y1: 80, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const oldChild1 = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 });
+    const oldChild2 = provider.createSimpleDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 });
+    const newChild = provider.createSimpleDom(4, { x1: 80, y1: 80, x2: 100, y2: 100 });
 
     // Set initial children
     parent.updateChildren([oldChild1, oldChild2]);
@@ -306,8 +313,8 @@ test('VirtualDomMock.updateChildren removes old children when setting new ones',
 
 test('VirtualDomMock.updateChildren works with empty array', () => {
     const provider = new VirtualDomProviderMock();
-    const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child = provider.createDom(2, { x1: 0, y1: 0, x2: 50, y2: 50 }, undefined, undefined, undefined) as VirtualDomMock;
+    const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    const child = provider.createSimpleDom(2, { x1: 0, y1: 0, x2: 50, y2: 50 });
 
     // Add a child first
     parent.updateChildren([child]);
