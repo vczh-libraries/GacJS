@@ -21,6 +21,7 @@ rendering a remote GUI in HTML via DOM and Canvas.
 - The root of the workspace is defined in `Gaclib/package.json`.
   - Call `yarn build` in `Gaclib` to build the whole workspace.
   - If your working directory in the repo root, you needs `cd Gaclib; yarn build`.
+  - Call `yarn test` to run all test cases.
 
 ## TypeScript/JavaScript coding guidelines
 
