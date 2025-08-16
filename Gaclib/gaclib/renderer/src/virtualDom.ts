@@ -13,6 +13,37 @@ export type TypedElementDesc =
     | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
     | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel };
 
+/*
+ * # Converting from RenderingDom(r) to IVirtualDom(v)
+ *   r.id -> v.id
+ *   r.content.hitTestResult -> v.hitTestResult
+ *   r.content.cursor -> v.cursor
+ *   r.content.element -> v.typedDesc
+ *   r.content.bounds -> v.bounds
+ *   r.children -> v.children
+ * 
+ * In most cases, r.validArea is the same as r.bounds.
+ * Unless the element is clipped by a parent node during rendering.
+ * The actual parent is in GacUI Core therefore it may not necessary appeared as a RenderingDom.
+ * r.validArea will always equals to or smaller than the intersection of r.bounds and parent.validArea.
+ * 
+ * In case of smaller, createSimpleDom will be called to make a IVirtualDom whose bounds is r.validArea.
+ * And the IVirtualDom created from r becomes it child.
+ * In case of equal, such extra IVirtualDom must not exist.
+ * 
+ * # Converting from RenderingDom_DiffsInOrder to IVirtualDom
+ * 
+ * Although there is only one diffsInOrder collection but we should read RenderingDom_Diff.diffType and
+ *   Process "Created", create IVirtualDom for each of them and maintain necessary mappings
+ *     content must be non-null for "Created"
+ *   Process "Deleted", remove them from mappings
+ *     content and children will be ignored
+ *   Process "Updated"
+ *     non-null content or children means the updated new value
+ *
+ * We don't need to keep and update RenderingDom, it will apply to IVirtualDom directly.
+ * The updated IVirtualDom must follow the above rule with bounds and validArea.
+ */
 export interface IVirtualDom {
     get parent(): IVirtualDom | undefined;
     get id(): SCHEMA.TYPES.Integer;
@@ -47,8 +78,6 @@ export interface VirtualDomRecord {
     elementToDoms: VirtualDomMap;
     elements: ElementMap;
 }
-
-
 
 function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
     // Process children
