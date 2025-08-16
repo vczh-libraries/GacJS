@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { IVirtualDom, IVirtualDomProvider, TypedElementDesc } from '../src/virtualDom';
-import { assert, test } from 'vitest';
+import { assert, test, expect } from 'vitest';
 
 class VirtualDomMock implements IVirtualDom {
     private _parent: VirtualDomMock | undefined;
@@ -107,7 +107,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct argum
     assert.strictEqual(dom.cursor, cursor);
     assert.deepEqual(dom.typedDesc, typedDesc);
     assert.isUndefined(dom.parent);
-    assert.deepEqual(dom.children, []);
+    expect(dom.children).toEqual([]);
 });
 
 test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined optional parameters', () => {
@@ -123,7 +123,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined opt
     assert.isUndefined(dom.cursor);
     assert.isUndefined(dom.typedDesc);
     assert.isUndefined(dom.parent);
-    assert.deepEqual(dom.children, []);
+    expect(dom.children).toEqual([]);
 });
 
 test('VirtualDomMock.updateBounds updates bounds correctly', () => {
@@ -210,9 +210,9 @@ test('VirtualDomMock.updateChildren correctly sets parent and children relations
     assert.isUndefined(parent.parent);
     assert.isUndefined(child1.parent);
     assert.isUndefined(child2.parent);
-    assert.deepEqual(parent.children, []);
-    assert.deepEqual(child1.children, []);
-    assert.deepEqual(child2.children, []);
+    expect(parent.children).toEqual([]);
+    expect(child1.children).toEqual([]);
+    expect(child2.children).toEqual([]);
 
     // Add children to parent
     parent.updateChildren([child1, child2]);
@@ -221,9 +221,9 @@ test('VirtualDomMock.updateChildren correctly sets parent and children relations
     assert.isUndefined(parent.parent);
     assert.strictEqual(child1.parent, parent);
     assert.strictEqual(child2.parent, parent);
-    assert.deepEqual(parent.children, [child1, child2]);
-    assert.deepEqual(child1.children, []);
-    assert.deepEqual(child2.children, []);
+    expect(parent.children).toEqual([child1, child2]);
+    expect(child1.children).toEqual([]);
+    expect(child2.children).toEqual([]);
 });
 
 test('VirtualDomMock.updateChildren correctly reorders children', () => {
@@ -235,11 +235,11 @@ test('VirtualDomMock.updateChildren correctly reorders children', () => {
 
     // Set initial order
     parent.updateChildren([child1, child2, child3]);
-    assert.deepEqual(parent.children, [child1, child2, child3]);
+    expect(parent.children).toEqual([child1, child2, child3]);
 
     // Reorder children
     parent.updateChildren([child3, child1, child2]);
-    assert.deepEqual(parent.children, [child3, child1, child2]);
+    expect(parent.children).toEqual([child3, child1, child2]);
 
     // Verify all children still have the correct parent
     assert.strictEqual(child1.parent, parent);
@@ -257,13 +257,13 @@ test('VirtualDomMock.updateChildren works with mixed root nodes and original chi
 
     // Set initial children
     parent.updateChildren([child1, child2]);
-    assert.deepEqual(parent.children, [child1, child2]);
+    expect(parent.children).toEqual([child1, child2]);
 
     // Mix original children with new children
     parent.updateChildren([newChild1, child1, newChild2]);
 
     // Verify the new arrangement
-    assert.deepEqual(parent.children, [newChild1, child1, newChild2]);
+    expect(parent.children).toEqual([newChild1, child1, newChild2]);
 
     // Verify parent relationships
     assert.strictEqual(newChild1.parent, parent);
@@ -295,7 +295,7 @@ test('VirtualDomMock.updateChildren removes old children when setting new ones',
 
     // Verify new child is added
     assert.strictEqual(newChild.parent, parent);
-    assert.deepEqual(parent.children, [newChild]);
+    expect(parent.children).toEqual([newChild]);
 });
 
 test('VirtualDomMock.updateChildren works with empty array', () => {
@@ -306,10 +306,10 @@ test('VirtualDomMock.updateChildren works with empty array', () => {
     // Add a child first
     parent.updateChildren([child]);
     assert.strictEqual(child.parent, parent);
-    assert.deepEqual(parent.children, [child]);
+    expect(parent.children).toEqual([child]);
 
     // Remove all children
     parent.updateChildren([]);
     assert.isUndefined(child.parent);
-    assert.deepEqual(parent.children, []);
+    expect(parent.children).toEqual([]);
 });
