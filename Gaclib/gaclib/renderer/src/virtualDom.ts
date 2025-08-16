@@ -67,14 +67,14 @@ function collectIds(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord)
     }
 }
 
-function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
+function createVirtualDom(parentVirtualDom: IVirtualDom, parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
     // Calculate relative bounds (offset from parent)
-    const parentBounds = parent.bounds;
+    const parentRenderingBounds = parentRenderingDom.content.bounds;
     const relativeBounds: SCHEMA.Rect = {
-        x1: renderingDom.content.bounds.x1 - parentBounds.x1,
-        y1: renderingDom.content.bounds.y1 - parentBounds.y1,
-        x2: renderingDom.content.bounds.x2 - parentBounds.x1,
-        y2: renderingDom.content.bounds.y2 - parentBounds.y1
+        x1: renderingDom.content.bounds.x1 - parentRenderingBounds.x1,
+        y1: renderingDom.content.bounds.y1 - parentRenderingBounds.y1,
+        x2: renderingDom.content.bounds.x2 - parentRenderingBounds.x1,
+        y2: renderingDom.content.bounds.y2 - parentRenderingBounds.y1
     };
 
     // Create TypedElementDesc from element ID if present
@@ -113,7 +113,7 @@ function createVirtualDom(parent: IVirtualDom, renderingDom: SCHEMA.RenderingDom
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(virtualDom, child, record, provider);
+                const childVirtualDom = createVirtualDom(virtualDom, renderingDom, child, record, provider);
                 children.push(childVirtualDom);
             }
         }
@@ -168,7 +168,7 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(screen, child, record, provider);
+                const childVirtualDom = createVirtualDom(screen, renderingDom, child, record, provider);
                 children.push(childVirtualDom);
             }
         }
