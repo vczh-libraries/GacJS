@@ -44,51 +44,43 @@ class VirtualDomMock implements IVirtualDom {
         }
     }
 
+    private updateParent(child: VirtualDomMock, newParent: VirtualDomMock | undefined): void {
+        const oldParent = child._parent;
+
+        if (oldParent !== undefined && oldParent !== newParent) {
+            const index = oldParent._children.indexOf(child);
+            if (index !== -1) {
+                oldParent._children.splice(index, 1);
+            }
+        }
+
+        child._parent = newParent;
+    }
+
     updateChildren(children: IVirtualDom[]): void {
-        // Validation first
         for (const child of children) {
             if (!(child instanceof VirtualDomMock)) {
-                throw new Error('All children must be VirtualDomMock instances');
+                throw new Error('All children must be VirtualDomMock instances.');
             }
             if (child === this) {
-                throw new Error('Child cannot be this node itself');
+                throw new Error('Child cannot be this node itself.');
             }
             if (child._parent !== undefined && child._parent !== this) {
-                throw new Error('Child already has a different parent');
+                throw new Error('Child already has a different parent.');
             }
             if (this.isRootOfSelf(child)) {
-                throw new Error('Child cannot be the root of this node');
+                throw new Error('Child cannot be the root of this node.');
             }
         }
 
-        // Create a copy of current children to process
-        const oldChildren = [...this._children] as VirtualDomMock[];
-        
-        // Set the new children array immediately
+        for (const child of this._children) {
+            this.updateParent(child as VirtualDomMock, undefined);
+        }
+
         this._children = [...children];
 
-        // Update parent relationships
-        // 1. Remove parent reference from children that are no longer in the new list
-        for (const oldChild of oldChildren) {
-            if (!children.includes(oldChild)) {
-                oldChild._parent = undefined;
-            }
-        }
-
-        // 2. Set parent reference for all new children
-        for (const child of children) {
-            const childMock = child as VirtualDomMock;
-            if (childMock._parent !== this) {
-                // Remove from old parent if it has one
-                if (childMock._parent !== undefined) {
-                    const oldParent = childMock._parent;
-                    const index = oldParent._children.indexOf(childMock);
-                    if (index !== -1) {
-                        oldParent._children.splice(index, 1);
-                    }
-                }
-                childMock._parent = this;
-            }
+        for (const child of this._children) {
+            this.updateParent(child as VirtualDomMock, this);
         }
     }
 }
@@ -144,20 +136,20 @@ test('VirtualDomMock.updateBounds updates bounds correctly', () => {
     const provider = new VirtualDomProviderMock();
     const initialBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 10, y2: 10 };
     const newBounds: SCHEMA.Rect = { x1: 5, y1: 5, x2: 15, y2: 15 };
-    
+
     const dom = provider.createDom(1, initialBounds, undefined, undefined, undefined) as VirtualDomMock;
-    
+
     assert.deepEqual(dom.bounds, initialBounds);
-    
+
     dom.updateBounds(newBounds);
-    
+
     assert.deepEqual(dom.bounds, newBounds);
 });
 
 test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock instance', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    
+
     // Create a mock object that implements IVirtualDom but is not VirtualDomMock
     const fakeDom = {
         id: 2,
@@ -167,13 +159,13 @@ test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock inst
         hitTestResult: undefined,
         cursor: undefined,
         typedDesc: undefined,
-        updateBounds: () => {},
-        updateChildren: () => {}
+        updateBounds: () => { },
+        updateChildren: () => { }
     };
 
     assert.throws(() => {
         parent.updateChildren([fakeDom as IVirtualDom]);
-    }, 'All children must be VirtualDomMock instances');
+    }, 'All children must be VirtualDomMock instances.');
 });
 
 test('VirtualDomMock.updateChildren throws when child is this node itself', () => {
@@ -182,7 +174,7 @@ test('VirtualDomMock.updateChildren throws when child is this node itself', () =
 
     assert.throws(() => {
         dom.updateChildren([dom]);
-    }, 'Child cannot be this node itself');
+    }, 'Child cannot be this node itself.');
 });
 
 test('VirtualDomMock.updateChildren throws when child already has a different parent', () => {
@@ -195,7 +187,7 @@ test('VirtualDomMock.updateChildren throws when child already has a different pa
 
     assert.throws(() => {
         parent2.updateChildren([child]);
-    }, 'Child already has a different parent');
+    }, 'Child already has a different parent.');
 });
 
 test('VirtualDomMock.updateChildren throws when child is the root of this node', () => {
@@ -211,14 +203,14 @@ test('VirtualDomMock.updateChildren throws when child is the root of this node',
     // Try to make parent a child of child (circular dependency)
     assert.throws(() => {
         child.updateChildren([root]);
-    }, 'Child cannot be the root of this node');
+    }, 'Child cannot be the root of this node.');
 });
 
 test('VirtualDomMock.updateChildren correctly sets parent and children relationships', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 40, y2: 40 }, undefined, undefined, { type: SCHEMA.RendererType.FocusRectangle }) as VirtualDomMock;
-    const child2 = provider.createDom(3, { x1: 50, y1: 50, x2: 90, y2: 90 }, undefined, undefined, { type: SCHEMA.RendererType.Raw }) as VirtualDomMock;
+    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 40, y2: 40 }, undefined, undefined, undefined) as VirtualDomMock;
+    const child2 = provider.createDom(3, { x1: 50, y1: 50, x2: 90, y2: 90 }, undefined, undefined, undefined) as VirtualDomMock;
 
     // Initially all nodes have no parent and no children
     assert.isUndefined(parent.parent);
@@ -243,8 +235,8 @@ test('VirtualDomMock.updateChildren correctly sets parent and children relations
 test('VirtualDomMock.updateChildren correctly reorders children', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 }, undefined, undefined, { type: SCHEMA.RendererType.FocusRectangle }) as VirtualDomMock;
-    const child2 = provider.createDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 }, undefined, undefined, { type: SCHEMA.RendererType.Raw }) as VirtualDomMock;
+    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 }, undefined, undefined, undefined) as VirtualDomMock;
+    const child2 = provider.createDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 }, undefined, undefined, undefined) as VirtualDomMock;
     const child3 = provider.createDom(4, { x1: 80, y1: 80, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
 
     // Set initial order
@@ -264,10 +256,10 @@ test('VirtualDomMock.updateChildren correctly reorders children', () => {
 test('VirtualDomMock.updateChildren works with mixed root nodes and original children', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 25, y2: 25 }, undefined, undefined, { type: SCHEMA.RendererType.FocusRectangle }) as VirtualDomMock;
-    const child2 = provider.createDom(3, { x1: 30, y1: 30, x2: 55, y2: 55 }, undefined, undefined, { type: SCHEMA.RendererType.Raw }) as VirtualDomMock;
+    const child1 = provider.createDom(2, { x1: 0, y1: 0, x2: 25, y2: 25 }, undefined, undefined, undefined) as VirtualDomMock;
+    const child2 = provider.createDom(3, { x1: 30, y1: 30, x2: 55, y2: 55 }, undefined, undefined, undefined) as VirtualDomMock;
     const newChild1 = provider.createDom(4, { x1: 60, y1: 60, x2: 85, y2: 85 }, undefined, undefined, undefined) as VirtualDomMock;
-    const newChild2 = provider.createDom(5, { x1: 90, y1: 90, x2: 100, y2: 100 }, undefined, undefined, { type: SCHEMA.RendererType.FocusRectangle }) as VirtualDomMock;
+    const newChild2 = provider.createDom(5, { x1: 90, y1: 90, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
 
     // Set initial children
     parent.updateChildren([child1, child2]);
@@ -278,12 +270,12 @@ test('VirtualDomMock.updateChildren works with mixed root nodes and original chi
 
     // Verify the new arrangement
     assert.deepEqual(parent.children, [newChild1, child1, newChild2]);
-    
+
     // Verify parent relationships
     assert.strictEqual(newChild1.parent, parent);
     assert.strictEqual(child1.parent, parent);
     assert.strictEqual(newChild2.parent, parent);
-    
+
     // child2 should no longer have this parent
     assert.isUndefined(child2.parent);
 });
@@ -291,8 +283,8 @@ test('VirtualDomMock.updateChildren works with mixed root nodes and original chi
 test('VirtualDomMock.updateChildren removes old children when setting new ones', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const oldChild1 = provider.createDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 }, undefined, undefined, { type: SCHEMA.RendererType.Raw }) as VirtualDomMock;
-    const oldChild2 = provider.createDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 }, undefined, undefined, { type: SCHEMA.RendererType.FocusRectangle }) as VirtualDomMock;
+    const oldChild1 = provider.createDom(2, { x1: 0, y1: 0, x2: 30, y2: 30 }, undefined, undefined, undefined) as VirtualDomMock;
+    const oldChild2 = provider.createDom(3, { x1: 40, y1: 40, x2: 70, y2: 70 }, undefined, undefined, undefined) as VirtualDomMock;
     const newChild = provider.createDom(4, { x1: 80, y1: 80, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
 
     // Set initial children
@@ -306,7 +298,7 @@ test('VirtualDomMock.updateChildren removes old children when setting new ones',
     // Verify old children are removed
     assert.isUndefined(oldChild1.parent);
     assert.isUndefined(oldChild2.parent);
-    
+
     // Verify new child is added
     assert.strictEqual(newChild.parent, parent);
     assert.deepEqual(parent.children, [newChild]);
@@ -315,7 +307,7 @@ test('VirtualDomMock.updateChildren removes old children when setting new ones',
 test('VirtualDomMock.updateChildren works with empty array', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 }, undefined, undefined, undefined) as VirtualDomMock;
-    const child = provider.createDom(2, { x1: 0, y1: 0, x2: 50, y2: 50 }, undefined, undefined, { type: SCHEMA.RendererType.FocusRectangle }) as VirtualDomMock;
+    const child = provider.createDom(2, { x1: 0, y1: 0, x2: 50, y2: 50 }, undefined, undefined, undefined) as VirtualDomMock;
 
     // Add a child first
     parent.updateChildren([child]);
