@@ -26,14 +26,13 @@
 
     <script lang="javascript">
         const Snapshot = GacUIHtmlRenderer.Snapshot;
-        let currentSelectedFile = null; // Track currently selected file
 
         function renderSnapshot(url) {
             document.getElementById('renderingColumn').textContent = url;
         }
 
         // Function to create tree element from a data structure
-        function createTreeElement(tree /*: TreeFolder*/, indent = 0) {
+        function createTreeElement(tree /*: TreeFolder*/, config, indent = 0) {
             /*
             interface TreeFolder {
                 type: 'Folder';
@@ -65,7 +64,7 @@
                     container.appendChild(folderDiv);
 
                     // Recursively add folder content
-                    container.appendChild(createTreeElement(entry, indent + 1));
+                    container.appendChild(createTreeElement(entry, config, indent + 1));
                 } else {
                     // File entry
                     const fileDiv = document.createElement('div');
@@ -85,15 +84,15 @@
                         e.preventDefault();
 
                         // Remove selected class from previously selected file
-                        if (currentSelectedFile) {
-                            currentSelectedFile.classList.remove('selected');
+                        if (config.currentSelectedFile) {
+                            config.currentSelectedFile.classList.remove('selected');
                         }
 
                         // Add selected class to current file
                         fileLink.classList.add('selected');
-                        currentSelectedFile = fileLink;
+                        config.currentSelectedFile = fileLink;
 
-                        renderSnapshot(entry.url);
+                        config.onSelected(entry.url);
                     });
 
                     fileDiv.appendChild(fileLink);
@@ -142,7 +141,9 @@
         // Initialize the tree view
         function initializeTreeView() {
             const treeView = document.getElementById('treeView');
-            const treeElement = createTreeElement(readSnapshot(Snapshot, './'));
+            const treeElement = createTreeElement(readSnapshot(Snapshot, './'), {
+                onSelected: renderSnapshot
+            });
             treeView.appendChild(treeElement);
         }
 
