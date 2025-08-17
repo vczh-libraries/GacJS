@@ -97,8 +97,9 @@ function areRectsEqual(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): boolean {
     return rect1.x1 === rect2.x1 && rect1.y1 === rect2.y1 && rect1.x2 === rect2.x2 && rect1.y2 === rect2.y2;
 }
 
-function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): void {
+function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
     // Process children
+    const parentValidArea = renderingDom.id === RootVirtualDomId ? undefined : renderingDom.content.validArea;
     const children: IVirtualDom[] = [];
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
@@ -118,13 +119,21 @@ function fillVirtualDom(
     record: VirtualDomRecord,
     provider: IVirtualDomProvider,
     id: SCHEMA.TYPES.Integer,
-    globalBounds: SCHEMA.Rect,
-    typedDesc: TypedElementDesc | undefined
 ): IVirtualDom {
+    // Create TypedElementDesc from element ID if present
+    let typedDesc: TypedElementDesc | undefined = undefined;
+    if (renderingDom.content.element !== null) {
+        // Look up the element in the provided element map with error checking
+        typedDesc = record.elements.get(renderingDom.content.element);
+        if (typedDesc === undefined) {
+            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} not found in ElementMap`);
+        }
+    }
+
     // Create the virtual DOM
     const virtualDom = provider.createDom(
         id,
-        globalBounds,
+        renderingDom.content.bounds,
         renderingDom.content.hitTestResult || undefined,
         renderingDom.content.cursor || undefined,
         typedDesc
@@ -140,7 +149,7 @@ function fillVirtualDom(
     }
 
     // Process and update children
-    processAndUpdateChildren(renderingDom, virtualDom, record, provider, renderingDom.content.validArea);
+    processAndUpdateChildren(renderingDom, virtualDom, record, provider);
 
     return virtualDom;
 }
@@ -149,16 +158,6 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
     // Check for duplicate IDs
     if (record.doms.has(renderingDom.id)) {
         throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
-    }
-
-    // Create TypedElementDesc from element ID if present
-    let typedDesc: TypedElementDesc | undefined = undefined;
-    if (renderingDom.content.element !== null) {
-        // Look up the element in the provided element map with error checking
-        typedDesc = record.elements.get(renderingDom.content.element);
-        if (typedDesc === undefined) {
-            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} not found in ElementMap`);
-        }
     }
 
     // Calculate the natural intersection of this element's bounds with parent's validArea
@@ -173,8 +172,6 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
             record,
             provider,
             renderingDom.id,
-            renderingDom.content.bounds, // Single virtual DOM uses bounds as globalBounds
-            typedDesc
         );
 
         // Add to the doms map only if ID is not negative
@@ -195,8 +192,6 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
             record,
             provider,
             ClippedVirtualDomId,
-            renderingDom.content.bounds, // Inner virtual DOM uses original bounds
-            typedDesc
         );
 
         // Add to the doms map only if ID is not negative
