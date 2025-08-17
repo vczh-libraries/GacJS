@@ -100,6 +100,10 @@ function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom:
     virtualDom.updateChildren(children);
 }
 
+function areRectsEqual(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): boolean {
+    return rect1.x1 === rect2.x1 && rect1.y1 === rect2.y1 && rect1.x2 === rect2.x2 && rect1.y2 === rect2.y2;
+}
+
 function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
     // Check for duplicate IDs
     if (record.doms.has(renderingDom.id)) {
@@ -116,36 +120,77 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
         }
     }
 
-    // Create the virtual DOM node with global bounds
-    const virtualDom = provider.createDom(
-        renderingDom.id,
-        renderingDom.content.bounds,
-        renderingDom.content.hitTestResult || undefined,
-        renderingDom.content.cursor || undefined,
-        typedDesc
-    );
+    // Check if validArea is different from bounds
+    if (!areRectsEqual(renderingDom.content.validArea, renderingDom.content.bounds)) {
+        // validArea is smaller than bounds, need to create two virtual DOMs
+        
+        // Create the outer virtual DOM with validArea as bounds, but with the original renderingDom.id
+        const outerVirtualDom = provider.createSimpleDom(renderingDom.id, renderingDom.content.validArea);
+        
+        // Create the inner virtual DOM with original bounds, but with ClippedVirtualDomId
+        const innerVirtualDom = provider.createDom(
+            ClippedVirtualDomId,
+            renderingDom.content.bounds,
+            renderingDom.content.hitTestResult || undefined,
+            renderingDom.content.cursor || undefined,
+            typedDesc
+        );
 
-    // Add to the doms map
-    record.doms.set(renderingDom.id, virtualDom);
-
-    // Add to elementToDoms map if this DOM has an element
-    if (renderingDom.content.element !== null) {
-        // Ensure 1:1 mapping - element should not already exist in elementToDoms
-        if (record.elementToDoms.has(renderingDom.content.element)) {
-            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
+        // Add to the doms map only if ID is not negative
+        if (renderingDom.id >= 0) {
+            record.doms.set(renderingDom.id, outerVirtualDom);
         }
-        record.elementToDoms.set(renderingDom.content.element, virtualDom);
+
+        // Add to elementToDoms map if this DOM has an element
+        if (renderingDom.content.element !== null) {
+            // Ensure 1:1 mapping - element should not already exist in elementToDoms
+            if (record.elementToDoms.has(renderingDom.content.element)) {
+                throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
+            }
+            record.elementToDoms.set(renderingDom.content.element, innerVirtualDom);
+        }
+
+        // Process and update children on the inner virtual DOM
+        processAndUpdateChildren(renderingDom, innerVirtualDom, record, provider);
+        
+        // Set the inner virtual DOM as the only child of the outer virtual DOM
+        outerVirtualDom.updateChildren([innerVirtualDom]);
+
+        return outerVirtualDom;
+    } else {
+        // validArea equals bounds, create single virtual DOM as before
+        const virtualDom = provider.createDom(
+            renderingDom.id,
+            renderingDom.content.bounds,
+            renderingDom.content.hitTestResult || undefined,
+            renderingDom.content.cursor || undefined,
+            typedDesc
+        );
+
+        // Add to the doms map only if ID is not negative
+        if (renderingDom.id >= 0) {
+            record.doms.set(renderingDom.id, virtualDom);
+        }
+
+        // Add to elementToDoms map if this DOM has an element
+        if (renderingDom.content.element !== null) {
+            // Ensure 1:1 mapping - element should not already exist in elementToDoms
+            if (record.elementToDoms.has(renderingDom.content.element)) {
+                throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
+            }
+            record.elementToDoms.set(renderingDom.content.element, virtualDom);
+        }
+
+        // Process and update children
+        processAndUpdateChildren(renderingDom, virtualDom, record, provider);
+
+        return virtualDom;
     }
-
-    // Process and update children
-    processAndUpdateChildren(renderingDom, virtualDom, record, provider);
-
-    return virtualDom;
 }
 
 export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, provider: IVirtualDomProvider): VirtualDomRecord {
     // Verify that this is the screen (root) element
-    if (renderingDom.id !== -1 ||
+    if (renderingDom.id !== RootVirtualDomId ||
         renderingDom.content.hitTestResult !== null ||
         renderingDom.content.cursor !== null ||
         renderingDom.content.element !== null ||

@@ -1,13 +1,13 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { createVirtualDomFromRenderingDom, ElementMap } from '../src/virtualDom';
+import { createVirtualDomFromRenderingDom, ElementMap, RootVirtualDomId } from '../src/virtualDom';
 import { VirtualDomProviderMock } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
 // Helper function to create a valid root RenderingDom with zero bounds
 function createRootRenderingDom(): SCHEMA.RenderingDom {
     return {
-        id: -1,
+        id: RootVirtualDomId,
         content: {
             hitTestResult: null,
             cursor: null,
@@ -56,7 +56,7 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Verify the screen element
-    assert.strictEqual(result.screen.id, -1);
+    assert.strictEqual(result.screen.id, RootVirtualDomId);
     assert.deepEqual(result.screen.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
@@ -302,7 +302,7 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Verify the screen (root)
-    assert.strictEqual(result.screen.id, -1);
+    assert.strictEqual(result.screen.id, RootVirtualDomId);
     assert.deepEqual(result.screen.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
