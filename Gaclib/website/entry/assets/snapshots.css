@@ -25,7 +25,8 @@ body {
 }
 
 .files-column h3,
-.frames-column h3 {
+.frames-column h3,
+.rendering-column h3 {
     margin: 0 0 16px 0;
     padding: 0;
     font-size: 14px;
@@ -48,7 +49,7 @@ body {
 }
 
 .frames-column {
-    width: 400px;
+    width: 200px;
     min-width: 200px;
     max-width: 60vw;
     border-right: 1px solid #dee2e6;

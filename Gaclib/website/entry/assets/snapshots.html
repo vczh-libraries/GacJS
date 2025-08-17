@@ -22,13 +22,15 @@
         </div>
         <div class="splitter" id="framesSplitter"></div>
         <div class="rendering-column" id="renderingColumn">
-            Click on a frame to show the UI.
+            <h3>GacUI Rendering</h3>
+            <div id="gacuiScreen">Click on a frame to show the UI.</div>
         </div>
     </div>
 
     <script lang="javascript">
-        function renderFrame(frame) {
-            document.getElementById('renderingColumn').textContent = JSON.stringify(frame, null, 2);
+        function renderFrame(frameData) {
+            const gacuiScreen = document.getElementById('gacuiScreen');
+            gacuiScreen.innerHTML = `<h4>Frame Index: ${frameData.index}</h4>`;
         }
 
         async function renderSnapshot(url) {
@@ -39,18 +41,18 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const trace = await response.json();
-                
+
                 // Clear the existing frames list
                 const frameList = document.getElementById('frameList');
                 frameList.innerHTML = '';
-                
+
                 // Create tree element for frames
                 const framesTree = GacUIHtmlRenderer.readFrames(trace);
                 const frameTreeElement = GacUIHtmlRenderer.createTreeElement(framesTree, {
                     onSelected: renderFrame
                 });
                 frameList.appendChild(frameTreeElement);
-                
+
             } catch (error) {
                 document.getElementById('frameList').textContent = `Error loading frames: ${error.message}`;
             }

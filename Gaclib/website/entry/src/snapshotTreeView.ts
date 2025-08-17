@@ -121,11 +121,14 @@ export function readFrames(trace: SCHEMA.UnitTest_RenderingTrace): TreeFolder {
 
     // Convert each frame to a TreeFile
     if (trace.frames) {
-        trace.frames.forEach((frame: SCHEMA.UnitTest_RenderingFrame) => {
+        trace.frames.forEach((frame: SCHEMA.UnitTest_RenderingFrame, index: number) => {
             const fileName = frame.frameName || `Frame_${frame.frameId}`;
             treeFolder.content[fileName] = {
                 type: 'File',
-                url: frame // Use the entire frame object as the URL
+                url: {
+                    trace,
+                    index
+                }
             };
         });
     }
