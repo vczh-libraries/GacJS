@@ -7,13 +7,13 @@ export interface TreeFolder {
 
 export interface TreeFile {
     type: 'File';
-    url: string;
+    url: {};
 }
 
 export type TreeNode = TreeFolder | TreeFile;
 
 export interface TreeConfig {
-    onSelected: (url: string) => void;
+    onSelected: (url: {}) => void;
     currentSelectedFile?: HTMLElement;
 }
 
