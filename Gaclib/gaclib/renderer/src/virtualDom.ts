@@ -97,6 +97,22 @@ function areRectsEqual(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): boolean {
     return rect1.x1 === rect2.x1 && rect1.y1 === rect2.y1 && rect1.x2 === rect2.x2 && rect1.y2 === rect2.y2;
 }
 
+function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): void {
+    // Process children
+    const children: IVirtualDom[] = [];
+    if (renderingDom.children) {
+        for (const child of renderingDom.children) {
+            if (child !== null) {
+                const childVirtualDom = createVirtualDom(child, record, provider, parentValidArea);
+                children.push(childVirtualDom);
+            }
+        }
+    }
+
+    // Update children on the target virtual DOM
+    virtualDom.updateChildren(children);
+}
+
 function fillVirtualDom(
     renderingDom: SCHEMA.RenderingDom,
     record: VirtualDomRecord,
@@ -127,22 +143,6 @@ function fillVirtualDom(
     processAndUpdateChildren(renderingDom, virtualDom, record, provider, renderingDom.content.validArea);
 
     return virtualDom;
-}
-
-function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): void {
-    // Process children
-    const children: IVirtualDom[] = [];
-    if (renderingDom.children) {
-        for (const child of renderingDom.children) {
-            if (child !== null) {
-                const childVirtualDom = createVirtualDom(child, record, provider, parentValidArea);
-                children.push(childVirtualDom);
-            }
-        }
-    }
-
-    // Update children on the target virtual DOM
-    virtualDom.updateChildren(children);
 }
 
 function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): IVirtualDom {
