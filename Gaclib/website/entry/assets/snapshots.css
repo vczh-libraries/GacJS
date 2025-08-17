@@ -8,6 +8,7 @@ body {
 }
 
 .container {
+    background-color: #f8f9fa;
     display: flex;
     height: 100vh;
     width: 100vw;
@@ -17,7 +18,6 @@ body {
     width: 400px;
     min-width: 200px;
     max-width: 60vw;
-    background-color: #f8f9fa;
     border-right: 1px solid #dee2e6;
     overflow-y: auto;
     padding: 16px;
@@ -40,7 +40,6 @@ body {
     width: 400px;
     min-width: 200px;
     max-width: 60vw;
-    background-color: #f8f9fa;
     border-right: 1px solid #dee2e6;
     overflow-y: auto;
     padding: 16px;
@@ -49,11 +48,9 @@ body {
 
 .right-column {
     flex: 1;
-    background-color: #f8f9fa;
     overflow-y: auto;
     padding: 16px;
     box-sizing: border-box;
-    white-space: pre-wrap;
 }
 
 .tree-item {
