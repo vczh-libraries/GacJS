@@ -50,61 +50,56 @@
             */
             const container = document.createElement('div');
 
-            // Sort entries: folders first, then files, both alphabetically
-            const entries = Object.entries(tree.content);
-            const folders = entries.filter(([, value]) => value.type === 'Folder').sort(([a], [b]) => a.localeCompare(b));
-            const files = entries.filter(([, value]) => value.type === 'File').sort(([a], [b]) => a.localeCompare(b));
+            // Iterate through entries (already sorted in readSnapshot)
+            Object.entries(tree.content).forEach(([name, entry]) => {
+                if (entry.type === 'Folder') {
+                    // Create folder element
+                    const folderDiv = document.createElement('div');
+                    folderDiv.className = 'tree-item tree-folder';
 
-            // Add folders first
-            folders.forEach(([name, childEntry]) => {
-                // Create folder element
-                const folderDiv = document.createElement('div');
-                folderDiv.className = 'tree-item tree-folder';
+                    const indentSpan = document.createElement('span');
+                    indentSpan.className = 'tree-indent';
+                    indentSpan.style.width = (indent * 4) + 'ch';
+                    folderDiv.appendChild(indentSpan);
 
-                const indentSpan = document.createElement('span');
-                indentSpan.className = 'tree-indent';
-                indentSpan.style.width = (indent * 4) + 'ch';
-                folderDiv.appendChild(indentSpan);
+                    folderDiv.appendChild(document.createTextNode(name));
+                    container.appendChild(folderDiv);
 
-                folderDiv.appendChild(document.createTextNode(name));
-                container.appendChild(folderDiv);
+                    // Recursively add folder content
+                    container.appendChild(createTreeElement(entry, indent + 1));
+                } else {
+                    // File entry
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = 'tree-item';
 
-                // Recursively add folder content
-                container.appendChild(createTreeElement(childEntry, indent + 1));
-            });
+                    const indentSpan = document.createElement('span');
+                    indentSpan.className = 'tree-indent';
+                    indentSpan.style.width = (indent * 4) + 'ch';
+                    fileDiv.appendChild(indentSpan);
 
-            // Add files
-            files.forEach(([name, fileEntry]) => {
-                const fileDiv = document.createElement('div');
-                fileDiv.className = 'tree-item';
+                    const fileLink = document.createElement('a');
+                    fileLink.className = 'tree-file';
+                    fileLink.href = '#';
+                    fileLink.textContent = entry.display;
 
-                const indentSpan = document.createElement('span');
-                indentSpan.className = 'tree-indent';
-                indentSpan.style.width = (indent * 4) + 'ch';
-                fileDiv.appendChild(indentSpan);
+                    fileLink.addEventListener('click', (e) => {
+                        e.preventDefault();
 
-                const fileLink = document.createElement('a');
-                fileLink.className = 'tree-file';
-                fileLink.href = '#';
-                fileLink.textContent = fileEntry.display;
+                        // Remove selected class from previously selected file
+                        if (currentSelectedFile) {
+                            currentSelectedFile.classList.remove('selected');
+                        }
 
-                fileLink.addEventListener('click', (e) => {
-                    e.preventDefault();
+                        // Add selected class to current file
+                        fileLink.classList.add('selected');
+                        currentSelectedFile = fileLink;
 
-                    // Remove selected class from previously selected file
-                    if (currentSelectedFile) {
-                        currentSelectedFile.classList.remove('selected');
-                    }
+                        renderSnapshot(entry.url);
+                    });
 
-                    // Add selected class to current file
-                    fileLink.classList.add('selected');
-                    currentSelectedFile = fileLink;
-
-                    renderSnapshot(fileEntry.url);
-                });
-
-                fileDiv.appendChild(fileLink);
-                container.appendChild(fileDiv);
+                    fileDiv.appendChild(fileLink);
+                    container.appendChild(fileDiv);
+                }
             });
 
             return container;
@@ -118,7 +113,19 @@
                     content: {}
                 };
 
-                Object.entries(entry.content).forEach(([name, childEntry]) => {
+                // Sort entries: folders first, then files, both alphabetically
+                const entries = Object.entries(entry.content);
+                const folders = entries.filter(([, value]) => value.type === 'Folder').sort(([a], [b]) => a.localeCompare(b));
+                const files = entries.filter(([, value]) => value === 'File').sort(([a], [b]) => a.localeCompare(b));
+
+                // Add folders first
+                folders.forEach(([name, childEntry]) => {
+                    const childPath = path ? `${path}/${name}` : name;
+                    treeFolder.content[name] = readSnapshot(childEntry, childPath);
+                });
+
+                // Add files second
+                files.forEach(([name, childEntry]) => {
                     const childPath = path ? `${path}/${name}` : name;
                     treeFolder.content[name] = readSnapshot(childEntry, childPath);
                 });
