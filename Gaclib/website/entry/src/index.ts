@@ -13,6 +13,9 @@ export async function runGacUI(target: HTMLElement): Promise<[IGacUIHtmlRenderer
     return [renderer, client];
 }
 
-// for testing in elements.html
+// for elements.html
 export { applyBounds, applyTypedStyle, applyFeatureGates } from '@gaclib/renderer';
+
+// for snapshots.html
 export { Snapshot } from './snapshotIndex';
+export { createTreeElement, readSnapshot } from './snapshotTreeView';
