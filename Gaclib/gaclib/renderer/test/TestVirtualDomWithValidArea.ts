@@ -351,17 +351,17 @@ test('createVirtualDomFromRenderingDom - still throws for duplicate positive IDs
 });
 
 test('createVirtualDomFromRenderingDom - parent clips child naturally', () => {
-    // +---------------+
-    // |1              |
-    // | +-----------+ |
-    // | |1v         | |
-    // | |  +------+ | |
+    // +-------------+
+    // |1            |
+    // | +---------+ |
+    // | |1v       | |
+    // | |  +------+-+-+
     // | |  |1/2   | | |
     // | |  |      | | |
-    // | |  +------+ | |
-    // | +-----------+ |
-    // +---------------+
-    
+    // | +--+------+ | |
+    // +----+--------+ |
+    //      +----------+
+
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
     
@@ -411,20 +411,20 @@ test('createVirtualDomFromRenderingDom - parent clips child naturally', () => {
 });
 
 test('createVirtualDomFromRenderingDom - four children in corners', () => {
-    // +-------------------+
-    // |1                  |
-    // | +---------------+ |
-    // | |1v             | |
-    // | |+-+         +-+| |
-    // | ||2|         |3|| |
-    // | |+-+         +-+| |
-    // | |               | |
-    // | |+-+         +-+| |
-    // | ||4|         |5|| |
-    // | |+-+         +-+| |
-    // | +---------------+ |
-    // +-------------------+
-    
+    // +----------------+
+    // |1               |
+    // | +---+    +---+ |
+    // | |+--+----+--+| |
+    // | ||2 |1v  |3 || |
+    // | ++--+    +--++ |
+    // |  |          |  |
+    // | ++--+    +--++ |
+    // | ||4 |    |5 || |
+    // | |+--+----+--+| |
+    // | +---+    +---+ |
+    // |                |
+    // +----------------+
+
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
     
@@ -517,16 +517,17 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
 });
 
 test('createVirtualDomFromRenderingDom - three nested elements with same y2', () => {
-    // +---------------------+
-    // |1                    |
-    // | +-----------------+ |
-    // | |1v               | |
-    // | |           +---+ | |
-    // | |           |2  | | |
-    // | |           |+-+| | |
-    // | |           ||3|| | |
-    // | +-----------------+ |
-    // +---------------------+
+    // +-----------------+
+    // |1                |
+    // | +-------------+ |
+    // | |1v           | |
+    // | |       +-----+-+-+
+    // | |       |2    | | |
+    // | |       |+--+ | | |
+    // | |       ||3 | | | |
+    // | +-------+---+-+ | |
+    // +---------+-----+-+ |
+    //           +-------+-+
     
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
