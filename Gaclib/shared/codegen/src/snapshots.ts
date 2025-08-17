@@ -45,3 +45,7 @@ export function prepareSnapshots(): void {
     copyJsonFiles(SourcePath, DestPath);
     console.log('JSON files copy completed');
 }
+
+export function generateSnapshotIndex(): void {
+
+}
