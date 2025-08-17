@@ -9,7 +9,7 @@ class VirtualDomMock implements IVirtualDom {
 
     constructor(
         public readonly id: SCHEMA.TYPES.Integer,
-        private _bounds: SCHEMA.Rect,
+        public globalBounds: SCHEMA.Rect,
         public readonly hitTestResult: SCHEMA.WindowHitTestResult | undefined,
         public readonly cursor: SCHEMA.WindowSystemCursorType | undefined,
         private _typedDesc: TypedElementDesc | undefined
@@ -23,7 +23,6 @@ class VirtualDomMock implements IVirtualDom {
     }
 
     get bounds(): SCHEMA.Rect {
-        return this._bounds;
     }
 
     get typedDesc(): TypedElementDesc | undefined {
@@ -32,10 +31,6 @@ class VirtualDomMock implements IVirtualDom {
 
     get children(): ReadonlyArray<IVirtualDom> {
         return this._children;
-    }
-
-    updateBounds(bounds: SCHEMA.Rect): void {
-        this._bounds = bounds;
     }
 
     updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {

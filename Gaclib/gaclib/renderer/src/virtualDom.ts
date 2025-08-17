@@ -7,15 +7,19 @@ import { TypedElementDesc } from './GacUIElementManager';
  *   r.content.hitTestResult -> v.hitTestResult
  *   r.content.cursor -> v.cursor
  *   r.content.element -> v.typedDesc
- *   r.content.bounds -> v.bounds
+ *   r.content.bounds -> v.globalBounds
  *   r.children -> v.children
  * 
- * In most cases, r.validArea is the same as r.bounds.
+ * r.content.bounds and r.content.validArea are in global coordinate.
+ * v.globalBounds will in global coordinate too, but v.global will be in its parent's coordinate.
+ * when v is the root, v.bounds === v.globalBounds.
+ * 
+ * In most cases, r.content.validArea is the same as r.content.bounds.
  * Unless the element is clipped by a parent node during rendering.
  * The actual parent is in GacUI Core therefore it may not necessary appeared as a RenderingDom.
- * r.validArea will always equals to or smaller than the intersection of r.bounds and parent.validArea.
+ * r.content.validArea will always equals to or smaller than the intersection of r.content.bounds and parent.validArea.
  * 
- * In case of smaller, createSimpleDom will be called to make a IVirtualDom whose bounds is r.validArea.
+ * In case of smaller, createSimpleDom will be called to make a IVirtualDom whose bounds is r.content.validArea.
  * And the IVirtualDom created from r becomes it child.
  * In case of equal, such extra IVirtualDom must not exist.
  * 
@@ -35,12 +39,12 @@ import { TypedElementDesc } from './GacUIElementManager';
 export interface IVirtualDom {
     get parent(): IVirtualDom | undefined;
     get id(): SCHEMA.TYPES.Integer;
+    get globalBounds(): SCHEMA.Rect;
     get bounds(): SCHEMA.Rect;
     get hitTestResult(): SCHEMA.WindowHitTestResult | undefined;
     get cursor(): SCHEMA.WindowSystemCursorType | undefined;
     get typedDesc(): TypedElementDesc | undefined;
     get children(): ReadonlyArray<IVirtualDom>;
-    updateBounds(bounds: SCHEMA.Rect): void;
     updateChildren(children: IVirtualDom[]): void;
     updateTypedDesc(typedDesc: TypedElementDesc | undefined): void;
 }
@@ -48,7 +52,7 @@ export interface IVirtualDom {
 export interface IVirtualDomProvider {
     createDom(
         id: SCHEMA.TYPES.Integer,
-        bounds: SCHEMA.Rect,
+        globalBounds: SCHEMA.Rect,
         hitTestResult: SCHEMA.WindowHitTestResult | undefined,
         cursor: SCHEMA.WindowSystemCursorType | undefined,
         typedDesc: TypedElementDesc | undefined): IVirtualDom;
@@ -135,7 +139,6 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
     return virtualDom;
 }
 
-// IMPORTANT: RenderingDomContent.bounds are global but IVirtualDom.bounds is the offset to its parent
 export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, provider: IVirtualDomProvider): VirtualDomRecord {
     // Verify that this is the screen (root) element
     if (renderingDom.id !== -1 ||
