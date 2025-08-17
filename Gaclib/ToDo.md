@@ -2,9 +2,6 @@
 
 - `IVirtualDomProvider`
   - Implement the HTML `IVirtualDomProvider` and test it in elements.html
-  - Implement `RenderingDom` -> `IVirtualDom` but not consider `validArea` yet.
-  - Consider `validArea` in `createVirtualDomFromRenderingDom`.
-    - Add more test cases for child bounds clipped by parent bounds.
   - Apply `RenderingDom_Diff` on `IVirtualDom`.
 - Add a package to copy all GacUISrc/UnitText snapsnots and render in Snapshots.html
 - `snapshot.html` to render snapshots, will clickable but not collapsible tree view at the left.

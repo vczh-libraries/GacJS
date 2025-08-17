@@ -68,6 +68,7 @@ function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, 
 }
 
 export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, dom: IVirtualDom, domv?: IVirtualDom): void {
+    console.log(`Asserting attributes for RenderingDom ID: ${renderingDom.id}`);
     if (domv === undefined) {
         // Single DOM case: dom should have the original ID and inherit bounds as globalBounds
         assert.strictEqual(dom.id, renderingDom.id);

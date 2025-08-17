@@ -93,22 +93,6 @@ function intersectRects(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): SCHEMA.Rect {
     };
 }
 
-function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea: SCHEMA.Rect): void {
-    // Process children
-    const children: IVirtualDom[] = [];
-    if (renderingDom.children) {
-        for (const child of renderingDom.children) {
-            if (child !== null) {
-                const childVirtualDom = createVirtualDom(child, record, provider, parentValidArea);
-                children.push(childVirtualDom);
-            }
-        }
-    }
-
-    // Update children on the target virtual DOM
-    virtualDom.updateChildren(children);
-}
-
 function areRectsEqual(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): boolean {
     return rect1.x1 === rect2.x1 && rect1.y1 === rect2.y1 && rect1.x2 === rect2.x2 && rect1.y2 === rect2.y2;
 }
@@ -119,13 +103,12 @@ function fillVirtualDom(
     provider: IVirtualDomProvider,
     id: SCHEMA.TYPES.Integer,
     globalBounds: SCHEMA.Rect,
-    typedDesc: TypedElementDesc | undefined,
-    childrenParentValidArea: SCHEMA.Rect
+    typedDesc: TypedElementDesc | undefined
 ): IVirtualDom {
     // Create the virtual DOM
     const virtualDom = provider.createDom(
-        id, 
-        globalBounds, 
+        id,
+        globalBounds,
         renderingDom.content.hitTestResult || undefined,
         renderingDom.content.cursor || undefined,
         typedDesc
@@ -141,12 +124,28 @@ function fillVirtualDom(
     }
 
     // Process and update children
-    processAndUpdateChildren(renderingDom, virtualDom, record, provider, childrenParentValidArea);
+    processAndUpdateChildren(renderingDom, virtualDom, record, provider, renderingDom.content.validArea);
 
     return virtualDom;
 }
 
-function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea: SCHEMA.Rect): IVirtualDom {
+function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): void {
+    // Process children
+    const children: IVirtualDom[] = [];
+    if (renderingDom.children) {
+        for (const child of renderingDom.children) {
+            if (child !== null) {
+                const childVirtualDom = createVirtualDom(child, record, provider, parentValidArea);
+                children.push(childVirtualDom);
+            }
+        }
+    }
+
+    // Update children on the target virtual DOM
+    virtualDom.updateChildren(children);
+}
+
+function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): IVirtualDom {
     // Check for duplicate IDs
     if (record.doms.has(renderingDom.id)) {
         throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
@@ -163,39 +162,11 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
     }
 
     // Calculate the natural intersection of this element's bounds with parent's validArea
-    const naturalValidArea = intersectRects(renderingDom.content.bounds, parentValidArea);
-    
-    // Check if validArea is different from bounds AND different from natural intersection
-    if (!areRectsEqual(renderingDom.content.validArea, renderingDom.content.bounds) &&
-        !areRectsEqual(renderingDom.content.validArea, naturalValidArea)) {
-        // validArea is smaller than both bounds and natural intersection, need to create two virtual DOMs
-        
-        // Create the outer virtual DOM with validArea as bounds, but with the original renderingDom.id
-        const outerVirtualDom = provider.createSimpleDom(renderingDom.id, renderingDom.content.validArea);
-        
-        // Create the inner virtual DOM with original bounds, but with ClippedVirtualDomId
-        // Children should be processed with the outer DOM's validArea as their parent validArea
-        const innerVirtualDom = fillVirtualDom(
-            renderingDom,
-            record,
-            provider,
-            ClippedVirtualDomId,
-            renderingDom.content.bounds, // Inner virtual DOM uses original bounds
-            typedDesc,
-            renderingDom.content.validArea
-        );
+    const naturalValidArea = parentValidArea ? intersectRects(renderingDom.content.bounds, parentValidArea) : renderingDom.content.bounds;
 
-        // Add to the doms map only if ID is not negative
-        if (renderingDom.id >= 0) {
-            record.doms.set(renderingDom.id, outerVirtualDom);
-        }
-        
-        // Set the inner virtual DOM as the only child of the outer virtual DOM
-        outerVirtualDom.updateChildren([innerVirtualDom]);
-
-        return outerVirtualDom;
-    } else {
-        // validArea equals bounds OR validArea equals natural intersection, create single virtual DOM
+    // Check if validArea does not provide new information
+    if (areRectsEqual(renderingDom.content.validArea, naturalValidArea)) {
+        // validArea equals natural intersection, create single virtual DOM
         // Children should be processed with this element's validArea as their parent validArea
         const virtualDom = fillVirtualDom(
             renderingDom,
@@ -203,8 +174,7 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
             provider,
             renderingDom.id,
             renderingDom.content.bounds, // Single virtual DOM uses bounds as globalBounds
-            typedDesc,
-            renderingDom.content.validArea
+            typedDesc
         );
 
         // Add to the doms map only if ID is not negative
@@ -213,6 +183,31 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
         }
 
         return virtualDom;
+    } else {
+        // validArea is smaller than natural intersection, need to create two virtual DOMs
+        // Create the outer virtual DOM with validArea as bounds, but with the original renderingDom.id
+        const outerVirtualDom = provider.createSimpleDom(renderingDom.id, renderingDom.content.validArea);
+
+        // Create the inner virtual DOM with original bounds, but with ClippedVirtualDomId
+        // Children should be processed with the outer DOM's validArea as their parent validArea
+        const innerVirtualDom = fillVirtualDom(
+            renderingDom,
+            record,
+            provider,
+            ClippedVirtualDomId,
+            renderingDom.content.bounds, // Inner virtual DOM uses original bounds
+            typedDesc
+        );
+
+        // Add to the doms map only if ID is not negative
+        if (renderingDom.id >= 0) {
+            record.doms.set(renderingDom.id, outerVirtualDom);
+        }
+
+        // Set the inner virtual DOM as the only child of the outer virtual DOM
+        outerVirtualDom.updateChildren([innerVirtualDom]);
+
+        return outerVirtualDom;
     }
 }
 
@@ -242,7 +237,7 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
     };
 
     // Process and update children on the screen
-    processAndUpdateChildren(renderingDom, record.screen, record, provider, renderingDom.content.bounds);
+    processAndUpdateChildren(renderingDom, record.screen, record, provider);
 
     // Return the result
     return record;
