@@ -33,7 +33,7 @@
         }
 
         // Function to create tree element from a data structure
-        function createTreeElement(tree, path = '', indent = 0) {
+        function createTreeElement(tree /*: TreeFolder*/, indent = 0) {
             /*
             interface TreeFolder {
                 type: 'Folder';
@@ -50,7 +50,13 @@
             */
             const container = document.createElement('div');
 
-            if (tree.type === 'Folder') {
+            // Sort entries: folders first, then files, both alphabetically
+            const entries = Object.entries(tree.content);
+            const folders = entries.filter(([, value]) => value.type === 'Folder').sort(([a], [b]) => a.localeCompare(b));
+            const files = entries.filter(([, value]) => value.type === 'File').sort(([a], [b]) => a.localeCompare(b));
+
+            // Add folders first
+            folders.forEach(([name, childEntry]) => {
                 // Create folder element
                 const folderDiv = document.createElement('div');
                 folderDiv.className = 'tree-item tree-folder';
@@ -60,55 +66,46 @@
                 indentSpan.style.width = (indent * 4) + 'ch';
                 folderDiv.appendChild(indentSpan);
 
-                const folderName = path.split('/').pop() || 'Application';
-                folderDiv.appendChild(document.createTextNode(folderName));
+                folderDiv.appendChild(document.createTextNode(name));
                 container.appendChild(folderDiv);
 
-                // Sort entries: folders first, then files, both alphabetically
-                const entries = Object.entries(tree.content);
-                const folders = entries.filter(([, value]) => value.type === 'Folder').sort(([a], [b]) => a.localeCompare(b));
-                const files = entries.filter(([, value]) => value.type === 'File').sort(([a], [b]) => a.localeCompare(b));
+                // Recursively add folder content
+                container.appendChild(createTreeElement(childEntry, indent + 1));
+            });
 
-                // Add folders first
-                folders.forEach(([name, childEntry]) => {
-                    const childPath = path ? `${path}/${name}` : name;
-                    container.appendChild(createTreeElement(childEntry, childPath, indent + 1));
+            // Add files
+            files.forEach(([name, fileEntry]) => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'tree-item';
+
+                const indentSpan = document.createElement('span');
+                indentSpan.className = 'tree-indent';
+                indentSpan.style.width = (indent * 4) + 'ch';
+                fileDiv.appendChild(indentSpan);
+
+                const fileLink = document.createElement('a');
+                fileLink.className = 'tree-file';
+                fileLink.href = '#';
+                fileLink.textContent = fileEntry.display;
+
+                fileLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Remove selected class from previously selected file
+                    if (currentSelectedFile) {
+                        currentSelectedFile.classList.remove('selected');
+                    }
+
+                    // Add selected class to current file
+                    fileLink.classList.add('selected');
+                    currentSelectedFile = fileLink;
+
+                    renderSnapshot(fileEntry.url);
                 });
 
-                // Add files
-                files.forEach(([name, fileEntry]) => {
-                    const fileDiv = document.createElement('div');
-                    fileDiv.className = 'tree-item';
-
-                    const indentSpan = document.createElement('span');
-                    indentSpan.className = 'tree-indent';
-                    indentSpan.style.width = ((indent + 1) * 4) + 'ch';
-                    fileDiv.appendChild(indentSpan);
-
-                    const fileLink = document.createElement('a');
-                    fileLink.className = 'tree-file';
-                    fileLink.href = '#';
-                    fileLink.textContent = fileEntry.display;
-
-                    fileLink.addEventListener('click', (e) => {
-                        e.preventDefault();
-
-                        // Remove selected class from previously selected file
-                        if (currentSelectedFile) {
-                            currentSelectedFile.classList.remove('selected');
-                        }
-
-                        // Add selected class to current file
-                        fileLink.classList.add('selected');
-                        currentSelectedFile = fileLink;
-
-                        renderSnapshot(fileEntry.url);
-                    });
-
-                    fileDiv.appendChild(fileLink);
-                    container.appendChild(fileDiv);
-                });
-            }
+                fileDiv.appendChild(fileLink);
+                container.appendChild(fileDiv);
+            });
 
             return container;
         }
