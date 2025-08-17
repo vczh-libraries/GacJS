@@ -32,6 +32,20 @@ rendering a remote GUI in HTML via DOM and Canvas.
 - Do not use `if (x)`, unless `x` is a boolean or nullable type.
   - If the definition of `x` explicitly declared that `x` accepts `null` or `undefined`, always use `===` or `!==` instead.
 
+### ASCII Art in Test Cases
+
+- Rectangles represents all `IVirtualDom` instances in a tree.
+- Each rectangle must be smaller but big enough to print the ID path.
+- When there are multiple `IVirtualDom`, the shapes don't have to maintain ratios of values.
+- Each rectangle prints the full path of IDs from the first child of the root all the way to itself.
+- When two `IVirtualDom` are created from one `RenderingDom`:
+  - The outer one prints the full path of IDs.
+  - The inner one prints the full path of IDs following a 'v' character, no space is needed.
+- A rectangle consists of multiple `+`, `-` and `|` characters.
+  - In the same graph, save value of `x1` and `x2` across multiple rectangles must be in the same column.
+  - Different values must be in different columns.
+  - Same for `y1` and `y2` about rows.
+
 ## for Copilot in Visual Studio Code
 
 - You are on Windows running in Visual Studio Code
