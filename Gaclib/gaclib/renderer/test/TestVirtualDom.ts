@@ -57,6 +57,7 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
 
     // Verify the screen element
     assert.strictEqual(result.screen.id, -1);
+    assert.deepEqual(result.screen.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
     expect(result.screen.children).toEqual([]);
@@ -302,6 +303,7 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 
     // Verify the screen (root)
     assert.strictEqual(result.screen.id, -1);
+    assert.deepEqual(result.screen.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
     assert.strictEqual(result.screen.children.length, 2);
@@ -317,6 +319,8 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 
     // Verify node 'a' (child of root)
     assert.strictEqual(a.id, 2);
+    // Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(a.globalBounds, { x1: 100, y1: 100, x2: 300, y2: 300 });
     // Bounds should be relative to parent (root at 0,0) - so same as global
     assert.deepEqual(a.bounds, { x1: 100, y1: 100, x2: 300, y2: 300 });
     assert.strictEqual(a.parent, result.screen);
@@ -327,6 +331,8 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 
     // Verify node 'e' (child of root)
     assert.strictEqual(e.id, 6);
+    // Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(e.globalBounds, { x1: 400, y1: 100, x2: 600, y2: 300 });
     // Bounds should be relative to parent (root at 0,0) - so same as global
     assert.deepEqual(e.bounds, { x1: 400, y1: 100, x2: 600, y2: 300 });
     assert.strictEqual(e.parent, result.screen);
@@ -338,6 +344,8 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     // Get child 'b' of 'a'
     const b = a.children[0];
     assert.strictEqual(b.id, 3);
+    // Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(b.globalBounds, { x1: 120, y1: 120, x2: 280, y2: 280 });
     // Bounds should be relative to parent 'a' (at 100,100)
     assert.deepEqual(b.bounds, { x1: 20, y1: 20, x2: 180, y2: 180 });
     assert.strictEqual(b.parent, a);
@@ -352,6 +360,8 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 
     // Verify node 'c' (child of 'b')
     assert.strictEqual(c.id, 4);
+    // Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(c.globalBounds, { x1: 130, y1: 130, x2: 180, y2: 180 });
     // Bounds should be relative to parent 'b' (at 120,120)
     assert.deepEqual(c.bounds, { x1: 10, y1: 10, x2: 60, y2: 60 });
     assert.strictEqual(c.parent, b);
@@ -362,6 +372,8 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 
     // Verify node 'd' (child of 'b')
     assert.strictEqual(d.id, 5);
+    // Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(d.globalBounds, { x1: 200, y1: 200, x2: 270, y2: 270 });
     // Bounds should be relative to parent 'b' (at 120,120)
     assert.deepEqual(d.bounds, { x1: 80, y1: 80, x2: 150, y2: 150 });
     assert.strictEqual(d.parent, b);
@@ -421,12 +433,18 @@ test('createVirtualDomFromRenderingDom - complex bounds calculation with multipl
     const level2 = level1.children[0];
     const level3 = level2.children[0];
 
+    // Level 1: Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(level1.globalBounds, { x1: 100, y1: 200, x2: 600, y2: 700 });
     // Level 1: Relative to root (0,0) = (100,200,600,700)
     assert.deepEqual(level1.bounds, { x1: 100, y1: 200, x2: 600, y2: 700 });
 
+    // Level 2: Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(level2.globalBounds, { x1: 150, y1: 250, x2: 550, y2: 650 });
     // Level 2: Relative to level1 (100,200) = (150-100, 250-200, 550-100, 650-200) = (50,50,450,450)
     assert.deepEqual(level2.bounds, { x1: 50, y1: 50, x2: 450, y2: 450 });
 
+    // Level 3: Global bounds should match RenderingDom.content.bounds
+    assert.deepEqual(level3.globalBounds, { x1: 200, y1: 300, x2: 500, y2: 600 });
     // Level 3: Relative to level2 (150,250) = (200-150, 300-250, 500-150, 600-250) = (50,50,350,350)
     assert.deepEqual(level3.bounds, { x1: 50, y1: 50, x2: 350, y2: 350 });
 });

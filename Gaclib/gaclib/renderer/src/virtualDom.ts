@@ -58,7 +58,7 @@ export interface IVirtualDomProvider {
         typedDesc: TypedElementDesc | undefined): IVirtualDom;
     createSimpleDom(
         id: SCHEMA.TYPES.Integer,
-        bounds: SCHEMA.Rect): IVirtualDom;
+        globalBounds: SCHEMA.Rect): IVirtualDom;
 }
 
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
@@ -93,15 +93,6 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
         throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
     }
 
-    // Calculate relative bounds (offset from parent)
-    const parentRenderingBounds = parentRenderingDom.content.bounds;
-    const relativeBounds: SCHEMA.Rect = {
-        x1: renderingDom.content.bounds.x1 - parentRenderingBounds.x1,
-        y1: renderingDom.content.bounds.y1 - parentRenderingBounds.y1,
-        x2: renderingDom.content.bounds.x2 - parentRenderingBounds.x1,
-        y2: renderingDom.content.bounds.y2 - parentRenderingBounds.y1
-    };
-
     // Create TypedElementDesc from element ID if present
     let typedDesc: TypedElementDesc | undefined = undefined;
     if (renderingDom.content.element !== null) {
@@ -112,10 +103,10 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
         }
     }
 
-    // Create the virtual DOM node
+    // Create the virtual DOM node with global bounds
     const virtualDom = provider.createDom(
         renderingDom.id,
-        relativeBounds,
+        renderingDom.content.bounds,
         renderingDom.content.hitTestResult || undefined,
         renderingDom.content.cursor || undefined,
         typedDesc

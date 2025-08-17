@@ -23,6 +23,18 @@ class VirtualDomMock implements IVirtualDom {
     }
 
     get bounds(): SCHEMA.Rect {
+        if (!this._parent) {
+            // Root node: bounds === globalBounds
+            return this.globalBounds;
+        }
+        // Calculate relative bounds by subtracting parent's global position
+        const parentGlobalBounds = this._parent.globalBounds;
+        return {
+            x1: this.globalBounds.x1 - parentGlobalBounds.x1,
+            y1: this.globalBounds.y1 - parentGlobalBounds.y1,
+            x2: this.globalBounds.x2 - parentGlobalBounds.x1,
+            y2: this.globalBounds.y2 - parentGlobalBounds.y1
+        };
     }
 
     get typedDesc(): TypedElementDesc | undefined {
@@ -79,34 +91,35 @@ class VirtualDomMock implements IVirtualDom {
 export class VirtualDomProviderMock implements IVirtualDomProvider {
     createDom(
         id: SCHEMA.TYPES.Integer,
-        bounds: SCHEMA.Rect,
+        globalBounds: SCHEMA.Rect,
         hitTestResult: SCHEMA.WindowHitTestResult | undefined,
         cursor: SCHEMA.WindowSystemCursorType | undefined,
         typedDesc: TypedElementDesc | undefined
     ): IVirtualDom {
-        return new VirtualDomMock(id, bounds, hitTestResult, cursor, typedDesc);
+        return new VirtualDomMock(id, globalBounds, hitTestResult, cursor, typedDesc);
     }
 
     createSimpleDom(
         id: SCHEMA.TYPES.Integer,
-        bounds: SCHEMA.Rect
+        globalBounds: SCHEMA.Rect
     ): VirtualDomMock {
-        return new VirtualDomMock(id, bounds, undefined, undefined, undefined);
+        return new VirtualDomMock(id, globalBounds, undefined, undefined, undefined);
     }
 }
 
 test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct arguments', () => {
     const provider = new VirtualDomProviderMock();
     const id = 123;
-    const bounds: SCHEMA.Rect = { x1: 10, y1: 20, x2: 30, y2: 40 };
+    const globalBounds: SCHEMA.Rect = { x1: 10, y1: 20, x2: 30, y2: 40 };
     const hitTestResult = SCHEMA.WindowHitTestResult.Client;
     const cursor = SCHEMA.WindowSystemCursorType.Arrow;
     const typedDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
 
-    const dom = provider.createDom(id, bounds, hitTestResult, cursor, typedDesc) as VirtualDomMock;
+    const dom = provider.createDom(id, globalBounds, hitTestResult, cursor, typedDesc) as VirtualDomMock;
 
     assert.strictEqual(dom.id, id);
-    assert.deepEqual(dom.bounds, bounds);
+    assert.deepEqual(dom.globalBounds, globalBounds);
+    assert.deepEqual(dom.bounds, globalBounds); // Root node: bounds === globalBounds
     assert.strictEqual(dom.hitTestResult, hitTestResult);
     assert.strictEqual(dom.cursor, cursor);
     assert.deepEqual(dom.typedDesc, typedDesc);
@@ -117,31 +130,18 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct argum
 test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined optional parameters', () => {
     const provider = new VirtualDomProviderMock();
     const id = 456;
-    const bounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 100, y2: 100 };
+    const globalBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 100, y2: 100 };
 
-    const dom = provider.createDom(id, bounds, undefined, undefined, undefined) as VirtualDomMock;
+    const dom = provider.createDom(id, globalBounds, undefined, undefined, undefined) as VirtualDomMock;
 
     assert.strictEqual(dom.id, id);
-    assert.deepEqual(dom.bounds, bounds);
+    assert.deepEqual(dom.globalBounds, globalBounds);
+    assert.deepEqual(dom.bounds, globalBounds); // Root node: bounds === globalBounds
     assert.isUndefined(dom.hitTestResult);
     assert.isUndefined(dom.cursor);
     assert.isUndefined(dom.typedDesc);
     assert.isUndefined(dom.parent);
     expect(dom.children).toEqual([]);
-});
-
-test('VirtualDomMock.updateBounds updates bounds correctly', () => {
-    const provider = new VirtualDomProviderMock();
-    const initialBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 10, y2: 10 };
-    const newBounds: SCHEMA.Rect = { x1: 5, y1: 5, x2: 15, y2: 15 };
-
-    const dom = provider.createSimpleDom(1, initialBounds);
-
-    assert.deepEqual(dom.bounds, initialBounds);
-
-    dom.updateBounds(newBounds);
-
-    assert.deepEqual(dom.bounds, newBounds);
 });
 
 test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock instance', () => {
@@ -218,6 +218,62 @@ test('VirtualDomMock.updateChildren correctly sets parent and children relations
     expect(parent.children).toEqual([child1, child2]);
     expect(child1.children).toEqual([]);
     expect(child2.children).toEqual([]);
+});
+
+test('VirtualDomMock bounds computation - root node', () => {
+    const provider = new VirtualDomProviderMock();
+    const globalBounds: SCHEMA.Rect = { x1: 100, y1: 200, x2: 300, y2: 400 };
+    const root = provider.createSimpleDom(1, globalBounds);
+
+    // Root node: bounds should equal globalBounds
+    assert.deepEqual(root.globalBounds, globalBounds);
+    assert.deepEqual(root.bounds, globalBounds);
+});
+
+test('VirtualDomMock bounds computation - child nodes', () => {
+    const provider = new VirtualDomProviderMock();
+    const parentGlobalBounds: SCHEMA.Rect = { x1: 100, y1: 200, x2: 400, y2: 500 };
+    const childGlobalBounds: SCHEMA.Rect = { x1: 150, y1: 250, x2: 250, y2: 350 };
+    
+    const parent = provider.createSimpleDom(1, parentGlobalBounds);
+    const child = provider.createSimpleDom(2, childGlobalBounds);
+
+    // Before establishing parent-child relationship
+    assert.deepEqual(child.globalBounds, childGlobalBounds);
+    assert.deepEqual(child.bounds, childGlobalBounds); // Still root, so bounds === globalBounds
+
+    // Establish parent-child relationship
+    parent.updateChildren([child]);
+
+    // After establishing relationship
+    assert.deepEqual(child.globalBounds, childGlobalBounds); // globalBounds should not change
+    // bounds should be relative to parent: (150-100, 250-200, 250-100, 350-200) = (50, 50, 150, 150)
+    assert.deepEqual(child.bounds, { x1: 50, y1: 50, x2: 150, y2: 150 });
+});
+
+test('VirtualDomMock bounds computation - nested hierarchy', () => {
+    const provider = new VirtualDomProviderMock();
+    const rootGlobalBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 1000, y2: 1000 };
+    const level1GlobalBounds: SCHEMA.Rect = { x1: 100, y1: 200, x2: 600, y2: 700 };
+    const level2GlobalBounds: SCHEMA.Rect = { x1: 150, y1: 250, x2: 550, y2: 650 };
+    
+    const root = provider.createSimpleDom(1, rootGlobalBounds);
+    const level1 = provider.createSimpleDom(2, level1GlobalBounds);
+    const level2 = provider.createSimpleDom(3, level2GlobalBounds);
+
+    // Create hierarchy: root -> level1 -> level2
+    root.updateChildren([level1]);
+    level1.updateChildren([level2]);
+
+    // Verify bounds calculations
+    // Root: bounds === globalBounds
+    assert.deepEqual(root.bounds, rootGlobalBounds);
+    
+    // Level 1: relative to root (0,0) = (100,200,600,700)
+    assert.deepEqual(level1.bounds, { x1: 100, y1: 200, x2: 600, y2: 700 });
+    
+    // Level 2: relative to level1 (100,200) = (150-100, 250-200, 550-100, 650-200) = (50,50,450,450)
+    assert.deepEqual(level2.bounds, { x1: 50, y1: 50, x2: 450, y2: 450 });
 });
 
 test('VirtualDomMock.updateChildren correctly reorders children', () => {
