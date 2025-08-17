@@ -33,7 +33,7 @@
         }
 
         // Function to create tree element from a data structure
-        function createTreeElement(tree) {
+        function createTreeElement(tree, path = '', indent = 0) {
             /*
             interface TreeFolder {
                 type: 'Folder';
@@ -43,18 +43,14 @@
             interface TreeFile {
                 type: 'File';
                 display: string;
-                url: {};
+                url: string;
             }
 
             type TreeNode = TreeFolder | TreeFile;
             */
-        }
-
-        // Function to create tree structure recursively
-        function createTreeElementFromSnapshotFolder(entry, path = '', indent = 0) {
             const container = document.createElement('div');
 
-            if (entry.type === 'Folder') {
+            if (tree.type === 'Folder') {
                 // Create folder element
                 const folderDiv = document.createElement('div');
                 folderDiv.className = 'tree-item tree-folder';
@@ -69,18 +65,18 @@
                 container.appendChild(folderDiv);
 
                 // Sort entries: folders first, then files, both alphabetically
-                const entries = Object.entries(entry.content);
+                const entries = Object.entries(tree.content);
                 const folders = entries.filter(([, value]) => value.type === 'Folder').sort(([a], [b]) => a.localeCompare(b));
-                const files = entries.filter(([, value]) => value === 'File').sort(([a], [b]) => a.localeCompare(b));
+                const files = entries.filter(([, value]) => value.type === 'File').sort(([a], [b]) => a.localeCompare(b));
 
                 // Add folders first
                 folders.forEach(([name, childEntry]) => {
                     const childPath = path ? `${path}/${name}` : name;
-                    container.appendChild(createTreeElementFromSnapshotFolder(childEntry, childPath, indent + 1));
+                    container.appendChild(createTreeElement(childEntry, childPath, indent + 1));
                 });
 
                 // Add files
-                files.forEach(([name]) => {
+                files.forEach(([name, fileEntry]) => {
                     const fileDiv = document.createElement('div');
                     fileDiv.className = 'tree-item';
 
@@ -92,9 +88,8 @@
                     const fileLink = document.createElement('a');
                     fileLink.className = 'tree-file';
                     fileLink.href = '#';
-                    fileLink.textContent = name;
+                    fileLink.textContent = fileEntry.display;
 
-                    const filePath = path ? `./${path}/${name}` : `./${name}`;
                     fileLink.addEventListener('click', (e) => {
                         e.preventDefault();
 
@@ -107,7 +102,7 @@
                         fileLink.classList.add('selected');
                         currentSelectedFile = fileLink;
 
-                        renderSnapshot(filePath);
+                        renderSnapshot(fileEntry.url);
                     });
 
                     fileDiv.appendChild(fileLink);
@@ -118,10 +113,36 @@
             return container;
         }
 
+        // Function to read snapshot and convert to tree structure
+        function readSnapshot(entry, path = '') {
+            if (entry.type === 'Folder') {
+                const treeFolder = {
+                    type: 'Folder',
+                    content: {}
+                };
+
+                Object.entries(entry.content).forEach(([name, childEntry]) => {
+                    const childPath = path ? `${path}/${name}` : name;
+                    treeFolder.content[name] = readSnapshot(childEntry, childPath);
+                });
+
+                return treeFolder;
+            } else {
+                // entry === 'File'
+                const filePath = path ? `./${path}` : `./${path}`;
+                return {
+                    type: 'File',
+                    display: path.split('/').pop() || 'Unknown',
+                    url: filePath
+                };
+            }
+        }
+
         // Initialize the tree view
         function initializeTreeView() {
             const treeView = document.getElementById('treeView');
-            const treeElement = createTreeElementFromSnapshotFolder(Snapshot);
+            const treeData = readSnapshot(Snapshot);
+            const treeElement = createTreeElement(treeData);
             treeView.appendChild(treeElement);
         }
 
