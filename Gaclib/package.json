@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "codegen": "lerna run codegen --stream",
     "build": "lerna run build --stream",
     "test": "lerna run test --stream"
   },
