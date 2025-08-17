@@ -13,12 +13,12 @@
     <div class="container">
         <div class="files-column" id="filesColumn">
             <h3>Files Tree View</h3>
-            <div id="treeView"></div>
+            <div id="filesTreeView"></div>
         </div>
         <div class="splitter" id="filesSplitter"></div>
         <div class="frames-column" id="framesColumn">
             <h3>Frame List</h3>
-            <div id="frameTreeView">Click on a file to show frame names.</div>
+            <div id="frameList">Click on a file to show frame names.</div>
         </div>
         <div class="splitter" id="framesSplitter"></div>
         <div class="rendering-column" id="renderingColumn">
@@ -41,28 +41,28 @@
                 const trace = await response.json();
                 
                 // Clear the existing frames list
-                const frameTreeView = document.getElementById('frameTreeView');
-                frameTreeView.innerHTML = '';
+                const frameList = document.getElementById('frameList');
+                frameList.innerHTML = '';
                 
                 // Create tree element for frames
                 const framesTree = GacUIHtmlRenderer.readFrames(trace);
                 const frameTreeElement = GacUIHtmlRenderer.createTreeElement(framesTree, {
                     onSelected: renderFrame
                 });
-                frameTreeView.appendChild(frameTreeElement);
+                frameList.appendChild(frameTreeElement);
                 
             } catch (error) {
-                document.getElementById('frameTreeView').textContent = `Error loading frames: ${error.message}`;
+                document.getElementById('frameList').textContent = `Error loading frames: ${error.message}`;
             }
         }
 
         // Initialize the tree view
         function initializeTreeView() {
-            const treeView = document.getElementById('treeView');
-            const treeElement = GacUIHtmlRenderer.createTreeElement(GacUIHtmlRenderer.readSnapshot(GacUIHtmlRenderer.Snapshot, './'), {
+            const filesTreeView = document.getElementById('filesTreeView');
+            const treeElement = GacUIHtmlRenderer.createTreeElement(GacUIHtmlRenderer.readSnapshot(GacUIHtmlRenderer.Snapshot, './snapshots/'), {
                 onSelected: renderSnapshot
             });
-            treeView.appendChild(treeElement);
+            filesTreeView.appendChild(treeElement);
         }
 
         // Initialize splitter functionality
