@@ -57,6 +57,16 @@ export function createChildRenderingDom(
     };
 }
 
+function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, dom: IVirtualDom): void {
+    // Check typedDesc based on element mapping
+    if (renderingDom.content.element !== null) {
+        const expectedTypedDesc = elements.get(renderingDom.content.element);
+        assert.deepEqual(dom.typedDesc, expectedTypedDesc);
+    } else {
+        assert.isUndefined(dom.typedDesc);
+    }
+}
+
 export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, dom: IVirtualDom, domv?: IVirtualDom): void {
     if (domv === undefined) {
         // Single DOM case: dom should have the original ID and inherit bounds as globalBounds
@@ -65,13 +75,7 @@ export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements:
         assert.strictEqual(dom.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
         assert.strictEqual(dom.cursor, renderingDom.content.cursor ?? undefined);
         
-        // Check typedDesc based on element mapping
-        if (renderingDom.content.element !== null) {
-            const expectedTypedDesc = elements.get(renderingDom.content.element);
-            assert.deepEqual(dom.typedDesc, expectedTypedDesc);
-        } else {
-            assert.isUndefined(dom.typedDesc);
-        }
+        assertDomDesc(renderingDom, elements, dom);
     } else {
         // Clipped DOM case: dom is outer (with validArea), domv is inner (with bounds and content)
         assert.strictEqual(dom.id, renderingDom.id);
@@ -85,13 +89,7 @@ export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements:
         assert.strictEqual(domv.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
         assert.strictEqual(domv.cursor, renderingDom.content.cursor ?? undefined);
         
-        // Check typedDesc based on element mapping for the inner DOM
-        if (renderingDom.content.element !== null) {
-            const expectedTypedDesc = elements.get(renderingDom.content.element);
-            assert.deepEqual(domv.typedDesc, expectedTypedDesc);
-        } else {
-            assert.isUndefined(domv.typedDesc);
-        }
+        assertDomDesc(renderingDom, elements, domv);
     }
 }
 
