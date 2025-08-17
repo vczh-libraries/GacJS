@@ -11,15 +11,15 @@
 
 <body>
     <div class="container">
-        <div class="left-column" id="leftColumn">
+        <div class="files-column" id="filesColumn">
             <div id="treeView"></div>
         </div>
         <div class="splitter" id="splitter1"></div>
-        <div class="middle-column" id="middleColumn">
+        <div class="frames-column" id="framesColumn">
             Click on a file to show frame names.
         </div>
         <div class="splitter" id="splitter2"></div>
-        <div class="right-column" id="rightColumn">
+        <div class="rendering-column" id="renderingColumn">
             Click on a frame to show the UI.
         </div>
     </div>
@@ -29,7 +29,7 @@
         let currentSelectedFile = null; // Track currently selected file
 
         function renderSnapshot(url) {
-            document.getElementById('rightColumn').textContent = url;
+            document.getElementById('renderingColumn').textContent = url;
         }
 
         // Function to create tree structure recursively
@@ -111,8 +111,8 @@
         function initializeSplitter() {
             const splitter1 = document.getElementById('splitter1');
             const splitter2 = document.getElementById('splitter2');
-            const leftColumn = document.getElementById('leftColumn');
-            const middleColumn = document.getElementById('middleColumn');
+            const filesColumn = document.getElementById('filesColumn');
+            const framesColumn = document.getElementById('framesColumn');
             const container = document.querySelector('.container');
 
             let isResizing = false;
@@ -141,29 +141,29 @@
                 const newX = e.clientX - containerRect.left;
 
                 if (currentSplitter === 'splitter1') {
-                    // First splitter: controls left column width
+                    // First splitter: controls files column width
                     // Constrain width between 200px and 60% of container width
                     const minWidth = 200;
                     const maxWidth = containerRect.width * 0.6;
                     const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newX));
 
-                    leftColumn.style.width = constrainedWidth + 'px';
+                    filesColumn.style.width = constrainedWidth + 'px';
                 } else if (currentSplitter === 'splitter2') {
-                    // Second splitter: controls middle column width
-                    // Calculate available space (total width - left column width - splitter widths)
-                    const leftWidth = leftColumn.offsetWidth;
+                    // Second splitter: controls frames column width
+                    // Calculate available space (total width - files column width - splitter widths)
+                    const filesWidth = filesColumn.offsetWidth;
                     const splitterWidth = 6; // Each splitter is 6px wide
-                    const availableStart = leftWidth + splitterWidth;
+                    const availableStart = filesWidth + splitterWidth;
                     const availableWidth = containerRect.width - availableStart - splitterWidth;
                     
-                    const middleWidth = newX - availableStart;
+                    const framesWidth = newX - availableStart;
                     
-                    // Constrain middle column width
-                    const minMiddleWidth = 200;
-                    const maxMiddleWidth = Math.max(minMiddleWidth, availableWidth * 0.8);
-                    const constrainedMiddleWidth = Math.max(minMiddleWidth, Math.min(maxMiddleWidth, middleWidth));
+                    // Constrain frames column width
+                    const minFramesWidth = 200;
+                    const maxFramesWidth = Math.max(minFramesWidth, availableWidth * 0.8);
+                    const constrainedFramesWidth = Math.max(minFramesWidth, Math.min(maxFramesWidth, framesWidth));
 
-                    middleColumn.style.width = constrainedMiddleWidth + 'px';
+                    framesColumn.style.width = constrainedFramesWidth + 'px';
                 }
             });
 
