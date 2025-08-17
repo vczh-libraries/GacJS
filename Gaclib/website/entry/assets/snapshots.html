@@ -42,7 +42,6 @@
 
             interface TreeFile {
                 type: 'File';
-                display: string;
                 url: string;
             }
 
@@ -80,7 +79,7 @@
                     const fileLink = document.createElement('a');
                     fileLink.className = 'tree-file';
                     fileLink.href = '#';
-                    fileLink.textContent = entry.display;
+                    fileLink.textContent = name;
 
                     fileLink.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -106,7 +105,7 @@
         }
 
         // Function to read snapshot and convert to tree structure
-        function readSnapshot(entry, path = './') {
+        function readSnapshot(entry, path) {
             if (entry.type === 'Folder') {
                 const treeFolder = {
                     type: 'Folder',
@@ -135,7 +134,6 @@
                 // entry === 'File'
                 return {
                     type: 'File',
-                    display: path.split('/').slice(-1)[0] || 'Unknown',
                     url: path
                 };
             }
@@ -144,8 +142,7 @@
         // Initialize the tree view
         function initializeTreeView() {
             const treeView = document.getElementById('treeView');
-            const treeData = readSnapshot(Snapshot, './');
-            const treeElement = createTreeElement(treeData);
+            const treeElement = createTreeElement(readSnapshot(Snapshot, './'));
             treeView.appendChild(treeElement);
         }
 
