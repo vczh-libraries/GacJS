@@ -34,6 +34,9 @@ rendering a remote GUI in HTML via DOM and Canvas.
 
 ### ASCII Art in Test Cases
 
+- Add ASCII art for all `IVirtualDom` building test cases except:
+  - The test case is designed for testing exceptions.
+  - The test case builds only one `IVirtualDom` from the root `RenderingDom`, no child nodes added.
 - Rectangles represents all `IVirtualDom` instances in a tree.
 - Each rectangle must be smaller but big enough to print the ID path.
 - When there are multiple `IVirtualDom`, the shapes don't have to maintain ratios of values.
