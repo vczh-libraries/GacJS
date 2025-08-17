@@ -3,9 +3,14 @@ import { TypedElementDesc } from '../src/GacUIElementManager';
 import { createVirtualDomFromRenderingDom, ElementMap, ClippedVirtualDomId } from '../src/virtualDom';
 import { VirtualDomProviderMock } from './virtualDomMock';
 import { createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom } from './TestVirtualDom';
-import { test, expect, assert } from 'vitest';
+import { test, assert } from 'vitest';
 
 test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)', () => {
+    // +--+
+    // |1 |
+    // |  |
+    // +--+
+    
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
     const elements: ElementMap = new Map();
@@ -44,6 +49,14 @@ test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)',
 });
 
 test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping)', () => {
+    // +-------+
+    // |1      |
+    // | +---+ |
+    // | |1v | |
+    // | |   | |
+    // | +---+ |
+    // +-------+
+    
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
     const elements: ElementMap = new Map();
@@ -96,6 +109,14 @@ test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping
 });
 
 test('createVirtualDomFromRenderingDom - multiple clipped elements with same ClippedVirtualDomId', () => {
+    // +-------+  +-------+
+    // |1      |  |2      |
+    // | +---+ |  | +---+ |
+    // | |1v | |  | |2v | |
+    // | |   | |  | |   | |
+    // | +---+ |  | +---+ |
+    // +-------+  +-------+
+    
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
     const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
@@ -170,6 +191,16 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
 });
 
 test('createVirtualDomFromRenderingDom - clipped element with children', () => {
+    // +------------------+
+    // |1                 |
+    // |   +------------+ |
+    // |   |1v          | |
+    // |   |      +---+ | |
+    // |   |      |1/3| | |
+    // |   |      +---+ | |
+    // |   +------------+ |
+    // +------------------+
+    
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
     const elements: ElementMap = new Map();
@@ -225,6 +256,19 @@ test('createVirtualDomFromRenderingDom - clipped element with children', () => {
 });
 
 test('createVirtualDomFromRenderingDom - nested clipping', () => {
+    // +---------------------+
+    // |1                    |
+    // |  +---------------+  |
+    // |  |1v             |  |
+    // |  |  +---------+  |  |
+    // |  |  |1/2      |  |  |
+    // |  |  | +-----+ |  |  |
+    // |  |  | |1/2v | |  |  |
+    // |  |  | +-----+ |  |  |
+    // |  |  +---------+  |  |
+    // |  +---------------+  |
+    // +---------------------+
+    
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
     
@@ -277,35 +321,6 @@ test('createVirtualDomFromRenderingDom - nested clipping', () => {
     assert.strictEqual(result.doms.get(1), outerParent);
     assert.strictEqual(result.doms.get(2), outerChild);
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
-});
-
-test('createVirtualDomFromRenderingDom - no duplicate ID error for ClippedVirtualDomId', () => {
-    const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
-    
-    const rootDom = createRootRenderingDom();
-    rootDom.children = [
-        createChildRenderingDom(
-            1,
-            createSimpleRenderingDomContent(
-                { x1: 0, y1: 0, x2: 100, y2: 100 },
-                { x1: 10, y1: 10, x2: 90, y2: 90 }
-            )
-        ),
-        createChildRenderingDom(
-            2,
-            createSimpleRenderingDomContent(
-                { x1: 200, y1: 0, x2: 300, y2: 100 },
-                { x1: 210, y1: 10, x2: 290, y2: 90 }
-            )
-        )
-    ];
-
-    // This should not throw an error even though both children will create
-    // inner virtual DOMs with ClippedVirtualDomId
-    expect(() => {
-        createVirtualDomFromRenderingDom(rootDom, elements, provider);
-    }).not.toThrow();
 });
 
 test('createVirtualDomFromRenderingDom - still throws for duplicate positive IDs', () => {

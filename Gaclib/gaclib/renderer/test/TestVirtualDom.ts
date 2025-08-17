@@ -221,6 +221,20 @@ test('createVirtualDomFromRenderingDom - throws on duplicate element mapping', (
 });
 
 test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => {
+    // +---------------------+  +---+
+    // |2                    |  |6  |
+    // |  +----------------+ |  |   |
+    // |  |2/3             | |  |   |
+    // |  | +-----+        | |  |   |
+    // |  | |2/3/4|        | |  |   |
+    // |  | +-----+        | |  |   |
+    // |  |        +-----+ | |  |   |
+    // |  |        |2/3/5| | |  |   |
+    // |  |        |     | | |  |   |
+    // |  |        +-----+ | |  |   |
+    // |  +----------------+ |  |   |
+    // +---------------------+  +---+
+    
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
     const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
@@ -405,6 +419,18 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 });
 
 test('createVirtualDomFromRenderingDom - complex bounds calculation with multiple levels', () => {
+    // +--------------+
+    // |2             |
+    // | +----------+ |
+    // | |2/3       | |
+    // | | +------+ | |
+    // | | |2/3/4 | | |
+    // | | |      | | |
+    // | | |      | | |
+    // | | +------+ | |
+    // | +----------+ |
+    // +--------------+
+    
     const provider = new VirtualDomProviderMock();
     const elements: ElementMap = new Map();
     
