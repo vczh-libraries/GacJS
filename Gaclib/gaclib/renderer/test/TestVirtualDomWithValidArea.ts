@@ -1,53 +1,9 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { createVirtualDomFromRenderingDom, ElementMap, RootVirtualDomId, ClippedVirtualDomId } from '../src/virtualDom';
+import { createVirtualDomFromRenderingDom, ElementMap, ClippedVirtualDomId } from '../src/virtualDom';
 import { VirtualDomProviderMock } from './virtualDomMock';
+import { createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom } from './TestVirtualDom';
 import { test, expect, assert } from 'vitest';
-
-// Helper function to create a valid root RenderingDom with zero bounds
-function createRootRenderingDom(): SCHEMA.RenderingDom {
-    return {
-        id: RootVirtualDomId,
-        content: {
-            hitTestResult: null,
-            cursor: null,
-            element: null,
-            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
-            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
-        },
-        children: null
-    };
-}
-
-// Helper function to create RenderingDomContent with different validArea and bounds
-function createRenderingDomContentWithValidArea(
-    bounds: SCHEMA.Rect,
-    validArea: SCHEMA.Rect,
-    hitTestResult: SCHEMA.WindowHitTestResult | null = null,
-    cursor: SCHEMA.WindowSystemCursorType | null = null,
-    element: SCHEMA.TYPES.Integer | null = null
-): SCHEMA.RenderingDomContent {
-    return {
-        hitTestResult,
-        cursor,
-        element,
-        bounds,
-        validArea
-    };
-}
-
-// Helper function to create a child RenderingDom
-function createChildRenderingDom(
-    id: SCHEMA.TYPES.Integer,
-    content: SCHEMA.RenderingDomContent,
-    children: SCHEMA.RenderingDom[] | null = null
-): SCHEMA.RenderingDom {
-    return {
-        id,
-        content,
-        children
-    };
-}
 
 test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)', () => {
     const provider = new VirtualDomProviderMock();
@@ -59,12 +15,12 @@ test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)',
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
-                { x1: 10, y1: 10, x2: 100, y2: 100 }, // validArea same as bounds
                 SCHEMA.WindowHitTestResult.Client,
                 SCHEMA.WindowSystemCursorType.Arrow,
-                101
+                101,
+                { x1: 10, y1: 10, x2: 100, y2: 100 } // validArea same as bounds
             )
         )
     ];
@@ -97,12 +53,12 @@ test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
-                { x1: 20, y1: 20, x2: 90, y2: 90 },   // validArea smaller than bounds
                 SCHEMA.WindowHitTestResult.Client,
                 SCHEMA.WindowSystemCursorType.Arrow,
-                101
+                101,
+                { x1: 20, y1: 20, x2: 90, y2: 90 }   // validArea smaller than bounds
             )
         )
     ];
@@ -151,22 +107,22 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
-                { x1: 20, y1: 20, x2: 90, y2: 90 },   // validArea smaller than bounds
                 SCHEMA.WindowHitTestResult.Client,
                 null,
-                101
+                101,
+                { x1: 20, y1: 20, x2: 90, y2: 90 }   // validArea smaller than bounds
             )
         ),
         createChildRenderingDom(
             2,
-            createRenderingDomContentWithValidArea(
+            createRenderingDomContent(
                 { x1: 200, y1: 10, x2: 300, y2: 100 }, // bounds
-                { x1: 210, y1: 20, x2: 290, y2: 90 },  // validArea smaller than bounds
                 null,
                 SCHEMA.WindowSystemCursorType.Hand,
-                102
+                102,
+                { x1: 210, y1: 20, x2: 290, y2: 90 }  // validArea smaller than bounds
             )
         )
     ];
@@ -223,17 +179,17 @@ test('createVirtualDomFromRenderingDom - clipped element with children', () => {
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
-                { x1: 20, y1: 20, x2: 90, y2: 90 },   // validArea smaller than bounds
                 SCHEMA.WindowHitTestResult.Client,
                 null,
-                101
+                101,
+                { x1: 20, y1: 20, x2: 90, y2: 90 }   // validArea smaller than bounds
             ),
             [
                 createChildRenderingDom(
                     3,
-                    createRenderingDomContentWithValidArea(
+                    createSimpleRenderingDomContent(
                         { x1: 30, y1: 30, x2: 80, y2: 80 }, // bounds (inside parent bounds)
                         { x1: 30, y1: 30, x2: 80, y2: 80 }  // validArea same as bounds
                     )
@@ -276,14 +232,14 @@ test('createVirtualDomFromRenderingDom - nested clipping', () => {
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createSimpleRenderingDomContent(
                 { x1: 0, y1: 0, x2: 100, y2: 100 }, // bounds
                 { x1: 10, y1: 10, x2: 90, y2: 90 }  // validArea smaller than bounds
             ),
             [
                 createChildRenderingDom(
                     2,
-                    createRenderingDomContentWithValidArea(
+                    createSimpleRenderingDomContent(
                         { x1: 20, y1: 20, x2: 80, y2: 80 }, // bounds
                         { x1: 30, y1: 30, x2: 70, y2: 70 }  // validArea smaller than bounds
                     )
@@ -331,14 +287,14 @@ test('createVirtualDomFromRenderingDom - no duplicate ID error for ClippedVirtua
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createSimpleRenderingDomContent(
                 { x1: 0, y1: 0, x2: 100, y2: 100 },
                 { x1: 10, y1: 10, x2: 90, y2: 90 }
             )
         ),
         createChildRenderingDom(
             2,
-            createRenderingDomContentWithValidArea(
+            createSimpleRenderingDomContent(
                 { x1: 200, y1: 0, x2: 300, y2: 100 },
                 { x1: 210, y1: 10, x2: 290, y2: 90 }
             )
@@ -360,14 +316,14 @@ test('createVirtualDomFromRenderingDom - still throws for duplicate positive IDs
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createRenderingDomContentWithValidArea(
+            createSimpleRenderingDomContent(
                 { x1: 0, y1: 0, x2: 100, y2: 100 },
                 { x1: 0, y1: 0, x2: 100, y2: 100 } // No clipping
             )
         ),
         createChildRenderingDom(
             1, // Duplicate positive ID - should still throw
-            createRenderingDomContentWithValidArea(
+            createSimpleRenderingDomContent(
                 { x1: 200, y1: 0, x2: 300, y2: 100 },
                 { x1: 200, y1: 0, x2: 300, y2: 100 } // No clipping
             )

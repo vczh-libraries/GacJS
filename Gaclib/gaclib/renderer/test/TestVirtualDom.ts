@@ -5,7 +5,7 @@ import { VirtualDomProviderMock } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
 // Helper function to create a valid root RenderingDom with zero bounds
-function createRootRenderingDom(): SCHEMA.RenderingDom {
+export function createRootRenderingDom(): SCHEMA.RenderingDom {
     return {
         id: RootVirtualDomId,
         content: {
@@ -20,23 +20,32 @@ function createRootRenderingDom(): SCHEMA.RenderingDom {
 }
 
 // Helper function to create RenderingDomContent
-function createRenderingDomContent(
+export function createRenderingDomContent(
     bounds: SCHEMA.Rect,
     hitTestResult: SCHEMA.WindowHitTestResult | null = null,
     cursor: SCHEMA.WindowSystemCursorType | null = null,
-    element: SCHEMA.TYPES.Integer | null = null
+    element: SCHEMA.TYPES.Integer | null = null,
+    validArea?: SCHEMA.Rect
 ): SCHEMA.RenderingDomContent {
     return {
         hitTestResult,
         cursor,
         element,
         bounds,
-        validArea: bounds // For simplicity, use the same bounds for validArea
+        validArea: validArea ?? bounds // If validArea is not provided, use bounds
     };
 }
 
+// Helper function to create simple RenderingDomContent (for cases with mostly null parameters)
+export function createSimpleRenderingDomContent(
+    bounds: SCHEMA.Rect,
+    validArea?: SCHEMA.Rect
+): SCHEMA.RenderingDomContent {
+    return createRenderingDomContent(bounds, null, null, null, validArea);
+}
+
 // Helper function to create a child RenderingDom
-function createChildRenderingDom(
+export function createChildRenderingDom(
     id: SCHEMA.TYPES.Integer,
     content: SCHEMA.RenderingDomContent,
     children: SCHEMA.RenderingDom[] | null = null
