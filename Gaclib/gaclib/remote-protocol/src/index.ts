@@ -1,3 +1,3 @@
-export * from './remoteProtocolPrimitiveTypes.js';
-export * from './remoteProtocolInvoking.js';
-export * from './remoteProtocolDefinition.js';
+export * from './remoteProtocolPrimitiveTypes';
+export * from './remoteProtocolInvoking';
+export * from './remoteProtocolDefinition';
