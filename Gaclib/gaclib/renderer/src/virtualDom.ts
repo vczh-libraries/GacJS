@@ -108,13 +108,17 @@ function fillVirtualDom(
     renderingDom: SCHEMA.RenderingDom,
     record: VirtualDomRecord,
     provider: IVirtualDomProvider,
-    virtualDomForDomsMap: IVirtualDom,
-    virtualDomForElement: IVirtualDom
-): void {
-    // Add to the doms map only if ID is not negative
-    if (renderingDom.id >= 0) {
-        record.doms.set(renderingDom.id, virtualDomForDomsMap);
-    }
+    id: SCHEMA.TYPES.Integer,
+    typedDesc: TypedElementDesc | undefined
+): IVirtualDom {
+    // Create the virtual DOM
+    const virtualDom = provider.createDom(
+        id, 
+        renderingDom.content.bounds, 
+        renderingDom.content.hitTestResult || undefined,
+        renderingDom.content.cursor || undefined,
+        typedDesc
+    );
 
     // Add to elementToDoms map if this DOM has an element
     if (renderingDom.content.element !== null) {
@@ -122,11 +126,13 @@ function fillVirtualDom(
         if (record.elementToDoms.has(renderingDom.content.element)) {
             throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
         }
-        record.elementToDoms.set(renderingDom.content.element, virtualDomForElement);
+        record.elementToDoms.set(renderingDom.content.element, virtualDom);
     }
 
     // Process and update children
-    processAndUpdateChildren(renderingDom, virtualDomForElement, record, provider);
+    processAndUpdateChildren(renderingDom, virtualDom, record, provider);
+
+    return virtualDom;
 }
 
 function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
@@ -153,16 +159,18 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
         const outerVirtualDom = provider.createSimpleDom(renderingDom.id, renderingDom.content.validArea);
         
         // Create the inner virtual DOM with original bounds, but with ClippedVirtualDomId
-        const innerVirtualDom = provider.createDom(
+        const innerVirtualDom = fillVirtualDom(
+            renderingDom,
+            record,
+            provider,
             ClippedVirtualDomId,
-            renderingDom.content.bounds,
-            renderingDom.content.hitTestResult || undefined,
-            renderingDom.content.cursor || undefined,
             typedDesc
         );
 
-        // Fill the virtual DOM records and process children
-        fillVirtualDom(renderingDom, record, provider, outerVirtualDom, innerVirtualDom);
+        // Add to the doms map only if ID is not negative
+        if (renderingDom.id >= 0) {
+            record.doms.set(renderingDom.id, outerVirtualDom);
+        }
         
         // Set the inner virtual DOM as the only child of the outer virtual DOM
         outerVirtualDom.updateChildren([innerVirtualDom]);
@@ -170,16 +178,18 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
         return outerVirtualDom;
     } else {
         // validArea equals bounds, create single virtual DOM as before
-        const virtualDom = provider.createDom(
+        const virtualDom = fillVirtualDom(
+            renderingDom,
+            record,
+            provider,
             renderingDom.id,
-            renderingDom.content.bounds,
-            renderingDom.content.hitTestResult || undefined,
-            renderingDom.content.cursor || undefined,
             typedDesc
         );
 
-        // Fill the virtual DOM records and process children
-        fillVirtualDom(renderingDom, record, provider, virtualDom, virtualDom);
+        // Add to the doms map only if ID is not negative
+        if (renderingDom.id >= 0) {
+            record.doms.set(renderingDom.id, virtualDom);
+        }
 
         return virtualDom;
     }
