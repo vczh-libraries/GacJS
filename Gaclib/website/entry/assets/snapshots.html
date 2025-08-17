@@ -32,8 +32,26 @@
             document.getElementById('renderingColumn').textContent = url;
         }
 
+        // Function to create tree element from a data structure
+        function createTreeElement(tree) {
+            /*
+            interface TreeFolder {
+                type: 'Folder';
+                content: { [name: string]: TreeNode };
+            }
+
+            interface TreeFile {
+                type: 'File';
+                display: string;
+                url: {};
+            }
+
+            type TreeNode = TreeFolder | TreeFile;
+            */
+        }
+
         // Function to create tree structure recursively
-        function createTreeElement(entry, path = '', indent = 0) {
+        function createTreeElementFromSnapshotFolder(entry, path = '', indent = 0) {
             const container = document.createElement('div');
 
             if (entry.type === 'Folder') {
@@ -58,7 +76,7 @@
                 // Add folders first
                 folders.forEach(([name, childEntry]) => {
                     const childPath = path ? `${path}/${name}` : name;
-                    container.appendChild(createTreeElement(childEntry, childPath, indent + 1));
+                    container.appendChild(createTreeElementFromSnapshotFolder(childEntry, childPath, indent + 1));
                 });
 
                 // Add files
@@ -79,16 +97,16 @@
                     const filePath = path ? `./${path}/${name}` : `./${name}`;
                     fileLink.addEventListener('click', (e) => {
                         e.preventDefault();
-                        
+
                         // Remove selected class from previously selected file
                         if (currentSelectedFile) {
                             currentSelectedFile.classList.remove('selected');
                         }
-                        
+
                         // Add selected class to current file
                         fileLink.classList.add('selected');
                         currentSelectedFile = fileLink;
-                        
+
                         renderSnapshot(filePath);
                     });
 
@@ -103,7 +121,7 @@
         // Initialize the tree view
         function initializeTreeView() {
             const treeView = document.getElementById('treeView');
-            const treeElement = createTreeElement(Snapshot);
+            const treeElement = createTreeElementFromSnapshotFolder(Snapshot);
             treeView.appendChild(treeElement);
         }
 
@@ -155,9 +173,9 @@
                     const splitterWidth = 6; // Each splitter is 6px wide
                     const availableStart = filesWidth + splitterWidth;
                     const availableWidth = containerRect.width - availableStart - splitterWidth;
-                    
+
                     const framesWidth = newX - availableStart;
-                    
+
                     // Constrain frames column width
                     const minFramesWidth = 200;
                     const maxFramesWidth = Math.max(minFramesWidth, availableWidth * 0.8);
