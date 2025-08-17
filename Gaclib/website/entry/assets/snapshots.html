@@ -106,7 +106,7 @@
         }
 
         // Function to read snapshot and convert to tree structure
-        function readSnapshot(entry, path = '') {
+        function readSnapshot(entry, path = './') {
             if (entry.type === 'Folder') {
                 const treeFolder = {
                     type: 'Folder',
@@ -120,24 +120,23 @@
 
                 // Add folders first
                 folders.forEach(([name, childEntry]) => {
-                    const childPath = path ? `${path}/${name}` : name;
+                    const childPath = `${path}${name}/`;
                     treeFolder.content[name] = readSnapshot(childEntry, childPath);
                 });
 
                 // Add files second
                 files.forEach(([name, childEntry]) => {
-                    const childPath = path ? `${path}/${name}` : name;
+                    const childPath = `${path}${name}`;
                     treeFolder.content[name] = readSnapshot(childEntry, childPath);
                 });
 
                 return treeFolder;
             } else {
                 // entry === 'File'
-                const filePath = path ? `./${path}` : `./${path}`;
                 return {
                     type: 'File',
-                    display: path.split('/').pop() || 'Unknown',
-                    url: filePath
+                    display: path.split('/').slice(-1)[0] || 'Unknown',
+                    url: path
                 };
             }
         }
@@ -145,7 +144,7 @@
         // Initialize the tree view
         function initializeTreeView() {
             const treeView = document.getElementById('treeView');
-            const treeData = readSnapshot(Snapshot);
+            const treeData = readSnapshot(Snapshot, './');
             const treeElement = createTreeElement(treeData);
             treeView.appendChild(treeElement);
         }
