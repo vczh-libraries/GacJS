@@ -202,7 +202,7 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
             record,
             provider,
             renderingDom.id,
-            renderingDom.content.validArea, // Single virtual DOM uses validArea as bounds
+            renderingDom.content.bounds, // Single virtual DOM uses bounds as globalBounds
             typedDesc,
             renderingDom.content.validArea
         );

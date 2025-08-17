@@ -401,7 +401,7 @@ test('createVirtualDomFromRenderingDom - parent clips child naturally', () => {
     // Child b should NOT be clipped because b.validArea == intersection(b.bounds, a.validArea)
     const child = innerParent.children[0]; // ID 2, not clipped
     assert.strictEqual(child.id, 2);
-    assert.deepEqual(child.globalBounds, { x1: 30, y1: 30, x2: 90, y2: 90 }); // b.validArea
+    assert.deepEqual(child.globalBounds, { x1: 30, y1: 30, x2: 120, y2: 120 }); // b.bounds
     assert.strictEqual(child.children.length, 0);
 
     // Verify mappings
@@ -489,22 +489,22 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
     // All children should NOT be clipped because their validArea == intersection(bounds, a.validArea)
     const child1 = innerParent.children[0]; // ID 2
     assert.strictEqual(child1.id, 2);
-    assert.deepEqual(child1.globalBounds, { x1: 20, y1: 20, x2: 50, y2: 50 });
+    assert.deepEqual(child1.globalBounds, { x1: 10, y1: 10, x2: 50, y2: 50 });
     assert.strictEqual(child1.children.length, 0);
 
     const child2 = innerParent.children[1]; // ID 3
     assert.strictEqual(child2.id, 3);
-    assert.deepEqual(child2.globalBounds, { x1: 150, y1: 20, x2: 180, y2: 50 });
+    assert.deepEqual(child2.globalBounds, { x1: 150, y1: 10, x2: 190, y2: 50 });
     assert.strictEqual(child2.children.length, 0);
 
     const child3 = innerParent.children[2]; // ID 4
     assert.strictEqual(child3.id, 4);
-    assert.deepEqual(child3.globalBounds, { x1: 20, y1: 150, x2: 50, y2: 180 });
+    assert.deepEqual(child3.globalBounds, { x1: 10, y1: 150, x2: 50, y2: 190 });
     assert.strictEqual(child3.children.length, 0);
 
     const child4 = innerParent.children[3]; // ID 5
     assert.strictEqual(child4.id, 5);
-    assert.deepEqual(child4.globalBounds, { x1: 150, y1: 150, x2: 180, y2: 180 });
+    assert.deepEqual(child4.globalBounds, { x1: 150, y1: 150, x2: 190, y2: 190 });
     assert.strictEqual(child4.children.length, 0);
 
     // Verify mappings
@@ -576,13 +576,13 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
     // b should NOT be clipped because b.validArea == intersection(b.bounds, a.validArea)
     const nodeB = innerA.children[0]; // ID 2, not clipped
     assert.strictEqual(nodeB.id, 2);
-    assert.deepEqual(nodeB.globalBounds, { x1: 120, y1: 30, x2: 180, y2: 100 }); // b.validArea
+    assert.deepEqual(nodeB.globalBounds, { x1: 120, y1: 30, x2: 190, y2: 100 }); // b.bounds
     assert.strictEqual(nodeB.children.length, 1);
 
     // c should NOT be clipped because c.validArea == intersection(c.bounds, b.validArea)
     const nodeC = nodeB.children[0]; // ID 3, not clipped
     assert.strictEqual(nodeC.id, 3);
-    assert.deepEqual(nodeC.globalBounds, { x1: 120, y1: 80, x2: 150, y2: 100 }); // c.validArea
+    assert.deepEqual(nodeC.globalBounds, { x1: 100, y1: 80, x2: 150, y2: 100 }); // c.bounds
     assert.strictEqual(nodeC.children.length, 0);
 
     // Verify mappings
