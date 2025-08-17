@@ -12,11 +12,13 @@
 <body>
     <div class="container">
         <div class="files-column" id="filesColumn">
+            <h3>Files Tree View</h3>
             <div id="treeView"></div>
         </div>
         <div class="splitter" id="filesSplitter"></div>
         <div class="frames-column" id="framesColumn">
-            Click on a file to show frame names.
+            <h3>Frame List</h3>
+            <div id="frameTreeView">Click on a file to show frame names.</div>
         </div>
         <div class="splitter" id="framesSplitter"></div>
         <div class="rendering-column" id="renderingColumn">
@@ -25,8 +27,33 @@
     </div>
 
     <script lang="javascript">
-        function renderSnapshot(url) {
-            document.getElementById('renderingColumn').textContent = url;
+        function renderFrame(frame) {
+            document.getElementById('renderingColumn').textContent = JSON.stringify(frame, null, 2);
+        }
+
+        async function renderSnapshot(url) {
+            try {
+                // Fetch the JSON file
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const trace = await response.json();
+                
+                // Clear the existing frames list
+                const frameTreeView = document.getElementById('frameTreeView');
+                frameTreeView.innerHTML = '';
+                
+                // Create tree element for frames
+                const framesTree = GacUIHtmlRenderer.readFrames(trace);
+                const frameTreeElement = GacUIHtmlRenderer.createTreeElement(framesTree, {
+                    onSelected: renderFrame
+                });
+                frameTreeView.appendChild(frameTreeElement);
+                
+            } catch (error) {
+                document.getElementById('frameTreeView').textContent = `Error loading frames: ${error.message}`;
+            }
         }
 
         // Initialize the tree view

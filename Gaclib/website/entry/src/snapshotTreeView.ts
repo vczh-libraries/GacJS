@@ -1,4 +1,5 @@
 import { SnapshotEntry } from './snapshotIndex';
+import * as SCHEMA from '@gaclib/remote-protocol';
 
 export interface TreeFolder {
     type: 'Folder';
@@ -109,4 +110,25 @@ export function readSnapshot(entry: SnapshotEntry, path: string): TreeNode {
             url: path
         };
     }
+}
+
+// Function to convert UnitTest_RenderingTrace to TreeFolder for frame list
+export function readFrames(trace: SCHEMA.UnitTest_RenderingTrace): TreeFolder {
+    const treeFolder: TreeFolder = {
+        type: 'Folder',
+        content: {}
+    };
+
+    // Convert each frame to a TreeFile
+    if (trace.frames) {
+        trace.frames.forEach((frame: SCHEMA.UnitTest_RenderingFrame) => {
+            const fileName = frame.frameName || `Frame_${frame.frameId}`;
+            treeFolder.content[fileName] = {
+                type: 'File',
+                url: frame // Use the entire frame object as the URL
+            };
+        });
+    }
+
+    return treeFolder;
 }

@@ -24,6 +24,17 @@ body {
     box-sizing: border-box;
 }
 
+.files-column h3,
+.frames-column h3 {
+    margin: 0 0 16px 0;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 8px;
+}
+
 .splitter {
     width: 6px;
     background-color: #dee2e6;
