@@ -35,17 +35,17 @@ test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)',
     // Should have exactly one child
     assert.strictEqual(result.screen.children.length, 1);
     
-    const child = result.screen.children[0];
-    assert.strictEqual(child.id, 1);
-    assert.deepEqual(child.globalBounds, { x1: 10, y1: 10, x2: 100, y2: 100 });
-    assert.strictEqual(child.hitTestResult, SCHEMA.WindowHitTestResult.Client);
-    assert.strictEqual(child.cursor, SCHEMA.WindowSystemCursorType.Arrow);
-    assert.deepEqual(child.typedDesc, focusRectangleDesc);
-    assert.strictEqual(child.children.length, 0);
+    const dom1 = result.screen.children[0];
+    assert.strictEqual(dom1.id, 1);
+    assert.deepEqual(dom1.globalBounds, { x1: 10, y1: 10, x2: 100, y2: 100 });
+    assert.strictEqual(dom1.hitTestResult, SCHEMA.WindowHitTestResult.Client);
+    assert.strictEqual(dom1.cursor, SCHEMA.WindowSystemCursorType.Arrow);
+    assert.deepEqual(dom1.typedDesc, focusRectangleDesc);
+    assert.strictEqual(dom1.children.length, 0);
 
     // Should be in doms map
-    assert.strictEqual(result.doms.get(1), child);
-    assert.strictEqual(result.elementToDoms.get(101), child);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.elementToDoms.get(101), dom1);
 });
 
 test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping)', () => {
@@ -81,31 +81,31 @@ test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping
     // Should have exactly one child (the outer clipped DOM)
     assert.strictEqual(result.screen.children.length, 1);
     
-    const outerChild = result.screen.children[0];
+    const dom1 = result.screen.children[0];
     
     // Outer DOM should have the original ID and reflect validArea
-    assert.strictEqual(outerChild.id, 1);
-    assert.deepEqual(outerChild.globalBounds, { x1: 20, y1: 20, x2: 90, y2: 90 }); // validArea
-    assert.isUndefined(outerChild.hitTestResult); // Simple DOM has no properties
-    assert.isUndefined(outerChild.cursor);
-    assert.isUndefined(outerChild.typedDesc);
-    assert.strictEqual(outerChild.children.length, 1); // Should have one child
+    assert.strictEqual(dom1.id, 1);
+    assert.deepEqual(dom1.globalBounds, { x1: 20, y1: 20, x2: 90, y2: 90 }); // validArea
+    assert.isUndefined(dom1.hitTestResult); // Simple DOM has no properties
+    assert.isUndefined(dom1.cursor);
+    assert.isUndefined(dom1.typedDesc);
+    assert.strictEqual(dom1.children.length, 1); // Should have one child
 
     // Inner DOM should have ClippedVirtualDomId and reflect original bounds
-    const innerChild = outerChild.children[0];
-    assert.strictEqual(innerChild.id, ClippedVirtualDomId);
-    assert.deepEqual(innerChild.globalBounds, { x1: 10, y1: 10, x2: 100, y2: 100 }); // original bounds
-    assert.strictEqual(innerChild.hitTestResult, SCHEMA.WindowHitTestResult.Client);
-    assert.strictEqual(innerChild.cursor, SCHEMA.WindowSystemCursorType.Arrow);
-    assert.deepEqual(innerChild.typedDesc, focusRectangleDesc);
-    assert.strictEqual(innerChild.children.length, 0);
+    const dom1v = dom1.children[0];
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.deepEqual(dom1v.globalBounds, { x1: 10, y1: 10, x2: 100, y2: 100 }); // original bounds
+    assert.strictEqual(dom1v.hitTestResult, SCHEMA.WindowHitTestResult.Client);
+    assert.strictEqual(dom1v.cursor, SCHEMA.WindowSystemCursorType.Arrow);
+    assert.deepEqual(dom1v.typedDesc, focusRectangleDesc);
+    assert.strictEqual(dom1v.children.length, 0);
 
     // Outer DOM should be in doms map (with original ID)
-    assert.strictEqual(result.doms.get(1), outerChild);
+    assert.strictEqual(result.doms.get(1), dom1);
     // Inner DOM should NOT be in doms map (negative ID)
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
     // Element should map to inner DOM (the one with the actual content)
-    assert.strictEqual(result.elementToDoms.get(101), innerChild);
+    assert.strictEqual(result.elementToDoms.get(101), dom1v);
 });
 
 test('createVirtualDomFromRenderingDom - multiple clipped elements with same ClippedVirtualDomId', () => {
@@ -153,41 +153,41 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
     // Should have exactly two children (both outer clipped DOMs)
     assert.strictEqual(result.screen.children.length, 2);
     
-    const outerChild1 = result.screen.children[0];
-    const outerChild2 = result.screen.children[1];
+    const dom1 = result.screen.children[0];
+    const dom2 = result.screen.children[1];
     
     // Both outer DOMs should have their original IDs
-    assert.strictEqual(outerChild1.id, 1);
-    assert.strictEqual(outerChild2.id, 2);
+    assert.strictEqual(dom1.id, 1);
+    assert.strictEqual(dom2.id, 2);
     
     // Both should have exactly one child
-    assert.strictEqual(outerChild1.children.length, 1);
-    assert.strictEqual(outerChild2.children.length, 1);
+    assert.strictEqual(dom1.children.length, 1);
+    assert.strictEqual(dom2.children.length, 1);
 
     // Both inner DOMs should have ClippedVirtualDomId
-    const innerChild1 = outerChild1.children[0];
-    const innerChild2 = outerChild2.children[0];
-    assert.strictEqual(innerChild1.id, ClippedVirtualDomId);
-    assert.strictEqual(innerChild2.id, ClippedVirtualDomId);
+    const dom1v = dom1.children[0];
+    const dom2v = dom2.children[0];
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.strictEqual(dom2v.id, ClippedVirtualDomId);
 
     // Verify properties are correctly mapped
-    assert.strictEqual(innerChild1.hitTestResult, SCHEMA.WindowHitTestResult.Client);
-    assert.isUndefined(innerChild1.cursor);
-    assert.deepEqual(innerChild1.typedDesc, focusRectangleDesc);
+    assert.strictEqual(dom1v.hitTestResult, SCHEMA.WindowHitTestResult.Client);
+    assert.isUndefined(dom1v.cursor);
+    assert.deepEqual(dom1v.typedDesc, focusRectangleDesc);
     
-    assert.isUndefined(innerChild2.hitTestResult);
-    assert.strictEqual(innerChild2.cursor, SCHEMA.WindowSystemCursorType.Hand);
-    assert.deepEqual(innerChild2.typedDesc, rawDesc);
+    assert.isUndefined(dom2v.hitTestResult);
+    assert.strictEqual(dom2v.cursor, SCHEMA.WindowSystemCursorType.Hand);
+    assert.deepEqual(dom2v.typedDesc, rawDesc);
 
     // Both outer DOMs should be in doms map
-    assert.strictEqual(result.doms.get(1), outerChild1);
-    assert.strictEqual(result.doms.get(2), outerChild2);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.doms.get(2), dom2);
     // No ClippedVirtualDomId in doms map
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
     
     // Elements should map to inner DOMs
-    assert.strictEqual(result.elementToDoms.get(101), innerChild1);
-    assert.strictEqual(result.elementToDoms.get(102), innerChild2);
+    assert.strictEqual(result.elementToDoms.get(101), dom1v);
+    assert.strictEqual(result.elementToDoms.get(102), dom2v);
 });
 
 test('createVirtualDomFromRenderingDom - clipped element with children', () => {
@@ -234,25 +234,25 @@ test('createVirtualDomFromRenderingDom - clipped element with children', () => {
     // Should have exactly one child (the outer clipped DOM)
     assert.strictEqual(result.screen.children.length, 1);
     
-    const outerChild = result.screen.children[0];
-    assert.strictEqual(outerChild.id, 1);
-    assert.strictEqual(outerChild.children.length, 1);
+    const dom1 = result.screen.children[0];
+    assert.strictEqual(dom1.id, 1);
+    assert.strictEqual(dom1.children.length, 1);
 
     // Inner DOM should have the child elements
-    const innerChild = outerChild.children[0];
-    assert.strictEqual(innerChild.id, ClippedVirtualDomId);
-    assert.strictEqual(innerChild.children.length, 1);
+    const dom1v = dom1.children[0];
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.strictEqual(dom1v.children.length, 1);
 
     // Verify the grandchild
-    const grandChild = innerChild.children[0];
-    assert.strictEqual(grandChild.id, 3);
-    assert.deepEqual(grandChild.globalBounds, { x1: 30, y1: 30, x2: 80, y2: 80 });
-    assert.strictEqual(grandChild.children.length, 0);
+    const dom3 = dom1v.children[0];
+    assert.strictEqual(dom3.id, 3);
+    assert.deepEqual(dom3.globalBounds, { x1: 30, y1: 30, x2: 80, y2: 80 });
+    assert.strictEqual(dom3.children.length, 0);
 
     // Verify mappings
-    assert.strictEqual(result.doms.get(1), outerChild);
-    assert.strictEqual(result.doms.get(3), grandChild);
-    assert.strictEqual(result.elementToDoms.get(101), innerChild);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.doms.get(3), dom3);
+    assert.strictEqual(result.elementToDoms.get(101), dom1v);
 });
 
 test('createVirtualDomFromRenderingDom - nested clipping', () => {
@@ -295,31 +295,31 @@ test('createVirtualDomFromRenderingDom - nested clipping', () => {
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Navigate the hierarchy
-    const outerParent = result.screen.children[0]; // ID 1, clipped
-    assert.strictEqual(outerParent.id, 1);
-    assert.strictEqual(outerParent.children.length, 1);
+    const dom1 = result.screen.children[0]; // ID 1, clipped
+    assert.strictEqual(dom1.id, 1);
+    assert.strictEqual(dom1.children.length, 1);
 
-    const innerParent = outerParent.children[0]; // ID ClippedVirtualDomId, parent content
-    assert.strictEqual(innerParent.id, ClippedVirtualDomId);
-    assert.strictEqual(innerParent.children.length, 1);
+    const dom1v = dom1.children[0]; // ID ClippedVirtualDomId, parent content
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.strictEqual(dom1v.children.length, 1);
 
-    const outerChild = innerParent.children[0]; // ID 2, clipped
-    assert.strictEqual(outerChild.id, 2);
-    assert.strictEqual(outerChild.children.length, 1);
+    const dom2 = dom1v.children[0]; // ID 2, clipped
+    assert.strictEqual(dom2.id, 2);
+    assert.strictEqual(dom2.children.length, 1);
 
-    const innerChild = outerChild.children[0]; // ID ClippedVirtualDomId, child content
-    assert.strictEqual(innerChild.id, ClippedVirtualDomId);
-    assert.strictEqual(innerChild.children.length, 0);
+    const dom2v = dom2.children[0]; // ID ClippedVirtualDomId, child content
+    assert.strictEqual(dom2v.id, ClippedVirtualDomId);
+    assert.strictEqual(dom2v.children.length, 0);
 
     // Verify bounds
-    assert.deepEqual(outerParent.globalBounds, { x1: 10, y1: 10, x2: 90, y2: 90 });
-    assert.deepEqual(innerParent.globalBounds, { x1: 0, y1: 0, x2: 100, y2: 100 });
-    assert.deepEqual(outerChild.globalBounds, { x1: 30, y1: 30, x2: 70, y2: 70 });
-    assert.deepEqual(innerChild.globalBounds, { x1: 20, y1: 20, x2: 80, y2: 80 });
+    assert.deepEqual(dom1.globalBounds, { x1: 10, y1: 10, x2: 90, y2: 90 });
+    assert.deepEqual(dom1v.globalBounds, { x1: 0, y1: 0, x2: 100, y2: 100 });
+    assert.deepEqual(dom2.globalBounds, { x1: 30, y1: 30, x2: 70, y2: 70 });
+    assert.deepEqual(dom2v.globalBounds, { x1: 20, y1: 20, x2: 80, y2: 80 });
 
     // Verify mappings
-    assert.strictEqual(result.doms.get(1), outerParent);
-    assert.strictEqual(result.doms.get(2), outerChild);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.doms.get(2), dom2);
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
 });
 
@@ -388,25 +388,25 @@ test('createVirtualDomFromRenderingDom - parent clips child naturally', () => {
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Navigate the hierarchy
-    const outerParent = result.screen.children[0]; // ID 1, clipped
-    assert.strictEqual(outerParent.id, 1);
-    assert.deepEqual(outerParent.globalBounds, { x1: 20, y1: 20, x2: 90, y2: 90 }); // a.validArea
-    assert.strictEqual(outerParent.children.length, 1);
+    const dom1 = result.screen.children[0]; // ID 1, clipped
+    assert.strictEqual(dom1.id, 1);
+    assert.deepEqual(dom1.globalBounds, { x1: 20, y1: 20, x2: 90, y2: 90 }); // a.validArea
+    assert.strictEqual(dom1.children.length, 1);
 
-    const innerParent = outerParent.children[0]; // ID ClippedVirtualDomId, a content
-    assert.strictEqual(innerParent.id, ClippedVirtualDomId);
-    assert.deepEqual(innerParent.globalBounds, { x1: 10, y1: 10, x2: 100, y2: 100 }); // a.bounds
-    assert.strictEqual(innerParent.children.length, 1);
+    const dom1v = dom1.children[0]; // ID ClippedVirtualDomId, a content
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.deepEqual(dom1v.globalBounds, { x1: 10, y1: 10, x2: 100, y2: 100 }); // a.bounds
+    assert.strictEqual(dom1v.children.length, 1);
 
     // Child b should NOT be clipped because b.validArea == intersection(b.bounds, a.validArea)
-    const child = innerParent.children[0]; // ID 2, not clipped
-    assert.strictEqual(child.id, 2);
-    assert.deepEqual(child.globalBounds, { x1: 30, y1: 30, x2: 120, y2: 120 }); // b.bounds
-    assert.strictEqual(child.children.length, 0);
+    const dom2 = dom1v.children[0]; // ID 2, not clipped
+    assert.strictEqual(dom2.id, 2);
+    assert.deepEqual(dom2.globalBounds, { x1: 30, y1: 30, x2: 120, y2: 120 }); // b.bounds
+    assert.strictEqual(dom2.children.length, 0);
 
     // Verify mappings
-    assert.strictEqual(result.doms.get(1), outerParent);
-    assert.strictEqual(result.doms.get(2), child);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.doms.get(2), dom2);
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
 });
 
@@ -476,43 +476,43 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Navigate the hierarchy
-    const outerParent = result.screen.children[0]; // ID 1, clipped
-    assert.strictEqual(outerParent.id, 1);
-    assert.deepEqual(outerParent.globalBounds, { x1: 20, y1: 20, x2: 180, y2: 180 }); // a.validArea
-    assert.strictEqual(outerParent.children.length, 1);
+    const dom1 = result.screen.children[0]; // ID 1, clipped
+    assert.strictEqual(dom1.id, 1);
+    assert.deepEqual(dom1.globalBounds, { x1: 20, y1: 20, x2: 180, y2: 180 }); // a.validArea
+    assert.strictEqual(dom1.children.length, 1);
 
-    const innerParent = outerParent.children[0]; // ID ClippedVirtualDomId, a content
-    assert.strictEqual(innerParent.id, ClippedVirtualDomId);
-    assert.deepEqual(innerParent.globalBounds, { x1: 0, y1: 0, x2: 200, y2: 200 }); // a.bounds
-    assert.strictEqual(innerParent.children.length, 4);
+    const dom1v = dom1.children[0]; // ID ClippedVirtualDomId, a content
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.deepEqual(dom1v.globalBounds, { x1: 0, y1: 0, x2: 200, y2: 200 }); // a.bounds
+    assert.strictEqual(dom1v.children.length, 4);
 
     // All children should NOT be clipped because their validArea == intersection(bounds, a.validArea)
-    const child1 = innerParent.children[0]; // ID 2
-    assert.strictEqual(child1.id, 2);
-    assert.deepEqual(child1.globalBounds, { x1: 10, y1: 10, x2: 50, y2: 50 });
-    assert.strictEqual(child1.children.length, 0);
+    const dom2 = dom1v.children[0]; // ID 2
+    assert.strictEqual(dom2.id, 2);
+    assert.deepEqual(dom2.globalBounds, { x1: 10, y1: 10, x2: 50, y2: 50 });
+    assert.strictEqual(dom2.children.length, 0);
 
-    const child2 = innerParent.children[1]; // ID 3
-    assert.strictEqual(child2.id, 3);
-    assert.deepEqual(child2.globalBounds, { x1: 150, y1: 10, x2: 190, y2: 50 });
-    assert.strictEqual(child2.children.length, 0);
+    const dom3 = dom1v.children[1]; // ID 3
+    assert.strictEqual(dom3.id, 3);
+    assert.deepEqual(dom3.globalBounds, { x1: 150, y1: 10, x2: 190, y2: 50 });
+    assert.strictEqual(dom3.children.length, 0);
 
-    const child3 = innerParent.children[2]; // ID 4
-    assert.strictEqual(child3.id, 4);
-    assert.deepEqual(child3.globalBounds, { x1: 10, y1: 150, x2: 50, y2: 190 });
-    assert.strictEqual(child3.children.length, 0);
+    const dom4 = dom1v.children[2]; // ID 4
+    assert.strictEqual(dom4.id, 4);
+    assert.deepEqual(dom4.globalBounds, { x1: 10, y1: 150, x2: 50, y2: 190 });
+    assert.strictEqual(dom4.children.length, 0);
 
-    const child4 = innerParent.children[3]; // ID 5
-    assert.strictEqual(child4.id, 5);
-    assert.deepEqual(child4.globalBounds, { x1: 150, y1: 150, x2: 190, y2: 190 });
-    assert.strictEqual(child4.children.length, 0);
+    const dom5 = dom1v.children[3]; // ID 5
+    assert.strictEqual(dom5.id, 5);
+    assert.deepEqual(dom5.globalBounds, { x1: 150, y1: 150, x2: 190, y2: 190 });
+    assert.strictEqual(dom5.children.length, 0);
 
     // Verify mappings
-    assert.strictEqual(result.doms.get(1), outerParent);
-    assert.strictEqual(result.doms.get(2), child1);
-    assert.strictEqual(result.doms.get(3), child2);
-    assert.strictEqual(result.doms.get(4), child3);
-    assert.strictEqual(result.doms.get(5), child4);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.doms.get(2), dom2);
+    assert.strictEqual(result.doms.get(3), dom3);
+    assert.strictEqual(result.doms.get(4), dom4);
+    assert.strictEqual(result.doms.get(5), dom5);
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
 });
 
@@ -564,31 +564,31 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
 
     // Navigate the hierarchy
-    const outerA = result.screen.children[0]; // ID 1, clipped
-    assert.strictEqual(outerA.id, 1);
-    assert.deepEqual(outerA.globalBounds, { x1: 20, y1: 20, x2: 180, y2: 100 }); // a.validArea
-    assert.strictEqual(outerA.children.length, 1);
+    const dom1 = result.screen.children[0]; // ID 1, clipped
+    assert.strictEqual(dom1.id, 1);
+    assert.deepEqual(dom1.globalBounds, { x1: 20, y1: 20, x2: 180, y2: 100 }); // a.validArea
+    assert.strictEqual(dom1.children.length, 1);
 
-    const innerA = outerA.children[0]; // ID ClippedVirtualDomId, a content
-    assert.strictEqual(innerA.id, ClippedVirtualDomId);
-    assert.deepEqual(innerA.globalBounds, { x1: 10, y1: 10, x2: 200, y2: 100 }); // a.bounds
-    assert.strictEqual(innerA.children.length, 1);
+    const dom1v = dom1.children[0]; // ID ClippedVirtualDomId, a content
+    assert.strictEqual(dom1v.id, ClippedVirtualDomId);
+    assert.deepEqual(dom1v.globalBounds, { x1: 10, y1: 10, x2: 200, y2: 100 }); // a.bounds
+    assert.strictEqual(dom1v.children.length, 1);
 
     // b should NOT be clipped because b.validArea == intersection(b.bounds, a.validArea)
-    const nodeB = innerA.children[0]; // ID 2, not clipped
-    assert.strictEqual(nodeB.id, 2);
-    assert.deepEqual(nodeB.globalBounds, { x1: 120, y1: 30, x2: 190, y2: 120 }); // b.bounds
-    assert.strictEqual(nodeB.children.length, 1);
+    const dom2 = dom1v.children[0]; // ID 2, not clipped
+    assert.strictEqual(dom2.id, 2);
+    assert.deepEqual(dom2.globalBounds, { x1: 120, y1: 30, x2: 190, y2: 120 }); // b.bounds
+    assert.strictEqual(dom2.children.length, 1);
 
     // c should NOT be clipped because c.validArea == intersection(c.bounds, b.validArea)
-    const nodeC = nodeB.children[0]; // ID 3, not clipped
-    assert.strictEqual(nodeC.id, 3);
-    assert.deepEqual(nodeC.globalBounds, { x1: 100, y1: 80, x2: 150, y2: 130 }); // c.bounds
-    assert.strictEqual(nodeC.children.length, 0);
+    const dom3 = dom2.children[0]; // ID 3, not clipped
+    assert.strictEqual(dom3.id, 3);
+    assert.deepEqual(dom3.globalBounds, { x1: 100, y1: 80, x2: 150, y2: 130 }); // c.bounds
+    assert.strictEqual(dom3.children.length, 0);
 
     // Verify mappings
-    assert.strictEqual(result.doms.get(1), outerA);
-    assert.strictEqual(result.doms.get(2), nodeB);
-    assert.strictEqual(result.doms.get(3), nodeC);
+    assert.strictEqual(result.doms.get(1), dom1);
+    assert.strictEqual(result.doms.get(2), dom2);
+    assert.strictEqual(result.doms.get(3), dom3);
     assert.isUndefined(result.doms.get(ClippedVirtualDomId));
 });
