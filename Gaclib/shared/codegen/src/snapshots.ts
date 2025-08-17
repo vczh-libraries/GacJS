@@ -4,6 +4,7 @@ import * as path from 'path';
 const __dirname = import.meta.dirname;
 const SourcePath = path.join(__dirname, '../../../../../GacUI/Test/Resources/UnitTestSnapshots');
 const DestPath = path.join(__dirname, '../../../website/entry/assets/snapshots');
+const IndexPath = path.join(__dirname, '../../../website/entry/src/snapshotIndex.ts');
 
 export function prepareSnapshots(): void {
     // Ensure the destination directory exists
@@ -47,5 +48,68 @@ export function prepareSnapshots(): void {
 }
 
 export function generateSnapshotIndex(): void {
+    console.log(`Generating snapshot index from ${DestPath} to ${IndexPath}`);
 
+    // Type definitions for the snapshot tree
+    interface SnapshotFolderContent {
+        [key: string]: SnapshotFolderContent | 'File' | { type: 'Folder'; content: SnapshotFolderContent };
+    }
+
+    // Recursive function to build the snapshot tree
+    function buildSnapshotTree(dirPath: string): SnapshotFolderContent {
+        const content: SnapshotFolderContent = {};
+        
+        if (!fs.existsSync(dirPath)) {
+            console.warn(`Directory does not exist: ${dirPath}`);
+            return content;
+        }
+
+        const items = fs.readdirSync(dirPath, { withFileTypes: true });
+        
+        for (const item of items) {
+            const itemPath = path.join(dirPath, item.name);
+            
+            if (item.isDirectory()) {
+                // Recursively build tree for subdirectory
+                const subContent = buildSnapshotTree(itemPath);
+                content[item.name] = {
+                    type: 'Folder',
+                    content: subContent
+                };
+            } else if (item.isFile() && path.extname(item.name).toLowerCase() === '.json') {
+                // Add JSON file as 'File' entry
+                content[item.name] = 'File';
+            }
+        }
+        
+        return content;
+    }
+
+    // Build the snapshot tree
+    const snapshotContent = buildSnapshotTree(DestPath);
+
+    // Generate the TypeScript file content
+    const tsContent = `export interface SnapshotFolder {
+    type: 'Folder';
+    content: { [key: string]: SnapshotEntry };
+}
+
+export type SnapshotEntry = SnapshotFolder | 'File';
+
+export const Snapshot: SnapshotEntry = ${JSON.stringify({
+        type: 'Folder',
+        content: snapshotContent
+    }, null, 4)};
+`;
+
+    // Ensure the directory exists
+    const indexDir = path.dirname(IndexPath);
+    if (!fs.existsSync(indexDir)) {
+        fs.mkdirSync(indexDir, { recursive: true });
+    }
+
+    // Write the generated TypeScript file
+    fs.writeFileSync(IndexPath, tsContent, 'utf8');
+    
+    console.log(`Snapshot index generated successfully at ${IndexPath}`);
 }
