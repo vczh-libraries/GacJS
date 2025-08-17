@@ -6,7 +6,7 @@
     "main": "./lib/index.js",
     "scripts": {
         "build-ts": "rimraf ./lib && eslint --fix && tsc",
-        "build-assets": "copyfiles -u 1 assets/* lib/dist/",
+        "build-assets": "copyfiles -u 1 assets/**/* lib/dist/",
         "esbuild-dev": "node ./lib/esbuild.js",
         "esbuild-ship": "node ./lib/esbuild.js --ship",
         "build": "npm-run-all2 -s build-ts build-assets esbuild-dev",

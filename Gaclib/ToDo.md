@@ -3,7 +3,6 @@
 - `IVirtualDomProvider`
   - Implement the HTML `IVirtualDomProvider` and test it in elements.html
   - Apply `RenderingDom_Diff` on `IVirtualDom`.
-- Add a package to copy all GacUISrc/UnitText snapsnots and render in Snapshots.html
 - `snapshot.html` to render snapshots, will clickable but not collapsible tree view at the left.
 - Implement remote protocol rendering.
 - Handle remote exception.
