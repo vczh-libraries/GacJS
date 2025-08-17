@@ -1,10 +1,10 @@
 # ToDo
 
 - `IVirtualDomProvider`
-  - Should allow `IVirtualDom` to change `element` freely, delete the limitation, because composition can always change element. The limitation should apply to update requests.
   - Implement the HTML `IVirtualDomProvider` and test it in elements.html
   - Implement `RenderingDom` -> `IVirtualDom` but not consider `validArea` yet.
   - Consider `validArea` in `createVirtualDomFromRenderingDom`.
+    - Add more test cases for child bounds clipped by parent bounds.
   - Apply `RenderingDom_Diff` on `IVirtualDom`.
 - Add a package to copy all GacUISrc/UnitText snapsnots and render in Snapshots.html
 - `snapshot.html` to render snapshots, will clickable but not collapsible tree view at the left.
