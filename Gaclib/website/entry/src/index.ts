@@ -19,3 +19,4 @@ export { applyBounds, applyTypedStyle, applyFeatureGates } from '@gaclib/rendere
 // for snapshots.html
 export { Snapshot } from './snapshotIndex';
 export { createTreeElement, readSnapshot, readFrames } from './snapshotTreeView';
+export { renderUI } from './snapshotRendering';

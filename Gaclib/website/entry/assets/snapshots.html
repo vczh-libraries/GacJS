@@ -30,7 +30,7 @@
     <script lang="javascript">
         function renderFrame(frameData) {
             const gacuiScreen = document.getElementById('gacuiScreen');
-            gacuiScreen.innerHTML = `<h4>Frame Index: ${frameData.index}</h4>`;
+            GacUIHtmlRenderer.renderUI(gacuiScreen, frameData.trace, frameData.index);
         }
 
         async function renderSnapshot(url) {
