@@ -1,5 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
+import { ElementManager } from './GacUIElementManager';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
@@ -7,6 +8,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
+    private _elements: ElementManager = new ElementManager();
 
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
@@ -122,35 +124,35 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     RequestRendererUpdateElement_SolidBorder(requestArgs: SCHEMA.ElementDesc_SolidBorder): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_SolidBorder)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidBorder, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SinkBorder(requestArgs: SCHEMA.ElementDesc_SinkBorder): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_SinkBorder)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SinkBorder, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SinkSplitter(requestArgs: SCHEMA.ElementDesc_SinkSplitter): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_SinkSplitter)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SinkSplitter, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SolidBackground(requestArgs: SCHEMA.ElementDesc_SolidBackground): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_SolidBackground)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidBackground, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_GradientBackground(requestArgs: SCHEMA.ElementDesc_GradientBackground): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_GradientBackground)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.GradientBackground, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_InnerShadow(requestArgs: SCHEMA.ElementDesc_InnerShadow): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_InnerShadow)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.InnerShadow, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_Polygon(requestArgs: SCHEMA.ElementDesc_Polygon): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_Polygon)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.Polygon, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_SolidLabel)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
     }
 
     /****************************************************************************************
@@ -166,7 +168,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {
-        throw new Error(`Not Implemented (RequestRendererUpdateElement_ImageFrame)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: requestArgs });
     }
 
     /****************************************************************************************
@@ -174,11 +176,28 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     RequestRendererCreated(requestArgs: SCHEMA.TYPES.List<SCHEMA.RendererCreation>): void {
-        throw new Error(`Not Implemented (RequestRendererCreated)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        if (requestArgs === null) {
+            return;
+        }
+
+        for (const creation of requestArgs) {
+            this._elements.create(creation.id, creation.type);
+
+            // For FocusRectangle and Raw, call updateDesc since they have no desc
+            if (creation.type === SCHEMA.RendererType.FocusRectangle || creation.type === SCHEMA.RendererType.Raw) {
+                this._elements.updateDesc(creation.id, { type: creation.type });
+            }
+        }
     }
 
     RequestRendererDestroyed(requestArgs: SCHEMA.TYPES.List<SCHEMA.TYPES.Integer>): void {
-        throw new Error(`Not Implemented (RequestRendererDestroyed)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        if (requestArgs === null) {
+            return;
+        }
+
+        for (const id of requestArgs) {
+            this._elements.destroy(id);
+        }
     }
 
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {
