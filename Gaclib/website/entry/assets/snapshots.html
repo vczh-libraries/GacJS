@@ -14,11 +14,11 @@
         <div class="files-column" id="filesColumn">
             <div id="treeView"></div>
         </div>
-        <div class="splitter" id="splitter1"></div>
+        <div class="splitter" id="filesSplitter"></div>
         <div class="frames-column" id="framesColumn">
             Click on a file to show frame names.
         </div>
-        <div class="splitter" id="splitter2"></div>
+        <div class="splitter" id="framesSplitter"></div>
         <div class="rendering-column" id="renderingColumn">
             Click on a frame to show the UI.
         </div>
@@ -109,8 +109,8 @@
 
         // Initialize splitter functionality
         function initializeSplitter() {
-            const splitter1 = document.getElementById('splitter1');
-            const splitter2 = document.getElementById('splitter2');
+            const filesSplitter = document.getElementById('filesSplitter');
+            const framesSplitter = document.getElementById('framesSplitter');
             const filesColumn = document.getElementById('filesColumn');
             const framesColumn = document.getElementById('framesColumn');
             const container = document.querySelector('.container');
@@ -126,12 +126,12 @@
                 e.preventDefault();
             }
 
-            splitter1.addEventListener('mousedown', (e) => {
-                startResize('splitter1', e);
+            filesSplitter.addEventListener('mousedown', (e) => {
+                startResize('filesSplitter', e);
             });
 
-            splitter2.addEventListener('mousedown', (e) => {
-                startResize('splitter2', e);
+            framesSplitter.addEventListener('mousedown', (e) => {
+                startResize('framesSplitter', e);
             });
 
             document.addEventListener('mousemove', (e) => {
@@ -140,16 +140,16 @@
                 const containerRect = container.getBoundingClientRect();
                 const newX = e.clientX - containerRect.left;
 
-                if (currentSplitter === 'splitter1') {
-                    // First splitter: controls files column width
+                if (currentSplitter === 'filesSplitter') {
+                    // Files splitter: controls files column width
                     // Constrain width between 200px and 60% of container width
                     const minWidth = 200;
                     const maxWidth = containerRect.width * 0.6;
                     const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newX));
 
                     filesColumn.style.width = constrainedWidth + 'px';
-                } else if (currentSplitter === 'splitter2') {
-                    // Second splitter: controls frames column width
+                } else if (currentSplitter === 'framesSplitter') {
+                    // Frames splitter: controls frames column width
                     // Calculate available space (total width - files column width - splitter widths)
                     const filesWidth = filesColumn.offsetWidth;
                     const splitterWidth = 6; // Each splitter is 6px wide
