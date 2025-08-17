@@ -23,6 +23,16 @@ import { TypedElementDesc } from './GacUIElementManager';
  * And the IVirtualDom created from r becomes it child.
  * In case of equal, such extra IVirtualDom must not exist.
  * 
+ * The RenderingDom always has a -1 id. All other RenderingDom's id must not be negative.
+ * When two IVirtualDom need to be created for one RenderingDom
+ *   The outer one reflects r.content.validArea, it would be a simple dom, but it copies RenderingDom.id.
+ *   The inner one reflects r.content.bounds, it copies RenderingDom.content, but its id will be -2.
+ *   An id of -2 is special and help identify such case, so it is possible to have multiple IVirtualDom using -2.
+ *   This allows for more flexible rendering scenarios where elements may need to be represented in different ways.
+ *   VirtualDomRecord.doms will not store for id that is negative.
+ *
+ * RootVirtualDomId and ClippedVirtualDomId are defined for special ids.
+ *
  * # Converting from RenderingDom_DiffsInOrder to IVirtualDom
  * 
  * Although there is only one diffsInOrder collection but we should read RenderingDom_Diff.diffType and
@@ -63,6 +73,9 @@ export interface IVirtualDomProvider {
 
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
 export type ElementMap = Map<SCHEMA.TYPES.Integer, TypedElementDesc>;
+
+export const RootVirtualDomId: SCHEMA.TYPES.Integer = -1;
+export const ClippedVirtualDomId: SCHEMA.TYPES.Integer = -2;
 
 export interface VirtualDomRecord {
     screen: IVirtualDom;
