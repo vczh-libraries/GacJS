@@ -22,101 +22,105 @@
 
     <script lang="javascript">
         const Snapshot = GacUIHtmlRenderer.Snapshot;
-        
+
+        function renderSnapshot(url) {
+            document.getElementById('rightColumn').textContent = url;
+        }
+
         // Function to create tree structure recursively
         function createTreeElement(entry, path = '', indent = 0) {
             const container = document.createElement('div');
-            
+
             if (entry.type === 'Folder') {
                 // Create folder element
                 const folderDiv = document.createElement('div');
                 folderDiv.className = 'tree-item tree-folder';
-                
+
                 const indentSpan = document.createElement('span');
                 indentSpan.className = 'tree-indent';
                 indentSpan.style.width = (indent * 4) + 'ch';
                 folderDiv.appendChild(indentSpan);
-                
+
                 const folderName = path.split('/').pop() || 'Application';
                 folderDiv.appendChild(document.createTextNode(folderName));
                 container.appendChild(folderDiv);
-                
+
                 // Sort entries: folders first, then files, both alphabetically
                 const entries = Object.entries(entry.content);
                 const folders = entries.filter(([, value]) => value.type === 'Folder').sort(([a], [b]) => a.localeCompare(b));
                 const files = entries.filter(([, value]) => value === 'File').sort(([a], [b]) => a.localeCompare(b));
-                
+
                 // Add folders first
                 folders.forEach(([name, childEntry]) => {
                     const childPath = path ? `${path}/${name}` : name;
                     container.appendChild(createTreeElement(childEntry, childPath, indent + 1));
                 });
-                
+
                 // Add files
                 files.forEach(([name]) => {
                     const fileDiv = document.createElement('div');
                     fileDiv.className = 'tree-item';
-                    
+
                     const indentSpan = document.createElement('span');
                     indentSpan.className = 'tree-indent';
                     indentSpan.style.width = ((indent + 1) * 4) + 'ch';
                     fileDiv.appendChild(indentSpan);
-                    
+
                     const fileLink = document.createElement('a');
                     fileLink.className = 'tree-file';
                     fileLink.href = '#';
                     fileLink.textContent = name;
-                    
+
                     const filePath = path ? `./${path}/${name}` : `./${name}`;
                     fileLink.addEventListener('click', (e) => {
                         e.preventDefault();
-                        document.getElementById('rightColumn').textContent = filePath;
+                        renderSnapshot(filePath);
                     });
-                    
+
                     fileDiv.appendChild(fileLink);
                     container.appendChild(fileDiv);
                 });
             }
-            
+
             return container;
         }
-        
+
         // Initialize the tree view
         function initializeTreeView() {
             const treeView = document.getElementById('treeView');
             const treeElement = createTreeElement(Snapshot);
             treeView.appendChild(treeElement);
         }
-        
+
         // Initialize splitter functionality
         function initializeSplitter() {
             const splitter = document.getElementById('splitter');
             const leftColumn = document.getElementById('leftColumn');
             const container = document.querySelector('.container');
-            
+
             let isResizing = false;
-            
+
             splitter.addEventListener('mousedown', (e) => {
                 isResizing = true;
                 document.body.style.cursor = 'col-resize';
                 document.body.style.userSelect = 'none';
                 e.preventDefault();
             });
-            
+
             document.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
-                
+
                 const containerRect = container.getBoundingClientRect();
                 const newWidth = e.clientX - containerRect.left;
-                
+
                 // Constrain width between 200px and 80% of container width
                 const minWidth = 200;
                 const maxWidth = containerRect.width * 0.8;
                 const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-                
+
                 leftColumn.style.width = constrainedWidth + 'px';
             });
-            
+
             document.addEventListener('mouseup', () => {
                 if (isResizing) {
                     isResizing = false;
@@ -125,13 +129,13 @@
                 }
             });
         }
-        
+
         // Initialize everything when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             initializeTreeView();
             initializeSplitter();
         });
-        
+
         // If DOMContentLoaded has already fired, initialize immediately
         if (document.readyState === 'loading') {
             // Do nothing, event listener above will handle it
