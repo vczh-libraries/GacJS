@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { createVirtualDomFromRenderingDom, ElementMap, RootVirtualDomId } from '../src/virtualDom';
+import { createVirtualDomFromRenderingDom, ElementMap, RootVirtualDomId, IVirtualDom, ClippedVirtualDomId } from '../src/virtualDom';
 import { VirtualDomProviderMock } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
@@ -55,6 +55,44 @@ export function createChildRenderingDom(
         content,
         children
     };
+}
+
+export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, dom: IVirtualDom, domv?: IVirtualDom): void {
+    if (domv === undefined) {
+        // Single DOM case: dom should have the original ID and inherit bounds as globalBounds
+        assert.strictEqual(dom.id, renderingDom.id);
+        assert.deepEqual(dom.globalBounds, renderingDom.content.bounds);
+        assert.strictEqual(dom.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
+        assert.strictEqual(dom.cursor, renderingDom.content.cursor ?? undefined);
+        
+        // Check typedDesc based on element mapping
+        if (renderingDom.content.element !== null) {
+            const expectedTypedDesc = elements.get(renderingDom.content.element);
+            assert.deepEqual(dom.typedDesc, expectedTypedDesc);
+        } else {
+            assert.isUndefined(dom.typedDesc);
+        }
+    } else {
+        // Clipped DOM case: dom is outer (with validArea), domv is inner (with bounds and content)
+        assert.strictEqual(dom.id, renderingDom.id);
+        assert.deepEqual(dom.globalBounds, renderingDom.content.validArea);
+        assert.isUndefined(dom.hitTestResult); // Simple DOM has no properties
+        assert.isUndefined(dom.cursor);
+        assert.isUndefined(dom.typedDesc);
+        
+        assert.strictEqual(domv.id, ClippedVirtualDomId);
+        assert.deepEqual(domv.globalBounds, renderingDom.content.bounds);
+        assert.strictEqual(domv.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
+        assert.strictEqual(domv.cursor, renderingDom.content.cursor ?? undefined);
+        
+        // Check typedDesc based on element mapping for the inner DOM
+        if (renderingDom.content.element !== null) {
+            const expectedTypedDesc = elements.get(renderingDom.content.element);
+            assert.deepEqual(domv.typedDesc, expectedTypedDesc);
+        } else {
+            assert.isUndefined(domv.typedDesc);
+        }
+    }
 }
 
 test('createVirtualDomFromRenderingDom - root node with no children', () => {
@@ -341,40 +379,25 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     const dom6 = result.screen.children[1];
 
     // Verify node 'dom2' (child of root)
-    assert.strictEqual(dom2.id, 2);
-    // Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom2.globalBounds, { x1: 100, y1: 100, x2: 300, y2: 300 });
+    assertDomAttributes(rootDom.children[0]!, elements, dom2);
     // Bounds should be relative to parent (root at 0,0) - so same as global
     assert.deepEqual(dom2.bounds, { x1: 100, y1: 100, x2: 300, y2: 300 });
     assert.strictEqual(dom2.parent, result.screen);
-    assert.strictEqual(dom2.hitTestResult, SCHEMA.WindowHitTestResult.Client);
-    assert.strictEqual(dom2.cursor, SCHEMA.WindowSystemCursorType.Arrow);
-    assert.deepEqual(dom2.typedDesc, focusRectangleDesc);
     assert.strictEqual(dom2.children.length, 1);
 
     // Verify node 'dom6' (child of root)
-    assert.strictEqual(dom6.id, 6);
-    // Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom6.globalBounds, { x1: 400, y1: 100, x2: 600, y2: 300 });
+    assertDomAttributes(rootDom.children[1]!, elements, dom6);
     // Bounds should be relative to parent (root at 0,0) - so same as global
     assert.deepEqual(dom6.bounds, { x1: 400, y1: 100, x2: 600, y2: 300 });
     assert.strictEqual(dom6.parent, result.screen);
-    assert.isUndefined(dom6.hitTestResult);
-    assert.isUndefined(dom6.cursor);
-    assert.isUndefined(dom6.typedDesc);
     assert.strictEqual(dom6.children.length, 0);
 
     // Get child 'dom3' of 'dom2'
     const dom3 = dom2.children[0];
-    assert.strictEqual(dom3.id, 3);
-    // Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom3.globalBounds, { x1: 120, y1: 120, x2: 280, y2: 280 });
+    assertDomAttributes(rootDom.children[0]!.children![0]!, elements, dom3);
     // Bounds should be relative to parent 'dom2' (at 100,100)
     assert.deepEqual(dom3.bounds, { x1: 20, y1: 20, x2: 180, y2: 180 });
     assert.strictEqual(dom3.parent, dom2);
-    assert.isUndefined(dom3.hitTestResult);
-    assert.isUndefined(dom3.cursor);
-    assert.deepEqual(dom3.typedDesc, rawDesc);
     assert.strictEqual(dom3.children.length, 2);
 
     // Get children 'dom4' and 'dom5' of 'dom3'
@@ -382,27 +405,17 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     const dom5 = dom3.children[1];
 
     // Verify node 'dom4' (child of 'dom3')
-    assert.strictEqual(dom4.id, 4);
-    // Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom4.globalBounds, { x1: 130, y1: 130, x2: 180, y2: 180 });
+    assertDomAttributes(rootDom.children[0]!.children![0]!.children![0]!, elements, dom4);
     // Bounds should be relative to parent 'dom3' (at 120,120)
     assert.deepEqual(dom4.bounds, { x1: 10, y1: 10, x2: 60, y2: 60 });
     assert.strictEqual(dom4.parent, dom3);
-    assert.isUndefined(dom4.hitTestResult);
-    assert.isUndefined(dom4.cursor);
-    assert.isUndefined(dom4.typedDesc);
     assert.strictEqual(dom4.children.length, 0);
 
     // Verify node 'dom5' (child of 'dom3')
-    assert.strictEqual(dom5.id, 5);
-    // Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom5.globalBounds, { x1: 200, y1: 200, x2: 270, y2: 270 });
+    assertDomAttributes(rootDom.children[0]!.children![0]!.children![1]!, elements, dom5);
     // Bounds should be relative to parent 'dom3' (at 120,120)
     assert.deepEqual(dom5.bounds, { x1: 80, y1: 80, x2: 150, y2: 150 });
     assert.strictEqual(dom5.parent, dom3);
-    assert.isUndefined(dom5.hitTestResult);
-    assert.isUndefined(dom5.cursor);
-    assert.deepEqual(dom5.typedDesc, solidLabelDesc);
     assert.strictEqual(dom5.children.length, 0);
 
     // Verify element mappings
@@ -468,18 +481,16 @@ test('createVirtualDomFromRenderingDom - complex bounds calculation with multipl
     const dom3 = dom2.children[0];
     const dom4 = dom3.children[0];
 
-    // Level 1: Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom2.globalBounds, { x1: 100, y1: 200, x2: 600, y2: 700 });
+    assertDomAttributes(rootDom.children[0]!, elements, dom2);
+    assertDomAttributes(rootDom.children[0]!.children![0]!, elements, dom3);
+    assertDomAttributes(rootDom.children[0]!.children![0]!.children![0]!, elements, dom4);
+
     // Level 1: Relative to root (0,0) = (100,200,600,700)
     assert.deepEqual(dom2.bounds, { x1: 100, y1: 200, x2: 600, y2: 700 });
 
-    // Level 2: Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom3.globalBounds, { x1: 150, y1: 250, x2: 550, y2: 650 });
     // Level 2: Relative to dom2 (100,200) = (150-100, 250-200, 550-100, 650-200) = (50,50,450,450)
     assert.deepEqual(dom3.bounds, { x1: 50, y1: 50, x2: 450, y2: 450 });
 
-    // Level 3: Global bounds should match RenderingDom.content.bounds
-    assert.deepEqual(dom4.globalBounds, { x1: 200, y1: 300, x2: 500, y2: 600 });
     // Level 3: Relative to dom3 (150,250) = (200-150, 300-250, 500-150, 600-250) = (50,50,350,350)
     assert.deepEqual(dom4.bounds, { x1: 50, y1: 50, x2: 350, y2: 350 });
 });
