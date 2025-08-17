@@ -14,9 +14,13 @@
         <div class="left-column" id="leftColumn">
             <div id="treeView"></div>
         </div>
-        <div class="splitter" id="splitter"></div>
+        <div class="splitter" id="splitter1"></div>
+        <div class="middle-column" id="middleColumn">
+            Click on a file to show frame names.
+        </div>
+        <div class="splitter" id="splitter2"></div>
         <div class="right-column" id="rightColumn">
-            Click on a file in the tree to see its path here.
+            Click on a frame to show the UI.
         </div>
     </div>
 
@@ -105,36 +109,68 @@
 
         // Initialize splitter functionality
         function initializeSplitter() {
-            const splitter = document.getElementById('splitter');
+            const splitter1 = document.getElementById('splitter1');
+            const splitter2 = document.getElementById('splitter2');
             const leftColumn = document.getElementById('leftColumn');
+            const middleColumn = document.getElementById('middleColumn');
             const container = document.querySelector('.container');
 
             let isResizing = false;
+            let currentSplitter = null;
 
-            splitter.addEventListener('mousedown', (e) => {
+            function startResize(splitter, e) {
                 isResizing = true;
+                currentSplitter = splitter;
                 document.body.style.cursor = 'col-resize';
                 document.body.style.userSelect = 'none';
                 e.preventDefault();
+            }
+
+            splitter1.addEventListener('mousedown', (e) => {
+                startResize('splitter1', e);
+            });
+
+            splitter2.addEventListener('mousedown', (e) => {
+                startResize('splitter2', e);
             });
 
             document.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
 
                 const containerRect = container.getBoundingClientRect();
-                const newWidth = e.clientX - containerRect.left;
+                const newX = e.clientX - containerRect.left;
 
-                // Constrain width between 200px and 80% of container width
-                const minWidth = 200;
-                const maxWidth = containerRect.width * 0.8;
-                const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+                if (currentSplitter === 'splitter1') {
+                    // First splitter: controls left column width
+                    // Constrain width between 200px and 60% of container width
+                    const minWidth = 200;
+                    const maxWidth = containerRect.width * 0.6;
+                    const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newX));
 
-                leftColumn.style.width = constrainedWidth + 'px';
+                    leftColumn.style.width = constrainedWidth + 'px';
+                } else if (currentSplitter === 'splitter2') {
+                    // Second splitter: controls middle column width
+                    // Calculate available space (total width - left column width - splitter widths)
+                    const leftWidth = leftColumn.offsetWidth;
+                    const splitterWidth = 6; // Each splitter is 6px wide
+                    const availableStart = leftWidth + splitterWidth;
+                    const availableWidth = containerRect.width - availableStart - splitterWidth;
+                    
+                    const middleWidth = newX - availableStart;
+                    
+                    // Constrain middle column width
+                    const minMiddleWidth = 200;
+                    const maxMiddleWidth = Math.max(minMiddleWidth, availableWidth * 0.8);
+                    const constrainedMiddleWidth = Math.max(minMiddleWidth, Math.min(maxMiddleWidth, middleWidth));
+
+                    middleColumn.style.width = constrainedMiddleWidth + 'px';
+                }
             });
 
             document.addEventListener('mouseup', () => {
                 if (isResizing) {
                     isResizing = false;
+                    currentSplitter = null;
                     document.body.style.cursor = '';
                     document.body.style.userSelect = '';
                 }
