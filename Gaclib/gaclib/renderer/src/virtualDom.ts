@@ -90,7 +90,7 @@ function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom:
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(renderingDom, child, record, provider);
+                const childVirtualDom = createVirtualDom(child, record, provider);
                 children.push(childVirtualDom);
             }
         }
@@ -104,7 +104,32 @@ function areRectsEqual(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): boolean {
     return rect1.x1 === rect2.x1 && rect1.y1 === rect2.y1 && rect1.x2 === rect2.x2 && rect1.y2 === rect2.y2;
 }
 
-function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
+function fillVirtualDom(
+    renderingDom: SCHEMA.RenderingDom,
+    record: VirtualDomRecord,
+    provider: IVirtualDomProvider,
+    virtualDomForDomsMap: IVirtualDom,
+    virtualDomForElement: IVirtualDom
+): void {
+    // Add to the doms map only if ID is not negative
+    if (renderingDom.id >= 0) {
+        record.doms.set(renderingDom.id, virtualDomForDomsMap);
+    }
+
+    // Add to elementToDoms map if this DOM has an element
+    if (renderingDom.content.element !== null) {
+        // Ensure 1:1 mapping - element should not already exist in elementToDoms
+        if (record.elementToDoms.has(renderingDom.content.element)) {
+            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
+        }
+        record.elementToDoms.set(renderingDom.content.element, virtualDomForElement);
+    }
+
+    // Process and update children
+    processAndUpdateChildren(renderingDom, virtualDomForElement, record, provider);
+}
+
+function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider): IVirtualDom {
     // Check for duplicate IDs
     if (record.doms.has(renderingDom.id)) {
         throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
@@ -136,22 +161,8 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
             typedDesc
         );
 
-        // Add to the doms map only if ID is not negative
-        if (renderingDom.id >= 0) {
-            record.doms.set(renderingDom.id, outerVirtualDom);
-        }
-
-        // Add to elementToDoms map if this DOM has an element
-        if (renderingDom.content.element !== null) {
-            // Ensure 1:1 mapping - element should not already exist in elementToDoms
-            if (record.elementToDoms.has(renderingDom.content.element)) {
-                throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
-            }
-            record.elementToDoms.set(renderingDom.content.element, innerVirtualDom);
-        }
-
-        // Process and update children on the inner virtual DOM
-        processAndUpdateChildren(renderingDom, innerVirtualDom, record, provider);
+        // Fill the virtual DOM records and process children
+        fillVirtualDom(renderingDom, record, provider, outerVirtualDom, innerVirtualDom);
         
         // Set the inner virtual DOM as the only child of the outer virtual DOM
         outerVirtualDom.updateChildren([innerVirtualDom]);
@@ -167,22 +178,8 @@ function createVirtualDom(parentRenderingDom: SCHEMA.RenderingDom, renderingDom:
             typedDesc
         );
 
-        // Add to the doms map only if ID is not negative
-        if (renderingDom.id >= 0) {
-            record.doms.set(renderingDom.id, virtualDom);
-        }
-
-        // Add to elementToDoms map if this DOM has an element
-        if (renderingDom.content.element !== null) {
-            // Ensure 1:1 mapping - element should not already exist in elementToDoms
-            if (record.elementToDoms.has(renderingDom.content.element)) {
-                throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
-            }
-            record.elementToDoms.set(renderingDom.content.element, virtualDom);
-        }
-
-        // Process and update children
-        processAndUpdateChildren(renderingDom, virtualDom, record, provider);
+        // Fill the virtual DOM records and process children
+        fillVirtualDom(renderingDom, record, provider, virtualDom, virtualDom);
 
         return virtualDom;
     }
