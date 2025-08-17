@@ -70,6 +70,21 @@ body {
     margin: -2px -4px;
 }
 
+.tree-file.selected {
+    color: #dc3545;
+    background-color: transparent;
+    border: 1px solid #dc3545;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    text-decoration: none;
+}
+
+.tree-file.selected:hover {
+    color: #dc3545;
+    background-color: transparent;
+    text-decoration: none;
+}
+
 .tree-indent {
     display: inline-block;
 }
