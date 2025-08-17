@@ -39,20 +39,7 @@ class VirtualDomMock implements IVirtualDom {
     }
 
     updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
-        // Only allow undefined to undefined, or same type updates
-        if (this._typedDesc === undefined && typedDesc !== undefined) {
-            throw new Error('Cannot change typedDesc from undefined to defined.');
-        }
-        if (this._typedDesc !== undefined && typedDesc === undefined) {
-            throw new Error('Cannot change typedDesc from defined to undefined.');
-        }
-        if (typedDesc !== undefined && this._typedDesc !== undefined) {
-            // Ensure the type part is not changed, only the desc part can change
-            if (typedDesc.type !== this._typedDesc.type) {
-                throw new Error('Cannot change the type of typedDesc, only the desc part can be updated.');
-            }
-            this._typedDesc = typedDesc;
-        }
+        this._typedDesc = typedDesc;
     }
 
     private isRootOfSelf(child: VirtualDomMock): boolean {
@@ -366,7 +353,7 @@ test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
     assert.isUndefined(dom.typedDesc);
 });
 
-test('VirtualDomMock.updateTypedDesc throws when trying to set from undefined to defined', () => {
+test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', () => {
     const provider = new VirtualDomProviderMock();
     const newDesc: TypedElementDesc = {
         type: SCHEMA.RendererType.SolidBackground,
@@ -381,15 +368,12 @@ test('VirtualDomMock.updateTypedDesc throws when trying to set from undefined to
 
     assert.isUndefined(dom.typedDesc);
 
-    assert.throws(() => {
-        dom.updateTypedDesc(newDesc);
-    }, 'Cannot change typedDesc from undefined to defined.');
+    dom.updateTypedDesc(newDesc);
 
-    // Verify original typedDesc is unchanged
-    assert.isUndefined(dom.typedDesc);
+    assert.deepEqual(dom.typedDesc, newDesc);
 });
 
-test('VirtualDomMock.updateTypedDesc throws when trying to set from defined to undefined', () => {
+test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', () => {
     const provider = new VirtualDomProviderMock();
     const initialDesc: TypedElementDesc = {
         type: SCHEMA.RendererType.FocusRectangle
@@ -399,15 +383,12 @@ test('VirtualDomMock.updateTypedDesc throws when trying to set from defined to u
 
     assert.deepEqual(dom.typedDesc, initialDesc);
 
-    assert.throws(() => {
-        dom.updateTypedDesc(undefined);
-    }, 'Cannot change typedDesc from defined to undefined.');
+    dom.updateTypedDesc(undefined);
 
-    // Verify original typedDesc is unchanged
-    assert.deepEqual(dom.typedDesc, initialDesc);
+    assert.isUndefined(dom.typedDesc);
 });
 
-test('VirtualDomMock.updateTypedDesc throws when trying to change type', () => {
+test('VirtualDomMock.updateTypedDesc allows changing type', () => {
     const provider = new VirtualDomProviderMock();
     const initialDesc: TypedElementDesc = {
         type: SCHEMA.RendererType.SolidBorder,
@@ -428,12 +409,9 @@ test('VirtualDomMock.updateTypedDesc throws when trying to change type', () => {
 
     const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
 
-    assert.throws(() => {
-        dom.updateTypedDesc(differentTypeDesc);
-    }, 'Cannot change the type of typedDesc, only the desc part can be updated.');
+    dom.updateTypedDesc(differentTypeDesc);
 
-    // Verify original typedDesc is unchanged
-    assert.deepEqual(dom.typedDesc, initialDesc);
+    assert.deepEqual(dom.typedDesc, differentTypeDesc);
 });
 
 test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', () => {
