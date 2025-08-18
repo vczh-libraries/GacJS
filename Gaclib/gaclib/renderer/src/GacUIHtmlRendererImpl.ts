@@ -9,6 +9,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
     private _elements: ElementManager = new ElementManager();
+    private _images: Map<SCHEMA.TYPES.Integer, SCHEMA.ImageCreation> = new Map();
 
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
@@ -185,8 +186,16 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      * Renderer (Element Helpers)
      ***************************************************************************************/
 
+    private _measuring: SCHEMA.ElementMeasurings = {};
+    private _imageElementForTesting: HTMLElement = document.createElement("img");
+
     updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
         this._elements.updateDesc(id, typedDesc);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    createImageMetadata(imageCreation: SCHEMA.ImageCreation): SCHEMA.ImageCreation {
+        throw new Error(`Not Implemented (createImageMetadata)\nArguments: ${JSON.stringify(imageCreation, undefined, 4)}`);
     }
 
     /****************************************************************************************
