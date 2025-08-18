@@ -1,90 +1,35 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { IVirtualDom, IVirtualDomProvider } from '../src/virtualDom';
+import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../src/virtualDom';
 import { assert, test, expect } from 'vitest';
 
-class VirtualDomMock implements IVirtualDom {
-    private _parent: VirtualDomMock | undefined;
-    private _children: VirtualDomMock[];
-
+class VirtualDomMock extends VirtualDomBase<VirtualDomMock> {
     constructor(
-        public readonly id: SCHEMA.TYPES.Integer,
-        public globalBounds: SCHEMA.Rect,
-        public readonly hitTestResult: SCHEMA.WindowHitTestResult | undefined,
-        public readonly cursor: SCHEMA.WindowSystemCursorType | undefined,
-        private _typedDesc: TypedElementDesc | undefined
+        id: SCHEMA.TYPES.Integer,
+        globalBounds: SCHEMA.Rect,
+        hitTestResult: SCHEMA.WindowHitTestResult | undefined,
+        cursor: SCHEMA.WindowSystemCursorType | undefined,
+        typedDesc: TypedElementDesc | undefined
     ) {
-        this._parent = undefined;
-        this._children = [];
+        super(id, globalBounds, hitTestResult, cursor, typedDesc);
     }
 
-    get parent(): IVirtualDom | undefined {
-        return this._parent;
+    protected getExpectedChildType(): string {
+        return 'VirtualDomMock';
     }
 
-    get bounds(): SCHEMA.Rect {
-        if (!this._parent) {
-            // Root node: bounds === globalBounds
-            return this.globalBounds;
-        }
-        // Calculate relative bounds by subtracting parent's global position
-        const parentGlobalBounds = this._parent.globalBounds;
-        return {
-            x1: this.globalBounds.x1 - parentGlobalBounds.x1,
-            y1: this.globalBounds.y1 - parentGlobalBounds.y1,
-            x2: this.globalBounds.x2 - parentGlobalBounds.x1,
-            y2: this.globalBounds.y2 - parentGlobalBounds.y1
-        };
+    protected isExpectedChildType(child: IVirtualDom): boolean {
+        return child instanceof VirtualDomMock;
     }
 
-    get typedDesc(): TypedElementDesc | undefined {
-        return this._typedDesc;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+        // Mock implementation - no additional logic needed
     }
 
-    get children(): ReadonlyArray<IVirtualDom> {
-        return this._children;
-    }
-
-    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
-        this._typedDesc = typedDesc;
-    }
-
-    private isRootOfSelf(child: VirtualDomMock): boolean {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        let current: VirtualDomMock = this;
-        while (true) {
-            if (!current._parent) {
-                return current === child;
-            }
-            current = current._parent;
-        }
-    }
-
-    updateChildren(children: IVirtualDom[]): void {
-        for (const child of children) {
-            if (!(child instanceof VirtualDomMock)) {
-                throw new Error('All children must be VirtualDomMock instances.');
-            }
-            if (child === this) {
-                throw new Error('Child cannot be this node itself.');
-            }
-            if (child._parent !== undefined && child._parent !== this) {
-                throw new Error('Child already has a different parent.');
-            }
-            if (this.isRootOfSelf(child)) {
-                throw new Error('Child cannot be the root of this node.');
-            }
-        }
-
-        for (const child of this._children) {
-            child._parent = undefined;
-        }
-
-        this._children = [...children] as VirtualDomMock[];
-
-        for (const child of this._children) {
-            child._parent = this;
-        }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected onUpdateChildren(children: VirtualDomMock[]): void {
+        // Mock implementation - no additional logic needed
     }
 }
 

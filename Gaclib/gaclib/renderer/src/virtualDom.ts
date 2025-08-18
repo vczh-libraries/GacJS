@@ -73,3 +73,100 @@ export interface IVirtualDomProvider {
 
 export const RootVirtualDomId: SCHEMA.TYPES.Integer = -1;
 export const ClippedVirtualDomId: SCHEMA.TYPES.Integer = -2;
+
+export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVirtualDom {
+    private _parent: T | undefined;
+    private _children: T[];
+
+    constructor(
+        public readonly id: SCHEMA.TYPES.Integer,
+        public globalBounds: SCHEMA.Rect,
+        public readonly hitTestResult: SCHEMA.WindowHitTestResult | undefined,
+        public readonly cursor: SCHEMA.WindowSystemCursorType | undefined,
+        private _typedDesc: TypedElementDesc | undefined
+    ) {
+        this._parent = undefined;
+        this._children = [];
+    }
+
+    get parent(): IVirtualDom | undefined {
+        return this._parent;
+    }
+
+    get bounds(): SCHEMA.Rect {
+        if (!this._parent) {
+            // Root node: bounds === globalBounds
+            return this.globalBounds;
+        }
+        // Calculate relative bounds by subtracting parent's global position
+        const parentGlobalBounds = this._parent.globalBounds;
+        return {
+            x1: this.globalBounds.x1 - parentGlobalBounds.x1,
+            y1: this.globalBounds.y1 - parentGlobalBounds.y1,
+            x2: this.globalBounds.x2 - parentGlobalBounds.x1,
+            y2: this.globalBounds.y2 - parentGlobalBounds.y1
+        };
+    }
+
+    get typedDesc(): TypedElementDesc | undefined {
+        return this._typedDesc;
+    }
+
+    get children(): ReadonlyArray<IVirtualDom> {
+        return this._children;
+    }
+
+    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+        this._typedDesc = typedDesc;
+        this.onUpdateTypedDesc(typedDesc);
+    }
+
+    private isRootOfSelf(child: T): boolean {
+         
+        let current: T = this as unknown as T;
+        while (true) {
+            if (!current._parent) {
+                return current === child;
+            }
+            current = current._parent;
+        }
+    }
+
+    updateChildren(children: IVirtualDom[]): void {
+        const expectedType = this.getExpectedChildType();
+        
+        for (const child of children) {
+            if (!this.isExpectedChildType(child)) {
+                throw new Error(`All children must be ${expectedType} instances.`);
+            }
+            if (child === this) {
+                throw new Error('Child cannot be this node itself.');
+            }
+            const typedChild = child as unknown as T;
+            if (typedChild._parent !== undefined && typedChild._parent !== (this as unknown as T)) {
+                throw new Error('Child already has a different parent.');
+            }
+            if (this.isRootOfSelf(typedChild)) {
+                throw new Error('Child cannot be the root of this node.');
+            }
+        }
+
+        for (const child of this._children) {
+            child._parent = undefined;
+        }
+
+        this._children = [...children] as T[];
+
+        for (const child of this._children) {
+            child._parent = this as unknown as T;
+        }
+
+        this.onUpdateChildren(this._children);
+    }
+
+    // Abstract methods that subclasses must implement
+    protected abstract getExpectedChildType(): string;
+    protected abstract isExpectedChildType(child: IVirtualDom): boolean;
+    protected abstract onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void;
+    protected abstract onUpdateChildren(children: T[]): void;
+}

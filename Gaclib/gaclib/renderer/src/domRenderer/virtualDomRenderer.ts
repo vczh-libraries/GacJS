@@ -1,105 +1,45 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../GacUIElementManager';
-import { IVirtualDom, IVirtualDomProvider } from '../virtualDom';
+import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../virtualDom';
 import { applyBounds, applyTypedStyle } from './elementStyles';
 
-class VirtualDomHtml implements IVirtualDom {
-    private _parent: VirtualDomHtml | undefined;
-    private _children: VirtualDomHtml[];
+class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {
     public readonly htmlElement: HTMLElement;
 
     constructor(
-        public readonly id: SCHEMA.TYPES.Integer,
-        public globalBounds: SCHEMA.Rect,
-        public readonly hitTestResult: SCHEMA.WindowHitTestResult | undefined,
-        public readonly cursor: SCHEMA.WindowSystemCursorType | undefined,
-        private _typedDesc: TypedElementDesc | undefined
+        id: SCHEMA.TYPES.Integer,
+        globalBounds: SCHEMA.Rect,
+        hitTestResult: SCHEMA.WindowHitTestResult | undefined,
+        cursor: SCHEMA.WindowSystemCursorType | undefined,
+        typedDesc: TypedElementDesc | undefined
     ) {
-        this._parent = undefined;
-        this._children = [];
+        super(id, globalBounds, hitTestResult, cursor, typedDesc);
         this.htmlElement = document.createElement('div');
         
         // Apply initial typed style if provided
-        if (this._typedDesc !== undefined) {
-            applyTypedStyle(this.htmlElement, this._typedDesc);
+        if (typedDesc !== undefined) {
+            applyTypedStyle(this.htmlElement, typedDesc);
         }
     }
 
-    get parent(): IVirtualDom | undefined {
-        return this._parent;
+    protected getExpectedChildType(): string {
+        return 'VirtualDomHtml';
     }
 
-    get bounds(): SCHEMA.Rect {
-        if (!this._parent) {
-            // Root node: bounds === globalBounds
-            return this.globalBounds;
-        }
-        // Calculate relative bounds by subtracting parent's global position
-        const parentGlobalBounds = this._parent.globalBounds;
-        return {
-            x1: this.globalBounds.x1 - parentGlobalBounds.x1,
-            y1: this.globalBounds.y1 - parentGlobalBounds.y1,
-            x2: this.globalBounds.x2 - parentGlobalBounds.x1,
-            y2: this.globalBounds.y2 - parentGlobalBounds.y1
-        };
+    protected isExpectedChildType(child: IVirtualDom): boolean {
+        return child instanceof VirtualDomHtml;
     }
 
-    get typedDesc(): TypedElementDesc | undefined {
-        return this._typedDesc;
-    }
-
-    get children(): ReadonlyArray<IVirtualDom> {
-        return this._children;
-    }
-
-    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
-        this._typedDesc = typedDesc;
-        
+    protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
         // Apply typed style to the HTML element
         if (typedDesc !== undefined) {
             applyTypedStyle(this.htmlElement, typedDesc);
         }
     }
 
-    private isRootOfSelf(child: VirtualDomHtml): boolean {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        let current: VirtualDomHtml = this;
-        while (true) {
-            if (!current._parent) {
-                return current === child;
-            }
-            current = current._parent;
-        }
-    }
-
-    updateChildren(children: IVirtualDom[]): void {
-        for (const child of children) {
-            if (!(child instanceof VirtualDomHtml)) {
-                throw new Error('All children must be VirtualDomHtml instances.');
-            }
-            if (child === this) {
-                throw new Error('Child cannot be this node itself.');
-            }
-            if (child._parent !== undefined && child._parent !== this) {
-                throw new Error('Child already has a different parent.');
-            }
-            if (this.isRootOfSelf(child)) {
-                throw new Error('Child cannot be the root of this node.');
-            }
-        }
-
-        for (const child of this._children) {
-            child._parent = undefined;
-        }
-
-        this._children = [...children] as VirtualDomHtml[];
-
-        for (const child of this._children) {
-            child._parent = this;
-        }
-
+    protected onUpdateChildren(children: VirtualDomHtml[]): void {
         // Update HTML element children
-        const htmlChildren = this._children.map(child => child.htmlElement);
+        const htmlChildren = children.map(child => child.htmlElement);
         this.htmlElement.replaceChildren(...htmlChildren);
     }
 }
