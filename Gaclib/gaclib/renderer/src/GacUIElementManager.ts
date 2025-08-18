@@ -27,11 +27,20 @@ interface ElementRecord {
 export class ElementManager {
     private _elements: Map<SCHEMA.TYPES.Integer, ElementRecord> = new Map();
 
+    get elements(): ReadonlyMap<SCHEMA.TYPES.Integer, ElementRecord> {
+        return this._elements;
+    }
+
     create(id: SCHEMA.TYPES.Integer, type: SCHEMA.RendererType): void {
         if (this._elements.has(id)) {
             throw new Error(`Element with id ${id} already exists`);
         }
         this._elements.set(id, { type });
+    }
+
+    createWithDesc(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
+        this.create(id, typedDesc.type);
+        this.updateDesc(id, typedDesc);
     }
 
     destroy(id: SCHEMA.TYPES.Integer): void {
@@ -46,6 +55,14 @@ export class ElementManager {
     getDesc(id: SCHEMA.TYPES.Integer): TypedElementDesc | undefined {
         const element = this._elements.get(id);
         return element?.desc;
+    }
+
+    getDescEnsured(id: SCHEMA.TYPES.Integer): TypedElementDesc {
+        const desc = this.getDesc(id);
+        if (!desc) {
+            throw new Error(`Element with id ${id} does not have a description`);
+        }
+        return desc;
     }
 
     updateDesc(id: SCHEMA.TYPES.Integer, desc: TypedElementDesc): void {

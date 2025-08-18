@@ -2,6 +2,8 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { getImageFormatType, getImageContentType, getImageUrl } from './domRenderer/elementStyles';
+import { createVirtualDomFromRenderingDom, VirtualDomRecord } from './virtualDomBuilding';
+import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
@@ -9,8 +11,11 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
+
+    private _provider = new VirtualDomHtmlProvider();
     private _elements: ElementManager = new ElementManager();
     private _images: Map<SCHEMA.TYPES.Integer, SCHEMA.ImageCreation> = new Map();
+    private _renderingRecord: VirtualDomRecord | undefined = undefined;
 
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
@@ -362,8 +367,14 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {
-        // recreate HTMLElement completely with createVirtualDomFromRenderingDom
-        throw new Error(`Not Implemented (RequestRendererRenderDom)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        if (this._renderingRecord) {
+            this._renderingRecord = undefined;
+            this._settings.target.replaceChildren();
+        }
+        if (requestArgs) {
+            this._renderingRecord = createVirtualDomFromRenderingDom(requestArgs, this._elements, this._provider);
+            this._settings.target.replaceChildren(this._provider.getElement(this._renderingRecord.screen));
+        }
     }
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
