@@ -30,5 +30,5 @@ export * from './featureGates';
 export * from './GacUIHtmlRendererImpl';
 export * from './domRenderer/elementStyles';
 export * from './domRenderer/virtualDomRenderer';
-export * from './virtualDom';
+export { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId } from './virtualDom';
 export * from './virtualDomBuilding';
