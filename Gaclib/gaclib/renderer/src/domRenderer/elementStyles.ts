@@ -98,19 +98,9 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
  * ImageFrame
  **********************************************************************/
 
-function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
-    if (desc.imageId === null) {
-        return '';
-    }
-    if (!desc.imageCreation) {
-        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation to exist.');
-    }
-    if (desc.imageCreation.imageDataOmitted) {
-        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation.imageDataOmitted to be false.');
-    }
-
+export function getImageUrl(imageCreation: SCHEMA.ImageCreation): string {
     let contentType: string;
-    const bin = atob(desc.imageCreation.imageData);
+    const bin = atob(imageCreation.imageData);
     if (bin.substring(0, 2) === 'BM') {
         contentType = 'image/bmp';
     } else if (bin.substring(0, 6) === 'GIF87a' || bin.substring(0, 6) === 'GIF89a') {
@@ -127,6 +117,20 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
         throw new Error('Unsupported image format');
     }
 
+    return `url(data:${contentType};base64,${imageCreation.imageData})`;
+}
+
+function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
+    if (desc.imageId === null) {
+        return '';
+    }
+    if (!desc.imageCreation) {
+        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation to exist.');
+    }
+    if (desc.imageCreation.imageDataOmitted) {
+        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation.imageDataOmitted to be false.');
+    }
+
     let positionStyle: string;
     if (desc.stretch) {
         positionStyle = `background-repeat: no-repeat; background-origin: border-box; background-size: 100% 100%;`;
@@ -139,7 +143,7 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
         filterStyle = `filter: grayscale(100%);`;
     }
 
-    return `background-image: url(data:${contentType};base64,${desc.imageCreation.imageData}); ${positionStyle} ${filterStyle}`;
+    return `background-image: ${getImageUrl(desc.imageCreation)}; ${positionStyle} ${filterStyle}`;
 }
 
 /**********************************************************************
