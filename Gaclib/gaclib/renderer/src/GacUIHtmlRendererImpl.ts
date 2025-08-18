@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
-import { ElementManager } from './GacUIElementManager';
+import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
@@ -124,36 +124,36 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     RequestRendererUpdateElement_SolidBorder(requestArgs: SCHEMA.ElementDesc_SolidBorder): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidBorder, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidBorder, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SinkBorder(requestArgs: SCHEMA.ElementDesc_SinkBorder): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SinkBorder, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SinkBorder, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SinkSplitter(requestArgs: SCHEMA.ElementDesc_SinkSplitter): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SinkSplitter, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SinkSplitter, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SolidBackground(requestArgs: SCHEMA.ElementDesc_SolidBackground): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidBackground, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidBackground, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_GradientBackground(requestArgs: SCHEMA.ElementDesc_GradientBackground): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.GradientBackground, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.GradientBackground, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_InnerShadow(requestArgs: SCHEMA.ElementDesc_InnerShadow): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.InnerShadow, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.InnerShadow, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_Polygon(requestArgs: SCHEMA.ElementDesc_Polygon): void {
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.Polygon, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.Polygon, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
         // pay attention for text size measuring request
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
     }
 
     /****************************************************************************************
@@ -178,7 +178,15 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         // when the imageData is available, call the following function
         // when the whole imageCreation is unavailable, the an imageCreation with available imageData should have been registered by RequestImageCreated
         // we need to get that imageCreation by imageId, pass to updateDesc with an desc with that imageCreation
-        this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: requestArgs });
+        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: requestArgs });
+    }
+
+    /****************************************************************************************
+     * Renderer (Element Helpers)
+     ***************************************************************************************/
+
+    updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
+        this._elements.updateDesc(id, typedDesc);
     }
 
     /****************************************************************************************
@@ -195,7 +203,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
             // For FocusRectangle and Raw, call updateDesc since they have no desc
             if (creation.type === SCHEMA.RendererType.FocusRectangle || creation.type === SCHEMA.RendererType.Raw) {
-                this._elements.updateDesc(creation.id, { type: creation.type });
+                this.updateElement(creation.id, { type: creation.type });
             }
         }
     }
@@ -210,6 +218,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {
         // nothing needs to be done
     }
