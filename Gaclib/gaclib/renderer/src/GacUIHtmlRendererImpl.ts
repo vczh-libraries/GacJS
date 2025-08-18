@@ -253,7 +253,6 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         this._elements.updateDesc(id, typedDesc);
     }
 
-
     createImageMetadata(imageCreation: SCHEMA.ImageCreation): SCHEMA.ImageMetadata {
         throw new Error(`Not Implemented (createImageMetadata)\nArguments: ${JSON.stringify(imageCreation, undefined, 4)}`);
     }
