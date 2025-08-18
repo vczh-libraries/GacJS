@@ -29,3 +29,4 @@ export * from './interfaces';
 export * from './featureGates';
 export * from './GacUIHtmlRendererImpl';
 export * from './domRenderer/elementStyles';
+export * from './domRenderer/virtualDomRenderer';
