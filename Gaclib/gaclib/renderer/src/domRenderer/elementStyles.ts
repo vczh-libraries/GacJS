@@ -3,7 +3,7 @@ import { getFeatureGates } from '../featureGates';
 import { TypedElementDesc } from '../GacUIElementManager';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
-const ExtraBorderNodeName = '$GacUI-FocusRectangle-Border';
+const ExtraBorderNodeName = '$GacUI-ExtraBorder';
 const SvgNS = 'http://www.w3.org/2000/svg';
 
 /**********************************************************************
@@ -99,6 +99,9 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
  **********************************************************************/
 
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
+    if (desc.imageId === null) {
+        return '';
+    }
     if (!desc.imageCreation) {
         throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation to exist.');
     }
@@ -273,6 +276,10 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
 
 export function hasExtraBorder(target: HTMLElement): boolean {
     return !!target[ExtraBorderNodeName];
+}
+
+export function getExtraBorder(target: HTMLElement): HTMLElement | undefined {
+    return target[ExtraBorderNodeName] as unknown as HTMLElement | undefined;
 }
 
 function ensureNoExtraBorder(target: HTMLElement): void {

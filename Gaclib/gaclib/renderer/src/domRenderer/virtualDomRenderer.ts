@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../GacUIElementManager';
 import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../virtualDom';
-import { applyBounds, applyCommonStyle, applyTypedStyle } from './elementStyles';
+import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder } from './elementStyles';
 
 class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {
     public readonly htmlElement: HTMLElement;
@@ -41,6 +41,10 @@ class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {
         // Update HTML element children
         const htmlChildren = children.map(child => child.htmlElement);
         this.htmlElement.replaceChildren(...htmlChildren);
+        const border = getExtraBorder(this.htmlElement)
+        if (border) {
+            this.htmlElement.insertBefore(border, this.htmlElement.firstChild);
+        }
     }
 }
 
