@@ -18,7 +18,7 @@ function generateUnions(schema: Schema, classNames: string[]): string {
     return schema.declarations.filter(decl => decl['$ast'] === 'UnionDecl').map(decl => `
         |
         |export type ${decl.name} =
-        ${decl.members.map((member, index) => `|    | [${index}, ${refToString(member.name, classNames)}]`).join('\n')};
+        ${decl.members.map((member) => `|    | ['${member.name}', ${refToString(member.name, classNames)}]`).join('\n')};
     `).join('\n');
 }
 
