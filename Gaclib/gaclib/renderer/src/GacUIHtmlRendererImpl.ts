@@ -152,6 +152,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
+        // pay attention for text size measuring request
         this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
     }
 
@@ -171,9 +172,12 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {
         // if imageCreation !== null it means a new image is created, otherwise we must ensure the image has already been registered
-        // need to record created image accordingly, but it may repeat so only process if imageDataOmitted === false
+        // need to record created image accordingly, but it may repeat so only process if imageDataOmitted === false, and fill the measuring request and image metadata
         // before receiving RequestRendererBeginRendering, we must ensure the imageData has been sent
         // the size respond will sent by RespondRendererEndRendering instead, if RequestImageCreated is not received on that image
+        // when the imageData is available, call the following function
+        // when the whole imageCreation is unavailable, the an imageCreation with available imageData should have been registered by RequestImageCreated
+        // we need to get that imageCreation by imageId, pass to updateDesc with an desc with that imageCreation
         this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: requestArgs });
     }
 
@@ -207,18 +211,21 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {
-        throw new Error(`Not Implemented (RequestRendererBeginRendering)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        // nothing needs to be done
     }
 
     RequestRendererEndRendering(id: number): void {
+        // sent back all measuring request and image metadata and reset the data structure
         throw new Error(`Not Implemented (RequestRendererEndRendering)\nID: ${id}`);
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {
+        // recreate HTMLElement completely with createVirtualDomFromRenderingDom
         throw new Error(`Not Implemented (RequestRendererRenderDom)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
+        // incrementally update HTMLElement
         throw new Error(`Not Implemented (RequestRendererRenderDomDiff)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
