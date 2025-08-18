@@ -3,7 +3,6 @@
 - `IVirtualDomProvider`
   - Implement the HTML `IVirtualDomProvider` and test it in elements.html
   - Apply `RenderingDom_Diff` on `IVirtualDom`.
-- `snapshot.html` to render snapshots, will clickable but not collapsible tree view at the left.
 - Implement remote protocol rendering.
 - Handle remote exception.
 - Complete a demo, website and C++ renderer connect to Core in turns.
