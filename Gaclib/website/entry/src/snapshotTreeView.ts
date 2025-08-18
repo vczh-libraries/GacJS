@@ -122,7 +122,7 @@ export function readFrames(trace: SCHEMA.UnitTest_RenderingTrace): TreeFolder {
     // Convert each frame to a TreeFile
     if (trace.frames) {
         trace.frames.forEach((frame: SCHEMA.UnitTest_RenderingFrame, index: number) => {
-            const fileName = frame.frameName || `Frame_${frame.frameId}`;
+            const fileName = `${frame.frameId}: ${frame.frameName}`;
             treeFolder.content[fileName] = {
                 type: 'File',
                 url: {
