@@ -177,10 +177,10 @@ export function onSolidLabelResized(textDiv: HTMLElement): void {
 }
 
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
-    if (!desc.font) {
+    if (desc.font === null) {
         throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.font to exist.');
     }
-    if (!desc.text) {
+    if (desc.text === null) {
         throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.text to exist.');
     }
 

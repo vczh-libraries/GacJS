@@ -15,7 +15,7 @@ class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {
     ) {
         super(id, globalBounds, hitTestResult, cursor, typedDesc);
         this.htmlElement = document.createElement('div');
-        
+
         // Apply initial typed style if provided
         if (typedDesc !== undefined) {
             applyTypedStyle(this.htmlElement, typedDesc);
@@ -62,7 +62,7 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         return new VirtualDomHtml(id, globalBounds, undefined, undefined, undefined);
     }
 
-    fixBounds(virtualDom: IVirtualDom): void {
+    fixBounds(virtualDom: IVirtualDom): HTMLElement {
         if (!(virtualDom instanceof VirtualDomHtml)) {
             throw new Error('VirtualDom must be VirtualDomHtml instance.');
         }
@@ -78,6 +78,8 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
 
         // Apply bounds to all children recursively
         this.fixBoundsRecursive(virtualDom);
+
+        return virtualDom.htmlElement;
     }
 
     private fixBoundsRecursive(virtualDom: VirtualDomHtml): void {

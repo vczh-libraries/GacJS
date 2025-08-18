@@ -6,7 +6,6 @@ import {
 } from '@gaclib/renderer';
 
 export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_RenderingTrace, frameIndex: number): void {
-    gacuiScreen.replaceChildren();
     const frame = trace.frames![frameIndex];
     const provider = new VirtualDomHtmlProvider();
 
@@ -57,10 +56,16 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
                 break;
             }
             case 'ElementDesc_ImageFrame': {
-                elements.set(id, { type: SCHEMA.RendererType.ImageFrame, desc: desc[1] });
+                const copied = (<SCHEMA.ElementDesc_ImageFrame>JSON.parse(JSON.stringify(desc[1])));
+                copied.imageCreation = imageCreations.get(copied.imageId!)!;
+                elements.set(id, { type: SCHEMA.RendererType.ImageFrame, desc: copied });
                 break;
             }
         }
     }
     const rootDom = createVirtualDomFromRenderingDom(frame.root!, elements, provider);
+    const rootElement = provider.fixBounds(rootDom.screen);
+    rootElement.style.width = `${frame.windowSize.bounds.x2.value - frame.windowSize.bounds.x1.value}px`;
+    rootElement.style.height = `${frame.windowSize.bounds.y2.value - frame.windowSize.bounds.y1.value}px`;
+    gacuiScreen.replaceChildren(rootElement);
 }
