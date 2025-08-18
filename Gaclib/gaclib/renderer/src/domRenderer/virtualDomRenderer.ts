@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../GacUIElementManager';
 import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../virtualDom';
-import { applyBounds, applyTypedStyle } from './elementStyles';
+import { applyBounds, applyCommonStyle, applyTypedStyle } from './elementStyles';
 
 class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {
     public readonly htmlElement: HTMLElement;
@@ -72,13 +72,12 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
             throw new Error('fixBounds can only be called on root VirtualDom (with no parent).');
         }
 
-        // Configure root element as container
-        virtualDom.htmlElement.style.position = 'relative';
-        virtualDom.htmlElement.style.boxSizing = 'border-box';
-
         // Apply bounds to all children recursively
         this.fixBoundsRecursive(virtualDom);
 
+        // Configure root element as container
+        virtualDom.htmlElement.style.position = 'relative';
+        virtualDom.htmlElement.style.boxSizing = 'border-box';
         return virtualDom.htmlElement;
     }
 
@@ -86,6 +85,9 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         // Apply bounds to all children
         for (const child of virtualDom.children) {
             if (child instanceof VirtualDomHtml) {
+                if (!child.typedDesc) {
+                    applyCommonStyle(child.htmlElement);
+                }
                 applyBounds(child.htmlElement, child.bounds);
                 this.fixBoundsRecursive(child);
             }

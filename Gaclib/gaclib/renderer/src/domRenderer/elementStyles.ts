@@ -416,6 +416,10 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
  * applyBounds
  **********************************************************************/
 
+export function applyCommonStyle(target: HTMLElement): void {
+    target.style.cssText = CommonStyle;
+}
+
 export function applyBounds(target: HTMLElement, bounds: SCHEMA.Rect): void {
     target.style.left = `${bounds.x1}px`;
     target.style.top = `${bounds.y1}px`;
