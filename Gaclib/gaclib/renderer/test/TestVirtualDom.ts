@@ -1,6 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { createVirtualDomFromRenderingDom, ElementMap, RootVirtualDomId, IVirtualDom, ClippedVirtualDomId } from '../src/virtualDom';
+import { IVirtualDom, RootVirtualDomId, ClippedVirtualDomId } from '../src/virtualDom';
+import { createVirtualDomFromRenderingDom, ElementMap } from '../src/virtualDomBuilding';
 import { VirtualDomProviderMock } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
