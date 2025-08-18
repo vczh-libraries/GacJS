@@ -1,6 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
+import { getImageFormatType, getImageContentType, getImageUrl } from './domRenderer/elementStyles';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
@@ -125,36 +126,36 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     RequestRendererUpdateElement_SolidBorder(requestArgs: SCHEMA.ElementDesc_SolidBorder): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidBorder, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidBorder, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SinkBorder(requestArgs: SCHEMA.ElementDesc_SinkBorder): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SinkBorder, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.SinkBorder, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SinkSplitter(requestArgs: SCHEMA.ElementDesc_SinkSplitter): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SinkSplitter, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.SinkSplitter, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SolidBackground(requestArgs: SCHEMA.ElementDesc_SolidBackground): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidBackground, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidBackground, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_GradientBackground(requestArgs: SCHEMA.ElementDesc_GradientBackground): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.GradientBackground, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.GradientBackground, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_InnerShadow(requestArgs: SCHEMA.ElementDesc_InnerShadow): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.InnerShadow, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.InnerShadow, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_Polygon(requestArgs: SCHEMA.ElementDesc_Polygon): void {
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.Polygon, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.Polygon, desc: requestArgs });
     }
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
         // pay attention for text size measuring request
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
+        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
     }
 
     /****************************************************************************************
@@ -171,8 +172,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
 
         this._images.set(requestArgs.id, requestArgs);
-        const metadata = this.createImageMetadata(requestArgs);
-        this._responses.RespondImageCreated(id, metadata);
+        this._makeImageMetadata(id, requestArgs);
     }
 
     RequestImageDestroyed(requestArgs: SCHEMA.TYPES.Integer): void {
@@ -220,8 +220,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
         // When imageCreation is not null, handle measuring
         if (requestArgs.imageCreation !== null && !requestArgs.imageCreation.imageDataOmitted) {
-            const metadata = this.createImageMetadata(this._images.get(requestArgs.imageId!)!);
-            this._measuring.createdImages!.push(metadata);
+            this._makeImageMetadata(undefined, this._images.get(requestArgs.imageId!)!);
         }
 
         // Prepare requestArgs for this.updateElement
@@ -238,7 +237,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             };
         }
 
-        this.updateElement(finalRequestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: finalRequestArgs });
+        this._updateElement(finalRequestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: finalRequestArgs });
     }
 
     /****************************************************************************************
@@ -246,15 +245,68 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
-    // @ts-expect-error: This field is for testing purposes
-    private _imageElementForTesting: HTMLElement = document.createElement('img');
+    private _measuringTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
+    private _measuringTasksExecuted = 0;
+    private _measuringTasksExecuting = false;
+    private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
+    private _imageElementForTesting: HTMLImageElement = document.createElement('img');
 
-    updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
+    private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
         this._elements.updateDesc(id, typedDesc);
     }
 
-    createImageMetadata(imageCreation: SCHEMA.ImageCreation): SCHEMA.ImageMetadata {
-        throw new Error(`Not Implemented (createImageMetadata)\nArguments: ${JSON.stringify(imageCreation, undefined, 4)}`);
+    private _fireRespondRendererEndRendering(): void {
+        if (this._idRespondRendererEndRendering !== undefined) {
+            this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
+            this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
+            this._idRespondRendererEndRendering = undefined;
+        }
+    }
+
+    private async _runMeasuringTasks(): Promise<void> {
+        if (this._measuringTasksExecuting) {
+            return;
+        }
+        this._measuringTasksExecuting = true;
+        while (this._measuringTasksExecuted < this._measuringTasks.length) {
+            const [id, imageCreation] = this._measuringTasks[this._measuringTasksExecuted++];
+            const formatType = getImageFormatType(imageCreation.imageData);
+            const contentType = getImageContentType(formatType);
+            const imageUrl = getImageUrl(contentType, imageCreation.imageData);
+
+            // Set the source and wait for the image to load
+            this._imageElementForTesting.src = imageUrl;
+            await this._imageElementForTesting.decode();
+
+            // Create metadata with the measured size
+            const imageMetadata: SCHEMA.ImageMetadata = {
+                id: imageCreation.id,
+                format: formatType,
+                frames: [{
+                    size: {
+                        x: this._imageElementForTesting.naturalWidth,
+                        y: this._imageElementForTesting.naturalHeight
+                    }
+                }]
+            };
+
+            // Submit metadata
+            if (id === undefined) {
+                this._measuring.createdImages?.push(imageMetadata);
+            } else {
+                this._responses.RespondImageCreated(id, imageMetadata);
+            }
+        }
+        this._fireRespondRendererEndRendering();
+
+        this._measuringTasksExecuting = false;
+        this._measuringTasks = [];
+        this._measuringTasksExecuted = 0;
+    }
+
+    _makeImageMetadata(id: SCHEMA.TYPES.Integer | undefined, imageCreation: SCHEMA.ImageCreation): void {
+        this._measuringTasks.push([id, imageCreation]);
+        this._runMeasuringTasks();
     }
 
     /****************************************************************************************
@@ -271,7 +323,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
             // For FocusRectangle and Raw, call updateDesc since they have no desc
             if (creation.type === SCHEMA.RendererType.FocusRectangle || creation.type === SCHEMA.RendererType.Raw) {
-                this.updateElement(creation.id, { type: creation.type });
+                this._updateElement(creation.id, { type: creation.type });
             }
         }
     }
@@ -292,8 +344,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererEndRendering(id: number): void {
-        this._responses.RespondRendererEndRendering(id, this._measuring);
-        this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
+        this._idRespondRendererEndRendering = id;
+        if (this._measuringTasksExecuted === this._measuringTasks.length) {
+            this._fireRespondRendererEndRendering();
+        }
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {
