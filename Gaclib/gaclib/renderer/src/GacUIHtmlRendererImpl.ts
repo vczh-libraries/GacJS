@@ -276,19 +276,30 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
             // Set the source and wait for the image to load
             this._imageElementForTesting.src = imageUrl;
-            await this._imageElementForTesting.decode();
-
-            // Create metadata with the measured size
-            const imageMetadata: SCHEMA.ImageMetadata = {
-                id: imageCreation.id,
-                format: formatType,
-                frames: [{
-                    size: {
-                        x: this._imageElementForTesting.naturalWidth,
-                        y: this._imageElementForTesting.naturalHeight
-                    }
-                }]
-            };
+            let imageMetadata: SCHEMA.ImageMetadata;
+            try {
+                await this._imageElementForTesting.decode();
+                imageMetadata = {
+                    id: imageCreation.id,
+                    format: formatType,
+                    frames: [{
+                        size: {
+                            x: this._imageElementForTesting.naturalWidth,
+                            y: this._imageElementForTesting.naturalHeight
+                        }
+                    }]
+                };
+            } catch (error) {
+                if (error instanceof DOMException) {
+                    imageMetadata = {
+                        id: imageCreation.id,
+                        format: SCHEMA.ImageFormatType.Unknown,
+                        frames: [{ size: { x: 1, y: 1 } }]
+                    };
+                } else {
+                    throw error;
+                }
+            }
 
             // Submit metadata
             if (id === undefined) {
@@ -306,7 +317,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     _makeImageMetadata(id: SCHEMA.TYPES.Integer | undefined, imageCreation: SCHEMA.ImageCreation): void {
         this._measuringTasks.push([id, imageCreation]);
-        this._runMeasuringTasks();
+        void this._runMeasuringTasks();
     }
 
     /****************************************************************************************
