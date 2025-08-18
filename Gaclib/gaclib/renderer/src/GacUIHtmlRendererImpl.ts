@@ -163,12 +163,21 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestImageCreated(id: number, requestArgs: SCHEMA.ImageCreation): void {
         // make sure imageDataOmitted is true, register the image
-        throw new Error(`Not Implemented (RequestImageCreated)\nID: ${id}\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        if (this._images.has(requestArgs.id)) {
+            throw new Error(`Image ID ${requestArgs.id} is already in use`);
+        }
+        if (requestArgs.imageDataOmitted) {
+            throw new Error(`imageDataOmitted must be false for RequestImageCreated`);
+        }
+
+        this._images.set(requestArgs.id, requestArgs);
+        const metadata = this.createImageMetadata(requestArgs);
+        this._responses.RespondImageCreated(id, metadata);
     }
 
     RequestImageDestroyed(requestArgs: SCHEMA.TYPES.Integer): void {
         // unregister the image
-        throw new Error(`Not Implemented (RequestImageDestroyed)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        this._images.delete(requestArgs);
     }
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {
@@ -179,22 +188,73 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         // when the imageData is available, call the following function
         // when the whole imageCreation is unavailable, the an imageCreation with available imageData should have been registered by RequestImageCreated
         // we need to get that imageCreation by imageId, pass to updateDesc with an desc with that imageCreation
-        this.updateElement(requestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: requestArgs });
+
+        // When imageId is null, ensure imageCreation is null too
+        if (requestArgs.imageId === null) {
+            if (requestArgs.imageCreation !== null) {
+                throw new Error(`When imageId is null, imageCreation must be null too`);
+            }
+        }
+
+        // When imageId is not null, validate imageCreation
+        if (requestArgs.imageId !== null) {
+            if (requestArgs.imageCreation === null) {
+                // Image must have been registered
+                if (!this._images.has(requestArgs.imageId)) {
+                    throw new Error(`Image with ID ${requestArgs.imageId} must have been registered`);
+                }
+            } else if (requestArgs.imageCreation.imageDataOmitted) {
+                // Image must have been registered
+                if (!this._images.has(requestArgs.imageId)) {
+                    throw new Error(`Image with ID ${requestArgs.imageId} must have been registered when imageDataOmitted is true`);
+                }
+            } else {
+                // Image must not have been registered and register it
+                if (this._images.has(requestArgs.imageCreation.id)) {
+                    throw new Error(`Image with ID ${requestArgs.imageCreation.id} is already registered`);
+                }
+                this._images.set(requestArgs.imageCreation.id, requestArgs.imageCreation);
+                // Don't call RespondImageCreated in this case
+            }
+        }
+
+        // When imageCreation is not null, handle measuring
+        if (requestArgs.imageCreation !== null && !requestArgs.imageCreation.imageDataOmitted) {
+            const metadata = this.createImageMetadata(this._images.get(requestArgs.imageId!)!);
+            this._measuring.createdImages!.push(metadata);
+        }
+
+        // Prepare requestArgs for this.updateElement
+        let finalRequestArgs = requestArgs;
+        if (requestArgs.imageId !== null && (requestArgs.imageCreation === null || requestArgs.imageCreation.imageDataOmitted)) {
+            // Get the registered ImageCreation and replace the incomplete imageCreation
+            const registeredImage = this._images.get(requestArgs.imageId);
+            if (registeredImage === undefined) {
+                throw new Error(`Unable to find registered image with ID ${requestArgs.imageId}`);
+            }
+            finalRequestArgs = {
+                ...requestArgs,
+                imageCreation: registeredImage
+            };
+        }
+
+        this.updateElement(finalRequestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: finalRequestArgs });
     }
 
     /****************************************************************************************
      * Renderer (Element Helpers)
      ***************************************************************************************/
 
-    private _measuring: SCHEMA.ElementMeasurings = {};
-    private _imageElementForTesting: HTMLElement = document.createElement("img");
+    private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
+    // @ts-expect-error: This field is for testing purposes
+    private _imageElementForTesting: HTMLElement = document.createElement('img');
 
     updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
         this._elements.updateDesc(id, typedDesc);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    createImageMetadata(imageCreation: SCHEMA.ImageCreation): SCHEMA.ImageCreation {
+
+    createImageMetadata(imageCreation: SCHEMA.ImageCreation): SCHEMA.ImageMetadata {
         throw new Error(`Not Implemented (createImageMetadata)\nArguments: ${JSON.stringify(imageCreation, undefined, 4)}`);
     }
 
@@ -233,8 +293,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererEndRendering(id: number): void {
-        // sent back all measuring request and image metadata and reset the data structure
-        throw new Error(`Not Implemented (RequestRendererEndRendering)\nID: ${id}`);
+        this._responses.RespondRendererEndRendering(id, this._measuring);
+        this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {

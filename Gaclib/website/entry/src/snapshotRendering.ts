@@ -56,8 +56,10 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
                 break;
             }
             case 'ElementDesc_ImageFrame': {
-                const copied = (<SCHEMA.ElementDesc_ImageFrame>JSON.parse(JSON.stringify(desc[1])));
-                copied.imageCreation = imageCreations.get(copied.imageId!)!;
+                const copied: SCHEMA.ElementDesc_ImageFrame = {
+                    ...desc[1],
+                    imageCreation: imageCreations.get(desc[1].imageId!)!
+                };
                 elements.set(id, { type: SCHEMA.RendererType.ImageFrame, desc: copied });
                 break;
             }
