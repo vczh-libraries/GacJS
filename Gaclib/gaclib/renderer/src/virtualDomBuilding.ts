@@ -1,15 +1,17 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from './GacUIElementManager';
+import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId } from './virtualDom';
 
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
+
+// For backwards compatibility - deprecated, use ElementManager instead
 export type ElementMap = Map<SCHEMA.TYPES.Integer, TypedElementDesc>;
 
 export interface VirtualDomRecord {
     screen: IVirtualDom;
     doms: VirtualDomMap;
     elementToDoms: VirtualDomMap;
-    elements: ElementMap;
+    elements: ElementManager;
 }
 
 function intersectRects(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): SCHEMA.Rect {
@@ -51,11 +53,8 @@ function fillVirtualDom(
     // Create TypedElementDesc from element ID if present
     let typedDesc: TypedElementDesc | undefined = undefined;
     if (renderingDom.content.element !== null) {
-        // Look up the element in the provided element map with error checking
-        typedDesc = record.elements.get(renderingDom.content.element);
-        if (typedDesc === undefined) {
-            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} not found in ElementMap`);
-        }
+        // Look up the element in the provided element manager with error checking
+        typedDesc = record.elements.getDescEnsured(renderingDom.content.element);
     }
 
     // Create the virtual DOM
@@ -134,7 +133,7 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
     }
 }
 
-export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, provider: IVirtualDomProvider): VirtualDomRecord {
+export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, provider: IVirtualDomProvider): VirtualDomRecord {
     // Verify that this is the screen (root) element
     if (renderingDom.id !== RootVirtualDomId ||
         renderingDom.content.hitTestResult !== null ||

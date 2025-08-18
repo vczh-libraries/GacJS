@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from '../src/GacUIElementManager';
+import { ElementManager, TypedElementDesc } from '../src/GacUIElementManager';
 import { IVirtualDom, RootVirtualDomId, ClippedVirtualDomId } from '../src/virtualDom';
-import { createVirtualDomFromRenderingDom, ElementMap } from '../src/virtualDomBuilding';
+import { createVirtualDomFromRenderingDom } from '../src/virtualDomBuilding';
 import { VirtualDomProviderMock } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
@@ -58,17 +58,17 @@ export function createChildRenderingDom(
     };
 }
 
-function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, dom: IVirtualDom): void {
+function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, dom: IVirtualDom): void {
     // Check typedDesc based on element mapping
     if (renderingDom.content.element !== null) {
-        const expectedTypedDesc = elements.get(renderingDom.content.element);
+        const expectedTypedDesc = elements.getDesc(renderingDom.content.element);
         assert.deepEqual(dom.typedDesc, expectedTypedDesc);
     } else {
         assert.isUndefined(dom.typedDesc);
     }
 }
 
-export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements: ElementMap, dom: IVirtualDom, domv?: IVirtualDom): void {
+export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, dom: IVirtualDom, domv?: IVirtualDom): void {
     console.log(`Asserting attributes for RenderingDom ID: ${renderingDom.id}`);
     if (domv === undefined) {
         // Single DOM case: dom should have the original ID and inherit bounds as globalBounds
@@ -97,7 +97,7 @@ export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements:
 
 test('createVirtualDomFromRenderingDom - root node with no children', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const rootDom = createRootRenderingDom();
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
@@ -117,7 +117,7 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
 
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-negative-one ID)', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const invalidRootDom = createRootRenderingDom();
     invalidRootDom.id = 0; // Invalid ID, should be -1
 
@@ -128,7 +128,7 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-nega
 
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero bounds)', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const invalidRootDom = createRootRenderingDom();
     invalidRootDom.content.bounds = { x1: 10, y1: 20, x2: 30, y2: 40 }; // Non-zero bounds
 
@@ -139,7 +139,7 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero
 
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null hitTestResult)', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const invalidRootDom = createRootRenderingDom();
     invalidRootDom.content.hitTestResult = SCHEMA.WindowHitTestResult.Client; // Non-null hitTestResult
 
@@ -150,7 +150,7 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
 
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null element)', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const invalidRootDom = createRootRenderingDom();
     invalidRootDom.content.element = 123; // Non-null element
 
@@ -161,7 +161,7 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
 
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null cursor)', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const invalidRootDom = createRootRenderingDom();
     invalidRootDom.content.cursor = SCHEMA.WindowSystemCursorType.Arrow; // Non-null cursor
 
@@ -172,7 +172,7 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-null
 
 test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero validArea)', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     const invalidRootDom = createRootRenderingDom();
     invalidRootDom.content.validArea = { x1: 10, y1: 20, x2: 30, y2: 40 }; // Non-zero validArea
 
@@ -183,7 +183,7 @@ test('createVirtualDomFromRenderingDom - throws on invalid root format (non-zero
 
 test('createVirtualDomFromRenderingDom - throws on duplicate RenderingDom IDs', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -202,10 +202,10 @@ test('createVirtualDomFromRenderingDom - throws on duplicate RenderingDom IDs', 
     }, 'Duplicate RenderingDom ID found: 2. Each RenderingDom must have a unique ID.');
 });
 
-test('createVirtualDomFromRenderingDom - throws on missing element in ElementMap', () => {
+test('createVirtualDomFromRenderingDom - throws on missing element in ElementManager', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
-    // Note: elements map is empty, but child references element ID 100
+    const elements: ElementManager = new ElementManager();
+    // Note: elements manager is empty, but child references element ID 100
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -222,14 +222,14 @@ test('createVirtualDomFromRenderingDom - throws on missing element in ElementMap
 
     assert.throws(() => {
         createVirtualDomFromRenderingDom(rootDom, elements, provider);
-    }, 'RenderingDomContent.element ID 100 not found in ElementMap');
+    }, 'Element with id 100 does not have a description');
 });
 
 test('createVirtualDomFromRenderingDom - throws on duplicate element mapping', () => {
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const elements: ElementMap = new Map();
-    elements.set(100, focusRectangleDesc);
+    const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(100, focusRectangleDesc);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -302,10 +302,10 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
         }
     };
     
-    const elements: ElementMap = new Map();
-    elements.set(101, focusRectangleDesc);
-    elements.set(102, rawDesc);
-    elements.set(103, solidLabelDesc);
+    const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(101, focusRectangleDesc);
+    elements.createWithDesc(102, rawDesc);
+    elements.createWithDesc(103, solidLabelDesc);
     
     // Create tree structure: root(a(b(c,d)), e)
     // Global bounds: Root: (0,0,0,0), A: (100,100,300,300), B: (120,120,280,280), 
@@ -445,7 +445,7 @@ test('createVirtualDomFromRenderingDom - complex bounds calculation with multipl
     // +--------------+
     
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     // Create a 3-level nested structure with specific bounds for testing
     const rootDom = createRootRenderingDom();

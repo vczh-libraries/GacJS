@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from '../src/GacUIElementManager';
+import { ElementManager, TypedElementDesc } from '../src/GacUIElementManager';
 import { ClippedVirtualDomId } from '../src/virtualDom';
-import { createVirtualDomFromRenderingDom, ElementMap } from '../src/virtualDomBuilding';
+import { createVirtualDomFromRenderingDom } from '../src/virtualDomBuilding';
 import { VirtualDomProviderMock } from './virtualDomMock';
 import { createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './TestVirtualDom';
 import { test, assert } from 'vitest';
@@ -14,8 +14,8 @@ test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)',
     
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const elements: ElementMap = new Map();
-    elements.set(101, focusRectangleDesc);
+    const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(101, focusRectangleDesc);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -56,8 +56,8 @@ test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping
     
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const elements: ElementMap = new Map();
-    elements.set(101, focusRectangleDesc);
+    const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(101, focusRectangleDesc);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -105,9 +105,9 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
     const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
-    const elements: ElementMap = new Map();
-    elements.set(101, focusRectangleDesc);
-    elements.set(102, rawDesc);
+    const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(101, focusRectangleDesc);
+    elements.createWithDesc(102, rawDesc);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -174,8 +174,8 @@ test('createVirtualDomFromRenderingDom - clipped element with children', () => {
     
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const elements: ElementMap = new Map();
-    elements.set(101, focusRectangleDesc);
+    const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(101, focusRectangleDesc);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -238,7 +238,7 @@ test('createVirtualDomFromRenderingDom - nested clipping', () => {
     // +---------------------+
     
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -284,7 +284,7 @@ test('createVirtualDomFromRenderingDom - nested clipping', () => {
 
 test('createVirtualDomFromRenderingDom - still throws for duplicate positive IDs', () => {
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -322,7 +322,7 @@ test('createVirtualDomFromRenderingDom - parent clips child naturally', () => {
     //      +----------+
 
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -380,7 +380,7 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
     // +----------------+
 
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
@@ -476,7 +476,7 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
     //      +-----+
     
     const provider = new VirtualDomProviderMock();
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [

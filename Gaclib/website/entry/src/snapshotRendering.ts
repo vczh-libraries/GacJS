@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import {
-    ElementMap,
+    ElementManager,
     VirtualDomHtmlProvider,
     createVirtualDomFromRenderingDom,
 } from '@gaclib/renderer';
@@ -9,10 +9,10 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
     const frame = trace.frames![frameIndex];
     const provider = new VirtualDomHtmlProvider();
 
-    const elements: ElementMap = new Map();
+    const elements: ElementManager = new ElementManager();
     for (const [id, type] of trace.createdElements!) {
         if (type === SCHEMA.RendererType.FocusRectangle || type === SCHEMA.RendererType.Raw) {
-            elements.set(id, { type });
+            elements.createWithDesc(id, { type });
         }
     }
 
@@ -24,35 +24,35 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
     for (const [id, desc] of frame.elements!) {
         switch (desc[0]) {
             case 'ElementDesc_SolidBorder': {
-                elements.set(id, { type: SCHEMA.RendererType.SolidBorder, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.SolidBorder, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_SinkBorder': {
-                elements.set(id, { type: SCHEMA.RendererType.SinkBorder, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.SinkBorder, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_SinkSplitter': {
-                elements.set(id, { type: SCHEMA.RendererType.SinkSplitter, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.SinkSplitter, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_SolidBackground': {
-                elements.set(id, { type: SCHEMA.RendererType.SolidBackground, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.SolidBackground, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_GradientBackground': {
-                elements.set(id, { type: SCHEMA.RendererType.GradientBackground, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.GradientBackground, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_InnerShadow': {
-                elements.set(id, { type: SCHEMA.RendererType.InnerShadow, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.InnerShadow, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_Polygon': {
-                elements.set(id, { type: SCHEMA.RendererType.Polygon, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.Polygon, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_SolidLabel': {
-                elements.set(id, { type: SCHEMA.RendererType.SolidLabel, desc: desc[1] });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.SolidLabel, desc: desc[1] });
                 break;
             }
             case 'ElementDesc_ImageFrame': {
@@ -60,7 +60,7 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
                     ...desc[1],
                     imageCreation: imageCreations.get(desc[1].imageId!)!
                 };
-                elements.set(id, { type: SCHEMA.RendererType.ImageFrame, desc: copied });
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.ImageFrame, desc: copied });
                 break;
             }
         }
