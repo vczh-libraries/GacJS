@@ -98,26 +98,46 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
  * ImageFrame
  **********************************************************************/
 
-export function getImageUrl(imageCreation: SCHEMA.ImageCreation): string {
-    let contentType: string;
-    const bin = atob(imageCreation.imageData);
+export function getImageFormatType(imageData: string): SCHEMA.ImageFormatType {
+    const bin = atob(imageData);
     if (bin.substring(0, 2) === 'BM') {
-        contentType = 'image/bmp';
+        return SCHEMA.ImageFormatType.Bmp;
     } else if (bin.substring(0, 6) === 'GIF87a' || bin.substring(0, 6) === 'GIF89a') {
-        contentType = 'image/gif';
+        return SCHEMA.ImageFormatType.Gif;
     } else if (bin.substring(0, 4) === '\x89PNG') {
-        contentType = 'image/png';
+        return SCHEMA.ImageFormatType.Png;
     } else if (bin.substring(0, 2) === 'II' || bin.substring(0, 2) === 'MM') {
-        contentType = 'image/tiff';
+        return SCHEMA.ImageFormatType.Tiff;
     } else if (bin.substring(0, 2) === '\xFF\xD8') {
-        contentType = 'image/jpeg';
+        return SCHEMA.ImageFormatType.Jpeg;
     } else if (bin.substring(0, 4) === '\x00\x00\x01\x00' || bin.substring(0, 4) === '\x00\x00\x02\x00') {
-        contentType = 'image/vnd.microsoft.icon';
+        return SCHEMA.ImageFormatType.Icon;
     } else {
-        throw new Error('Unsupported image format');
+        return SCHEMA.ImageFormatType.Unknown;
     }
+}
 
-    return `url(data:${contentType};base64,${imageCreation.imageData})`;
+export function getImageContentType(type: SCHEMA.ImageFormatType): string {
+    switch (type) {
+        case SCHEMA.ImageFormatType.Bmp:
+            return 'image/bmp';
+        case SCHEMA.ImageFormatType.Gif:
+            return 'image/gif';
+        case SCHEMA.ImageFormatType.Png:
+            return 'image/png';
+        case SCHEMA.ImageFormatType.Tiff:
+            return 'image/tiff';
+        case SCHEMA.ImageFormatType.Jpeg:
+            return 'image/jpeg';
+        case SCHEMA.ImageFormatType.Icon:
+            return 'image/vnd.microsoft.icon';
+        default:
+            throw new Error('Unsupported image format');
+    }
+}
+
+export function getImageUrl(contentType: string, imageData: string): string {
+    return `url(data:${contentType};base64,${imageData})`;
 }
 
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
@@ -143,7 +163,8 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
         filterStyle = `filter: grayscale(100%);`;
     }
 
-    return `background-image: ${getImageUrl(desc.imageCreation)}; ${positionStyle} ${filterStyle}`;
+    const imageStyle = `background-image: ${getImageUrl(getImageContentType(getImageFormatType(desc.imageCreation.imageData)), desc.imageCreation.imageData)};`;
+    return `${imageStyle} ${positionStyle} ${filterStyle}`;
 }
 
 /**********************************************************************
