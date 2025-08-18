@@ -76,7 +76,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestControllerConnectionEstablished(): void {
-        // ignored
+        this._events.OnWindowActivatedUpdated(true);
     }
 
     RequestControllerConnectionStopped(): void {
@@ -160,14 +160,20 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     RequestImageCreated(id: number, requestArgs: SCHEMA.ImageCreation): void {
+        // make sure imageDataOmitted is true, register the image
         throw new Error(`Not Implemented (RequestImageCreated)\nID: ${id}\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestImageDestroyed(requestArgs: SCHEMA.TYPES.Integer): void {
+        // unregister the image
         throw new Error(`Not Implemented (RequestImageDestroyed)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {
+        // if imageCreation !== null it means a new image is created, otherwise we must ensure the image has already been registered
+        // need to record created image accordingly, but it may repeat so only process if imageDataOmitted === false
+        // before receiving RequestRendererBeginRendering, we must ensure the imageData has been sent
+        // the size respond will sent by RespondRendererEndRendering instead, if RequestImageCreated is not received on that image
         this._elements.updateDesc(requestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: requestArgs });
     }
 
