@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { getImageFormatType, getImageContentType, getImageUrl } from './domRenderer/elementStyles';
+import { getImageFormatType, getImageContentType, getImageDataUrl } from './domRenderer/elementStyles';
 import { createVirtualDomFromRenderingDom, VirtualDomRecord } from './virtualDomBuilding';
 import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
 
@@ -277,7 +277,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             const [id, imageCreation] = this._measuringTasks[this._measuringTasksExecuted++];
             const formatType = getImageFormatType(imageCreation.imageData);
             const contentType = getImageContentType(formatType);
-            const imageUrl = getImageUrl(contentType, imageCreation.imageData);
+            const imageUrl = getImageDataUrl(contentType, imageCreation.imageData);
 
             // Set the source and wait for the image to load
             this._imageElementForTesting.src = imageUrl;
@@ -373,7 +373,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
         if (requestArgs) {
             this._renderingRecord = createVirtualDomFromRenderingDom(requestArgs, this._elements, this._provider);
-            this._settings.target.replaceChildren(this._provider.getElement(this._renderingRecord.screen));
+            const rootElement = this._provider.fixBounds(this._renderingRecord.screen);
+            rootElement.style.width = `${this._windowConfig.bounds.x2.value - this._windowConfig.bounds.x1.value}px`;
+            rootElement.style.height = `${this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value}px`;
+            this._settings.target.replaceChildren(rootElement);
         }
     }
 

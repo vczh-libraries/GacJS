@@ -49,13 +49,6 @@ class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {
 }
 
 export class VirtualDomHtmlProvider implements IVirtualDomProvider {
-    getElement(virtualDom: IVirtualDom): HTMLElement {
-        if (!(virtualDom instanceof VirtualDomHtml)) {
-            throw new Error('VirtualDom must be VirtualDomHtml instance.');
-        }
-        return virtualDom.htmlElement;
-    }
-
     createDom(
         id: SCHEMA.TYPES.Integer,
         globalBounds: SCHEMA.Rect,

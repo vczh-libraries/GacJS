@@ -136,8 +136,12 @@ export function getImageContentType(type: SCHEMA.ImageFormatType): string {
     }
 }
 
+export function getImageDataUrl(contentType: string, imageData: string): string {
+    return `data:${contentType};base64,${imageData}`;
+}
+
 export function getImageUrl(contentType: string, imageData: string): string {
-    return `url(data:${contentType};base64,${imageData})`;
+    return `url(${getImageDataUrl(contentType, imageData)})`;
 }
 
 function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
