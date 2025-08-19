@@ -3,7 +3,7 @@ import { ElementManager, TypedElementDesc } from '../src/GacUIElementManager';
 import { ClippedVirtualDomId } from '../src/dom/virtualDom';
 import { createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
 import { VirtualDomProviderMock } from './virtualDomMock';
-import { createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './TestVirtualDom';
+import { createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './TestVirtualDomBuilding';
 import { test, assert } from 'vitest';
 
 test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)', () => {
