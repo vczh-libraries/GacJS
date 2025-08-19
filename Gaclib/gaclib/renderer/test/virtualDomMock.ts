@@ -134,7 +134,7 @@ export function assertVirtualDomEquals(v1: IVirtualDom, v2: IVirtualDom): void {
 
 function iterateRenderingDomInOrder(renderingDom: SCHEMA.RenderingDom, flattened: [SCHEMA.TYPES.Integer, SCHEMA.RenderingDom][]): void {
     flattened.push([renderingDom.id, renderingDom]);
-    
+
     if (renderingDom.children !== null) {
         for (const child of renderingDom.children) {
             if (child !== null) {
@@ -152,19 +152,29 @@ function flattenRenderingDomInOrder(renderingDom: SCHEMA.RenderingDom): [SCHEMA.
     return flattened;
 }
 
+function getIdFromList(xs: SCHEMA.TYPES.List<SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>>): SCHEMA.TYPES.Integer[] {
+    return xs === null ? [] : xs.map(x => x!.id);
+}
+
+function areChildrenEqual(children1: SCHEMA.TYPES.List<SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>>, children2: SCHEMA.TYPES.List<SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>>): boolean {
+    const ids1 = getIdFromList(children1);
+    const ids2 = getIdFromList(children2);
+    return JSON.stringify(ids1) === JSON.stringify(ids2);
+}
+
 export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDom): SCHEMA.RenderingDom_DiffsInOrder {
     const flattened1 = flattenRenderingDomInOrder(r1);
     const flattened2 = flattenRenderingDomInOrder(r2);
-    
+
     const diffs: SCHEMA.RenderingDom_Diff[] = [];
-    
+
     let index1 = 0;
     let index2 = 0;
-    
+
     while (index1 < flattened1.length || index2 < flattened2.length) {
         const item1 = index1 < flattened1.length ? flattened1[index1] : undefined;
         const item2 = index2 < flattened2.length ? flattened2[index2] : undefined;
-        
+
         if (item1 === undefined && item2 !== undefined) {
             // Created: r2 has something r1 doesn't have
             const [id, dom2] = item2;
@@ -172,7 +182,7 @@ export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDo
                 id: id,
                 diffType: SCHEMA.RenderingDom_DiffType.Created,
                 content: dom2.content,
-                children: dom2.children !== null ? dom2.children.map(child => child !== null ? child.id : 0).filter(id => id !== 0) : []
+                children: getIdFromList(dom2.children)
             });
             index2++;
         } else if (item1 !== undefined && item2 === undefined) {
@@ -182,20 +192,20 @@ export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDo
                 id: id,
                 diffType: SCHEMA.RenderingDom_DiffType.Deleted,
                 content: null,
-                children: []
+                children: null
             });
             index1++;
         } else if (item1 !== undefined && item2 !== undefined) {
             const [id1, dom1] = item1;
             const [id2, dom2] = item2;
-            
+
             if (id1 < id2) {
                 // Deleted: r1 has something r2 doesn't have
                 diffs.push({
                     id: id1,
                     diffType: SCHEMA.RenderingDom_DiffType.Deleted,
                     content: null,
-                    children: []
+                    children: null
                 });
                 index1++;
             } else if (id1 > id2) {
@@ -204,20 +214,20 @@ export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDo
                     id: id2,
                     diffType: SCHEMA.RenderingDom_DiffType.Created,
                     content: dom2.content,
-                    children: dom2.children !== null ? dom2.children.map(child => child !== null ? child.id : 0).filter(id => id !== 0) : []
+                    children: getIdFromList(dom2.children)
                 });
                 index2++;
             } else {
                 // Same ID, check if modified
                 const contentChanged = JSON.stringify(dom1.content) !== JSON.stringify(dom2.content);
                 const childrenChanged = !areChildrenEqual(dom1.children, dom2.children);
-                
+
                 if (contentChanged || childrenChanged) {
                     diffs.push({
                         id: id1,
                         diffType: SCHEMA.RenderingDom_DiffType.Modified,
                         content: contentChanged ? dom2.content : null,
-                        children: childrenChanged ? (dom2.children !== null ? dom2.children.map(child => child !== null ? child.id : 0).filter(id => id !== 0) : []) : []
+                        children: childrenChanged ? getIdFromList(dom2.children) : null
                     });
                 }
                 index1++;
@@ -225,17 +235,8 @@ export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDo
             }
         }
     }
-    
+
     return {
         diffsInOrder: diffs
     };
-}
-
-// Helper function to compare children arrays (order matters)
-function areChildrenEqual(children1: SCHEMA.TYPES.List<SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>>, children2: SCHEMA.TYPES.List<SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>>): boolean {
-    // Convert children arrays to ID arrays and compare them
-    const ids1 = children1 !== null ? children1.map(child => child !== null ? child.id : null) : null;
-    const ids2 = children2 !== null ? children2.map(child => child !== null ? child.id : null) : null;
-    
-    return JSON.stringify(ids1) === JSON.stringify(ids2);
 }
