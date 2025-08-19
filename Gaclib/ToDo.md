@@ -1,7 +1,7 @@
 # ToDo
 
 - Apply `RenderingDom_Diff` on `IVirtualDom`.
-- Implement remote protocol rendering.
+- Implement IO events.
 - Handle remote exception.
 - Make `index.html` resize window when browser view port changed.
 - Complete a demo, website and C++ renderer connect to Core in turns.

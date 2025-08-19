@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle } from './domRenderer/elementStyles';
+import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle, normalizeText } from './domRenderer/elementStyles';
 import { createVirtualDomFromRenderingDom, VirtualDomRecord } from './virtualDomBuilding';
 import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
 
@@ -292,7 +292,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                     }
 
                     // Set font style on the test element
-                    this._textElementForTesting.style.cssText = getFontStyle(typedDesc.desc);
+                    this._textElementForTesting.style.cssText = `box-sizing: border-box; ${getFontStyle(typedDesc.desc)}`;
 
                     // Set a reasonable text to measure font height
                     this._textElementForTesting.textContent = 'Ag';
@@ -320,31 +320,47 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             case SCHEMA.ElementSolidLabelMeasuringRequest.TotalSize:
                 {
                     const virtualDom = this._renderingRecord?.elementToDoms.get(id);
-                    if (virtualDom) {
-                        const minSize: SCHEMA.Size;
-                        // TODO
+                    const minSize: SCHEMA.Size = { x: 1, y: 1 };
 
-                        const result: SCHEMA.ElementMeasuring_ElementMinSize = {
-                            id: typedDesc.desc.id,
-                            minSize
-                        };
+                    if (virtualDom) {
+                        // Set font style on the test element
+                        this._textElementForTesting.style.cssText = `box-sizing: border-box; ${getFontStyle(typedDesc.desc)} white-space: ${typedDesc.desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+
+                        // Set width from virtualDom.bounds if wrapLine is enabled
+                        if (typedDesc.desc.wrapLine) {
+                            const width = virtualDom.bounds.x2 - virtualDom.bounds.x1;
+                            this._textElementForTesting.style.width = `${width}px`;
+                        }
+
+                        // Set the text content to measure
+                        this._textElementForTesting.textContent = normalizeText(typedDesc.desc);
+
+                        // Temporarily add to DOM to measure
+                        document.body.appendChild(this._textElementForTesting);
+
+                        // Get the measured size using offsetWidth/offsetHeight
+                        minSize.x = this._textElementForTesting.offsetWidth;
+                        minSize.y = this._textElementForTesting.offsetHeight;
+
+                        // Remove from DOM
+                        document.body.removeChild(this._textElementForTesting);
 
                         if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
                             const original = this._measuredTotalSizes.get(typedDesc.desc.id)!;
-                            if (original.minSize.x === result.minSize.x && original.minSize.y === result.minSize.y) {
+                            if (original.minSize.x === minSize.x && original.minSize.y === minSize.y) {
                                 break;
                             }
                         }
-                        this._measuredTotalSizes.set(typedDesc.desc.id, result);
-                        this._measuring.minSizes!.push(result);
-                    } else if (!this._measuredTotalSizes.has(typedDesc.desc.id)) {
-                        const result: SCHEMA.ElementMeasuring_ElementMinSize = {
-                            id: typedDesc.desc.id,
-                            minSize: { x: 1, y: 1 }
-                        };
-                        this._measuredTotalSizes.set(typedDesc.desc.id, result);
-                        this._measuring.minSizes!.push(result);
+                    } else if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
+                        break;
                     }
+
+                    const result: SCHEMA.ElementMeasuring_ElementMinSize = {
+                        id: typedDesc.desc.id,
+                        minSize
+                    };
+                    this._measuredTotalSizes.set(typedDesc.desc.id, result);
+                    this._measuring.minSizes!.push(result);
                 }
                 break;
         }

@@ -217,7 +217,11 @@ export function getFontStyle(desc: SCHEMA.ElementDesc_SolidLabel): string {
         textDecorations.push('line-through');
     }
 
-    return`color: ${desc.textColor}; font-family: ${desc.font!.fontFamily}; line-height: 1.4; font-size: ${desc.font!.size}px; font-weight: ${desc.font!.bold ? 'bold' : 'normal'}; font-style: ${desc.font!.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+    return `color: ${desc.textColor}; font-family: ${desc.font!.fontFamily}; line-height: 1.4; font-size: ${desc.font!.size}px; font-weight: ${desc.font!.bold ? 'bold' : 'normal'}; font-style: ${desc.font!.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+}
+
+export function normalizeText(desc: SCHEMA.ElementDesc_SolidLabel): string {
+    return desc.multiline ? desc.text! : desc.text!.replaceAll('\r', '').split('\n').join(' ');
 }
 
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
@@ -233,7 +237,6 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
 
     delete textDiv[WebkitElementName];
 
-    const textContent = desc.multiline ? desc.text : desc.text.replaceAll('\r', '').split('\n').join(' ');
     let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
     if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof HTMLDivElement)) {
         textElement = document.createElement('div');
@@ -243,7 +246,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     }
 
     if (!ellipseWithWrapLine || !useWebkitLineClamp) {
-        textElement.textContent = textContent;
+        textElement.textContent = normalizeText(desc);
     }
 
     {
@@ -293,7 +296,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             textElement.replaceChildren(webkitElement);
             textDiv[WebkitElementName] = webkitElement;
 
-            webkitElement.textContent = textContent;
+            webkitElement.textContent = normalizeText(desc);
 
             const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; ${fontStyle} ${formatStyle}`;
