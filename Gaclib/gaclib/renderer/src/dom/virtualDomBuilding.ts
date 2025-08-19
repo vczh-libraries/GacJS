@@ -178,7 +178,127 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
  * updateVirtualDomWithRenderingDomDiff
  ***************************************************************************************/
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface PropsAfterDiff {
+    bounds: SCHEMA.Rect;
+    validArea: SCHEMA.Rect;
+    parentId: SCHEMA.TYPES.Integer;
+    outerDom?: IVirtualDom;
+    innerDom?: IVirtualDom;
+}
+
+function collectPropsBeforeDiff(
+    virtualDom: IVirtualDom,
+    parentValidArea: SCHEMA.Rect | undefined,
+    props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
+): void {
+    let validArea: SCHEMA.Rect | undefined;
+    if (virtualDom.id >= 0) {
+        validArea = parentValidArea ? intersectRects(parentValidArea, virtualDom.props.globalBounds) : virtualDom.props.globalBounds;
+
+        let parent = virtualDom.parent!;
+        if (parent.id === ClippedVirtualDomId) {
+            parent = parent.parent!;
+        }
+
+        const isValidAreaDom = virtualDom.id >= 0 && virtualDom.children.length === 1 && virtualDom.children[0].id === ClippedVirtualDomId;
+        props.set(virtualDom.id, {
+            bounds: isValidAreaDom ? virtualDom.children[0].props.globalBounds : virtualDom.props.globalBounds,
+            validArea,
+            parentId: parent.id,
+            outerDom: virtualDom,
+            innerDom: isValidAreaDom ? virtualDom.children[0] : virtualDom
+        });
+    }
+
+    for (const child of virtualDom.children) {
+        collectPropsBeforeDiff(child, validArea, props);
+    }
+}
+
+function collectPropsAfterDiff(
+    diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder,
+    props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
+): void {
+    if (!diffsInOrder.diffsInOrder) {
+        return;
+    }
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        if (diff.diffType == SCHEMA.RenderingDom_DiffType.Created) {
+            if (!diff.content || !diff.children) {
+                throw new Error(`RenderingDom_Diff with Created must have content or children available: ${JSON.stringify(diff, undefined, 4)}`);
+            }
+            if (props.has(diff.id)) {
+                throw new Error(`RenderingDom_Diff with Created must use unused ID: ${JSON.stringify(diff, undefined, 4)}`);
+            }
+            props.set(diff.id, {
+                bounds: diff.content.bounds,
+                validArea: diff.content.validArea,
+                parentId: -2
+            });
+        }
+    }
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        if (diff.diffType == SCHEMA.RenderingDom_DiffType.Modified) {
+            if (!props.has(diff.id)) {
+                throw new Error(`RenderingDom_Diff with Modified must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
+            }
+            if (diff.content) {
+                const propsBeforeDiff = props.get(diff.id)!;
+                propsBeforeDiff.bounds = diff.content.bounds;
+                propsBeforeDiff.validArea = diff.content.validArea;
+            }
+        }
+    }
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        if (diff.diffType == SCHEMA.RenderingDom_DiffType.Deleted) {
+            if (!props.has(diff.id)) {
+                throw new Error(`RenderingDom_Diff with Deleted must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
+            }
+            props.delete(diff.id);
+        }
+    }
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        switch (diff.diffType) {
+            case SCHEMA.RenderingDom_DiffType.Created:
+            case SCHEMA.RenderingDom_DiffType.Modified:
+                if (diff.children) {
+                    for (const child of diff.children) {
+                        if (!props.has(child)) {
+                            throw new Error(`RenderingDom_Diff should not use invalid child id ${diff.diffType}: ${JSON.stringify(diff, undefined, 4)}`);
+                        }
+                        props.get(child)!.parentId = diff.id;
+                    }
+                }
+                break;
+        }
+    }
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        if (diff.diffType == SCHEMA.RenderingDom_DiffType.Created) {
+            if (props.get(diff.id)!.parentId === -2) {
+                throw new Error(`RenderingDom_Diff should not be dangling: ${JSON.stringify(diff, undefined, 4)}`);
+            }
+        }
+    }
+}
+
+ 
+function ensureVirtualDomForNewRenderingDom(
+    diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder,
+    record: VirtualDomRecord,
+    provider: IVirtualDomProvider,
+    props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
+): void {
+}
+
 export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
+    const props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff> = new Map();
+    collectPropsBeforeDiff(record.screen, undefined, props);
+    collectPropsAfterDiff(diffsInOrder, props);
+    ensureVirtualDomForNewRenderingDom(diffsInOrder, record, provider, props);
     throw new Error(`Not Implemented (updateVirtualDomWithRenderingDomDiff)\nArguments: ${JSON.stringify(diffsInOrder, undefined, 4)}`);
 }
