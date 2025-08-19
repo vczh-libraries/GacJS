@@ -1,21 +1,22 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle, normalizeText } from './domRenderer/elementStyles';
 import { createVirtualDomFromRenderingDom, VirtualDomRecord } from './virtualDomBuilding';
 import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
+import { ElementHTMLMeasurer } from './domRenderer/elementMeasurer';
+import { RootVirtualDomId } from './virtualDom';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
 
+    private _provider = new VirtualDomHtmlProvider();
+    private _measurer: ElementHTMLMeasurer;
+    private _renderingRecord: VirtualDomRecord;
+    private _images: Map<SCHEMA.TYPES.Integer, SCHEMA.ImageCreation> = new Map();
+
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
-
-    private _provider = new VirtualDomHtmlProvider();
-    private _elements: ElementManager = new ElementManager();
-    private _images: Map<SCHEMA.TYPES.Integer, SCHEMA.ImageCreation> = new Map();
-    private _renderingRecord: VirtualDomRecord | undefined = undefined;
 
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
@@ -56,6 +57,18 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void {
         this._responses = responses;
         this._events = events;
+        this._measurer = new ElementHTMLMeasurer(this._responses);
+        this._renderingRecord = createVirtualDomFromRenderingDom({
+            id: RootVirtualDomId,
+            content: {
+                hitTestResult: null,
+                cursor: null,
+                element: null,
+                bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
+                validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
+            },
+            children: null
+        }, new ElementManager(), this._provider);
     }
 
     private _areBoundsEqual(a: SCHEMA.NativeRect, b: SCHEMA.NativeRect): boolean {
@@ -161,7 +174,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
         const fixedRequestArgs = requestArgs;
         if (requestArgs.text === null || requestArgs.font === null) {
-            const typedDesc = this._elements.getDescEnsured(requestArgs.id);
+            const typedDesc = this._renderingRecord.elements.getDescEnsured(requestArgs.id);
             if (typedDesc.type !== SCHEMA.RendererType.SolidLabel) {
                 throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${typedDesc.type}`);
             }
@@ -177,9 +190,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             throw new Error(`In ElementDesc_SolidLabel, text or font should not be omitted if they were not offered before.`);
         }
         this._updateElement(fixedRequestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: fixedRequestArgs });
-        if (fixedRequestArgs.measuringRequest) {
-            this._measuringSolidLabels.push([fixedRequestArgs.id, fixedRequestArgs.measuringRequest]);
-        }
+        this._measurer.requestMeasureSolidLabel(fixedRequestArgs);
     }
 
     /****************************************************************************************
@@ -196,7 +207,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
 
         this._images.set(requestArgs.id, requestArgs);
-        this._makeImageMetadata(id, requestArgs);
+        this._measurer.requestImageMetadata(id, requestArgs, this._renderingRecord);
     }
 
     RequestImageDestroyed(requestArgs: SCHEMA.TYPES.Integer): void {
@@ -236,7 +247,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
         // When imageCreation is not null, handle measuring
         if (requestArgs.imageCreation !== null && !requestArgs.imageCreation.imageDataOmitted) {
-            this._makeImageMetadata(undefined, this._images.get(requestArgs.imageId!)!);
+            this._measurer.requestImageMetadata(undefined, this._images.get(requestArgs.imageId!)!, this._renderingRecord);
         }
 
         // Prepare requestArgs for this.updateElement
@@ -257,197 +268,12 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     /****************************************************************************************
-     * Renderer (Element Helpers)
-     ***************************************************************************************/
-
-    private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
-    private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
-
-    private _textElementForTesting: HTMLElement = document.createElement('div');
-    private _measuringSolidLabels: [SCHEMA.TYPES.Integer, SCHEMA.ElementSolidLabelMeasuringRequest][] = [];
-    private _measuredFontHeights: Map<string, SCHEMA.ElementMeasuring_FontHeight> = new Map();
-    private _measuredTotalSizes: Map<SCHEMA.TYPES.Integer, SCHEMA.ElementMeasuring_ElementMinSize> = new Map();
-
-    private _imageElementForTesting: HTMLImageElement = document.createElement('img');
-    private _measuringImageTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
-    private _measuringImageTasksExecuted = 0;
-    private _measuringImageTasksExecuting = false;
-
-    private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
-        this._elements.updateDesc(id, typedDesc);
-    }
-
-    private _measureSolidLabel(id: SCHEMA.TYPES.Integer, request: SCHEMA.ElementSolidLabelMeasuringRequest): SCHEMA.ElementSolidLabelMeasuringRequest | undefined {
-        const typedDesc = this._elements.getDescEnsured(id);
-        if (typedDesc.type !== SCHEMA.RendererType.SolidLabel) {
-            throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${typedDesc.type}`);
-        }
-
-        const actualRequest = typedDesc.desc.measuringRequest ?? request;
-        switch (actualRequest) {
-            case SCHEMA.ElementSolidLabelMeasuringRequest.FontHeight:
-                {
-                    const key = `${typedDesc.desc.font!.size}:${typedDesc.desc.font!.fontFamily}`;
-                    if (this._measuredFontHeights.has(key)) {
-                        return undefined;
-                    }
-
-                    // Set font style on the test element
-                    this._textElementForTesting.style.cssText = `box-sizing: border-box; width: max-content; height: max-content; ${getFontStyle(typedDesc.desc)}`;
-
-                    // Set a reasonable text to measure font height
-                    this._textElementForTesting.textContent = 'Ag';
-
-                    // Temporarily add to DOM to measure
-                    document.body.appendChild(this._textElementForTesting);
-
-                    // Get computed style to measure the actual height
-                    const computedStyle = window.getComputedStyle(this._textElementForTesting);
-                    const lineHeight = parseFloat(computedStyle.lineHeight);
-
-                    // Remove from DOM
-                    document.body.removeChild(this._textElementForTesting);
-
-                    // Store the measurement
-                    const result: SCHEMA.ElementMeasuring_FontHeight = {
-                        fontFamily: typedDesc.desc.font!.fontFamily,
-                        fontSize: typedDesc.desc.font!.size,
-                        height: Math.round(lineHeight)
-                    };
-                    this._measuredFontHeights.set(key, result);
-                    this._measuring.fontHeights!.push(result);
-                }
-                break;
-            case SCHEMA.ElementSolidLabelMeasuringRequest.TotalSize:
-                {
-                    const virtualDom = this._renderingRecord?.elementToDoms.get(id);
-
-                    if (!virtualDom) {
-                        return actualRequest;
-                    }
-                    // Set font style on the test element
-                    this._textElementForTesting.style.cssText = `box-sizing: border-box; width: max-content; height: max-content; ${getFontStyle(typedDesc.desc)} white-space: ${typedDesc.desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-
-                    // Set width from virtualDom.bounds if wrapLine is enabled
-                    if (typedDesc.desc.wrapLine) {
-                        const width = virtualDom.bounds.x2 - virtualDom.bounds.x1;
-                        this._textElementForTesting.style.width = `${width}px`;
-                    }
-
-                    // Set the text content to measure
-                    this._textElementForTesting.textContent = normalizeText(typedDesc.desc);
-                    if (this._textElementForTesting.textContent === '') {
-                        this._textElementForTesting.textContent = ' ';
-                    }
-
-                    // Temporarily add to DOM to measure
-                    document.body.appendChild(this._textElementForTesting);
-
-                    // Get the measured size using offsetWidth/offsetHeight
-                    const minSize: SCHEMA.Size = {
-                        x: this._textElementForTesting.offsetWidth,
-                        y: this._textElementForTesting.offsetHeight
-                    };
-
-                    // Remove from DOM
-                    document.body.removeChild(this._textElementForTesting);
-
-                    if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
-                        const original = this._measuredTotalSizes.get(typedDesc.desc.id)!;
-                        if (original.minSize.x === minSize.x && original.minSize.y === minSize.y) {
-                            return undefined;
-                        }
-                    }
-
-                    const result: SCHEMA.ElementMeasuring_ElementMinSize = {
-                        id: typedDesc.desc.id,
-                        minSize
-                    };
-                    this._measuredTotalSizes.set(typedDesc.desc.id, result);
-                    this._measuring.minSizes!.push(result);
-                }
-                break;
-        }
-        return undefined;
-    }
-
-    private _fireRespondRendererEndRendering(): void {
-        if (this._idRespondRendererEndRendering !== undefined) {
-            const remaining: [SCHEMA.TYPES.Integer, SCHEMA.ElementSolidLabelMeasuringRequest][] = [];
-            for (const [id, request] of this._measuringSolidLabels) {
-                const nextRequest = this._measureSolidLabel(id, request);
-                if (nextRequest) {
-                    remaining.push([id, nextRequest]);
-                }
-            }
-            this._measuringSolidLabels = remaining;
-
-            this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
-            this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
-            this._idRespondRendererEndRendering = undefined;
-        }
-    }
-
-    private async _runMeasuringImageTasks(): Promise<void> {
-        if (this._measuringImageTasksExecuting) {
-            return;
-        }
-        this._measuringImageTasksExecuting = true;
-        while (this._measuringImageTasksExecuted < this._measuringImageTasks.length) {
-            const [id, imageCreation] = this._measuringImageTasks[this._measuringImageTasksExecuted++];
-            const formatType = getImageFormatType(imageCreation.imageData);
-            const contentType = getImageContentType(formatType);
-            const imageUrl = getImageDataUrl(contentType, imageCreation.imageData);
-
-            // Set the source and wait for the image to load
-            this._imageElementForTesting.src = imageUrl;
-            let imageMetadata: SCHEMA.ImageMetadata;
-            try {
-                await this._imageElementForTesting.decode();
-                imageMetadata = {
-                    id: imageCreation.id,
-                    format: formatType,
-                    frames: [{
-                        size: {
-                            x: this._imageElementForTesting.naturalWidth,
-                            y: this._imageElementForTesting.naturalHeight
-                        }
-                    }]
-                };
-            } catch (error) {
-                if (error instanceof DOMException) {
-                    imageMetadata = {
-                        id: imageCreation.id,
-                        format: SCHEMA.ImageFormatType.Unknown,
-                        frames: [{ size: { x: 1, y: 1 } }]
-                    };
-                } else {
-                    throw error;
-                }
-            }
-
-            // Submit metadata
-            if (id === undefined) {
-                this._measuring.createdImages!.push(imageMetadata);
-            } else {
-                this._responses.RespondImageCreated(id, imageMetadata);
-            }
-        }
-        this._fireRespondRendererEndRendering();
-
-        this._measuringImageTasksExecuting = false;
-        this._measuringImageTasks = [];
-        this._measuringImageTasksExecuted = 0;
-    }
-
-    _makeImageMetadata(id: SCHEMA.TYPES.Integer | undefined, imageCreation: SCHEMA.ImageCreation): void {
-        this._measuringImageTasks.push([id, imageCreation]);
-        void this._runMeasuringImageTasks();
-    }
-
-    /****************************************************************************************
      * Renderer
      ***************************************************************************************/
+
+    private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
+        this._renderingRecord.elements.updateDesc(id, typedDesc);
+    }
 
     RequestRendererCreated(requestArgs: SCHEMA.TYPES.List<SCHEMA.RendererCreation>): void {
         if (requestArgs === null) {
@@ -455,7 +281,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
 
         for (const creation of requestArgs) {
-            this._elements.create(creation.id, creation.type);
+            this._renderingRecord.elements.create(creation.id, creation.type);
 
             // For FocusRectangle and Raw, call updateDesc since they have no desc
             if (creation.type === SCHEMA.RendererType.FocusRectangle || creation.type === SCHEMA.RendererType.Raw) {
@@ -470,7 +296,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
 
         for (const id of requestArgs) {
-            this._elements.destroy(id);
+            this._renderingRecord.elements.destroy(id);
         }
     }
 
@@ -480,19 +306,12 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererEndRendering(id: number): void {
-        this._idRespondRendererEndRendering = id;
-        if (this._measuringImageTasksExecuted === this._measuringImageTasks.length) {
-            this._fireRespondRendererEndRendering();
-        }
+        this._measurer.RequestRendererEndRendering(id, this._renderingRecord);
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {
-        if (this._renderingRecord) {
-            this._renderingRecord = undefined;
-            this._settings.target.replaceChildren();
-        }
         if (requestArgs) {
-            this._renderingRecord = createVirtualDomFromRenderingDom(requestArgs, this._elements, this._provider);
+            this._renderingRecord = createVirtualDomFromRenderingDom(requestArgs, this._renderingRecord.elements, this._provider);
             const rootElement = this._provider.fixBounds(this._renderingRecord.screen);
             rootElement.style.width = `${this._windowConfig.bounds.x2.value - this._windowConfig.bounds.x1.value}px`;
             rootElement.style.height = `${this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value}px`;
