@@ -31,6 +31,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct argum
     assert.strictEqual(dom.props.hitTestResult, hitTestResult);
     assert.strictEqual(dom.props.cursor, cursor);
     assert.deepEqual(dom.props.typedDesc, typedDesc);
+    assert.strictEqual(dom.props.elementId, 1);
     assert.isUndefined(dom.parent);
     expect(dom.children).toEqual([]);
 });
@@ -56,6 +57,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined opt
     assert.isUndefined(dom.props.hitTestResult);
     assert.isUndefined(dom.props.cursor);
     assert.isUndefined(dom.props.typedDesc);
+    assert.isUndefined(dom.props.elementId);
     assert.isUndefined(dom.parent);
     expect(dom.children).toEqual([]);
 });
@@ -314,10 +316,12 @@ test('VirtualDomMock.updateTypedDesc updates typedDesc correctly', () => {
     const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
+    assert.strictEqual(dom.props.elementId, 1);
 
     dom.updateTypedDesc(1, newDesc);
 
     assert.deepEqual(dom.props.typedDesc, newDesc);
+    assert.strictEqual(dom.props.elementId, 1);
 });
 
 test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
@@ -334,10 +338,12 @@ test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
     const dom = provider.createDom(1, props);
 
     assert.isUndefined(dom.props.typedDesc);
+    assert.isUndefined(dom.props.elementId);
 
     dom.updateTypedDesc(undefined, undefined);
 
     assert.isUndefined(dom.props.typedDesc);
+    assert.isUndefined(dom.props.elementId);
 });
 
 test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', () => {
@@ -362,10 +368,12 @@ test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', 
     const dom = provider.createDom(1, props);
 
     assert.isUndefined(dom.props.typedDesc);
+    assert.isUndefined(dom.props.elementId);
 
     dom.updateTypedDesc(1, newDesc);
 
     assert.deepEqual(dom.props.typedDesc, newDesc);
+    assert.strictEqual(dom.props.elementId, 1);
 });
 
 test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', () => {
@@ -385,10 +393,12 @@ test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', 
     const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
+    assert.strictEqual(dom.props.elementId, 1);
 
     dom.updateTypedDesc(undefined, undefined);
 
     assert.isUndefined(dom.props.typedDesc);
+    assert.isUndefined(dom.props.elementId);
 });
 
 test('VirtualDomMock.updateTypedDesc allows changing type', () => {
@@ -423,6 +433,7 @@ test('VirtualDomMock.updateTypedDesc allows changing type', () => {
     dom.updateTypedDesc(2, differentTypeDesc);
 
     assert.deepEqual(dom.props.typedDesc, differentTypeDesc);
+    assert.strictEqual(dom.props.elementId, 2);
 });
 
 test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', () => {
@@ -455,10 +466,12 @@ test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', 
     const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
+    assert.strictEqual(dom.props.elementId, 1);
 
     dom.updateTypedDesc(1, updatedDesc);
 
     assert.deepEqual(dom.props.typedDesc, updatedDesc);
+    assert.strictEqual(dom.props.elementId, 1);
 });
 
 test('VirtualDomMock.updateTypedDesc throws error when elementId and typedDesc consistency is violated', () => {

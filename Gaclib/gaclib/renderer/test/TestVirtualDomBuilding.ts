@@ -63,8 +63,10 @@ function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementManag
     if (renderingDom.content.element !== null) {
         const expectedTypedDesc = elements.getDesc(renderingDom.content.element);
         assert.deepEqual(dom.props.typedDesc, expectedTypedDesc);
+        assert.strictEqual(dom.props.elementId, renderingDom.content.element);
     } else {
         assert.isUndefined(dom.props.typedDesc);
+        assert.isUndefined(dom.props.elementId);
     }
 }
 
@@ -85,6 +87,7 @@ export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements:
         assert.isUndefined(dom.props.hitTestResult); // Simple DOM has no properties
         assert.isUndefined(dom.props.cursor);
         assert.isUndefined(dom.props.typedDesc);
+        assert.isUndefined(dom.props.elementId);
         
         assert.strictEqual(domv.id, ClippedVirtualDomId);
         assert.deepEqual(domv.props.globalBounds, renderingDom.content.bounds);
