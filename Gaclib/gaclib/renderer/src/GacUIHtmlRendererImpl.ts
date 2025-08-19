@@ -266,6 +266,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     private _textElementForTesting: HTMLElement = document.createElement('div');
     private _measuringSolidLabels: SCHEMA.TYPES.Integer[] = [];
     private _measuredFontHeights: Map<string, SCHEMA.ElementMeasuring_FontHeight> = new Map();
+    private _measuredTotalSizes: Map<SCHEMA.TYPES.Integer, SCHEMA.ElementMeasuring_ElementMinSize> = new Map();
 
     private _imageElementForTesting: HTMLImageElement = document.createElement('img');
     private _measuringImageTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
@@ -320,7 +321,29 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                 {
                     const virtualDom = this._renderingRecord?.elementToDoms.get(id);
                     if (virtualDom) {
+                        const minSize: SCHEMA.Size;
                         // TODO
+
+                        const result: SCHEMA.ElementMeasuring_ElementMinSize = {
+                            id: typedDesc.desc.id,
+                            minSize
+                        };
+
+                        if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
+                            const original = this._measuredTotalSizes.get(typedDesc.desc.id)!;
+                            if (original.minSize.x === result.minSize.x && original.minSize.y === result.minSize.y) {
+                                break;
+                            }
+                        }
+                        this._measuredTotalSizes.set(typedDesc.desc.id, result);
+                        this._measuring.minSizes!.push(result);
+                    } else if (!this._measuredTotalSizes.has(typedDesc.desc.id)) {
+                        const result: SCHEMA.ElementMeasuring_ElementMinSize = {
+                            id: typedDesc.desc.id,
+                            minSize: { x: 1, y: 1 }
+                        };
+                        this._measuredTotalSizes.set(typedDesc.desc.id, result);
+                        this._measuring.minSizes!.push(result);
                     }
                 }
                 break;
