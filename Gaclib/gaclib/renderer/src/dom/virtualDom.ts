@@ -49,9 +49,10 @@ import { TypedElementDesc } from '../GacUIElementManager';
 
 export interface VirtualDomProperties {
     readonly globalBounds: SCHEMA.Rect;
-    readonly hitTestResult?: SCHEMA.WindowHitTestResult | undefined;
-    readonly cursor?: SCHEMA.WindowSystemCursorType | undefined;
-    readonly typedDesc?: TypedElementDesc | undefined;
+    readonly hitTestResult?: SCHEMA.WindowHitTestResult;
+    readonly cursor?: SCHEMA.WindowSystemCursorType;
+    readonly typedDesc?: TypedElementDesc;
+    readonly elementId?: SCHEMA.TYPES.Integer;
 }
 
 export interface IVirtualDom {
@@ -61,7 +62,7 @@ export interface IVirtualDom {
     get props(): VirtualDomProperties;
     get children(): ReadonlyArray<IVirtualDom>;
     updateChildren(children: IVirtualDom[]): void;
-    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void;
+    updateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void;
     updateProps(props: VirtualDomProperties): void;
 }
 

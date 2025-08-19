@@ -222,19 +222,15 @@ function collectPropsBeforeDiff(
 }
 
 function collectPropsAfterDiff(
-    diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder,
+    diffs: SCHEMA.RenderingDom_Diff[],
     props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
 ): void {
-    if (!diffsInOrder.diffsInOrder) {
-        return;
-    }
-
-    for (const diff of diffsInOrder.diffsInOrder) {
+    for (const diff of diffs) {
         if (diff.diffType == SCHEMA.RenderingDom_DiffType.Created) {
             if (!diff.content || !diff.children) {
                 throw new Error(`RenderingDom_Diff with Created must have content or children available: ${JSON.stringify(diff, undefined, 4)}`);
             }
-            if (props.has(diff.id)) {
+            if (diff.id < 0 || props.has(diff.id)) {
                 throw new Error(`RenderingDom_Diff with Created must use unused ID: ${JSON.stringify(diff, undefined, 4)}`);
             }
             props.set(diff.id, {
@@ -245,7 +241,7 @@ function collectPropsAfterDiff(
         }
     }
 
-    for (const diff of diffsInOrder.diffsInOrder) {
+    for (const diff of diffs) {
         if (diff.diffType == SCHEMA.RenderingDom_DiffType.Modified) {
             if (!props.has(diff.id)) {
                 throw new Error(`RenderingDom_Diff with Modified must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
@@ -258,7 +254,7 @@ function collectPropsAfterDiff(
         }
     }
 
-    for (const diff of diffsInOrder.diffsInOrder) {
+    for (const diff of diffs) {
         if (diff.diffType == SCHEMA.RenderingDom_DiffType.Deleted) {
             if (!props.has(diff.id)) {
                 throw new Error(`RenderingDom_Diff with Deleted must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
@@ -267,7 +263,7 @@ function collectPropsAfterDiff(
         }
     }
 
-    for (const diff of diffsInOrder.diffsInOrder) {
+    for (const diff of diffs) {
         switch (diff.diffType) {
             case SCHEMA.RenderingDom_DiffType.Created:
             case SCHEMA.RenderingDom_DiffType.Modified:
@@ -283,7 +279,7 @@ function collectPropsAfterDiff(
         }
     }
 
-    for (const diff of diffsInOrder.diffsInOrder) {
+    for (const diff of diffs) {
         if (diff.diffType == SCHEMA.RenderingDom_DiffType.Created) {
             if (props.get(diff.id)!.parentId === -2) {
                 throw new Error(`RenderingDom_Diff should not be dangling: ${JSON.stringify(diff, undefined, 4)}`);
@@ -292,23 +288,54 @@ function collectPropsAfterDiff(
     }
 }
 
-
-function ensureVirtualDomForNewRenderingDom(
-    diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder,
-    record: VirtualDomRecord,
-    provider: IVirtualDomProvider,
+function ensureClippedHierarchy(
+    virtualDom: IVirtualDom,
     props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
 ): void {
-    void diffsInOrder;
-    void record;
-    void provider;
+    void virtualDom;
     void props;
 }
 
 export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
+    if (!diffsInOrder.diffsInOrder) {
+        return;
+    }
+
     const props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff> = new Map();
     collectPropsBeforeDiff(record.screen, undefined, props);
-    collectPropsAfterDiff(diffsInOrder, props);
-    ensureVirtualDomForNewRenderingDom(diffsInOrder, record, provider, props);
-    throw new Error(`Not Implemented (updateVirtualDomWithRenderingDomDiff)\nArguments: ${JSON.stringify(diffsInOrder, undefined, 4)}`);
+    collectPropsAfterDiff(diffsInOrder.diffsInOrder, props);
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        const self = props.get(diff.id)!;
+        switch (diff.diffType) {
+            case SCHEMA.RenderingDom_DiffType.Created:
+                {
+                    const parent = props.get(self.parentId);
+                    const [outerDom, innerDom] = createVirtualDom(diff.id, diff.content!, record, provider, parent?.validArea);
+                    self.innerDom = innerDom;
+                    self.outerDom = outerDom;
+                }
+                break;
+            case SCHEMA.RenderingDom_DiffType.Modified:
+                self.innerDom!.updateChildren([]);
+                break;
+            case SCHEMA.RenderingDom_DiffType.Deleted:
+                record.doms.delete(diff.id);
+                if (self.innerDom!.props.elementId) {
+                    record.elementToDoms.delete(self.innerDom!.props.elementId);
+                }
+                break;
+        }
+    }
+
+    for (const diff of diffsInOrder.diffsInOrder) {
+        if (diff.diffType === SCHEMA.RenderingDom_DiffType.Created || diff.diffType === SCHEMA.RenderingDom_DiffType.Modified) {
+            if (diff.children) {
+                const self = props.get(diff.id)!;
+                self.innerDom!.updateChildren(diff.children.map(childId => props.get(childId)!.outerDom!));
+            }
+        }
+    }
+
+    ensureClippedHierarchy(record.screen, props);
 }
