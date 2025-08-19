@@ -1,5 +1,5 @@
 import { connectHttpServer, IRemoteProtocolHttpClient } from '@gaclib-website/remote-protocol-http';
-import { createRenderer, generateFontConfig, IGacUIHtmlRenderer, } from '@gaclib/renderer'
+import { createRenderer, generateFontConfig, IGacUIHtmlRenderer, ElementHTMLMeasurer, VirtualDomHtmlProvider } from '@gaclib/renderer'
 
 export async function runGacUI(target: HTMLElement): Promise<[IGacUIHtmlRenderer, IRemoteProtocolHttpClient]> {
     const renderer = createRenderer({
@@ -9,7 +9,9 @@ export async function runGacUI(target: HTMLElement): Promise<[IGacUIHtmlRenderer
         fontConfig: generateFontConfig(target),
     });
     const client = await connectHttpServer('http://localhost:8888', renderer.requests);
-    renderer.init(client.responses, client.events);
+    const provider = new VirtualDomHtmlProvider();
+    const measurer = new ElementHTMLMeasurer(client.responses);
+    renderer.init(client.responses, client.events, provider, measurer);
     return [renderer, client];
 }
 

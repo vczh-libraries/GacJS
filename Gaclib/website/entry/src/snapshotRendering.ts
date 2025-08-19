@@ -66,8 +66,10 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
         }
     }
     const rootDom = createVirtualDomFromRenderingDom(frame.root!, elements, provider);
-    const rootElement = provider.fixBounds(rootDom.screen);
-    rootElement.style.width = `${frame.windowSize.bounds.x2.value - frame.windowSize.bounds.x1.value}px`;
-    rootElement.style.height = `${frame.windowSize.bounds.y2.value - frame.windowSize.bounds.y1.value}px`;
-    gacuiScreen.replaceChildren(rootElement);
+    provider.fixBounds(
+        rootDom.screen,
+        gacuiScreen,
+        frame.windowSize.bounds.x2.value - frame.windowSize.bounds.x1.value,
+        frame.windowSize.bounds.y2.value - frame.windowSize.bounds.y1.value
+    );
 }

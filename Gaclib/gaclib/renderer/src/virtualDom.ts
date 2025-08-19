@@ -69,6 +69,11 @@ export interface IVirtualDomProvider {
     createSimpleDom(
         id: SCHEMA.TYPES.Integer,
         globalBounds: SCHEMA.Rect): IVirtualDom;
+    fixBounds(
+        virtualDom: IVirtualDom,
+        target: HTMLElement,
+        width: number,
+        height: number): void;
 }
 
 export const RootVirtualDomId: SCHEMA.TYPES.Integer = -1;
@@ -122,7 +127,7 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
     }
 
     private isRootOfSelf(child: T): boolean {
-         
+
         let current: T = this as unknown as T;
         while (true) {
             if (!current._parent) {
@@ -134,7 +139,7 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
 
     updateChildren(children: IVirtualDom[]): void {
         const expectedType = this.getExpectedChildType();
-        
+
         for (const child of children) {
             if (!this.isExpectedChildType(child)) {
                 throw new Error(`All children must be ${expectedType} instances.`);

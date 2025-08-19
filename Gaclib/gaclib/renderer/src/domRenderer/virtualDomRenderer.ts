@@ -66,7 +66,7 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         return new VirtualDomHtml(id, globalBounds, undefined, undefined, undefined);
     }
 
-    fixBounds(virtualDom: IVirtualDom): HTMLElement {
+    fixBounds(virtualDom: IVirtualDom, target: HTMLElement, width: number, height: number): void {
         if (!(virtualDom instanceof VirtualDomHtml)) {
             throw new Error('VirtualDom must be VirtualDomHtml instance.');
         }
@@ -82,7 +82,9 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         // Configure root element as container
         virtualDom.htmlElement.style.position = 'relative';
         virtualDom.htmlElement.style.boxSizing = 'border-box';
-        return virtualDom.htmlElement;
+        virtualDom.htmlElement.style.width = `${width}px`;
+        virtualDom.htmlElement.style.height = `${height}px`;
+        target.replaceChildren(virtualDom.htmlElement);
     }
 
     private fixBoundsRecursive(virtualDom: VirtualDomHtml): void {

@@ -4,14 +4,17 @@ import { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId
 
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;
 
-// For backwards compatibility - deprecated, use ElementManager instead
-export type ElementMap = Map<SCHEMA.TYPES.Integer, TypedElementDesc>;
-
 export interface VirtualDomRecord {
     screen: IVirtualDom;
     doms: VirtualDomMap;
     elementToDoms: VirtualDomMap;
     elements: ElementManager;
+}
+
+export interface IElementMeasurer {
+    requestMeasureSolidLabel(desc: SCHEMA.ElementDesc_SolidLabel): void;
+    requestImageMetadata(id: SCHEMA.TYPES.Integer | undefined, imageCreation: SCHEMA.ImageCreation, renderingRecord: VirtualDomRecord): void;
+    RequestRendererEndRendering(id: number, renderingRecord: VirtualDomRecord): void;
 }
 
 function intersectRects(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): SCHEMA.Rect {
