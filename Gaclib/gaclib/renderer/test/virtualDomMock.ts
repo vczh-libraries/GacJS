@@ -127,7 +127,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct argum
         typedDesc
     };
 
-    const dom = provider.createDom(id, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(id, props);
 
     assert.strictEqual(dom.id, id);
     assert.deepEqual(dom.props.globalBounds, globalBounds);
@@ -151,7 +151,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined opt
         typedDesc: undefined
     };
 
-    const dom = provider.createDom(id, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(id, props);
 
     assert.strictEqual(dom.id, id);
     assert.deepEqual(dom.props.globalBounds, globalBounds);
@@ -413,7 +413,7 @@ test('VirtualDomMock.updateTypedDesc updates typedDesc correctly', () => {
         typedDesc: initialDesc
     };
 
-    const dom = provider.createDom(1, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
 
@@ -432,7 +432,7 @@ test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
         typedDesc: undefined
     };
 
-    const dom = provider.createDom(1, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(1, props);
 
     assert.isUndefined(dom.props.typedDesc);
 
@@ -459,7 +459,7 @@ test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', 
         typedDesc: undefined
     };
 
-    const dom = provider.createDom(1, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(1, props);
 
     assert.isUndefined(dom.props.typedDesc);
 
@@ -481,7 +481,7 @@ test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', 
         typedDesc: initialDesc
     };
 
-    const dom = provider.createDom(1, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
 
@@ -516,7 +516,7 @@ test('VirtualDomMock.updateTypedDesc allows changing type', () => {
         typedDesc: initialDesc
     };
 
-    const dom = provider.createDom(1, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(1, props);
 
     dom.updateTypedDesc(differentTypeDesc);
 
@@ -549,7 +549,7 @@ test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', 
         typedDesc: initialDesc
     };
 
-    const dom = provider.createDom(1, props) as VirtualDomMockTypes;
+    const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
 

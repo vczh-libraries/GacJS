@@ -144,7 +144,7 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
 
     updateChildren(children: T[]): void {
         const expectedType = this.getExpectedChildType();
-        const self = (this as unknown as T);
+        const self = this as unknown as T;
 
         for (const child of children) {
             if (!this.isExpectedChildType(child)) {
@@ -165,7 +165,7 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
             child._parent = undefined;
         }
 
-        this._children = [...children] as T[];
+        this._children = [...children];
 
         for (const child of this._children) {
             child._parent = self;
