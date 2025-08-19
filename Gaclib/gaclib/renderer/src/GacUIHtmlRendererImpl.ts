@@ -261,14 +261,16 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
+    private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
+
+    private _textElementForTesting: HTMLElement = document.createElement('div');
     private _measuringSolidLabels: SCHEMA.TYPES.Integer[] = [];
+    private _measuredFontHeights: Map<string, SCHEMA.ElementMeasuring_FontHeight> = new Map();
+
+    private _imageElementForTesting: HTMLImageElement = document.createElement('img');
     private _measuringImageTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
     private _measuringImageTasksExecuted = 0;
     private _measuringImageTasksExecuting = false;
-    private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
-
-    private _imageElementForTesting: HTMLImageElement = document.createElement('img');
-    private _textElementForTesting: HTMLElement = document.createElement('div');
 
     private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
         this._elements.updateDesc(id, typedDesc);
@@ -283,6 +285,11 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         switch (typedDesc.desc.measuringRequest) {
             case SCHEMA.ElementSolidLabelMeasuringRequest.FontHeight:
                 {
+                    const key = `${typedDesc.desc.font!.size}:${typedDesc.desc.font!.fontFamily}`;
+                    if (this._measuredFontHeights.has(key)) {
+                        break;
+                    }
+
                     // Set font style on the test element
                     this._textElementForTesting.style.cssText = getFontStyle(typedDesc.desc);
 
@@ -300,11 +307,13 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                     document.body.removeChild(this._textElementForTesting);
 
                     // Store the measurement
-                    this._measuring.fontHeights!.push({
+                    const result: SCHEMA.ElementMeasuring_FontHeight = {
                         fontFamily: typedDesc.desc.font!.fontFamily,
                         fontSize: typedDesc.desc.font!.size,
                         height: Math.round(lineHeight)
-                    });
+                    };
+                    this._measuredFontHeights.set(key, result);
+                    this._measuring.fontHeights!.push(result);
                 }
                 break;
             case SCHEMA.ElementSolidLabelMeasuringRequest.TotalSize:
