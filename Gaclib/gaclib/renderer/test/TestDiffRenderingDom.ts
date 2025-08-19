@@ -89,7 +89,7 @@ test('diffRenderingDom - created element should generate Created diff', () => {
             bounds: { x1: 10, y1: 10, x2: 50, y2: 30 },
             validArea: { x1: 10, y1: 10, x2: 50, y2: 30 }
         },
-        children: null
+        children: []
     });
 });
 
@@ -321,6 +321,6 @@ test('diffRenderingDom - complex mixed changes', () => {
             bounds: { x1: 20, y1: 20, x2: 40, y2: 40 },
             validArea: { x1: 20, y1: 20, x2: 40, y2: 40 }
         },
-        children: null
+        children: []
     });
 });
