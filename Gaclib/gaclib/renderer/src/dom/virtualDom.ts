@@ -88,7 +88,8 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
     private _children: T[];
 
     constructor(
-        public readonly id: SCHEMA.TYPES.Integer
+        public readonly id: SCHEMA.TYPES.Integer,
+        protected _props: VirtualDomProperties
     ) {
         this._parent = undefined;
         this._children = [];
@@ -102,17 +103,31 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
         return this._children;
     }
 
-    abstract get bounds(): SCHEMA.Rect;
-    abstract get props(): VirtualDomProperties;
+    get bounds(): SCHEMA.Rect {
+        if (!this.parent) {
+            // Root node: bounds === globalBounds
+            return this._props.globalBounds;
+        }
+        // Calculate relative bounds by subtracting parent's global position
+        const parentProps = this.parent.props;
+        return {
+            x1: this._props.globalBounds.x1 - parentProps.globalBounds.x1,
+            y1: this._props.globalBounds.y1 - parentProps.globalBounds.y1,
+            x2: this._props.globalBounds.x2 - parentProps.globalBounds.x1,
+            y2: this._props.globalBounds.y2 - parentProps.globalBounds.y1
+        };
+    }
+
+    get props(): VirtualDomProperties {
+        return this._props;
+    }
 
     updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
-         
         void typedDesc;
         throw new Error('updateTypedDesc is not supported for this virtual DOM type.');
     }
 
     updateProps(props: VirtualDomProperties): void {
-         
         void props;
         throw new Error('updateProps is not supported for this virtual DOM type.');
     }
@@ -167,84 +182,35 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
 
 export abstract class VirtualDomBaseRoot<T extends VirtualDomBaseRoot<T>> extends VirtualDomBase<T> {
     constructor() {
-        super(RootVirtualDomId);
-    }
-
-    get bounds(): SCHEMA.Rect {
-        return { x1: 0, y1: 0, x2: 0, y2: 0 };
-    }
-
-    get props(): VirtualDomProperties {
-        return {
+        super(RootVirtualDomId, {
             globalBounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
             hitTestResult: undefined,
             cursor: undefined,
             typedDesc: undefined
-        };
+        });
     }
 }
 
 export abstract class VirtualDomBaseValidArea<T extends VirtualDomBaseValidArea<T>> extends VirtualDomBase<T> {
     constructor(
         id: SCHEMA.TYPES.Integer,
-        private _globalBounds: SCHEMA.Rect
+        validArea: SCHEMA.Rect
     ) {
-        super(id);
-    }
-
-    get bounds(): SCHEMA.Rect {
-        if (!this.parent) {
-            // Root node: bounds === globalBounds
-            return this._globalBounds;
-        }
-        // Calculate relative bounds by subtracting parent's global position
-        const parentProps = this.parent.props;
-        return {
-            x1: this._globalBounds.x1 - parentProps.globalBounds.x1,
-            y1: this._globalBounds.y1 - parentProps.globalBounds.y1,
-            x2: this._globalBounds.x2 - parentProps.globalBounds.x1,
-            y2: this._globalBounds.y2 - parentProps.globalBounds.y1
-        };
-    }
-
-    get props(): VirtualDomProperties {
-        return {
-            globalBounds: this._globalBounds,
+        super(id, {
+            globalBounds: validArea,
             hitTestResult: undefined,
             cursor: undefined,
             typedDesc: undefined
-        };
+        });
     }
 }
 
 export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBaseOrdinary<T>> extends VirtualDomBase<T> {
-    private _props: VirtualDomProperties;
-
     constructor(
         id: SCHEMA.TYPES.Integer,
         props: VirtualDomProperties
     ) {
-        super(id);
-        this._props = props;
-    }
-
-    get bounds(): SCHEMA.Rect {
-        if (!this.parent) {
-            // Root node: bounds === globalBounds
-            return this._props.globalBounds;
-        }
-        // Calculate relative bounds by subtracting parent's global position
-        const parentProps = this.parent.props;
-        return {
-            x1: this._props.globalBounds.x1 - parentProps.globalBounds.x1,
-            y1: this._props.globalBounds.y1 - parentProps.globalBounds.y1,
-            x2: this._props.globalBounds.x2 - parentProps.globalBounds.x1,
-            y2: this._props.globalBounds.y2 - parentProps.globalBounds.y1
-        };
-    }
-
-    get props(): VirtualDomProperties {
-        return this._props;
+        super(id, props);
     }
 
     updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {

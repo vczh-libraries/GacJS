@@ -19,12 +19,11 @@ class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlRoot> {
     }
 
     protected getExpectedChildType(): string {
-        return 'VirtualDomHtml';
+        return 'VirtualDomHtmlValidArea or VirtualDomHtmlOrdinary';
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomHtmlRoot || 
-               child instanceof VirtualDomHtmlValidArea || 
+        return child instanceof VirtualDomHtmlValidArea || 
                child instanceof VirtualDomHtmlOrdinary;
     }
 
@@ -51,12 +50,11 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlVali
     }
 
     protected getExpectedChildType(): string {
-        return 'VirtualDomHtml';
+        return 'VirtualDomHtmlValidArea or VirtualDomHtmlOrdinary';
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomHtmlRoot || 
-               child instanceof VirtualDomHtmlValidArea || 
+        return child instanceof VirtualDomHtmlValidArea || 
                child instanceof VirtualDomHtmlOrdinary;
     }
 
@@ -88,12 +86,11 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlOrdina
     }
 
     protected getExpectedChildType(): string {
-        return 'VirtualDomHtml';
+        return 'VirtualDomHtmlValidArea or VirtualDomHtmlOrdinary';
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomHtmlRoot || 
-               child instanceof VirtualDomHtmlValidArea || 
+        return child instanceof VirtualDomHtmlValidArea || 
                child instanceof VirtualDomHtmlOrdinary;
     }
 

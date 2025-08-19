@@ -1,28 +1,27 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { 
-    IVirtualDom, 
-    IVirtualDomProvider, 
-    VirtualDomBaseRoot, 
-    VirtualDomBaseValidArea, 
+import {
+    IVirtualDom,
+    IVirtualDomProvider,
+    VirtualDomBaseRoot,
+    VirtualDomBaseValidArea,
     VirtualDomBaseOrdinary,
-    VirtualDomProperties 
+    VirtualDomProperties
 } from '../src/dom/virtualDom';
 import { assert, test, expect } from 'vitest';
 
 class VirtualDomMockRoot extends VirtualDomBaseRoot<VirtualDomMockRoot> {
     protected getExpectedChildType(): string {
-        return 'VirtualDomMock';
+        return 'VirtualDomMockValidArea or VirtualDomMockOrdinary';
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomMockRoot || 
-               child instanceof VirtualDomMockValidArea || 
-               child instanceof VirtualDomMockOrdinary;
+        return child instanceof VirtualDomMockValidArea ||
+            child instanceof VirtualDomMockOrdinary;
     }
 
     protected onUpdateChildren(children: VirtualDomMockRoot[]): void {
-         
+
         void children;
         // Mock implementation - no additional logic needed
     }
@@ -37,17 +36,15 @@ class VirtualDomMockValidArea extends VirtualDomBaseValidArea<VirtualDomMockVali
     }
 
     protected getExpectedChildType(): string {
-        return 'VirtualDomMock';
+        return 'VirtualDomMockValidArea or VirtualDomMockOrdinary';
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomMockRoot || 
-               child instanceof VirtualDomMockValidArea || 
-               child instanceof VirtualDomMockOrdinary;
+        return child instanceof VirtualDomMockValidArea ||
+            child instanceof VirtualDomMockOrdinary;
     }
 
     protected onUpdateChildren(children: VirtualDomMockValidArea[]): void {
-         
         void children;
         // Mock implementation - no additional logic needed
     }
@@ -62,23 +59,20 @@ class VirtualDomMockOrdinary extends VirtualDomBaseOrdinary<VirtualDomMockOrdina
     }
 
     protected getExpectedChildType(): string {
-        return 'VirtualDomMock';
+        return 'VirtualDomMockValidArea or VirtualDomMockOrdinary';
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomMockRoot || 
-               child instanceof VirtualDomMockValidArea || 
-               child instanceof VirtualDomMockOrdinary;
+        return child instanceof VirtualDomMockValidArea ||
+            child instanceof VirtualDomMockOrdinary;
     }
 
     protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
-         
         void typedDesc;
         // Mock implementation - no additional logic needed
     }
 
     protected onUpdateChildren(children: VirtualDomMockOrdinary[]): void {
-         
         void children;
         // Mock implementation - no additional logic needed
     }
@@ -111,7 +105,7 @@ export class VirtualDomProviderMock implements IVirtualDomProvider {
     ): VirtualDomMock {
         return new VirtualDomMockValidArea(id, globalBounds);
     }
-    
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fixBounds(virtualDom: IVirtualDom, target: HTMLElement, width: number, height: number): void {
         throw new Error('Not Implemented');
@@ -169,7 +163,7 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined opt
     expect(dom.children).toEqual([]);
 });
 
-test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock instance', () => {
+test('VirtualDomMock.updateChildren throws when child is not VirtualDomMockValidArea or VirtualDomMockOrdinary instance', () => {
     const provider = new VirtualDomProviderMock();
     const parent = provider.createSimpleDom(1, { x1: 0, y1: 0, x2: 100, y2: 100 });
 
@@ -178,7 +172,11 @@ test('VirtualDomMock.updateChildren throws when child is not VirtualDomMock inst
 
     assert.throws(() => {
         parent.updateChildren([fakeDom]);
-    }, 'All children must be VirtualDomMock instances.');
+    }, 'All children must be VirtualDomMockValidArea or VirtualDomMockOrdinary instances.');
+
+    assert.throws(() => {
+        parent.updateChildren([provider.createDomForRoot()]);
+    }, 'All children must be VirtualDomMockValidArea or VirtualDomMockOrdinary instances.');
 });
 
 test('VirtualDomMock.updateChildren throws when child is this node itself', () => {
@@ -259,7 +257,7 @@ test('VirtualDomMock bounds computation - child nodes', () => {
     const provider = new VirtualDomProviderMock();
     const parentGlobalBounds: SCHEMA.Rect = { x1: 100, y1: 200, x2: 400, y2: 500 };
     const childGlobalBounds: SCHEMA.Rect = { x1: 150, y1: 250, x2: 250, y2: 350 };
-    
+
     const parent = provider.createSimpleDom(1, parentGlobalBounds);
     const child = provider.createSimpleDom(2, childGlobalBounds);
 
@@ -281,7 +279,7 @@ test('VirtualDomMock bounds computation - nested hierarchy', () => {
     const rootGlobalBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 1000, y2: 1000 };
     const level1GlobalBounds: SCHEMA.Rect = { x1: 100, y1: 200, x2: 600, y2: 700 };
     const level2GlobalBounds: SCHEMA.Rect = { x1: 150, y1: 250, x2: 550, y2: 650 };
-    
+
     const root = provider.createSimpleDom(1, rootGlobalBounds);
     const level1 = provider.createSimpleDom(2, level1GlobalBounds);
     const level2 = provider.createSimpleDom(3, level2GlobalBounds);
@@ -293,10 +291,10 @@ test('VirtualDomMock bounds computation - nested hierarchy', () => {
     // Verify bounds calculations
     // Root: bounds === globalBounds
     assert.deepEqual(root.bounds, rootGlobalBounds);
-    
+
     // Level 1: relative to root (0,0) = (100,200,600,700)
     assert.deepEqual(level1.bounds, { x1: 100, y1: 200, x2: 600, y2: 700 });
-    
+
     // Level 2: relative to level1 (100,200) = (150-100, 250-200, 550-100, 650-200) = (50,50,450,450)
     assert.deepEqual(level2.bounds, { x1: 50, y1: 50, x2: 450, y2: 450 });
 });
