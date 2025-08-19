@@ -1,17 +1,39 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../src/GacUIElementManager';
-import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../src/dom/virtualDom';
+import { 
+    IVirtualDom, 
+    IVirtualDomProvider, 
+    VirtualDomBaseRoot, 
+    VirtualDomBaseValidArea, 
+    VirtualDomBaseOrdinary,
+    VirtualDomProperties 
+} from '../src/dom/virtualDom';
 import { assert, test, expect } from 'vitest';
 
-class VirtualDomMock extends VirtualDomBase<VirtualDomMock> {
+class VirtualDomMockRoot extends VirtualDomBaseRoot<VirtualDomMockRoot> {
+    protected getExpectedChildType(): string {
+        return 'VirtualDomMock';
+    }
+
+    protected isExpectedChildType(child: IVirtualDom): boolean {
+        return child instanceof VirtualDomMockRoot || 
+               child instanceof VirtualDomMockValidArea || 
+               child instanceof VirtualDomMockOrdinary;
+    }
+
+    protected onUpdateChildren(children: VirtualDomMockRoot[]): void {
+         
+        void children;
+        // Mock implementation - no additional logic needed
+    }
+}
+
+class VirtualDomMockValidArea extends VirtualDomBaseValidArea<VirtualDomMockValidArea> {
     constructor(
         id: SCHEMA.TYPES.Integer,
-        globalBounds: SCHEMA.Rect,
-        hitTestResult: SCHEMA.WindowHitTestResult | undefined,
-        cursor: SCHEMA.WindowSystemCursorType | undefined,
-        typedDesc: TypedElementDesc | undefined
+        validArea: SCHEMA.Rect
     ) {
-        super(id, globalBounds, hitTestResult, cursor, typedDesc);
+        super(id, validArea);
     }
 
     protected getExpectedChildType(): string {
@@ -19,36 +41,75 @@ class VirtualDomMock extends VirtualDomBase<VirtualDomMock> {
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomMock;
+        return child instanceof VirtualDomMockRoot || 
+               child instanceof VirtualDomMockValidArea || 
+               child instanceof VirtualDomMockOrdinary;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
-        // Mock implementation - no additional logic needed
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    protected onUpdateChildren(children: VirtualDomMock[]): void {
+    protected onUpdateChildren(children: VirtualDomMockValidArea[]): void {
+         
+        void children;
         // Mock implementation - no additional logic needed
     }
 }
 
+class VirtualDomMockOrdinary extends VirtualDomBaseOrdinary<VirtualDomMockOrdinary> {
+    constructor(
+        id: SCHEMA.TYPES.Integer,
+        props: VirtualDomProperties
+    ) {
+        super(id, props);
+    }
+
+    protected getExpectedChildType(): string {
+        return 'VirtualDomMock';
+    }
+
+    protected isExpectedChildType(child: IVirtualDom): boolean {
+        return child instanceof VirtualDomMockRoot || 
+               child instanceof VirtualDomMockValidArea || 
+               child instanceof VirtualDomMockOrdinary;
+    }
+
+    protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+         
+        void typedDesc;
+        // Mock implementation - no additional logic needed
+    }
+
+    protected onUpdateChildren(children: VirtualDomMockOrdinary[]): void {
+         
+        void children;
+        // Mock implementation - no additional logic needed
+    }
+}
+
+type VirtualDomMock = VirtualDomMockRoot | VirtualDomMockValidArea | VirtualDomMockOrdinary;
+
 export class VirtualDomProviderMock implements IVirtualDomProvider {
     createDom(
         id: SCHEMA.TYPES.Integer,
-        globalBounds: SCHEMA.Rect,
-        hitTestResult: SCHEMA.WindowHitTestResult | undefined,
-        cursor: SCHEMA.WindowSystemCursorType | undefined,
-        typedDesc: TypedElementDesc | undefined
+        props: VirtualDomProperties
     ): IVirtualDom {
-        return new VirtualDomMock(id, globalBounds, hitTestResult, cursor, typedDesc);
+        return new VirtualDomMockOrdinary(id, props);
+    }
+
+    createDomForRoot(): IVirtualDom {
+        return new VirtualDomMockRoot();
+    }
+
+    createDomForValidArea(
+        id: SCHEMA.TYPES.Integer,
+        validArea: SCHEMA.Rect
+    ): IVirtualDom {
+        return new VirtualDomMockValidArea(id, validArea);
     }
 
     createSimpleDom(
         id: SCHEMA.TYPES.Integer,
         globalBounds: SCHEMA.Rect
     ): VirtualDomMock {
-        return new VirtualDomMock(id, globalBounds, undefined, undefined, undefined);
+        return new VirtualDomMockValidArea(id, globalBounds);
     }
     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,14 +126,21 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct argum
     const cursor = SCHEMA.WindowSystemCursorType.Arrow;
     const typedDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
 
-    const dom = provider.createDom(id, globalBounds, hitTestResult, cursor, typedDesc) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds,
+        hitTestResult,
+        cursor,
+        typedDesc
+    };
+
+    const dom = provider.createDom(id, props) as VirtualDomMock;
 
     assert.strictEqual(dom.id, id);
-    assert.deepEqual(dom.globalBounds, globalBounds);
+    assert.deepEqual(dom.props.globalBounds, globalBounds);
     assert.deepEqual(dom.bounds, globalBounds); // Root node: bounds === globalBounds
-    assert.strictEqual(dom.hitTestResult, hitTestResult);
-    assert.strictEqual(dom.cursor, cursor);
-    assert.deepEqual(dom.typedDesc, typedDesc);
+    assert.strictEqual(dom.props.hitTestResult, hitTestResult);
+    assert.strictEqual(dom.props.cursor, cursor);
+    assert.deepEqual(dom.props.typedDesc, typedDesc);
     assert.isUndefined(dom.parent);
     expect(dom.children).toEqual([]);
 });
@@ -82,14 +150,21 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined opt
     const id = 456;
     const globalBounds: SCHEMA.Rect = { x1: 0, y1: 0, x2: 100, y2: 100 };
 
-    const dom = provider.createDom(id, globalBounds, undefined, undefined, undefined) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds,
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: undefined
+    };
+
+    const dom = provider.createDom(id, props) as VirtualDomMock;
 
     assert.strictEqual(dom.id, id);
-    assert.deepEqual(dom.globalBounds, globalBounds);
+    assert.deepEqual(dom.props.globalBounds, globalBounds);
     assert.deepEqual(dom.bounds, globalBounds); // Root node: bounds === globalBounds
-    assert.isUndefined(dom.hitTestResult);
-    assert.isUndefined(dom.cursor);
-    assert.isUndefined(dom.typedDesc);
+    assert.isUndefined(dom.props.hitTestResult);
+    assert.isUndefined(dom.props.cursor);
+    assert.isUndefined(dom.props.typedDesc);
     assert.isUndefined(dom.parent);
     expect(dom.children).toEqual([]);
 });
@@ -176,7 +251,7 @@ test('VirtualDomMock bounds computation - root node', () => {
     const root = provider.createSimpleDom(1, globalBounds);
 
     // Root node: bounds should equal globalBounds
-    assert.deepEqual(root.globalBounds, globalBounds);
+    assert.deepEqual(root.props.globalBounds, globalBounds);
     assert.deepEqual(root.bounds, globalBounds);
 });
 
@@ -189,14 +264,14 @@ test('VirtualDomMock bounds computation - child nodes', () => {
     const child = provider.createSimpleDom(2, childGlobalBounds);
 
     // Before establishing parent-child relationship
-    assert.deepEqual(child.globalBounds, childGlobalBounds);
+    assert.deepEqual(child.props.globalBounds, childGlobalBounds);
     assert.deepEqual(child.bounds, childGlobalBounds); // Still root, so bounds === globalBounds
 
     // Establish parent-child relationship
     parent.updateChildren([child]);
 
     // After establishing relationship
-    assert.deepEqual(child.globalBounds, childGlobalBounds); // globalBounds should not change
+    assert.deepEqual(child.props.globalBounds, childGlobalBounds); // globalBounds should not change
     // bounds should be relative to parent: (150-100, 250-200, 250-100, 350-200) = (50, 50, 150, 150)
     assert.deepEqual(child.bounds, { x1: 50, y1: 50, x2: 150, y2: 150 });
 });
@@ -333,25 +408,39 @@ test('VirtualDomMock.updateTypedDesc updates typedDesc correctly', () => {
         }
     };
 
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: initialDesc
+    };
 
-    assert.deepEqual(dom.typedDesc, initialDesc);
+    const dom = provider.createDom(1, props) as VirtualDomMock;
+
+    assert.deepEqual(dom.props.typedDesc, initialDesc);
 
     dom.updateTypedDesc(newDesc);
 
-    assert.deepEqual(dom.typedDesc, newDesc);
+    assert.deepEqual(dom.props.typedDesc, newDesc);
 });
 
 test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
     const provider = new VirtualDomProviderMock();
 
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, undefined) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: undefined
+    };
 
-    assert.isUndefined(dom.typedDesc);
+    const dom = provider.createDom(1, props) as VirtualDomMock;
+
+    assert.isUndefined(dom.props.typedDesc);
 
     dom.updateTypedDesc(undefined);
 
-    assert.isUndefined(dom.typedDesc);
+    assert.isUndefined(dom.props.typedDesc);
 });
 
 test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', () => {
@@ -365,13 +454,20 @@ test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', 
         }
     };
 
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, undefined) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: undefined
+    };
 
-    assert.isUndefined(dom.typedDesc);
+    const dom = provider.createDom(1, props) as VirtualDomMock;
+
+    assert.isUndefined(dom.props.typedDesc);
 
     dom.updateTypedDesc(newDesc);
 
-    assert.deepEqual(dom.typedDesc, newDesc);
+    assert.deepEqual(dom.props.typedDesc, newDesc);
 });
 
 test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', () => {
@@ -380,13 +476,20 @@ test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', 
         type: SCHEMA.RendererType.FocusRectangle
     };
 
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: initialDesc
+    };
 
-    assert.deepEqual(dom.typedDesc, initialDesc);
+    const dom = provider.createDom(1, props) as VirtualDomMock;
+
+    assert.deepEqual(dom.props.typedDesc, initialDesc);
 
     dom.updateTypedDesc(undefined);
 
-    assert.isUndefined(dom.typedDesc);
+    assert.isUndefined(dom.props.typedDesc);
 });
 
 test('VirtualDomMock.updateTypedDesc allows changing type', () => {
@@ -408,11 +511,18 @@ test('VirtualDomMock.updateTypedDesc allows changing type', () => {
         }
     };
 
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: initialDesc
+    };
+
+    const dom = provider.createDom(1, props) as VirtualDomMock;
 
     dom.updateTypedDesc(differentTypeDesc);
 
-    assert.deepEqual(dom.typedDesc, differentTypeDesc);
+    assert.deepEqual(dom.props.typedDesc, differentTypeDesc);
 });
 
 test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', () => {
@@ -434,11 +544,18 @@ test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', 
         }
     };
 
-    const dom = provider.createDom(1, { x1: 0, y1: 0, x2: 10, y2: 10 }, undefined, undefined, initialDesc) as VirtualDomMock;
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: initialDesc
+    };
 
-    assert.deepEqual(dom.typedDesc, initialDesc);
+    const dom = provider.createDom(1, props) as VirtualDomMock;
+
+    assert.deepEqual(dom.props.typedDesc, initialDesc);
 
     dom.updateTypedDesc(updatedDesc);
 
-    assert.deepEqual(dom.typedDesc, updatedDesc);
+    assert.deepEqual(dom.props.typedDesc, updatedDesc);
 });

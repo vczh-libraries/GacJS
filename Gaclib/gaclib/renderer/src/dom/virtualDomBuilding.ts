@@ -64,14 +64,16 @@ function fillVirtualDom(
         typedDesc = record.elements.getDescEnsured(renderingDom.content.element);
     }
 
-    // Create the virtual DOM
-    const virtualDom = provider.createDom(
-        id,
-        renderingDom.content.bounds,
-        renderingDom.content.hitTestResult || undefined,
-        renderingDom.content.cursor || undefined,
+    // Create props for the virtual DOM
+    const props = {
+        globalBounds: renderingDom.content.bounds,
+        hitTestResult: renderingDom.content.hitTestResult || undefined,
+        cursor: renderingDom.content.cursor || undefined,
         typedDesc
-    );
+    };
+
+    // Create the virtual DOM
+    const virtualDom = provider.createDom(id, props);
 
     // Add to elementToDoms map if this DOM has an element
     if (renderingDom.content.element !== null) {
@@ -117,7 +119,7 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
     } else {
         // validArea is smaller than natural intersection, need to create two virtual DOMs
         // Create the outer virtual DOM with validArea as bounds, but with the original renderingDom.id
-        const outerVirtualDom = provider.createSimpleDom(renderingDom.id, renderingDom.content.validArea);
+        const outerVirtualDom = provider.createDomForValidArea(renderingDom.id, renderingDom.content.validArea);
 
         // Create the inner virtual DOM with original bounds, but with ClippedVirtualDomId
         // Children should be processed with the outer DOM's validArea as their parent validArea
@@ -159,7 +161,7 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
 
     // Create the VirtualDomRecord with all required maps
     const record: VirtualDomRecord = {
-        screen: provider.createSimpleDom(renderingDom.id, renderingDom.content.bounds),
+        screen: provider.createDomForRoot(),
         doms: new Map(),
         elementToDoms: new Map(),
         elements

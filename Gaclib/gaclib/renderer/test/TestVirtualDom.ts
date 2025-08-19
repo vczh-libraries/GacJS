@@ -62,9 +62,9 @@ function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementManag
     // Check typedDesc based on element mapping
     if (renderingDom.content.element !== null) {
         const expectedTypedDesc = elements.getDesc(renderingDom.content.element);
-        assert.deepEqual(dom.typedDesc, expectedTypedDesc);
+        assert.deepEqual(dom.props.typedDesc, expectedTypedDesc);
     } else {
-        assert.isUndefined(dom.typedDesc);
+        assert.isUndefined(dom.props.typedDesc);
     }
 }
 
@@ -73,23 +73,23 @@ export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements:
     if (domv === undefined) {
         // Single DOM case: dom should have the original ID and inherit bounds as globalBounds
         assert.strictEqual(dom.id, renderingDom.id);
-        assert.deepEqual(dom.globalBounds, renderingDom.content.bounds);
-        assert.strictEqual(dom.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
-        assert.strictEqual(dom.cursor, renderingDom.content.cursor ?? undefined);
+        assert.deepEqual(dom.props.globalBounds, renderingDom.content.bounds);
+        assert.strictEqual(dom.props.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
+        assert.strictEqual(dom.props.cursor, renderingDom.content.cursor ?? undefined);
         
         assertDomDesc(renderingDom, elements, dom);
     } else {
         // Clipped DOM case: dom is outer (with validArea), domv is inner (with bounds and content)
         assert.strictEqual(dom.id, renderingDom.id);
-        assert.deepEqual(dom.globalBounds, renderingDom.content.validArea);
-        assert.isUndefined(dom.hitTestResult); // Simple DOM has no properties
-        assert.isUndefined(dom.cursor);
-        assert.isUndefined(dom.typedDesc);
+        assert.deepEqual(dom.props.globalBounds, renderingDom.content.validArea);
+        assert.isUndefined(dom.props.hitTestResult); // Simple DOM has no properties
+        assert.isUndefined(dom.props.cursor);
+        assert.isUndefined(dom.props.typedDesc);
         
         assert.strictEqual(domv.id, ClippedVirtualDomId);
-        assert.deepEqual(domv.globalBounds, renderingDom.content.bounds);
-        assert.strictEqual(domv.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
-        assert.strictEqual(domv.cursor, renderingDom.content.cursor ?? undefined);
+        assert.deepEqual(domv.props.globalBounds, renderingDom.content.bounds);
+        assert.strictEqual(domv.props.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
+        assert.strictEqual(domv.props.cursor, renderingDom.content.cursor ?? undefined);
         
         assertDomDesc(renderingDom, elements, domv);
     }
@@ -104,7 +104,7 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
 
     // Verify the screen element
     assert.strictEqual(result.screen.id, RootVirtualDomId);
-    assert.deepEqual(result.screen.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
+    assert.deepEqual(result.screen.props.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
     expect(result.screen.children).toEqual([]);
@@ -364,7 +364,7 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
 
     // Verify the screen (root)
     assert.strictEqual(result.screen.id, RootVirtualDomId);
-    assert.deepEqual(result.screen.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
+    assert.deepEqual(result.screen.props.globalBounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.deepEqual(result.screen.bounds, { x1: 0, y1: 0, x2: 0, y2: 0 });
     assert.isUndefined(result.screen.parent);
     assert.strictEqual(result.screen.children.length, 2);
