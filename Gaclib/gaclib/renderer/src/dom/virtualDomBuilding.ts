@@ -30,6 +30,10 @@ function areRectsEqual(rect1: SCHEMA.Rect, rect2: SCHEMA.Rect): boolean {
     return rect1.x1 === rect2.x1 && rect1.y1 === rect2.y1 && rect1.x2 === rect2.x2 && rect1.y2 === rect2.y2;
 }
 
+/****************************************************************************************
+ * createVirtualDomFromRenderingDom
+ ***************************************************************************************/
+
 function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom: IVirtualDom, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
     // Process children
     const parentValidArea = renderingDom.id === RootVirtualDomId ? undefined : renderingDom.content.validArea;
@@ -166,4 +170,13 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
 
     // Return the result
     return record;
+}
+
+/****************************************************************************************
+ * updateVirtualDomWithRenderingDomDiff
+ ***************************************************************************************/
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
+    throw new Error(`Not Implemented (updateVirtualDomWithRenderingDomDiff)\nArguments: ${JSON.stringify(diffsInOrder, undefined, 4)}`);
 }

@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { createVirtualDomFromRenderingDom, IElementMeasurer, VirtualDomRecord } from './dom/virtualDomBuilding';
+import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
@@ -322,9 +322,14 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
-        // incrementally update HTMLElement
-        // Call onSolidLabelResized accordingly
-        throw new Error(`Not Implemented (RequestRendererRenderDomDiff)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
+        // TODO: Call onSolidLabelResized accordingly
+        updateVirtualDomWithRenderingDomDiff(requestArgs, this._renderingRecord, this._provider);
+        this._provider.fixBounds(
+            this._renderingRecord.screen,
+            this._settings.target,
+            this._windowConfig.bounds.x2.value - this._windowConfig.bounds.x1.value,
+            this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value
+        );
     }
 
     /* eslint-disable @typescript-eslint/no-unused-vars */

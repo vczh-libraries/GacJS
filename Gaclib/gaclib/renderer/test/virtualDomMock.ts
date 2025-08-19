@@ -51,7 +51,7 @@ export class VirtualDomProviderMock implements IVirtualDomProvider {
         return new VirtualDomMock(id, globalBounds, undefined, undefined, undefined);
     }
     
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fixBounds(virtualDom: IVirtualDom, target: HTMLElement, width: number, height: number): void {
         throw new Error('Not Implemented');
     }
