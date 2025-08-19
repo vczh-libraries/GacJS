@@ -17,11 +17,11 @@ function createTestRecord() {
 
 test('updateVirtualDomWithRenderingDomDiff - Created diff must have content', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -32,7 +32,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have content', ()
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff with Created must have content or children available');
@@ -40,11 +40,11 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have content', ()
 
 test('updateVirtualDomWithRenderingDomDiff - Created diff must have children', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -55,7 +55,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have children', (
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff with Created must have content or children available');
@@ -63,14 +63,14 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have children', (
 
 test('updateVirtualDomWithRenderingDomDiff - Created diff must use unused ID', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create initial state with a child to make ID 1 exist
     const initialRenderingDom = createRootRenderingDom();
     initialRenderingDom.children = [
         createChildRenderingDom(1, createSimpleRenderingDomContent({ x1: 10, y1: 10, x2: 50, y2: 30 }), [])
     ];
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -81,7 +81,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must use unused ID', (
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff with Created must use unused ID');
@@ -89,11 +89,11 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must use unused ID', (
 
 test('updateVirtualDomWithRenderingDomDiff - Created diff with negative ID should throw', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -104,7 +104,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff with negative ID shoul
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff with Created must use unused ID');
@@ -112,11 +112,11 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff with negative ID shoul
 
 test('updateVirtualDomWithRenderingDomDiff - Modified diff must use existing ID', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -127,7 +127,7 @@ test('updateVirtualDomWithRenderingDomDiff - Modified diff must use existing ID'
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff with Modified must use existing ID');
@@ -135,11 +135,11 @@ test('updateVirtualDomWithRenderingDomDiff - Modified diff must use existing ID'
 
 test('updateVirtualDomWithRenderingDomDiff - Deleted diff must use existing ID', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -150,7 +150,7 @@ test('updateVirtualDomWithRenderingDomDiff - Deleted diff must use existing ID',
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff with Deleted must use existing ID');
@@ -158,14 +158,14 @@ test('updateVirtualDomWithRenderingDomDiff - Deleted diff must use existing ID',
 
 test('updateVirtualDomWithRenderingDomDiff - diff with invalid child ID should throw', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create initial state with a child
     const initialRenderingDom = createRootRenderingDom();
     initialRenderingDom.children = [
         createChildRenderingDom(1, createSimpleRenderingDomContent({ x1: 10, y1: 10, x2: 50, y2: 30 }), [])
     ];
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -176,7 +176,7 @@ test('updateVirtualDomWithRenderingDomDiff - diff with invalid child ID should t
             }
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff should not use invalid child id');
@@ -184,11 +184,11 @@ test('updateVirtualDomWithRenderingDomDiff - diff with invalid child ID should t
 
 test('updateVirtualDomWithRenderingDomDiff - dangling created node should throw', () => {
     const { elements, provider } = createTestRecord();
-    
+
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    
+
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
             {
@@ -200,7 +200,7 @@ test('updateVirtualDomWithRenderingDomDiff - dangling created node should throw'
             // Missing parent relationship - node will be dangling
         ]
     };
-    
+
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
     }).toThrow('RenderingDom_Diff should not be dangling');
@@ -220,9 +220,9 @@ test('updateVirtualDomWithRenderingDomDiff - no changes', () => {
      * |  +---+  |
      * +---------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -231,7 +231,7 @@ test('updateVirtualDomWithRenderingDomDiff - no changes', () => {
             []
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -240,15 +240,17 @@ test('updateVirtualDomWithRenderingDomDiff - no changes', () => {
             []
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 0);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -263,12 +265,12 @@ test('updateVirtualDomWithRenderingDomDiff - create single element', () => {
      * |         |  |  +---+  |
      * +---------+  +---------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -277,15 +279,21 @@ test('updateVirtualDomWithRenderingDomDiff - create single element', () => {
             []
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 2);
+    assert.strictEqual(diff.diffsInOrder![0].id, -1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+    assert.strictEqual(diff.diffsInOrder![1].id, 1);
+    assert.strictEqual(diff.diffsInOrder![1].diffType, SCHEMA.RenderingDom_DiffType.Created);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -300,9 +308,9 @@ test('updateVirtualDomWithRenderingDomDiff - delete single element', () => {
      * |  +---+  |  |         |
      * +---------+  +---------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -311,18 +319,24 @@ test('updateVirtualDomWithRenderingDomDiff - delete single element', () => {
             []
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 2);
+    assert.strictEqual(diff.diffsInOrder![0].id, -1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+    assert.strictEqual(diff.diffsInOrder![1].id, 1);
+    assert.strictEqual(diff.diffsInOrder![1].diffType, SCHEMA.RenderingDom_DiffType.Deleted);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -337,9 +351,9 @@ test('updateVirtualDomWithRenderingDomDiff - modify element content', () => {
      * |  +---+  |  |  +-----+|
      * +---------+  +---------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -348,7 +362,7 @@ test('updateVirtualDomWithRenderingDomDiff - modify element content', () => {
             []
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -357,15 +371,19 @@ test('updateVirtualDomWithRenderingDomDiff - modify element content', () => {
             []
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 1);
+    assert.strictEqual(diff.diffsInOrder![0].id, 1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -386,9 +404,9 @@ test('updateVirtualDomWithRenderingDomDiff - modify children order', () => {
      * |  +---+  |  |  +---+  |
      * +---------+  +---------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -400,7 +418,7 @@ test('updateVirtualDomWithRenderingDomDiff - modify children order', () => {
             ]
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -412,15 +430,19 @@ test('updateVirtualDomWithRenderingDomDiff - modify children order', () => {
             ]
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 1);
+    assert.strictEqual(diff.diffsInOrder![0].id, 1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -441,9 +463,9 @@ test('updateVirtualDomWithRenderingDomDiff - complex nested changes', () => {
      * |             |        |  +-------+  |
      * +-------------+        +-------------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -454,7 +476,7 @@ test('updateVirtualDomWithRenderingDomDiff - complex nested changes', () => {
             ]
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -466,15 +488,25 @@ test('updateVirtualDomWithRenderingDomDiff - complex nested changes', () => {
             ]
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 4);
+    assert.strictEqual(diff.diffsInOrder![0].id, 1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+    assert.strictEqual(diff.diffsInOrder![1].id, 2);
+    assert.strictEqual(diff.diffsInOrder![1].diffType, SCHEMA.RenderingDom_DiffType.Deleted);
+    assert.strictEqual(diff.diffsInOrder![2].id, 4);
+    assert.strictEqual(diff.diffsInOrder![2].diffType, SCHEMA.RenderingDom_DiffType.Created);
+    assert.strictEqual(diff.diffsInOrder![3].id, 5);
+    assert.strictEqual(diff.diffsInOrder![3].diffType, SCHEMA.RenderingDom_DiffType.Created);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -495,9 +527,9 @@ test('updateVirtualDomWithRenderingDomDiff - three level hierarchy changes', () 
      * |  +-------+  |        |  +-------+  |
      * +-------------+        +-------------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -514,7 +546,7 @@ test('updateVirtualDomWithRenderingDomDiff - three level hierarchy changes', () 
             ]
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -531,15 +563,25 @@ test('updateVirtualDomWithRenderingDomDiff - three level hierarchy changes', () 
             ]
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 4);
+    assert.strictEqual(diff.diffsInOrder![0].id, 1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+    assert.strictEqual(diff.diffsInOrder![1].id, 2);
+    assert.strictEqual(diff.diffsInOrder![1].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+    assert.strictEqual(diff.diffsInOrder![2].id, 3);
+    assert.strictEqual(diff.diffsInOrder![2].diffType, SCHEMA.RenderingDom_DiffType.Deleted);
+    assert.strictEqual(diff.diffsInOrder![3].id, 6);
+    assert.strictEqual(diff.diffsInOrder![3].diffType, SCHEMA.RenderingDom_DiffType.Created);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });
 
@@ -554,9 +596,9 @@ test('updateVirtualDomWithRenderingDomDiff - validArea equals bounds scenario', 
      * |  +---+  |  |  +-------+
      * +---------+  +---------+
      */
-    
+
     const { elements, provider } = createTestRecord();
-    
+
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
@@ -565,7 +607,7 @@ test('updateVirtualDomWithRenderingDomDiff - validArea equals bounds scenario', 
             []
         )
     ];
-    
+
     const r2: SCHEMA.RenderingDom = createRootRenderingDom();
     r2.children = [
         createChildRenderingDom(
@@ -574,14 +616,18 @@ test('updateVirtualDomWithRenderingDomDiff - validArea equals bounds scenario', 
             []
         )
     ];
-    
+
     const diff = diffRenderingDom(r1, r2);
+    assert.strictEqual(diff.diffsInOrder?.length, 1);
+    assert.strictEqual(diff.diffsInOrder![0].id, 1);
+    assert.strictEqual(diff.diffsInOrder![0].diffType, SCHEMA.RenderingDom_DiffType.Modified);
+
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
-    
+
     const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
     const j2 = JsonifyVirtualDom(record2.screen);
-    
+
     assert.deepEqual(j1, j2);
 });

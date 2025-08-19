@@ -244,13 +244,22 @@ function collectPropsAfterDiff(
 
     for (const diff of diffs) {
         if (diff.diffType == SCHEMA.RenderingDom_DiffType.Modified) {
-            if (!props.has(diff.id)) {
-                throw new Error(`RenderingDom_Diff with Modified must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
-            }
-            if (diff.content) {
-                const propsBeforeDiff = props.get(diff.id)!;
-                propsBeforeDiff.bounds = diff.content.bounds;
-                propsBeforeDiff.validArea = diff.content.validArea;
+            if (diff.id === RootVirtualDomId) {
+                if (diff.content) {
+                    throw new Error(`RenderingDom_Diff with Modified should not have content for RootVirtualDomId: ${JSON.stringify(diff, undefined, 4)}`);
+                }
+                if (!diff.children) {
+                    throw new Error(`RenderingDom_Diff with Modified must have children for RootVirtualDomId: ${JSON.stringify(diff, undefined, 4)}`);
+                }
+            } else {
+                if (!props.has(diff.id)) {
+                    throw new Error(`RenderingDom_Diff with Modified must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
+                }
+                if (diff.content) {
+                    const propsBeforeDiff = props.get(diff.id)!;
+                    propsBeforeDiff.bounds = diff.content.bounds;
+                    propsBeforeDiff.validArea = diff.content.validArea;
+                }
             }
         }
     }
@@ -260,7 +269,6 @@ function collectPropsAfterDiff(
             if (!props.has(diff.id)) {
                 throw new Error(`RenderingDom_Diff with Deleted must use existing ID: ${JSON.stringify(diff, undefined, 4)}`);
             }
-            props.delete(diff.id);
         }
     }
 
@@ -318,18 +326,22 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
                 }
                 break;
             case SCHEMA.RenderingDom_DiffType.Modified:
-                self.innerDom!.updateChildren([]);
-                if (diff.content) {
-                    const newProps = {
-                        globalBounds: diff.content.bounds,
-                        hitTestResult: diff.content.hitTestResult || undefined,
-                        cursor: diff.content.cursor || undefined,
-                        typedDesc: diff.content.element ? record.elements.getDescEnsured(diff.content.element) : undefined,
-                        elementId: diff.content.element || undefined
-                    };
+                if (diff.id === RootVirtualDomId) {
+                    record.screen.updateChildren([]);
+                } else {
+                    self.innerDom!.updateChildren([]);
+                    if (diff.content) {
+                        const newProps = {
+                            globalBounds: diff.content.bounds,
+                            hitTestResult: diff.content.hitTestResult || undefined,
+                            cursor: diff.content.cursor || undefined,
+                            typedDesc: diff.content.element ? record.elements.getDescEnsured(diff.content.element) : undefined,
+                            elementId: diff.content.element || undefined
+                        };
 
-                    // validArea is not considered here yet
-                    self.innerDom!.updateProps(newProps);
+                        // validArea is not considered here yet
+                        self.innerDom!.updateProps(newProps);
+                    }
                 }
                 break;
             case SCHEMA.RenderingDom_DiffType.Deleted:
@@ -344,8 +356,13 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
     for (const diff of diffsInOrder.diffsInOrder) {
         if (diff.diffType === SCHEMA.RenderingDom_DiffType.Created || diff.diffType === SCHEMA.RenderingDom_DiffType.Modified) {
             if (diff.children) {
-                const self = props.get(diff.id)!;
-                self.innerDom!.updateChildren(diff.children.map(childId => props.get(childId)!.outerDom!));
+                const newChildren = diff.children.map(childId => props.get(childId)!.outerDom!);
+                if (diff.id === RootVirtualDomId) {
+                    record.screen.updateChildren(newChildren);
+                } else {
+                    const self = props.get(diff.id)!;
+                    self.innerDom!.updateChildren(newChildren);
+                }
             }
         }
     }

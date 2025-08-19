@@ -6,7 +6,8 @@ import {
     VirtualDomBaseRoot,
     VirtualDomBaseValidArea,
     VirtualDomBaseOrdinary,
-    VirtualDomProperties
+    VirtualDomProperties,
+    RootVirtualDomId
 } from '../src/dom/virtualDom';
 import assert from 'assert';
 
@@ -164,11 +165,16 @@ function areChildrenEqual(children1: SCHEMA.TYPES.List<SCHEMA.TYPES.Ptr<SCHEMA.R
 }
 
 export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDom): SCHEMA.RenderingDom_DiffsInOrder {
-    const flattened1 = flattenRenderingDomInOrder(r1);
-    const flattened2 = flattenRenderingDomInOrder(r2);
+    if (r1.id !== RootVirtualDomId) {
+        throw new Error(`The old RenderingDom should be given a root node.`);
+    }
+    if (r2.id !== RootVirtualDomId) {
+        throw new Error(`The new RenderingDom should be given a root node.`);
+    }
 
     const diffs: SCHEMA.RenderingDom_Diff[] = [];
-
+    const flattened1 = flattenRenderingDomInOrder(r1);
+    const flattened2 = flattenRenderingDomInOrder(r2);
     let index1 = 0;
     let index2 = 0;
 
