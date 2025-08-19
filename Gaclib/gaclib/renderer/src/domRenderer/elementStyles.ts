@@ -208,6 +208,18 @@ export function onSolidLabelResized(textDiv: HTMLElement): void {
     }
 }
 
+export function getFontStyle(desc: SCHEMA.ElementDesc_SolidLabel): string {
+    const textDecorations: string[] = [];
+    if (desc.font!.underline) {
+        textDecorations.push('underline');
+    }
+    if (desc.font!.strikeline) {
+        textDecorations.push('line-through');
+    }
+
+    return`color: ${desc.textColor}; font-family: ${desc.font!.fontFamily}; line-height: 1.4; font-size: ${desc.font!.size}px; font-weight: ${desc.font!.bold ? 'bold' : 'normal'}; font-style: ${desc.font!.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+}
+
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
     if (desc.font === null) {
         throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.font to exist.');
@@ -268,15 +280,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     }
 
     {
-        const textDecorations: string[] = [];
-        if (desc.font.underline) {
-            textDecorations.push('underline');
-        }
-        if (desc.font.strikeline) {
-            textDecorations.push('line-through');
-        }
-
-        const fontStyle = `color: ${desc.textColor}; font-family: ${desc.font.fontFamily}; line-height: 1.4; font-size: ${desc.font.size}px; font-weight: ${desc.font.bold ? 'bold' : 'normal'}; font-style: ${desc.font.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
+        const fontStyle = getFontStyle(desc);
         const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
 
         if (!ellipseWithWrapLine || !useWebkitLineClamp) {

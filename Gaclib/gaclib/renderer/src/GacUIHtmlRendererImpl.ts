@@ -1,7 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { getImageFormatType, getImageContentType, getImageDataUrl } from './domRenderer/elementStyles';
+import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle } from './domRenderer/elementStyles';
 import { createVirtualDomFromRenderingDom, VirtualDomRecord } from './virtualDomBuilding';
 import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
 
@@ -160,25 +160,25 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
         const fixedRequestArgs = requestArgs;
-        if (requestArgs.text !== null || requestArgs.font !== null) {
-            const desc = this._elements.getDescEnsured(requestArgs.id);
-            if (desc.type !== SCHEMA.RendererType.SolidLabel) {
-                throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${desc.type}`);
+        if (requestArgs.text === null || requestArgs.font === null) {
+            const typedDesc = this._elements.getDescEnsured(requestArgs.id);
+            if (typedDesc.type !== SCHEMA.RendererType.SolidLabel) {
+                throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${typedDesc.type}`);
             }
             if (fixedRequestArgs.text === null) {
-                fixedRequestArgs.text = desc.desc.text;
+                fixedRequestArgs.text = typedDesc.desc.text;
             }
             if (fixedRequestArgs.font === null) {
-                fixedRequestArgs.font = desc.desc.font;
+                fixedRequestArgs.font = typedDesc.desc.font;
             }
         }
 
-        if (fixedRequestArgs.text !== null || fixedRequestArgs.font !== null) {
+        if (fixedRequestArgs.text === null || fixedRequestArgs.font === null) {
             throw new Error(`In ElementDesc_SolidLabel, text or font should not be omitted if they were not offered before.`);
         }
         this._updateElement(fixedRequestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: fixedRequestArgs });
         if (fixedRequestArgs.measuringRequest) {
-            this._measuringPendingSolidLabels.push(fixedRequestArgs.id);
+            this._measuringSolidLabels.push(fixedRequestArgs.id);
         }
     }
 
@@ -261,33 +261,82 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
-    private _measuringPendingSolidLabels: SCHEMA.TYPES.Integer[] = [];
-    private _measuringTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
-    private _measuringTasksExecuted = 0;
-    private _measuringTasksExecuting = false;
+    private _measuringSolidLabels: SCHEMA.TYPES.Integer[] = [];
+    private _measuringImageTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
+    private _measuringImageTasksExecuted = 0;
+    private _measuringImageTasksExecuting = false;
     private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
+
     private _imageElementForTesting: HTMLImageElement = document.createElement('img');
+    private _textElementForTesting: HTMLElement = document.createElement('div');
 
     private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
         this._elements.updateDesc(id, typedDesc);
     }
 
+    private _measureSolidLabel(id: SCHEMA.TYPES.Integer): void {
+        const typedDesc = this._elements.getDescEnsured(id);
+        if (typedDesc.type !== SCHEMA.RendererType.SolidLabel) {
+            throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${typedDesc.type}`);
+        }
+
+        switch (typedDesc.desc.measuringRequest) {
+            case SCHEMA.ElementSolidLabelMeasuringRequest.FontHeight:
+                {
+                    // Set font style on the test element
+                    this._textElementForTesting.style.cssText = getFontStyle(typedDesc.desc);
+
+                    // Set a reasonable text to measure font height
+                    this._textElementForTesting.textContent = 'Ag';
+
+                    // Temporarily add to DOM to measure
+                    document.body.appendChild(this._textElementForTesting);
+
+                    // Get computed style to measure the actual height
+                    const computedStyle = window.getComputedStyle(this._textElementForTesting);
+                    const lineHeight = parseFloat(computedStyle.lineHeight);
+
+                    // Remove from DOM
+                    document.body.removeChild(this._textElementForTesting);
+
+                    // Store the measurement
+                    this._measuring.fontHeights!.push({
+                        fontFamily: typedDesc.desc.font!.fontFamily,
+                        fontSize: typedDesc.desc.font!.size,
+                        height: Math.round(lineHeight)
+                    });
+                }
+                break;
+            case SCHEMA.ElementSolidLabelMeasuringRequest.TotalSize:
+                {
+                    const virtualDom = this._renderingRecord?.elementToDoms.get(id);
+                    if (virtualDom) {
+                        // TODO
+                    }
+                }
+                break;
+        }
+    }
+
     private _fireRespondRendererEndRendering(): void {
         if (this._idRespondRendererEndRendering !== undefined) {
+            for (const id of this._measuringSolidLabels) {
+                this._measureSolidLabel(id);
+            }
             this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
             this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
-            this._measuringPendingSolidLabels = [];
+            this._measuringSolidLabels = [];
             this._idRespondRendererEndRendering = undefined;
         }
     }
 
-    private async _runMeasuringTasks(): Promise<void> {
-        if (this._measuringTasksExecuting) {
+    private async _runMeasuringImageTasks(): Promise<void> {
+        if (this._measuringImageTasksExecuting) {
             return;
         }
-        this._measuringTasksExecuting = true;
-        while (this._measuringTasksExecuted < this._measuringTasks.length) {
-            const [id, imageCreation] = this._measuringTasks[this._measuringTasksExecuted++];
+        this._measuringImageTasksExecuting = true;
+        while (this._measuringImageTasksExecuted < this._measuringImageTasks.length) {
+            const [id, imageCreation] = this._measuringImageTasks[this._measuringImageTasksExecuted++];
             const formatType = getImageFormatType(imageCreation.imageData);
             const contentType = getImageContentType(formatType);
             const imageUrl = getImageDataUrl(contentType, imageCreation.imageData);
@@ -321,21 +370,21 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
             // Submit metadata
             if (id === undefined) {
-                this._measuring.createdImages?.push(imageMetadata);
+                this._measuring.createdImages!.push(imageMetadata);
             } else {
                 this._responses.RespondImageCreated(id, imageMetadata);
             }
         }
         this._fireRespondRendererEndRendering();
 
-        this._measuringTasksExecuting = false;
-        this._measuringTasks = [];
-        this._measuringTasksExecuted = 0;
+        this._measuringImageTasksExecuting = false;
+        this._measuringImageTasks = [];
+        this._measuringImageTasksExecuted = 0;
     }
 
     _makeImageMetadata(id: SCHEMA.TYPES.Integer | undefined, imageCreation: SCHEMA.ImageCreation): void {
-        this._measuringTasks.push([id, imageCreation]);
-        void this._runMeasuringTasks();
+        this._measuringImageTasks.push([id, imageCreation]);
+        void this._runMeasuringImageTasks();
     }
 
     /****************************************************************************************
@@ -374,7 +423,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestRendererEndRendering(id: number): void {
         this._idRespondRendererEndRendering = id;
-        if (this._measuringTasksExecuted === this._measuringTasks.length) {
+        if (this._measuringImageTasksExecuted === this._measuringImageTasks.length) {
             this._fireRespondRendererEndRendering();
         }
     }
@@ -395,6 +444,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
         // incrementally update HTMLElement
+        // Call onSolidLabelResized accordingly
         throw new Error(`Not Implemented (RequestRendererRenderDomDiff)\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
 
