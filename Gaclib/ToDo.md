@@ -1,6 +1,10 @@
 # ToDo
 
 - Apply `RenderingDom_Diff` on `IVirtualDom`.
+  - Generate test cases for `updateVirtualDomWithRenderingDomDiff`.
+  - Ignore `ensureClippedHierarchy` first for test cases that do not involve clipping.
+  - Make two `RenderingDom`, `JsonifyVirtualDom` the first transformed `IVirtualDom`, generate diff and apply on this `IVirtualDom` to create another and jsonify.
+  - Consider `validArea`.
 - Implement IO events.
 - Handle remote exception.
 - Make `index.html` resize window when browser view port changed.
