@@ -319,6 +319,18 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
                 break;
             case SCHEMA.RenderingDom_DiffType.Modified:
                 self.innerDom!.updateChildren([]);
+                if (diff.content) {
+                    const newProps = {
+                        globalBounds: diff.content.bounds,
+                        hitTestResult: diff.content.hitTestResult || undefined,
+                        cursor: diff.content.cursor || undefined,
+                        typedDesc: diff.content.element ? record.elements.getDescEnsured(diff.content.element) : undefined,
+                        elementId: diff.content.element || undefined
+                    };
+
+                    // validArea is not considered here yet
+                    self.innerDom!.updateProps(newProps);
+                }
                 break;
             case SCHEMA.RenderingDom_DiffType.Deleted:
                 record.doms.delete(diff.id);
