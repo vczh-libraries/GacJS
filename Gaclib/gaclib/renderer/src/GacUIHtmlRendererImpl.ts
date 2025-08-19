@@ -293,7 +293,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                     }
 
                     // Set font style on the test element
-                    this._textElementForTesting.style.cssText = `box-sizing: border-box; ${getFontStyle(typedDesc.desc)}`;
+                    this._textElementForTesting.style.cssText = `box-sizing: border-box; width: max-content; height: max-content; ${getFontStyle(typedDesc.desc)}`;
 
                     // Set a reasonable text to measure font height
                     this._textElementForTesting.textContent = 'Ag';
@@ -326,7 +326,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                         return actualRequest;
                     }
                     // Set font style on the test element
-                    this._textElementForTesting.style.cssText = `box-sizing: border-box; ${getFontStyle(typedDesc.desc)} white-space: ${typedDesc.desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+                    this._textElementForTesting.style.cssText = `box-sizing: border-box; width: max-content; height: max-content; ${getFontStyle(typedDesc.desc)} white-space: ${typedDesc.desc.wrapLine ? 'pre-wrap' : 'pre'};`;
 
                     // Set width from virtualDom.bounds if wrapLine is enabled
                     if (typedDesc.desc.wrapLine) {
