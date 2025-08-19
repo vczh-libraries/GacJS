@@ -19,7 +19,8 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with correct argum
         globalBounds,
         hitTestResult,
         cursor,
-        typedDesc
+        typedDesc,
+        elementId: 1
     };
 
     const dom = provider.createDom(id, props);
@@ -43,7 +44,8 @@ test('VirtualDomProviderMock.createDom creates VirtualDomMock with undefined opt
         globalBounds,
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: undefined
+        typedDesc: undefined,
+        elementId: undefined
     };
 
     const dom = provider.createDom(id, props);
@@ -305,14 +307,15 @@ test('VirtualDomMock.updateTypedDesc updates typedDesc correctly', () => {
         globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: initialDesc
+        typedDesc: initialDesc,
+        elementId: 1
     };
 
     const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
 
-    dom.updateTypedDesc(newDesc);
+    dom.updateTypedDesc(1, newDesc);
 
     assert.deepEqual(dom.props.typedDesc, newDesc);
 });
@@ -324,14 +327,15 @@ test('VirtualDomMock.updateTypedDesc allows undefined to undefined', () => {
         globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: undefined
+        typedDesc: undefined,
+        elementId: undefined
     };
 
     const dom = provider.createDom(1, props);
 
     assert.isUndefined(dom.props.typedDesc);
 
-    dom.updateTypedDesc(undefined);
+    dom.updateTypedDesc(undefined, undefined);
 
     assert.isUndefined(dom.props.typedDesc);
 });
@@ -351,14 +355,15 @@ test('VirtualDomMock.updateTypedDesc allows setting from undefined to defined', 
         globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: undefined
+        typedDesc: undefined,
+        elementId: undefined
     };
 
     const dom = provider.createDom(1, props);
 
     assert.isUndefined(dom.props.typedDesc);
 
-    dom.updateTypedDesc(newDesc);
+    dom.updateTypedDesc(1, newDesc);
 
     assert.deepEqual(dom.props.typedDesc, newDesc);
 });
@@ -373,14 +378,15 @@ test('VirtualDomMock.updateTypedDesc allows setting from defined to undefined', 
         globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: initialDesc
+        typedDesc: initialDesc,
+        elementId: 1
     };
 
     const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
 
-    dom.updateTypedDesc(undefined);
+    dom.updateTypedDesc(undefined, undefined);
 
     assert.isUndefined(dom.props.typedDesc);
 });
@@ -408,12 +414,13 @@ test('VirtualDomMock.updateTypedDesc allows changing type', () => {
         globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: initialDesc
+        typedDesc: initialDesc,
+        elementId: 1
     };
 
     const dom = provider.createDom(1, props);
 
-    dom.updateTypedDesc(differentTypeDesc);
+    dom.updateTypedDesc(2, differentTypeDesc);
 
     assert.deepEqual(dom.props.typedDesc, differentTypeDesc);
 });
@@ -441,14 +448,41 @@ test('VirtualDomMock.updateTypedDesc allows updating desc part with same type', 
         globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
         hitTestResult: undefined,
         cursor: undefined,
-        typedDesc: initialDesc
+        typedDesc: initialDesc,
+        elementId: 1
     };
 
     const dom = provider.createDom(1, props);
 
     assert.deepEqual(dom.props.typedDesc, initialDesc);
 
-    dom.updateTypedDesc(updatedDesc);
+    dom.updateTypedDesc(1, updatedDesc);
 
     assert.deepEqual(dom.props.typedDesc, updatedDesc);
+});
+
+test('VirtualDomMock.updateTypedDesc throws error when elementId and typedDesc consistency is violated', () => {
+    const provider = new VirtualDomProviderMock();
+    const props: VirtualDomProperties = {
+        globalBounds: { x1: 0, y1: 0, x2: 10, y2: 10 },
+        hitTestResult: undefined,
+        cursor: undefined,
+        typedDesc: undefined,
+        elementId: undefined
+    };
+
+    const dom = provider.createDom(1, props);
+
+    // Test case 1: elementId defined but typedDesc undefined
+    assert.throws(() => {
+        dom.updateTypedDesc(1, undefined);
+    }, /elementId and typedDesc must be both undefined or not undefined/);
+
+    // Test case 2: elementId undefined but typedDesc defined
+    const typedDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.FocusRectangle
+    };
+    assert.throws(() => {
+        dom.updateTypedDesc(undefined, typedDesc);
+    }, /elementId and typedDesc must be both undefined or not undefined/);
 });

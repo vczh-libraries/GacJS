@@ -69,7 +69,8 @@ function fillVirtualDom(
         globalBounds: content.bounds,
         hitTestResult: content.hitTestResult || undefined,
         cursor: content.cursor || undefined,
-        typedDesc
+        typedDesc,
+        elementId: content.element || undefined
     };
 
     // Create the virtual DOM

@@ -123,7 +123,8 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
         return this._props;
     }
 
-    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+    updateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
+        void elementId;
         void typedDesc;
         throw new Error('updateTypedDesc is not supported for this virtual DOM type.');
     }
@@ -187,7 +188,8 @@ export abstract class VirtualDomBaseRoot<T extends VirtualDomBase<T>> extends Vi
             globalBounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
             hitTestResult: undefined,
             cursor: undefined,
-            typedDesc: undefined
+            typedDesc: undefined,
+            elementId: undefined
         });
     }
 }
@@ -201,7 +203,8 @@ export abstract class VirtualDomBaseValidArea<T extends VirtualDomBase<T>> exten
             globalBounds: validArea,
             hitTestResult: undefined,
             cursor: undefined,
-            typedDesc: undefined
+            typedDesc: undefined,
+            elementId: undefined
         });
     }
 }
@@ -214,21 +217,27 @@ export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBase<T>> extend
         super(id, props);
     }
 
-    updateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+    updateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
+        // Validation: elementId and typedDesc must be both undefined or not undefined
+        if ((elementId === undefined) !== (typedDesc === undefined)) {
+            throw new Error('elementId and typedDesc must be both undefined or not undefined');
+        }
+        
         this._props = {
             ...this._props,
+            elementId,
             typedDesc
         };
-        this.onUpdateTypedDesc(typedDesc);
+        this.onUpdateTypedDesc(elementId, typedDesc);
     }
 
     updateProps(props: VirtualDomProperties): void {
-        this.updateTypedDesc(props.typedDesc);
+        this.updateTypedDesc(props.elementId, props.typedDesc);
         this._props = {
             ...props
         };
     }
 
     // Abstract method that subclasses must implement
-    protected abstract onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void;
+    protected abstract onUpdateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void;
 }

@@ -96,7 +96,8 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
                child instanceof VirtualDomHtmlOrdinary;
     }
 
-    protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+    protected onUpdateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
+        void elementId; // elementId parameter added for consistency but not used in this implementation
         // Apply typed style to the HTML element
         if (typedDesc !== undefined) {
             applyTypedStyle(this.htmlElement, typedDesc);

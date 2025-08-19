@@ -69,7 +69,8 @@ class VirtualDomMockOrdinary extends VirtualDomBaseOrdinary<VirtualDomMockTypes>
             child instanceof VirtualDomMockOrdinary;
     }
 
-    protected onUpdateTypedDesc(typedDesc: TypedElementDesc | undefined): void {
+    protected onUpdateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
+        void elementId;
         void typedDesc;
         // Mock implementation - no additional logic needed
     }
