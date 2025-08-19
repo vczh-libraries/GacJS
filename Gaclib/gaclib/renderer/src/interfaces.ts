@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { IVirtualDomProvider } from './virtualDom';
-import { IElementMeasurer } from './virtualDomBuilding';
+import { IVirtualDomProvider } from './dom/virtualDom';
+import { IElementMeasurer } from './dom/virtualDomBuilding';
 
 export interface IGacUIHtmlRenderer {
     get requests(): SCHEMA.IRemoteProtocolRequests;

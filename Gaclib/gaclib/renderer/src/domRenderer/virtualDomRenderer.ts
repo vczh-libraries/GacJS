@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../GacUIElementManager';
-import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../virtualDom';
+import { IVirtualDom, IVirtualDomProvider, VirtualDomBase } from '../dom/virtualDom';
 import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder } from './elementStyles';
 
 class VirtualDomHtml extends VirtualDomBase<VirtualDomHtml> {

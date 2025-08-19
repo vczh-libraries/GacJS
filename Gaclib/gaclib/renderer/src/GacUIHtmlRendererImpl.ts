@@ -1,8 +1,8 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { createVirtualDomFromRenderingDom, IElementMeasurer, VirtualDomRecord } from './virtualDomBuilding';
-import { IVirtualDomProvider, RootVirtualDomId } from './virtualDom';
+import { createVirtualDomFromRenderingDom, IElementMeasurer, VirtualDomRecord } from './dom/virtualDomBuilding';
+import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;

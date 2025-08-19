@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { ElementManager, TypedElementDesc } from './GacUIElementManager';
+import { ElementManager, TypedElementDesc } from '../GacUIElementManager';
 import { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId } from './virtualDom';
 
 export type VirtualDomMap = Map<SCHEMA.TYPES.Integer, IVirtualDom>;

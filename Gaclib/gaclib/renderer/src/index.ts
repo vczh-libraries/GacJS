@@ -32,5 +32,5 @@ export * from './GacUIHtmlRendererImpl';
 export * from './domRenderer/elementStyles';
 export * from './domRenderer/elementMeasurer';
 export * from './domRenderer/virtualDomRenderer';
-export { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId } from './virtualDom';
-export * from './virtualDomBuilding';
+export { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId } from './dom/virtualDom';
+export * from './dom/virtualDomBuilding';

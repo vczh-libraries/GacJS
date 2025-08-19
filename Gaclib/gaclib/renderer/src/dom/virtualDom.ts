@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from './GacUIElementManager';
+import { TypedElementDesc } from '../GacUIElementManager';
 
 /*
  * # Converting from RenderingDom(r) to IVirtualDom(v)

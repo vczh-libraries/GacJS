@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle, normalizeText } from './elementStyles';
-import { IElementMeasurer, VirtualDomRecord } from '../virtualDomBuilding';
+import { IElementMeasurer, VirtualDomRecord } from '../dom/virtualDomBuilding';
 
 export class ElementHTMLMeasurer implements IElementMeasurer {
     private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
