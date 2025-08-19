@@ -89,7 +89,7 @@ test('diffRenderingDom - created element should generate Created diff', () => {
             bounds: { x1: 10, y1: 10, x2: 50, y2: 30 },
             validArea: { x1: 10, y1: 10, x2: 50, y2: 30 }
         },
-        children: []
+        children: null
     });
 });
 
@@ -138,7 +138,7 @@ test('diffRenderingDom - deleted element should generate Deleted diff', () => {
         id: 1,
         diffType: SCHEMA.RenderingDom_DiffType.Deleted,
         content: null,
-        children: []
+        children: null
     });
 });
 
@@ -186,7 +186,7 @@ test('diffRenderingDom - modified content should generate Modified diff', () => 
             bounds: { x1: 10, y1: 10, x2: 70, y2: 30 },
             validArea: { x1: 10, y1: 10, x2: 70, y2: 30 }
         },
-        children: []
+        children: null
     });
 });
 
@@ -307,7 +307,7 @@ test('diffRenderingDom - complex mixed changes', () => {
         id: 2,
         diffType: SCHEMA.RenderingDom_DiffType.Deleted,
         content: null,
-        children: []
+        children: null
     });
     
     // Created element (id=4)
@@ -321,6 +321,6 @@ test('diffRenderingDom - complex mixed changes', () => {
             bounds: { x1: 20, y1: 20, x2: 40, y2: 40 },
             validArea: { x1: 20, y1: 20, x2: 40, y2: 40 }
         },
-        children: []
+        children: null
     });
 });
