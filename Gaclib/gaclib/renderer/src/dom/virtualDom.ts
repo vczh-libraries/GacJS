@@ -146,13 +146,13 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
         const expectedType = this.getExpectedChildType();
 
         for (const child of children) {
-            if (!this.isExpectedChildType(child)) {
+            if (!(child instanceof VirtualDomBase) || !this.isExpectedChildType(child)) {
                 throw new Error(`All children must be ${expectedType} instances.`);
             }
             if (child === this) {
                 throw new Error('Child cannot be this node itself.');
             }
-            const typedChild = child as unknown as T;
+            const typedChild = child as T;
             if (typedChild._parent !== undefined && typedChild._parent !== (this as unknown as T)) {
                 throw new Error('Child already has a different parent.');
             }
@@ -180,7 +180,7 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
     protected abstract onUpdateChildren(children: T[]): void;
 }
 
-export abstract class VirtualDomBaseRoot<T extends VirtualDomBaseRoot<T>> extends VirtualDomBase<T> {
+export abstract class VirtualDomBaseRoot<T extends VirtualDomBase<T>> extends VirtualDomBase<T> {
     constructor() {
         super(RootVirtualDomId, {
             globalBounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
@@ -191,7 +191,7 @@ export abstract class VirtualDomBaseRoot<T extends VirtualDomBaseRoot<T>> extend
     }
 }
 
-export abstract class VirtualDomBaseValidArea<T extends VirtualDomBaseValidArea<T>> extends VirtualDomBase<T> {
+export abstract class VirtualDomBaseValidArea<T extends VirtualDomBase<T>> extends VirtualDomBase<T> {
     constructor(
         id: SCHEMA.TYPES.Integer,
         validArea: SCHEMA.Rect
@@ -205,7 +205,7 @@ export abstract class VirtualDomBaseValidArea<T extends VirtualDomBaseValidArea<
     }
 }
 
-export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBaseOrdinary<T>> extends VirtualDomBase<T> {
+export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBase<T>> extends VirtualDomBase<T> {
     constructor(
         id: SCHEMA.TYPES.Integer,
         props: VirtualDomProperties

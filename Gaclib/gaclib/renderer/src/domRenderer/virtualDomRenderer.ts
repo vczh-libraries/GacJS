@@ -10,7 +10,9 @@ import {
 } from '../dom/virtualDom';
 import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder } from './elementStyles';
 
-class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlRoot> {
+type VirtualDomHtmlTypes = VirtualDomHtmlRoot | VirtualDomHtmlValidArea | VirtualDomHtmlOrdinary;
+
+class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlTypes> {
     public readonly htmlElement: HTMLElement;
 
     constructor() {
@@ -27,7 +29,7 @@ class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlRoot> {
                child instanceof VirtualDomHtmlOrdinary;
     }
 
-    protected onUpdateChildren(children: VirtualDomHtmlRoot[]): void {
+    protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
         // Update HTML element children
         const htmlChildren = children.map(child => child.htmlElement);
         this.htmlElement.replaceChildren(...htmlChildren);
@@ -38,7 +40,7 @@ class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlRoot> {
     }
 }
 
-class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlValidArea> {
+class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlTypes> {
     public readonly htmlElement: HTMLElement;
 
     constructor(
@@ -58,7 +60,7 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlVali
                child instanceof VirtualDomHtmlOrdinary;
     }
 
-    protected onUpdateChildren(children: VirtualDomHtmlValidArea[]): void {
+    protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
         // Update HTML element children
         const htmlChildren = children.map(child => child.htmlElement);
         this.htmlElement.replaceChildren(...htmlChildren);
@@ -69,7 +71,7 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlVali
     }
 }
 
-class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlOrdinary> {
+class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes> {
     public readonly htmlElement: HTMLElement;
 
     constructor(
@@ -101,7 +103,7 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlOrdina
         }
     }
 
-    protected onUpdateChildren(children: VirtualDomHtmlOrdinary[]): void {
+    protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
         // Update HTML element children
         const htmlChildren = children.map(child => child.htmlElement);
         this.htmlElement.replaceChildren(...htmlChildren);
@@ -111,8 +113,6 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlOrdina
         }
     }
 }
-
-type VirtualDomHtml = VirtualDomHtmlRoot | VirtualDomHtmlValidArea | VirtualDomHtmlOrdinary;
 
 export class VirtualDomHtmlProvider implements IVirtualDomProvider {
     createDom(
@@ -131,13 +131,6 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         validArea: SCHEMA.Rect
     ): IVirtualDom {
         return new VirtualDomHtmlValidArea(id, validArea);
-    }
-
-    createSimpleDom(
-        id: SCHEMA.TYPES.Integer,
-        globalBounds: SCHEMA.Rect
-    ): VirtualDomHtml {
-        return new VirtualDomHtmlValidArea(id, globalBounds);
     }
 
     fixBounds(virtualDom: IVirtualDom, target: HTMLElement, width: number, height: number): void {
@@ -163,7 +156,7 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         target.replaceChildren(virtualDom.htmlElement);
     }
 
-    private fixBoundsRecursive(virtualDom: VirtualDomHtml): void {
+    private fixBoundsRecursive(virtualDom: IVirtualDom): void {
         // Apply bounds to all children
         for (const child of virtualDom.children) {
             if (child instanceof VirtualDomHtmlRoot || 
