@@ -102,7 +102,7 @@ export class VirtualDomProviderMock implements IVirtualDomProvider {
     createSimpleDom(
         id: SCHEMA.TYPES.Integer,
         globalBounds: SCHEMA.Rect
-    ): VirtualDomMockTypes {
+    ): IVirtualDom {
         return new VirtualDomMockValidArea(id, globalBounds);
     }
 

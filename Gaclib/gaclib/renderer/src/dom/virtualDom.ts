@@ -142,21 +142,21 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
         }
     }
 
-    updateChildren(children: IVirtualDom[]): void {
+    updateChildren(children: T[]): void {
         const expectedType = this.getExpectedChildType();
+        const self = (this as unknown as T);
 
         for (const child of children) {
-            if (!(child instanceof VirtualDomBase) || !this.isExpectedChildType(child)) {
+            if (!this.isExpectedChildType(child)) {
                 throw new Error(`All children must be ${expectedType} instances.`);
             }
-            if (child === this) {
+            if (child === self) {
                 throw new Error('Child cannot be this node itself.');
             }
-            const typedChild = child as T;
-            if (typedChild._parent !== undefined && typedChild._parent !== (this as unknown as T)) {
+            if (child._parent !== undefined && child._parent !== self) {
                 throw new Error('Child already has a different parent.');
             }
-            if (this.isRootOfSelf(typedChild)) {
+            if (this.isRootOfSelf(child)) {
                 throw new Error('Child cannot be the root of this node.');
             }
         }
@@ -168,7 +168,7 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
         this._children = [...children] as T[];
 
         for (const child of this._children) {
-            child._parent = this as unknown as T;
+            child._parent = self;
         }
 
         this.onUpdateChildren(this._children);
