@@ -159,8 +159,27 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererUpdateElement_SolidLabel(requestArgs: SCHEMA.ElementDesc_SolidLabel): void {
-        // pay attention for text size measuring request
-        this._updateElement(requestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: requestArgs });
+        const fixedRequestArgs = requestArgs;
+        if (requestArgs.text !== null || requestArgs.font !== null) {
+            const desc = this._elements.getDescEnsured(requestArgs.id);
+            if (desc.type !== SCHEMA.RendererType.SolidLabel) {
+                throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${desc.type}`);
+            }
+            if (fixedRequestArgs.text === null) {
+                fixedRequestArgs.text = desc.desc.text;
+            }
+            if (fixedRequestArgs.font === null) {
+                fixedRequestArgs.font = desc.desc.font;
+            }
+        }
+
+        if (fixedRequestArgs.text !== null || fixedRequestArgs.font !== null) {
+            throw new Error(`In ElementDesc_SolidLabel, text or font should not be omitted if they were not offered before.`);
+        }
+        this._updateElement(fixedRequestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: fixedRequestArgs });
+        if (fixedRequestArgs.measuringRequest) {
+            this._measuringPendingSolidLabels.push(fixedRequestArgs.id);
+        }
     }
 
     /****************************************************************************************
@@ -186,14 +205,6 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {
-        // if imageCreation !== null it means a new image is created, otherwise we must ensure the image has already been registered
-        // need to record created image accordingly, but it may repeat so only process if imageDataOmitted === false, and fill the measuring request and image metadata
-        // before receiving RequestRendererBeginRendering, we must ensure the imageData has been sent
-        // the size respond will sent by RespondRendererEndRendering instead, if RequestImageCreated is not received on that image
-        // when the imageData is available, call the following function
-        // when the whole imageCreation is unavailable, the an imageCreation with available imageData should have been registered by RequestImageCreated
-        // we need to get that imageCreation by imageId, pass to updateDesc with an desc with that imageCreation
-
         // When imageId is null, ensure imageCreation is null too
         if (requestArgs.imageId === null) {
             if (requestArgs.imageCreation !== null) {
@@ -250,6 +261,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
+    private _measuringPendingSolidLabels: SCHEMA.TYPES.Integer[] = [];
     private _measuringTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
     private _measuringTasksExecuted = 0;
     private _measuringTasksExecuting = false;
@@ -264,6 +276,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         if (this._idRespondRendererEndRendering !== undefined) {
             this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
             this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
+            this._measuringPendingSolidLabels = [];
             this._idRespondRendererEndRendering = undefined;
         }
     }
