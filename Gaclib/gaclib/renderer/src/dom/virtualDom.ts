@@ -4,10 +4,10 @@ import { TypedElementDesc } from '../GacUIElementManager';
 /*
  * # Converting from RenderingDom(r) to IVirtualDom(v)
  *   r.id -> v.id
- *   r.content.hitTestResult -> v.hitTestResult
- *   r.content.cursor -> v.cursor
- *   r.content.element -> v.typedDesc
- *   r.content.bounds -> v.globalBounds
+ *   r.content.hitTestResult -> v.props.hitTestResult
+ *   r.content.cursor -> v.props.cursor
+ *   r.content.element -> v.props.typedDesc
+ *   r.content.bounds -> v.props.globalBounds
  *   r.children -> v.children
  * 
  * r.content.bounds and r.content.validArea are in global coordinate.
@@ -46,29 +46,33 @@ import { TypedElementDesc } from '../GacUIElementManager';
  * We don't need to keep and update RenderingDom, it will apply to IVirtualDom directly.
  * The updated IVirtualDom must follow the above rule with bounds and validArea.
  */
+
+export interface VirtualDomProperties {
+    readonly globalBounds: SCHEMA.Rect;
+    readonly hitTestResult?: SCHEMA.WindowHitTestResult | undefined;
+    readonly cursor?: SCHEMA.WindowSystemCursorType | undefined;
+    readonly typedDesc?: TypedElementDesc | undefined;
+}
+
 export interface IVirtualDom {
     get parent(): IVirtualDom | undefined;
     get id(): SCHEMA.TYPES.Integer;
-    get globalBounds(): SCHEMA.Rect;
     get bounds(): SCHEMA.Rect;
-    get hitTestResult(): SCHEMA.WindowHitTestResult | undefined;
-    get cursor(): SCHEMA.WindowSystemCursorType | undefined;
-    get typedDesc(): TypedElementDesc | undefined;
+    get props(): VirtualDomProperties;
     get children(): ReadonlyArray<IVirtualDom>;
     updateChildren(children: IVirtualDom[]): void;
     updateTypedDesc(typedDesc: TypedElementDesc | undefined): void;
+    updateProps(props: VirtualDomProperties): void;
 }
 
 export interface IVirtualDomProvider {
     createDom(
         id: SCHEMA.TYPES.Integer,
-        globalBounds: SCHEMA.Rect,
-        hitTestResult: SCHEMA.WindowHitTestResult | undefined,
-        cursor: SCHEMA.WindowSystemCursorType | undefined,
-        typedDesc: TypedElementDesc | undefined): IVirtualDom;
-    createSimpleDom(
+        props: VirtualDomProperties): IVirtualDom;
+    createDomForRoot(): IVirtualDom;
+    createDomForValidArea(
         id: SCHEMA.TYPES.Integer,
-        globalBounds: SCHEMA.Rect): IVirtualDom;
+        validArea: SCHEMA.Rect): IVirtualDom;
     fixBounds(
         virtualDom: IVirtualDom,
         target: HTMLElement,
