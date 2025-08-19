@@ -41,7 +41,7 @@ function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom:
     if (renderingDom.children) {
         for (const child of renderingDom.children) {
             if (child !== null) {
-                const childVirtualDom = createVirtualDom(child, record, provider, parentValidArea);
+                const childVirtualDom = createVirtualDomTree(child, record, provider, parentValidArea);
                 children.push(childVirtualDom);
             }
         }
@@ -52,23 +52,23 @@ function processAndUpdateChildren(renderingDom: SCHEMA.RenderingDom, virtualDom:
 }
 
 function fillVirtualDom(
-    renderingDom: SCHEMA.RenderingDom,
+    content: SCHEMA.RenderingDomContent,
     record: VirtualDomRecord,
     provider: IVirtualDomProvider,
     id: SCHEMA.TYPES.Integer,
 ): IVirtualDom {
     // Create TypedElementDesc from element ID if present
     let typedDesc: TypedElementDesc | undefined = undefined;
-    if (renderingDom.content.element !== null) {
+    if (content.element !== null) {
         // Look up the element in the provided element manager with error checking
-        typedDesc = record.elements.getDescEnsured(renderingDom.content.element);
+        typedDesc = record.elements.getDescEnsured(content.element);
     }
 
     // Create props for the virtual DOM
     const props = {
-        globalBounds: renderingDom.content.bounds,
-        hitTestResult: renderingDom.content.hitTestResult || undefined,
-        cursor: renderingDom.content.cursor || undefined,
+        globalBounds: content.bounds,
+        hitTestResult: content.hitTestResult || undefined,
+        cursor: content.cursor || undefined,
         typedDesc
     };
 
@@ -76,21 +76,21 @@ function fillVirtualDom(
     const virtualDom = provider.createDom(id, props);
 
     // Add to elementToDoms map if this DOM has an element
-    if (renderingDom.content.element !== null) {
+    if (content.element !== null) {
         // Ensure 1:1 mapping - element should not already exist in elementToDoms
-        if (record.elementToDoms.has(renderingDom.content.element)) {
-            throw new Error(`RenderingDomContent.element ID ${renderingDom.content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
+        if (record.elementToDoms.has(content.element)) {
+            throw new Error(`RenderingDomContent.element ID ${content.element} is already mapped to another IVirtualDom. Each element must have 1:1 mapping with IVirtualDom.`);
         }
-        record.elementToDoms.set(renderingDom.content.element, virtualDom);
+        record.elementToDoms.set(content.element, virtualDom);
     }
-
-    // Process and update children
-    processAndUpdateChildren(renderingDom, virtualDom, record, provider);
 
     return virtualDom;
 }
 
-function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): IVirtualDom {
+function createVirtualDom(id: SCHEMA.TYPES.Integer, content: SCHEMA.RenderingDomContent, record: VirtualDomRecord, provider: IVirtualDomProvider): [IVirtualDom, IVirtualDom] {
+}
+
+function createVirtualDomTree(renderingDom: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): IVirtualDom {
     // Check for duplicate IDs
     if (record.doms.has(renderingDom.id)) {
         throw new Error(`Duplicate RenderingDom ID found: ${renderingDom.id}. Each RenderingDom must have a unique ID.`);
@@ -104,11 +104,14 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
         // validArea equals natural intersection, create single virtual DOM
         // Children should be processed with this element's validArea as their parent validArea
         const virtualDom = fillVirtualDom(
-            renderingDom,
+            renderingDom.content,
             record,
             provider,
             renderingDom.id,
         );
+
+        // Process and update children
+        processAndUpdateChildren(renderingDom, virtualDom, record, provider);
 
         // Add to the doms map only if ID is not negative
         if (renderingDom.id >= 0) {
@@ -124,11 +127,14 @@ function createVirtualDom(renderingDom: SCHEMA.RenderingDom, record: VirtualDomR
         // Create the inner virtual DOM with original bounds, but with ClippedVirtualDomId
         // Children should be processed with the outer DOM's validArea as their parent validArea
         const innerVirtualDom = fillVirtualDom(
-            renderingDom,
+            renderingDom.content,
             record,
             provider,
             ClippedVirtualDomId,
         );
+
+        // Process and update children
+        processAndUpdateChildren(renderingDom, innerVirtualDom, record, provider);
 
         // Add to the doms map only if ID is not negative
         if (renderingDom.id >= 0) {
@@ -286,13 +292,17 @@ function collectPropsAfterDiff(
     }
 }
 
- 
+
 function ensureVirtualDomForNewRenderingDom(
     diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder,
     record: VirtualDomRecord,
     provider: IVirtualDomProvider,
     props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
 ): void {
+    void diffsInOrder;
+    void record;
+    void provider;
+    void props;
 }
 
 export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
