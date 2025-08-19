@@ -172,67 +172,42 @@ export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDo
     let index2 = 0;
 
     while (index1 < flattened1.length || index2 < flattened2.length) {
-        const item1 = index1 < flattened1.length ? flattened1[index1] : undefined;
-        const item2 = index2 < flattened2.length ? flattened2[index2] : undefined;
+        const item1 = index1 < flattened1.length ? flattened1[index1][1] : undefined;
+        const item2 = index2 < flattened2.length ? flattened2[index2][1] : undefined;
 
-        if (item1 === undefined && item2 !== undefined) {
+        if ((!item1 && item2) || (item1 && item2 && item1.id > item2.id)) {
             // Created: r2 has something r1 doesn't have
-            const [id, dom2] = item2;
             diffs.push({
-                id: id,
+                id: item2.id,
                 diffType: SCHEMA.RenderingDom_DiffType.Created,
-                content: dom2.content,
-                children: getIdFromList(dom2.children)
+                content: item2.content,
+                children: getIdFromList(item2.children)
             });
             index2++;
-        } else if (item1 !== undefined && item2 === undefined) {
+        } else if ((item1 && !item2) || (item1 && item2 && item1.id < item2.id)) {
             // Deleted: r1 has something r2 doesn't have
-            const [id] = item1;
             diffs.push({
-                id: id,
+                id: item1.id,
                 diffType: SCHEMA.RenderingDom_DiffType.Deleted,
                 content: null,
                 children: null
             });
             index1++;
-        } else if (item1 !== undefined && item2 !== undefined) {
-            const [id1, dom1] = item1;
-            const [id2, dom2] = item2;
+        } else if (item1 && item2) {
+            // Same ID, check if modified
+            const contentChanged = JSON.stringify(item1.content) !== JSON.stringify(item2.content);
+            const childrenChanged = !areChildrenEqual(item1.children, item2.children);
 
-            if (id1 < id2) {
-                // Deleted: r1 has something r2 doesn't have
+            if (contentChanged || childrenChanged) {
                 diffs.push({
-                    id: id1,
-                    diffType: SCHEMA.RenderingDom_DiffType.Deleted,
-                    content: null,
-                    children: null
+                    id: item2.id,
+                    diffType: SCHEMA.RenderingDom_DiffType.Modified,
+                    content: contentChanged ? item2.content : null,
+                    children: childrenChanged ? getIdFromList(item2.children) : null
                 });
-                index1++;
-            } else if (id1 > id2) {
-                // Created: r2 has something r1 doesn't have
-                diffs.push({
-                    id: id2,
-                    diffType: SCHEMA.RenderingDom_DiffType.Created,
-                    content: dom2.content,
-                    children: getIdFromList(dom2.children)
-                });
-                index2++;
-            } else {
-                // Same ID, check if modified
-                const contentChanged = JSON.stringify(dom1.content) !== JSON.stringify(dom2.content);
-                const childrenChanged = !areChildrenEqual(dom1.children, dom2.children);
-
-                if (contentChanged || childrenChanged) {
-                    diffs.push({
-                        id: id1,
-                        diffType: SCHEMA.RenderingDom_DiffType.Modified,
-                        content: contentChanged ? dom2.content : null,
-                        children: childrenChanged ? getIdFromList(dom2.children) : null
-                    });
-                }
-                index1++;
-                index2++;
             }
+            index1++;
+            index2++;
         }
     }
 
