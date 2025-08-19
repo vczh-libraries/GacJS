@@ -178,7 +178,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
         this._updateElement(fixedRequestArgs.id, { type: SCHEMA.RendererType.SolidLabel, desc: fixedRequestArgs });
         if (fixedRequestArgs.measuringRequest) {
-            this._measuringSolidLabels.push(fixedRequestArgs.id);
+            this._measuringSolidLabels.push([fixedRequestArgs.id, fixedRequestArgs.measuringRequest]);
         }
     }
 
@@ -264,7 +264,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
 
     private _textElementForTesting: HTMLElement = document.createElement('div');
-    private _measuringSolidLabels: SCHEMA.TYPES.Integer[] = [];
+    private _measuringSolidLabels: [SCHEMA.TYPES.Integer, SCHEMA.ElementSolidLabelMeasuringRequest][] = [];
     private _measuredFontHeights: Map<string, SCHEMA.ElementMeasuring_FontHeight> = new Map();
     private _measuredTotalSizes: Map<SCHEMA.TYPES.Integer, SCHEMA.ElementMeasuring_ElementMinSize> = new Map();
 
@@ -277,18 +277,19 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         this._elements.updateDesc(id, typedDesc);
     }
 
-    private _measureSolidLabel(id: SCHEMA.TYPES.Integer): void {
+    private _measureSolidLabel(id: SCHEMA.TYPES.Integer, request: SCHEMA.ElementSolidLabelMeasuringRequest): SCHEMA.ElementSolidLabelMeasuringRequest | undefined {
         const typedDesc = this._elements.getDescEnsured(id);
         if (typedDesc.type !== SCHEMA.RendererType.SolidLabel) {
             throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${typedDesc.type}`);
         }
 
-        switch (typedDesc.desc.measuringRequest) {
+        const actualRequest = typedDesc.desc.measuringRequest ?? request;
+        switch (actualRequest) {
             case SCHEMA.ElementSolidLabelMeasuringRequest.FontHeight:
                 {
                     const key = `${typedDesc.desc.font!.size}:${typedDesc.desc.font!.fontFamily}`;
                     if (this._measuredFontHeights.has(key)) {
-                        break;
+                        return undefined;
                     }
 
                     // Set font style on the test element
@@ -320,39 +321,42 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             case SCHEMA.ElementSolidLabelMeasuringRequest.TotalSize:
                 {
                     const virtualDom = this._renderingRecord?.elementToDoms.get(id);
-                    const minSize: SCHEMA.Size = { x: 1, y: 1 };
 
-                    if (virtualDom) {
-                        // Set font style on the test element
-                        this._textElementForTesting.style.cssText = `box-sizing: border-box; ${getFontStyle(typedDesc.desc)} white-space: ${typedDesc.desc.wrapLine ? 'pre-wrap' : 'pre'};`;
+                    if (!virtualDom) {
+                        return actualRequest;
+                    }
+                    // Set font style on the test element
+                    this._textElementForTesting.style.cssText = `box-sizing: border-box; ${getFontStyle(typedDesc.desc)} white-space: ${typedDesc.desc.wrapLine ? 'pre-wrap' : 'pre'};`;
 
-                        // Set width from virtualDom.bounds if wrapLine is enabled
-                        if (typedDesc.desc.wrapLine) {
-                            const width = virtualDom.bounds.x2 - virtualDom.bounds.x1;
-                            this._textElementForTesting.style.width = `${width}px`;
+                    // Set width from virtualDom.bounds if wrapLine is enabled
+                    if (typedDesc.desc.wrapLine) {
+                        const width = virtualDom.bounds.x2 - virtualDom.bounds.x1;
+                        this._textElementForTesting.style.width = `${width}px`;
+                    }
+
+                    // Set the text content to measure
+                    this._textElementForTesting.textContent = normalizeText(typedDesc.desc);
+                    if (this._textElementForTesting.textContent === '') {
+                        this._textElementForTesting.textContent = ' ';
+                    }
+
+                    // Temporarily add to DOM to measure
+                    document.body.appendChild(this._textElementForTesting);
+
+                    // Get the measured size using offsetWidth/offsetHeight
+                    const minSize: SCHEMA.Size = {
+                        x: this._textElementForTesting.offsetWidth,
+                        y: this._textElementForTesting.offsetHeight
+                    };
+
+                    // Remove from DOM
+                    document.body.removeChild(this._textElementForTesting);
+
+                    if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
+                        const original = this._measuredTotalSizes.get(typedDesc.desc.id)!;
+                        if (original.minSize.x === minSize.x && original.minSize.y === minSize.y) {
+                            return undefined;
                         }
-
-                        // Set the text content to measure
-                        this._textElementForTesting.textContent = normalizeText(typedDesc.desc);
-
-                        // Temporarily add to DOM to measure
-                        document.body.appendChild(this._textElementForTesting);
-
-                        // Get the measured size using offsetWidth/offsetHeight
-                        minSize.x = this._textElementForTesting.offsetWidth;
-                        minSize.y = this._textElementForTesting.offsetHeight;
-
-                        // Remove from DOM
-                        document.body.removeChild(this._textElementForTesting);
-
-                        if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
-                            const original = this._measuredTotalSizes.get(typedDesc.desc.id)!;
-                            if (original.minSize.x === minSize.x && original.minSize.y === minSize.y) {
-                                break;
-                            }
-                        }
-                    } else if (this._measuredTotalSizes.has(typedDesc.desc.id)) {
-                        break;
                     }
 
                     const result: SCHEMA.ElementMeasuring_ElementMinSize = {
@@ -364,16 +368,22 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                 }
                 break;
         }
+        return undefined;
     }
 
     private _fireRespondRendererEndRendering(): void {
         if (this._idRespondRendererEndRendering !== undefined) {
-            for (const id of this._measuringSolidLabels) {
-                this._measureSolidLabel(id);
+            const remaining: [SCHEMA.TYPES.Integer, SCHEMA.ElementSolidLabelMeasuringRequest][] = [];
+            for (const [id, request] of this._measuringSolidLabels) {
+                const nextRequest = this._measureSolidLabel(id, request);
+                if (nextRequest) {
+                    remaining.push([id, nextRequest]);
+                }
             }
+            this._measuringSolidLabels = remaining;
+
             this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
             this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
-            this._measuringSolidLabels = [];
             this._idRespondRendererEndRendering = undefined;
         }
     }
