@@ -2,8 +2,7 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 import { ElementManager, TypedElementDesc } from '../src/GacUIElementManager';
 import { ClippedVirtualDomId } from '../src/dom/virtualDom';
 import { createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
-import { VirtualDomProviderMock } from './virtualDomMock';
-import { createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './TestVirtualDomBuilding';
+import { VirtualDomProviderMock, createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './virtualDomMock';
 import { test, assert } from 'vitest';
 
 test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)', () => {

@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from '../src/GacUIElementManager';
+import { TypedElementDesc, ElementManager } from '../src/GacUIElementManager';
 import {
     IVirtualDom,
     IVirtualDomProvider,
@@ -7,9 +7,15 @@ import {
     VirtualDomBaseValidArea,
     VirtualDomBaseOrdinary,
     VirtualDomProperties,
-    RootVirtualDomId
+    RootVirtualDomId,
+    ClippedVirtualDomId
 } from '../src/dom/virtualDom';
-import assert from 'assert';
+import { updateVirtualDomWithRenderingDomDiff, createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
+import { assert } from 'vitest';
+
+/****************************************************************************************
+ * VirtualDomProviderMock
+ ***************************************************************************************/
 
 type VirtualDomMockTypes = VirtualDomMockRoot | VirtualDomMockValidArea | VirtualDomMockOrdinary;
 
@@ -114,6 +120,10 @@ export class VirtualDomProviderMock implements IVirtualDomProvider {
     }
 }
 
+/****************************************************************************************
+ * JsonifyVirtualDom
+ ***************************************************************************************/
+
 export interface JsonifiedVirtualDom {
     id: SCHEMA.TYPES.Integer;
     bounds: SCHEMA.Rect;
@@ -130,9 +140,9 @@ export function JsonifyVirtualDom(virtualDom: IVirtualDom): JsonifiedVirtualDom 
     };
 }
 
-export function assertVirtualDomEquals(v1: IVirtualDom, v2: IVirtualDom): void {
-    assert.deepStrictEqual(JsonifyVirtualDom(v1), JsonifyVirtualDom(v2));
-}
+/****************************************************************************************
+ * diffRenderingDom
+ ***************************************************************************************/
 
 function iterateRenderingDomInOrder(renderingDom: SCHEMA.RenderingDom, flattened: [SCHEMA.TYPES.Integer, SCHEMA.RenderingDom][]): void {
     flattened.push([renderingDom.id, renderingDom]);
@@ -221,4 +231,124 @@ export function diffRenderingDom(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDo
     return {
         diffsInOrder: diffs
     };
+}
+
+/****************************************************************************************
+ * Unit Test Helpers
+ ***************************************************************************************/
+
+// Helper function to create a valid root RenderingDom with zero bounds
+export function createRootRenderingDom(): SCHEMA.RenderingDom {
+    return {
+        id: RootVirtualDomId,
+        content: {
+            hitTestResult: null,
+            cursor: null,
+            element: null,
+            bounds: { x1: 0, y1: 0, x2: 0, y2: 0 },
+            validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
+        },
+        children: null
+    };
+}
+
+// Helper function to create RenderingDomContent
+export function createRenderingDomContent(
+    bounds: SCHEMA.Rect,
+    hitTestResult: SCHEMA.WindowHitTestResult | null = null,
+    cursor: SCHEMA.WindowSystemCursorType | null = null,
+    element: SCHEMA.TYPES.Integer | null = null,
+    validArea?: SCHEMA.Rect
+): SCHEMA.RenderingDomContent {
+    return {
+        hitTestResult,
+        cursor,
+        element,
+        bounds,
+        validArea: validArea ?? bounds // If validArea is not provided, use bounds
+    };
+}
+
+// Helper function to create simple RenderingDomContent (for cases with mostly null parameters)
+export function createSimpleRenderingDomContent(
+    bounds: SCHEMA.Rect,
+    validArea?: SCHEMA.Rect
+): SCHEMA.RenderingDomContent {
+    return createRenderingDomContent(bounds, null, null, null, validArea);
+}
+
+// Helper function to create a child RenderingDom
+export function createChildRenderingDom(
+    id: SCHEMA.TYPES.Integer,
+    content: SCHEMA.RenderingDomContent,
+    children: SCHEMA.RenderingDom[] | null = null
+): SCHEMA.RenderingDom {
+    return {
+        id,
+        content,
+        children
+    };
+}
+
+function assertDomDesc(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, dom: IVirtualDom): void {
+    // Check typedDesc based on element mapping
+    if (renderingDom.content.element !== null) {
+        const expectedTypedDesc = elements.getDesc(renderingDom.content.element);
+        assert.deepEqual(dom.props.typedDesc, expectedTypedDesc);
+        assert.strictEqual(dom.props.elementId, renderingDom.content.element);
+    } else {
+        assert.isUndefined(dom.props.typedDesc);
+        assert.isUndefined(dom.props.elementId);
+    }
+}
+
+export function assertDomAttributes(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, dom: IVirtualDom, domv?: IVirtualDom): void {
+    console.log(`Asserting attributes for RenderingDom ID: ${renderingDom.id}`);
+    if (domv === undefined) {
+        // Single DOM case: dom should have the original ID and inherit bounds as globalBounds
+        assert.strictEqual(dom.id, renderingDom.id);
+        assert.deepEqual(dom.props.globalBounds, renderingDom.content.bounds);
+        assert.strictEqual(dom.props.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
+        assert.strictEqual(dom.props.cursor, renderingDom.content.cursor ?? undefined);
+
+        assertDomDesc(renderingDom, elements, dom);
+    } else {
+        // Clipped DOM case: dom is outer (with validArea), domv is inner (with bounds and content)
+        assert.strictEqual(dom.id, renderingDom.id);
+        assert.deepEqual(dom.props.globalBounds, renderingDom.content.validArea);
+        assert.isUndefined(dom.props.hitTestResult); // Simple DOM has no properties
+        assert.isUndefined(dom.props.cursor);
+        assert.isUndefined(dom.props.typedDesc);
+        assert.isUndefined(dom.props.elementId);
+
+        assert.strictEqual(domv.id, ClippedVirtualDomId);
+        assert.deepEqual(domv.props.globalBounds, renderingDom.content.bounds);
+        assert.strictEqual(domv.props.hitTestResult, renderingDom.content.hitTestResult ?? undefined);
+        assert.strictEqual(domv.props.cursor, renderingDom.content.cursor ?? undefined);
+
+        assertDomDesc(renderingDom, elements, domv);
+    }
+}
+
+export function createTestRecord() {
+    const elements = new ElementManager();
+    const provider = new VirtualDomProviderMock();
+    return { elements, provider };
+}
+
+export function assertVirtualDomEquality(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDom, diff: SCHEMA.RenderingDom_DiffsInOrder, elements: ElementManager, provider: VirtualDomProviderMock): void {
+    const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
+    updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
+    const j1 = JsonifyVirtualDom(record1.screen);
+
+    const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
+    const j2 = JsonifyVirtualDom(record2.screen);
+
+    try {
+        assert.deepEqual(j1, j2);
+    } catch (error) {
+        console.log('j1:', JSON.stringify(j1, null, 2));
+        console.log('j2:', JSON.stringify(j2, null, 2));
+        throw error;
+    }
 }

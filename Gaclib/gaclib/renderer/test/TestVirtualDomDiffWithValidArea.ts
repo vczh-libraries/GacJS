@@ -1,8 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { diffRenderingDom } from './virtualDomMock';
-import { createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent } from './TestVirtualDomBuilding';
+import { diffRenderingDom, createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent, createTestRecord, assertVirtualDomEquality } from './virtualDomMock';
 import { test, assert } from 'vitest';
-import { assertVirtualDomEquality, createTestRecord } from './TestVirtualDomDiff';
 
 /****************************************************************************************
  * Category 1: bounds clipped by parent's validArea, validArea = intersection(bounds, parent.validArea)

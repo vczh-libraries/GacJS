@@ -1,6 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { diffRenderingDom } from './virtualDomMock';
-import { createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent } from './TestVirtualDomBuilding';
+import { diffRenderingDom, createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent } from './virtualDomMock';
 import { test, expect } from 'vitest';
 
 test('diffRenderingDom - identical trees should have no diffs', () => {
