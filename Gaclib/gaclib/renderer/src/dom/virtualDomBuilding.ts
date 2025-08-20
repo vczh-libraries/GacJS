@@ -67,10 +67,10 @@ function fillVirtualDom(
     // Create props for the virtual DOM
     const props = {
         globalBounds: content.bounds,
-        hitTestResult: content.hitTestResult || undefined,
-        cursor: content.cursor || undefined,
+        hitTestResult: content.hitTestResult !== null ? content.hitTestResult : undefined,
+        cursor: content.cursor !== null ? content.cursor : undefined,
         typedDesc,
-        elementId: content.element || undefined
+        elementId: content.element !== null ? content.element : undefined
     };
 
     // Create the virtual DOM
@@ -389,13 +389,13 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
                 if (diff.content) {
                     const newProps = {
                         globalBounds: diff.content.bounds,
-                        hitTestResult: diff.content.hitTestResult || undefined,
-                        cursor: diff.content.cursor || undefined,
-                        typedDesc: diff.content.element ? record.elements.getDescEnsured(diff.content.element) : undefined,
-                        elementId: diff.content.element || undefined
+                        hitTestResult: diff.content.hitTestResult !== null ? diff.content.hitTestResult : undefined,
+                        cursor: diff.content.cursor !== null ? diff.content.cursor : undefined,
+                        typedDesc: diff.content.element !== null ? record.elements.getDescEnsured(diff.content.element) : undefined,
+                        elementId: diff.content.element !== null ? diff.content.element : undefined
                     };
 
-                    if (self.innerDom!.props.elementId !== (diff.content.element || undefined)) {
+                    if (self.innerDom!.props.elementId !== (diff.content.element !== null ? diff.content.element : undefined)) {
                         if (self.innerDom!.props.elementId !== undefined) {
                             record.elementToDoms.delete(self.innerDom!.props.elementId);
                         }

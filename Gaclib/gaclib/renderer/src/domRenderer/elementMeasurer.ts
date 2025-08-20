@@ -20,7 +20,7 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
     }
 
     requestMeasureSolidLabel(desc: SCHEMA.ElementDesc_SolidLabel): void {
-        if (desc.measuringRequest) {
+        if (desc.measuringRequest !== null) {
             this._measuringSolidLabels.push([desc.id, desc.measuringRequest]);
         }
     }
@@ -136,7 +136,7 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
             const remaining: [SCHEMA.TYPES.Integer, SCHEMA.ElementSolidLabelMeasuringRequest][] = [];
             for (const [id, request] of this._measuringSolidLabels) {
                 const nextRequest = this._measureSolidLabel(id, request, renderingRecord);
-                if (nextRequest) {
+                if (nextRequest !== undefined) {
                     remaining.push([id, nextRequest]);
                 }
             }

@@ -148,7 +148,7 @@ function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
     if (desc.imageId === null) {
         return '';
     }
-    if (!desc.imageCreation) {
+    if (desc.imageCreation === null) {
         throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation to exist.');
     }
     if (desc.imageCreation.imageDataOmitted) {
@@ -182,7 +182,7 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
     svgElement.style.cssText = `${CommonStyle} inset: 0; margin: auto; width: ${desc.size.x}px; height: ${desc.size.y}px;`;
 
     let polygonElement = svgElement.childNodes[0] as unknown as SVGPolygonElement;
-    if (!polygonElement || svgElement.childNodes.length !== 1 || !(polygonElement instanceof SVGPolygonElement)) {
+    if (polygonElement === undefined || svgElement.childNodes.length !== 1 || !(polygonElement instanceof SVGPolygonElement)) {
         polygonElement = document.createElementNS(SvgNS, 'polygon');
         svgElement.replaceChildren(polygonElement);
     }
@@ -201,7 +201,7 @@ const WebkitElementName = '$GacUI-WebkitElement';
 
 export function onSolidLabelResized(textDiv: HTMLElement): void {
     const webkitElement = textDiv[WebkitElementName] as unknown as HTMLDivElement;
-    if (webkitElement) {
+    if (webkitElement !== undefined) {
         const lineHeight = parseFloat(webkitElement.style.lineHeight) * (parseFloat(webkitElement.style.fontSize));
         const lineClamp = Math.floor(textDiv.clientHeight / lineHeight);
         webkitElement.style.webkitLineClamp = `${lineClamp}`;
@@ -238,14 +238,14 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
     delete textDiv[WebkitElementName];
 
     let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
-    if (!textElement || textDiv.childNodes.length !== 1 || !(textElement instanceof HTMLDivElement)) {
+    if (textElement === undefined || textDiv.childNodes.length !== 1 || !(textElement instanceof HTMLDivElement)) {
         textElement = document.createElement('div');
         textDiv.replaceChildren(textElement);
     } else {
         textElement.replaceChildren();
     }
 
-    if (!ellipseWithWrapLine || !useWebkitLineClamp) {
+    if (ellipseWithWrapLine === false || useWebkitLineClamp === false) {
         textElement.textContent = normalizeText(desc);
     }
 
@@ -286,7 +286,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
         const fontStyle = getFontStyle(desc);
         const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
 
-        if (!ellipseWithWrapLine || !useWebkitLineClamp) {
+        if (ellipseWithWrapLine === false || useWebkitLineClamp === false) {
             const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
             textElement.style.cssText = `overflow:hidden; ${fontStyle} ${formatStyle} ${flexItemStyle}`;
         } else {
@@ -311,7 +311,7 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
  **********************************************************************/
 
 export function hasExtraBorder(target: HTMLElement): boolean {
-    return !!target[ExtraBorderNodeName];
+    return target[ExtraBorderNodeName] !== undefined;
 }
 
 export function getExtraBorder(target: HTMLElement): HTMLElement | undefined {
@@ -320,7 +320,7 @@ export function getExtraBorder(target: HTMLElement): HTMLElement | undefined {
 
 function ensureNoExtraBorder(target: HTMLElement): void {
     const element = target[ExtraBorderNodeName] as unknown as Element;
-    if (element) {
+    if (element !== undefined) {
         target.removeChild(element);
         delete target[ExtraBorderNodeName];
     }
