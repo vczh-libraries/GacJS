@@ -395,13 +395,22 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
                         elementId: diff.content.element || undefined
                     };
 
+                    if (self.innerDom!.props.elementId !== (diff.content.element || undefined)) {
+                        if (self.innerDom!.props.elementId !== undefined) {
+                            record.elementToDoms.delete(self.innerDom!.props.elementId);
+                        }
+                        if (diff.content.element !== null) {
+                            record.elementToDoms.set(diff.content.element, self.innerDom!);
+                        }
+                    }
+
                     // validArea is not considered here yet
                     self.innerDom!.updateProps(newProps);
                 }
                 break;
             case SCHEMA.RenderingDom_DiffType.Deleted:
                 record.doms.delete(diff.id);
-                if (self.innerDom!.props.elementId) {
+                if (self.innerDom!.props.elementId !== undefined) {
                     record.elementToDoms.delete(self.innerDom!.props.elementId);
                 }
                 break;
