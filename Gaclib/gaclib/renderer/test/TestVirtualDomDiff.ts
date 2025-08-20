@@ -532,12 +532,12 @@ test('updateVirtualDomWithRenderingDomDiff - validArea equals bounds scenario', 
     /*
      * ASCII Art:
      * r1:          r2:
-     * +---------+  +---------+
-     * |   root  |  |   root  |
-     * |  +---+  |  |  +-------+
-     * |  | a |  |  |  |   a   |
-     * |  +---+  |  |  +-------+
-     * +---------+  +---------+
+     * +---------+  +------------+
+     * |   root  |  |   root     |
+     * |  +---+  |  |  +-------+ |
+     * |  | a |  |  |  |   a   | |
+     * |  +---+  |  |  +-------+ |
+     * +---------+  +------------+
      */
 
     const { elements, provider } = createTestRecord();
