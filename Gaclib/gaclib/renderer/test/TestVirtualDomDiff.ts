@@ -28,31 +28,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have content', ()
 
     expect(() => {
         updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
-    }).toThrow('RenderingDom_Diff with Created must have content or children available');
-});
-
-test('updateVirtualDomWithRenderingDomDiff - Created diff must have children', () => {
-    const { elements, provider } = createTestRecord();
-
-    // Create a simple initial state
-    const initialRenderingDom = createRootRenderingDom();
-    const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
-    assertRecord(record);
-
-    const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
-        diffsInOrder: [
-            {
-                id: 1,
-                diffType: SCHEMA.RenderingDom_DiffType.Created,
-                content: createSimpleRenderingDomContent({ x1: 10, y1: 10, x2: 50, y2: 30 }),
-                children: null // Missing children - should throw
-            }
-        ]
-    };
-
-    expect(() => {
-        updateVirtualDomWithRenderingDomDiff(illegalDiff, record, provider);
-    }).toThrow('RenderingDom_Diff with Created must have content or children available');
+    }).toThrow('RenderingDom_Diff with Created must have content available');
 });
 
 test('updateVirtualDomWithRenderingDomDiff - Created diff must use unused ID', () => {

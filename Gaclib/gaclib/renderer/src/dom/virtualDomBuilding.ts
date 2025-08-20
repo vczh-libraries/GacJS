@@ -235,8 +235,8 @@ function collectPropsAfterDiff(
 ): void {
     for (const diff of diffs) {
         if (diff.diffType == SCHEMA.RenderingDom_DiffType.Created) {
-            if (!diff.content || !diff.children) {
-                throw new Error(`RenderingDom_Diff with Created must have content or children available: ${JSON.stringify(diff, undefined, 4)}`);
+            if (!diff.content) {
+                throw new Error(`RenderingDom_Diff with Created must have content available: ${JSON.stringify(diff, undefined, 4)}`);
             }
             if (diff.id < 0 || props.has(diff.id)) {
                 throw new Error(`RenderingDom_Diff with Created must use unused ID: ${JSON.stringify(diff, undefined, 4)}`);
