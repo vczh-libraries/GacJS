@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { updateVirtualDomWithRenderingDomDiff, createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
-import { diffRenderingDom, createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent, createTestRecord, assertVirtualDomEquality } from './virtualDomMock';
+import { diffRenderingDom, createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent, createTestRecord, assertVirtualDomEquality, assertRecord } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
 /****************************************************************************************
@@ -13,6 +13,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have content', ()
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -36,6 +37,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must have children', (
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -62,6 +64,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff must use unused ID', (
         createChildRenderingDom(1, createSimpleRenderingDomContent({ x1: 10, y1: 10, x2: 50, y2: 30 }), [])
     ];
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -85,6 +88,7 @@ test('updateVirtualDomWithRenderingDomDiff - Created diff with negative ID shoul
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -108,6 +112,7 @@ test('updateVirtualDomWithRenderingDomDiff - Modified diff must use existing ID'
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -131,6 +136,7 @@ test('updateVirtualDomWithRenderingDomDiff - Deleted diff must use existing ID',
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -157,6 +163,7 @@ test('updateVirtualDomWithRenderingDomDiff - diff with invalid child ID should t
         createChildRenderingDom(1, createSimpleRenderingDomContent({ x1: 10, y1: 10, x2: 50, y2: 30 }), [])
     ];
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [
@@ -180,6 +187,7 @@ test('updateVirtualDomWithRenderingDomDiff - dangling created node should throw'
     // Create a simple initial state
     const initialRenderingDom = createRootRenderingDom();
     const record = createVirtualDomFromRenderingDom(initialRenderingDom, elements, provider);
+    assertRecord(record);
 
     const illegalDiff: SCHEMA.RenderingDom_DiffsInOrder = {
         diffsInOrder: [

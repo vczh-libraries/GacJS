@@ -2,7 +2,7 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 import { ElementManager, TypedElementDesc } from '../src/GacUIElementManager';
 import { RootVirtualDomId } from '../src/dom/virtualDom';
 import { createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
-import { VirtualDomProviderMock, createRootRenderingDom, createRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './virtualDomMock';
+import { VirtualDomProviderMock, createRootRenderingDom, createRenderingDomContent, createChildRenderingDom, assertDomAttributes, assertRecord } from './virtualDomMock';
 import { test, expect, assert } from 'vitest';
 
 test('createVirtualDomFromRenderingDom - root node with no children', () => {
@@ -11,6 +11,7 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
     const rootDom = createRootRenderingDom();
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Verify the screen element
     assert.strictEqual(result.screen.id, RootVirtualDomId);
@@ -19,9 +20,6 @@ test('createVirtualDomFromRenderingDom - root node with no children', () => {
     assert.isUndefined(result.screen.parent);
     expect(result.screen.children).toEqual([]);
 
-    // Verify maps are empty since there are no children
-    assert.strictEqual(result.doms.size, 0);
-    assert.strictEqual(result.elementToDoms.size, 0);
     assert.strictEqual(result.elements, elements);
 });
 
@@ -271,6 +269,7 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Verify the screen (root)
     assert.strictEqual(result.screen.id, RootVirtualDomId);
@@ -279,9 +278,6 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     assert.isUndefined(result.screen.parent);
     assert.strictEqual(result.screen.children.length, 2);
 
-    // Verify maps sizes
-    assert.strictEqual(result.doms.size, 5); // 5 child nodes (excluding screen)
-    assert.strictEqual(result.elementToDoms.size, 3); // 3 elements: 101, 102, 103
     assert.strictEqual(result.elements, elements);
 
     // Get child nodes
@@ -327,18 +323,6 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     assert.deepEqual(dom5.bounds, { x1: 80, y1: 80, x2: 150, y2: 150 });
     assert.strictEqual(dom5.parent, dom3);
     assert.strictEqual(dom5.children.length, 0);
-
-    // Verify element mappings
-    assert.strictEqual(result.elementToDoms.get(101), dom2);
-    assert.strictEqual(result.elementToDoms.get(102), dom3);
-    assert.strictEqual(result.elementToDoms.get(103), dom5);
-
-    // Verify all nodes are in doms map
-    assert.strictEqual(result.doms.get(2), dom2);
-    assert.strictEqual(result.doms.get(3), dom3);
-    assert.strictEqual(result.doms.get(4), dom4);
-    assert.strictEqual(result.doms.get(5), dom5);
-    assert.strictEqual(result.doms.get(6), dom6);
 });
 
 test('createVirtualDomFromRenderingDom - complex bounds calculation with multiple levels', () => {
@@ -386,6 +370,7 @@ test('createVirtualDomFromRenderingDom - complex bounds calculation with multipl
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     const dom2 = result.screen.children[0];
     const dom3 = dom2.children[0];

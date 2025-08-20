@@ -2,7 +2,7 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 import { ElementManager, TypedElementDesc } from '../src/GacUIElementManager';
 import { ClippedVirtualDomId } from '../src/dom/virtualDom';
 import { createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
-import { VirtualDomProviderMock, createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes } from './virtualDomMock';
+import { VirtualDomProviderMock, createRootRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createChildRenderingDom, assertDomAttributes, assertRecord } from './virtualDomMock';
 import { test, assert } from 'vitest';
 
 test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)', () => {
@@ -31,6 +31,7 @@ test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)',
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Should have exactly one child
     assert.strictEqual(result.screen.children.length, 1);
@@ -73,6 +74,7 @@ test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Should have exactly one child (the outer clipped DOM)
     assert.strictEqual(result.screen.children.length, 1);
@@ -133,6 +135,7 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Should have exactly two children (both outer clipped DOMs)
     assert.strictEqual(result.screen.children.length, 2);
@@ -200,6 +203,7 @@ test('createVirtualDomFromRenderingDom - clipped element with children', () => {
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Should have exactly one child (the outer clipped DOM)
     assert.strictEqual(result.screen.children.length, 1);
@@ -260,6 +264,7 @@ test('createVirtualDomFromRenderingDom - nested clipping', () => {
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Navigate the hierarchy
     const dom1 = result.screen.children[0]; // ID 1, clipped
@@ -344,6 +349,7 @@ test('createVirtualDomFromRenderingDom - parent clips child naturally', () => {
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Navigate the hierarchy
     const dom1 = result.screen.children[0]; // ID 1, clipped
@@ -427,6 +433,7 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Navigate the hierarchy
     const dom1 = result.screen.children[0]; // ID 1, clipped
@@ -507,6 +514,7 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
     ];
 
     const result = createVirtualDomFromRenderingDom(rootDom, elements, provider);
+    assertRecord(result);
 
     // Navigate the hierarchy
     const dom1 = result.screen.children[0]; // ID 1, clipped
