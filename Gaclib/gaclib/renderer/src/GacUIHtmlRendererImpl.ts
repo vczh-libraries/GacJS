@@ -322,7 +322,6 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
-        // TODO: Call onSolidLabelResized accordingly
         updateVirtualDomWithRenderingDomDiff(requestArgs, this._renderingRecord, this._provider);
         this._provider.fixBounds(
             this._renderingRecord.screen,

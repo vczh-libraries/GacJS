@@ -1,14 +1,14 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { TypedElementDesc } from '../GacUIElementManager';
-import { 
-    IVirtualDom, 
-    IVirtualDomProvider, 
+import {
+    IVirtualDom,
+    IVirtualDomProvider,
     VirtualDomBaseRoot,
     VirtualDomBaseValidArea,
     VirtualDomBaseOrdinary,
-    VirtualDomProperties 
+    VirtualDomProperties
 } from '../dom/virtualDom';
-import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder } from './elementStyles';
+import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder, onSolidLabelResized } from './elementStyles';
 
 type VirtualDomHtmlTypes = VirtualDomHtmlRoot | VirtualDomHtmlValidArea | VirtualDomHtmlOrdinary;
 
@@ -25,8 +25,8 @@ class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlTypes> {
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomHtmlValidArea || 
-               child instanceof VirtualDomHtmlOrdinary;
+        return child instanceof VirtualDomHtmlValidArea ||
+            child instanceof VirtualDomHtmlOrdinary;
     }
 
     protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
@@ -56,8 +56,8 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlType
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomHtmlValidArea || 
-               child instanceof VirtualDomHtmlOrdinary;
+        return child instanceof VirtualDomHtmlValidArea ||
+            child instanceof VirtualDomHtmlOrdinary;
     }
 
     protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
@@ -92,8 +92,8 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     }
 
     protected isExpectedChildType(child: IVirtualDom): boolean {
-        return child instanceof VirtualDomHtmlValidArea || 
-               child instanceof VirtualDomHtmlOrdinary;
+        return child instanceof VirtualDomHtmlValidArea ||
+            child instanceof VirtualDomHtmlOrdinary;
     }
 
     protected onUpdateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
@@ -135,9 +135,9 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
     }
 
     fixBounds(virtualDom: IVirtualDom, target: HTMLElement, width: number, height: number): void {
-        if (!(virtualDom instanceof VirtualDomHtmlRoot || 
-              virtualDom instanceof VirtualDomHtmlValidArea || 
-              virtualDom instanceof VirtualDomHtmlOrdinary)) {
+        if (!(virtualDom instanceof VirtualDomHtmlRoot ||
+            virtualDom instanceof VirtualDomHtmlValidArea ||
+            virtualDom instanceof VirtualDomHtmlOrdinary)) {
             throw new Error('VirtualDom must be VirtualDomHtml instance.');
         }
 
@@ -160,13 +160,21 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
     private fixBoundsRecursive(virtualDom: IVirtualDom): void {
         // Apply bounds to all children
         for (const child of virtualDom.children) {
-            if (child instanceof VirtualDomHtmlRoot || 
-                child instanceof VirtualDomHtmlValidArea || 
+            if (child instanceof VirtualDomHtmlRoot ||
+                child instanceof VirtualDomHtmlValidArea ||
                 child instanceof VirtualDomHtmlOrdinary) {
                 if (!child.props.typedDesc) {
                     applyCommonStyle(child.htmlElement);
                 }
                 applyBounds(child.htmlElement, child.bounds);
+
+                if (child.props.typedDesc &&
+                    child.props.typedDesc.type === SCHEMA.RendererType.SolidLabel &&
+                    child.props.typedDesc.desc.ellipse &&
+                    child.props.typedDesc.desc.wrapLine
+                ) {
+                    onSolidLabelResized(child.htmlElement);
+                }
                 this.fixBoundsRecursive(child);
             }
         }
