@@ -1,32 +1,8 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { updateVirtualDomWithRenderingDomDiff, createVirtualDomFromRenderingDom } from '../src/dom/virtualDomBuilding';
-import { diffRenderingDom, JsonifyVirtualDom, VirtualDomProviderMock } from './virtualDomMock';
+import { diffRenderingDom } from './virtualDomMock';
 import { createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent } from './TestVirtualDomBuilding';
-import { ElementManager } from '../src/GacUIElementManager';
 import { test, assert } from 'vitest';
-
-function createTestRecord() {
-    const elements = new ElementManager();
-    const provider = new VirtualDomProviderMock();
-    return { elements, provider };
-}
-
-function assertVirtualDomEquality(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDom, diff: SCHEMA.RenderingDom_DiffsInOrder, elements: ElementManager, provider: VirtualDomProviderMock): void {
-    const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
-    updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
-    const j1 = JsonifyVirtualDom(record1.screen);
-
-    const record2 = createVirtualDomFromRenderingDom(r2, elements, provider);
-    const j2 = JsonifyVirtualDom(record2.screen);
-
-    try {
-        assert.deepEqual(j1, j2);
-    } catch (error) {
-        console.log('j1:', JSON.stringify(j1, null, 2));
-        console.log('j2:', JSON.stringify(j2, null, 2));
-        throw error;
-    }
-}
+import { assertVirtualDomEquality, createTestRecord } from './TestVirtualDomDiff';
 
 /****************************************************************************************
  * Category 1: bounds clipped by parent's validArea, validArea = intersection(bounds, parent.validArea)

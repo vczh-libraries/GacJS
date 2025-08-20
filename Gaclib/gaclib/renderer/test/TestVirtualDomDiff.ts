@@ -5,13 +5,13 @@ import { createRootRenderingDom, createChildRenderingDom, createSimpleRenderingD
 import { ElementManager } from '../src/GacUIElementManager';
 import { test, expect, assert } from 'vitest';
 
-function createTestRecord() {
+export function createTestRecord() {
     const elements = new ElementManager();
     const provider = new VirtualDomProviderMock();
     return { elements, provider };
 }
 
-function assertVirtualDomEquality(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDom, diff: SCHEMA.RenderingDom_DiffsInOrder, elements: ElementManager, provider: VirtualDomProviderMock): void {
+export function assertVirtualDomEquality(r1: SCHEMA.RenderingDom, r2: SCHEMA.RenderingDom, diff: SCHEMA.RenderingDom_DiffsInOrder, elements: ElementManager, provider: VirtualDomProviderMock): void {
     const record1 = createVirtualDomFromRenderingDom(r1, elements, provider);
     updateVirtualDomWithRenderingDomDiff(diff, record1, provider);
     const j1 = JsonifyVirtualDom(record1.screen);
