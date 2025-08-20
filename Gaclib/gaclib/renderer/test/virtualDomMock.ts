@@ -336,24 +336,19 @@ export function createTestRecord() {
     return { elements, provider };
 }
 
-function collectDomsInRecord(outerDom: IVirtualDom, doms: IVirtualDom[], domsWithElement: IVirtualDom[]): void {
+function collectDomsInRecord(virtualDom: IVirtualDom, doms: IVirtualDom[], domsWithElement: IVirtualDom[]): void {
     // Only include DOMs with non-negative IDs
-    let innerDom = outerDom;
-    if (outerDom.id >= 0) {
-        if (outerDom.children.length === 1 && outerDom.children[0].id === ClippedVirtualDomId) {
-            innerDom = outerDom.children[0];
-        }
+    if (virtualDom.id >= 0) {
+        doms.push(virtualDom);
+    }
 
-        doms.push(outerDom);
-
-        // Also include in domsWithElement if it has an elementId
-        if (innerDom.props.elementId !== undefined) {
-            domsWithElement.push(outerDom);
-        }
+    // Also include in domsWithElement if it has an elementId (could be ClippedVirtualDomId)
+    if (virtualDom.props.elementId !== undefined) {
+        domsWithElement.push(virtualDom);
     }
 
     // Recursively process all children
-    for (const child of innerDom.children) {
+    for (const child of virtualDom.children) {
         collectDomsInRecord(child, doms, domsWithElement);
     }
 }

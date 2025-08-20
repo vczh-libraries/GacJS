@@ -347,7 +347,7 @@ function ensureClippedHierarchy(
         currentProps.innerDom.updateChildren(children);
         record.doms.set(currentProps.outerDom.id, currentProps.outerDom);
         if (domProps.elementId !== undefined) {
-            record.elementToDoms.set(domProps.elementId, currentProps.outerDom);
+            record.elementToDoms.set(domProps.elementId, currentProps.innerDom);
         }
     } else if (expectedClipped && !areRectsEqual(currentProps.validArea, currentProps.outerDom!.props.globalBounds)) {
         currentProps.outerDom!.updateGlobalBounds(currentProps.validArea);
