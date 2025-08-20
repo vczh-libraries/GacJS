@@ -360,13 +360,20 @@ export function assertRecord(record: VirtualDomRecord): void {
     // Collect all DOMs starting from screen
     collectDomsInRecord(record.screen, doms, domsWithElement);
 
-    // Check that doms map has exactly the right size
-    assert.strictEqual(record.doms.size, doms.length,
-        `doms map size ${record.doms.size} does not match collected DOMs count ${doms.length}`);
+    // Collect IDs from collected DOMs and sort them
+    const collectedDomIds = doms.map(dom => dom.id).sort((a, b) => a - b);
+    const collectedElementIds = domsWithElement.map(dom => dom.props.elementId!).sort((a, b) => a - b);
 
-    // Check that elementToDoms map has exactly the right size
-    assert.strictEqual(record.elementToDoms.size, domsWithElement.length,
-        `elementToDoms map size ${record.elementToDoms.size} does not match collected DOMs with element count ${domsWithElement.length}`);
+    // Collect IDs from record maps and sort them
+    const recordDomIds = Array.from(record.doms.keys()).sort((a, b) => a - b);
+    const recordElementIds = Array.from(record.elementToDoms.keys()).sort((a, b) => a - b);
+
+    // Compare the sorted ID arrays
+    assert.deepEqual(recordDomIds, collectedDomIds,
+        `doms map IDs ${JSON.stringify(recordDomIds)} do not match collected DOM IDs ${JSON.stringify(collectedDomIds)}`);
+
+    assert.deepEqual(recordElementIds, collectedElementIds,
+        `elementToDoms map IDs ${JSON.stringify(recordElementIds)} do not match collected element IDs ${JSON.stringify(collectedElementIds)}`);
 
     // Check that every DOM with id >= 0 is in the doms map
     for (const dom of doms) {
