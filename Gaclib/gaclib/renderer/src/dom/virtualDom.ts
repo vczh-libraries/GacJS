@@ -63,6 +63,7 @@ export interface IVirtualDom {
     get children(): ReadonlyArray<IVirtualDom>;
     updateChildren(children: IVirtualDom[]): void;
     updateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void;
+    updateGlobalBounds(globalBounds: SCHEMA.Rect): void;
     updateProps(props: VirtualDomProperties): void;
 }
 
@@ -127,6 +128,11 @@ export abstract class VirtualDomBase<T extends VirtualDomBase<T>> implements IVi
         void elementId;
         void typedDesc;
         throw new Error('updateTypedDesc is not supported for this virtual DOM type.');
+    }
+
+    updateGlobalBounds(globalBounds: SCHEMA.Rect): void{
+        void globalBounds;
+        throw new Error('updateGlobalBounds is not supported for this virtual DOM type.');
     }
 
     updateProps(props: VirtualDomProperties): void {
@@ -207,6 +213,13 @@ export abstract class VirtualDomBaseValidArea<T extends VirtualDomBase<T>> exten
             elementId: undefined
         });
     }
+
+    updateGlobalBounds(globalBounds: SCHEMA.Rect): void{
+        this._props = {
+            ...this._props,
+            globalBounds
+        };
+    }
 }
 
 export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBase<T>> extends VirtualDomBase<T> {
@@ -229,6 +242,13 @@ export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBase<T>> extend
             typedDesc
         };
         this.onUpdateTypedDesc(elementId, typedDesc);
+    }
+
+    updateGlobalBounds(globalBounds: SCHEMA.Rect): void{
+        this._props = {
+            ...this._props,
+            globalBounds
+        };
     }
 
     updateProps(props: VirtualDomProperties): void {

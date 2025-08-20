@@ -347,6 +347,7 @@ export function assertVirtualDomEquality(r1: SCHEMA.RenderingDom, r2: SCHEMA.Ren
     try {
         assert.deepEqual(j1, j2);
     } catch (error) {
+        console.log('diff:', JSON.stringify(diff, null, 2));
         console.log('j1:', JSON.stringify(j1, null, 2));
         console.log('j2:', JSON.stringify(j2, null, 2));
         throw error;
