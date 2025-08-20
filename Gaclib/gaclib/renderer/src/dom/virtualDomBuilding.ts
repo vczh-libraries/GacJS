@@ -194,30 +194,37 @@ interface PropsAfterDiff {
 }
 
 function collectPropsBeforeDiff(
-    virtualDom: IVirtualDom,
+    outerDom: IVirtualDom,
     parentValidArea: SCHEMA.Rect | undefined,
     props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
 ): void {
     let validArea: SCHEMA.Rect | undefined;
-    if (virtualDom.id >= 0) {
-        validArea = parentValidArea ? intersectRects(parentValidArea, virtualDom.props.globalBounds) : virtualDom.props.globalBounds;
+    let innerDom = outerDom;
 
-        let parent = virtualDom.parent!;
+    if (outerDom.id >= 0) {
+        const isValidAreaDom = outerDom.id >= 0 && outerDom.children.length === 1 && outerDom.children[0].id === ClippedVirtualDomId;
+        if (isValidAreaDom) {
+            innerDom = outerDom.children[0];
+        }
+
+        let parent = outerDom.parent!;
         if (parent.id === ClippedVirtualDomId) {
             parent = parent.parent!;
         }
 
-        const isValidAreaDom = virtualDom.id >= 0 && virtualDom.children.length === 1 && virtualDom.children[0].id === ClippedVirtualDomId;
-        props.set(virtualDom.id, {
-            bounds: isValidAreaDom ? virtualDom.children[0].props.globalBounds : virtualDom.props.globalBounds,
+        const naturalValidArea = parentValidArea ? intersectRects(parentValidArea, innerDom.props.globalBounds) : innerDom.props.globalBounds;
+        validArea = isValidAreaDom ? outerDom.props.globalBounds : naturalValidArea;
+
+        props.set(outerDom.id, {
+            bounds: innerDom.props.globalBounds,
             validArea,
             parentId: parent.id,
-            outerDom: virtualDom,
-            innerDom: isValidAreaDom ? virtualDom.children[0] : virtualDom
+            outerDom,
+            innerDom
         });
     }
 
-    for (const child of virtualDom.children) {
+    for (const child of innerDom.children) {
         collectPropsBeforeDiff(child, validArea, props);
     }
 }
