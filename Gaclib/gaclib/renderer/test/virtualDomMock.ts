@@ -336,19 +336,24 @@ export function createTestRecord() {
     return { elements, provider };
 }
 
-function collectDomsInRecord(virtualDom: IVirtualDom, doms: IVirtualDom[], domsWithElement: IVirtualDom[]): void {
+function collectDomsInRecord(outerDom: IVirtualDom, doms: IVirtualDom[], domsWithElement: IVirtualDom[]): void {
     // Only include DOMs with non-negative IDs
-    if (virtualDom.id >= 0) {
-        doms.push(virtualDom);
-        
+    let innerDom = outerDom;
+    if (outerDom.id >= 0) {
+        if (outerDom.children.length === 1 && outerDom.children[0].id === ClippedVirtualDomId) {
+            innerDom = outerDom.children[0];
+        }
+
+        doms.push(outerDom);
+
         // Also include in domsWithElement if it has an elementId
-        if (virtualDom.props.elementId !== undefined) {
-            domsWithElement.push(virtualDom);
+        if (innerDom.props.elementId !== undefined) {
+            domsWithElement.push(outerDom);
         }
     }
-    
+
     // Recursively process all children
-    for (const child of virtualDom.children) {
+    for (const child of innerDom.children) {
         collectDomsInRecord(child, doms, domsWithElement);
     }
 }
@@ -356,24 +361,24 @@ function collectDomsInRecord(virtualDom: IVirtualDom, doms: IVirtualDom[], domsW
 export function assertRecord(record: VirtualDomRecord): void {
     const doms: IVirtualDom[] = [];
     const domsWithElement: IVirtualDom[] = [];
-    
+
     // Collect all DOMs starting from screen
     collectDomsInRecord(record.screen, doms, domsWithElement);
-    
+
     // Check that doms map has exactly the right size
-    assert.strictEqual(record.doms.size, doms.length, 
+    assert.strictEqual(record.doms.size, doms.length,
         `doms map size ${record.doms.size} does not match collected DOMs count ${doms.length}`);
-    
+
     // Check that elementToDoms map has exactly the right size
     assert.strictEqual(record.elementToDoms.size, domsWithElement.length,
         `elementToDoms map size ${record.elementToDoms.size} does not match collected DOMs with element count ${domsWithElement.length}`);
-    
+
     // Check that every DOM with id >= 0 is in the doms map
     for (const dom of doms) {
         assert.strictEqual(record.doms.get(dom.id), dom,
             `DOM with id ${dom.id} is not correctly stored in doms map`);
     }
-    
+
     // Check that every DOM with elementId is in the elementToDoms map
     for (const dom of domsWithElement) {
         assert.strictEqual(record.elementToDoms.get(dom.props.elementId!), dom,

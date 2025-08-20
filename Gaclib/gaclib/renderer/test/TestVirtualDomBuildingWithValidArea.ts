@@ -39,10 +39,6 @@ test('createVirtualDomFromRenderingDom - validArea equals bounds (no clipping)',
     const dom1 = result.screen.children[0];
     assertDomAttributes(rootDom.children[0]!, elements, dom1);
     assert.strictEqual(dom1.children.length, 0);
-
-    // Should be in doms map
-    assert.strictEqual(result.doms.get(1), dom1);
-    assert.strictEqual(result.elementToDoms.get(101), dom1);
 });
 
 test('createVirtualDomFromRenderingDom - validArea smaller than bounds (clipping)', () => {
