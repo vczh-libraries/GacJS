@@ -1,5 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { diffRenderingDom, createRootRenderingDom, createChildRenderingDom, createSimpleRenderingDomContent, createTestRecord, assertVirtualDomEquality } from './virtualDomMock';
+import { TypedElementDesc } from '../src/GacUIElementManager';
+import { diffRenderingDom, createRootRenderingDom, createChildRenderingDom, createRenderingDomContent, createSimpleRenderingDomContent, createTestRecord, assertVirtualDomEquality } from './virtualDomMock';
 import { test, assert } from 'vitest';
 
 /****************************************************************************************
@@ -606,28 +607,62 @@ test('updateVirtualDomWithRenderingDomDiff - Category 3: Mixed operations with e
      */
 
     const { elements, provider } = createTestRecord();
+    
+    const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
+    const solidBorderDesc1: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 401,
+            borderColor: '#FF0000',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const solidBorderDesc2: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 402,
+            borderColor: '#0000FF',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+
+    // Create elements for both r1 and r2 DOMs (reused between states)
+    elements.createWithDesc(106, focusRectangleDesc);  // focus rectangle
+    elements.createWithDesc(401, solidBorderDesc1);   // solid border 1
+    elements.createWithDesc(402, solidBorderDesc2);   // solid border 2
+    elements.createWithDesc(107, rawDesc);             // raw element
 
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
             1,
-            createSimpleRenderingDomContent(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Arrow,
+                106, // FocusRectangle element
                 { x1: 20, y1: 20, x2: 90, y2: 90 }   // validArea smaller than bounds
             ),
             [
                 createChildRenderingDom(
                     2,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 30, y1: 30, x2: 60, y2: 50 }, // bounds within parent's validArea
+                        null,
+                        null,
+                        401, // SolidBorder element
                         { x1: 30, y1: 30, x2: 60, y2: 50 } // validArea = intersection(bounds, parent.validArea)
                     ),
                     []
                 ),
                 createChildRenderingDom(
                     3,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 65, y1: 65, x2: 200, y2: 85 }, // bounds extending beyond parent's validArea
+                        null,
+                        null,
+                        402, // SolidBorder element
                         { x1: 65, y1: 65, x2: 85, y2: 80 } // validArea < intersection(bounds, parent.validArea)
                     ),
                     []
@@ -640,24 +675,33 @@ test('updateVirtualDomWithRenderingDomDiff - Category 3: Mixed operations with e
     r2.children = [
         createChildRenderingDom(
             1,
-            createSimpleRenderingDomContent(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Hand,
+                106, // FocusRectangle element (reused)
                 { x1: 20, y1: 20, x2: 100, y2: 100 }   // validArea = bounds
             ),
             [
                 // 2 deleted, 3 deleted
                 createChildRenderingDom(
                     2,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 30, y1: 30, x2: 200, y2: 55 }, // new element extending beyond parent's validArea
+                        null,
+                        null,
+                        107, // Raw element
                         { x1: 30, y1: 30, x2: 80, y2: 50 } // validArea < intersection(bounds, parent.validArea)
                     ),
                     []
                 ),
                 createChildRenderingDom(
                     3,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 30, y1: 60, x2: 130, y2: 85 }, // new element extending beyond parent's validArea
+                        null,
+                        null,
+                        401, // SolidBorder element (reused)
                         { x1: 30, y1: 60, x2: 100, y2: 85 } // validArea = intersection(bounds, parent.validArea)
                     ),
                     []
@@ -697,29 +741,63 @@ test('updateVirtualDomWithRenderingDomDiff - Category 3: Mixed operations with e
      */
 
     const { elements, provider } = createTestRecord();
+    
+    const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
+    const solidBorderDesc1: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 403,
+            borderColor: '#00FF00',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const solidBorderDesc2: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 404,
+            borderColor: '#FFFF00',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+
+    // Create elements for both r1 and r2 DOMs (reused between states)
+    elements.createWithDesc(108, focusRectangleDesc);  // focus rectangle
+    elements.createWithDesc(403, solidBorderDesc1);   // solid border 1
+    elements.createWithDesc(404, solidBorderDesc2);   // solid border 2
+    elements.createWithDesc(109, rawDesc);             // raw element
 
     const r1: SCHEMA.RenderingDom = createRootRenderingDom();
     r1.children = [
         createChildRenderingDom(
             1,
-            createSimpleRenderingDomContent(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Arrow,
+                108, // FocusRectangle element (reused)
                 { x1: 20, y1: 20, x2: 100, y2: 100 }   // validArea = bounds
             ),
             [
                 // 2 deleted, 3 deleted
                 createChildRenderingDom(
                     2,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 30, y1: 30, x2: 200, y2: 55 }, // new element extending beyond parent's validArea
+                        null,
+                        null,
+                        403, // SolidBorder element (reused)
                         { x1: 30, y1: 30, x2: 80, y2: 50 } // validArea < intersection(bounds, parent.validArea)
                     ),
                     []
                 ),
                 createChildRenderingDom(
                     3,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 30, y1: 60, x2: 130, y2: 85 }, // new element extending beyond parent's validArea
+                        null,
+                        null,
+                        404, // SolidBorder element (reused)
                         { x1: 30, y1: 60, x2: 100, y2: 85 } // validArea = intersection(bounds, parent.validArea)
                     ),
                     []
@@ -732,23 +810,32 @@ test('updateVirtualDomWithRenderingDomDiff - Category 3: Mixed operations with e
     r2.children = [
         createChildRenderingDom(
             1,
-            createSimpleRenderingDomContent(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 100, y2: 100 }, // bounds
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Hand,
+                108, // FocusRectangle element (reused)
                 { x1: 20, y1: 20, x2: 90, y2: 90 }   // validArea smaller than bounds
             ),
             [
                 createChildRenderingDom(
                     2,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 30, y1: 30, x2: 60, y2: 50 }, // bounds within parent's validArea
+                        null,
+                        null,
+                        109, // Raw element
                         { x1: 30, y1: 30, x2: 60, y2: 50 } // validArea = intersection(bounds, parent.validArea)
                     ),
                     []
                 ),
                 createChildRenderingDom(
                     3,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 65, y1: 65, x2: 200, y2: 85 }, // bounds extending beyond parent's validArea
+                        null,
+                        null,
+                        403, // SolidBorder element (reused)
                         { x1: 65, y1: 65, x2: 85, y2: 80 } // validArea < intersection(bounds, parent.validArea)
                     ),
                     []

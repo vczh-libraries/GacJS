@@ -381,46 +381,85 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
     // +----------------+
 
     const provider = new VirtualDomProviderMock();
+    const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const solidBorderDesc1: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 201,
+            borderColor: '#000000',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const solidBorderDesc2: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 202,
+            borderColor: '#FF0000',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+
     const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(101, focusRectangleDesc);
+    elements.createWithDesc(102, rawDesc);
+    elements.createWithDesc(103, rawDesc);
+    elements.createWithDesc(201, solidBorderDesc1);
+    elements.createWithDesc(202, solidBorderDesc2);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createSimpleRenderingDomContent(
+            createRenderingDomContent(
                 { x1: 0, y1: 0, x2: 200, y2: 200 }, // a.bounds
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Arrow,
+                101, // FocusRectangle element
                 { x1: 20, y1: 20, x2: 180, y2: 180 } // a.validArea smaller than bounds
             ),
             [
                 // Top-left corner
                 createChildRenderingDom(
                     2,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 10, y1: 10, x2: 50, y2: 50 }, // b.bounds
+                        null,
+                        null,
+                        201, // SolidBorder element
                         { x1: 20, y1: 20, x2: 50, y2: 50 }  // b.validArea = intersection(b.bounds, a.validArea)
                     )
                 ),
                 // Top-right corner
                 createChildRenderingDom(
                     3,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 150, y1: 10, x2: 190, y2: 50 }, // c.bounds
+                        null,
+                        null,
+                        102, // Raw element
                         { x1: 150, y1: 20, x2: 180, y2: 50 }  // c.validArea = intersection(c.bounds, a.validArea)
                     )
                 ),
                 // Bottom-left corner
                 createChildRenderingDom(
                     4,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 10, y1: 150, x2: 50, y2: 190 }, // d.bounds
+                        null,
+                        null,
+                        103, // Raw element
                         { x1: 20, y1: 150, x2: 50, y2: 180 }  // d.validArea = intersection(d.bounds, a.validArea)
                     )
                 ),
                 // Bottom-right corner
                 createChildRenderingDom(
                     5,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 150, y1: 150, x2: 190, y2: 190 }, // e.bounds
+                        null,
+                        null,
+                        202, // SolidBorder element
                         { x1: 150, y1: 150, x2: 180, y2: 180 }  // e.validArea = intersection(e.bounds, a.validArea)
                     )
                 )
@@ -478,28 +517,51 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
     //      +-----+
     
     const provider = new VirtualDomProviderMock();
+    const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
+    const solidBorderDesc: TypedElementDesc = {
+        type: SCHEMA.RendererType.SolidBorder,
+        desc: {
+            id: 301,
+            borderColor: '#0000FF',
+            shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
+        }
+    };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+
     const elements: ElementManager = new ElementManager();
+    elements.createWithDesc(104, focusRectangleDesc);
+    elements.createWithDesc(301, solidBorderDesc);
+    elements.createWithDesc(105, rawDesc);
     
     const rootDom = createRootRenderingDom();
     rootDom.children = [
         createChildRenderingDom(
             1,
-            createSimpleRenderingDomContent(
+            createRenderingDomContent(
                 { x1: 10, y1: 10, x2: 200, y2: 100 }, // a.bounds
+                SCHEMA.WindowHitTestResult.Client,
+                SCHEMA.WindowSystemCursorType.Hand,
+                104, // FocusRectangle element
                 { x1: 20, y1: 20, x2: 180, y2: 100 }  // a.validArea (same y2)
             ),
             [
                 createChildRenderingDom(
                     2,
-                    createSimpleRenderingDomContent(
+                    createRenderingDomContent(
                         { x1: 120, y1: 30, x2: 190, y2: 120 }, // b.bounds (at a's bottom right)
+                        null,
+                        null,
+                        301, // SolidBorder element
                         { x1: 120, y1: 30, x2: 180, y2: 100 }  // b.validArea = intersection(b.bounds, a.validArea)
                     ),
                     [
                         createChildRenderingDom(
                             3,
-                            createSimpleRenderingDomContent(
+                            createRenderingDomContent(
                                 { x1: 100, y1: 80, x2: 150, y2: 130 }, // c.bounds (at b's bottom left)
+                                null,
+                                null,
+                                105, // Raw element
                                 { x1: 120, y1: 80, x2: 150, y2: 100 }  // c.validArea = intersection(c.bounds, b.validArea)
                             )
                         )
