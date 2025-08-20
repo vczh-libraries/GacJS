@@ -297,12 +297,55 @@ function collectPropsAfterDiff(
     }
 }
 
+function ensureChildrenClippedHierarchy(
+    innerDom: IVirtualDom,
+    validArea: SCHEMA.Rect | undefined,
+    props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>,
+    record: VirtualDomRecord,
+    provider: IVirtualDomProvider
+): void {
+    const newChildren = innerDom.children.map(child => ensureClippedHierarchy(child, validArea, props, record, provider));
+    if (innerDom.children.length === newChildren.length && innerDom.children.every((child, index) => child === newChildren[index])) {
+        return;
+    }
+    innerDom.updateChildren(newChildren);
+}
+
 function ensureClippedHierarchy(
     virtualDom: IVirtualDom,
-    props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>
-): void {
-    void virtualDom;
-    void props;
+    validArea: SCHEMA.Rect | undefined,
+    props: Map<SCHEMA.TYPES.Integer, PropsAfterDiff>,
+    record: VirtualDomRecord,
+    provider: IVirtualDomProvider
+): IVirtualDom {
+    const currentProps = props.get(virtualDom.id)!;
+    const naturalValidArea = validArea ? intersectRects(validArea, currentProps.bounds) : currentProps.bounds;
+    const expectedClipped = !areRectsEqual(currentProps.validArea, naturalValidArea);
+    const actualClipped = currentProps.outerDom !== currentProps.innerDom;
+
+    if (expectedClipped !== actualClipped) {
+        const domProps = currentProps.innerDom!.props;
+        const children = [...currentProps.innerDom!.children];
+        currentProps.innerDom!.updateChildren([]);
+
+        if (expectedClipped) {
+            currentProps.outerDom = provider.createDomForValidArea(virtualDom.id, currentProps.validArea);
+            currentProps.innerDom = provider.createDom(ClippedVirtualDomId, domProps);
+            currentProps.outerDom.updateChildren([currentProps.innerDom]);
+        } else {
+            currentProps.outerDom = provider.createDom(virtualDom.id, domProps);
+            currentProps.innerDom = currentProps.outerDom;
+        }
+
+        currentProps.innerDom.updateChildren(children);
+        record.doms.set(currentProps.outerDom.id, currentProps.outerDom);
+        if (domProps.elementId !== undefined) {
+            record.elementToDoms.set(domProps.elementId, currentProps.outerDom);
+        }
+    }
+
+    ensureChildrenClippedHierarchy(currentProps.innerDom!, currentProps.validArea, props, record, provider);
+    return currentProps.outerDom!;
 }
 
 export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
@@ -370,5 +413,5 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
         }
     }
 
-    ensureClippedHierarchy(record.screen, props);
+    ensureChildrenClippedHierarchy(record.screen, undefined, props, record, provider);
 }
