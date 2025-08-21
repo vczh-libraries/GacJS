@@ -9,6 +9,10 @@
   - `requestStopToCore`
   - `RequestControllerConnectionStopped`
   - Close menu items x4.
+- Configuration
+  - Make `shouldAllowBrowserDefault` configurable.
+  - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
+  - Could reuse `GacUISettings` for all of these.
 
 ## Future
 
