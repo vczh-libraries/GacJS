@@ -1,8 +1,14 @@
 # ToDo
 
-- Implement IO events.
+- Keyboard events.
+- Hovering through list or menu doesn't trigger refreshing.
 - Handle remote exception.
 - Make `index.html` resize window when browser view port changed.
+- Existing.
+
+## Future
+
+- `IGraphicsParagraph` and typing events.
 
 ## Known Issues
 
