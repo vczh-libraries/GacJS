@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
     <title>GacUI HTML Renderer</title>
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="./global.css" />
@@ -12,14 +13,27 @@
     <div id="gacui-screen" class="gacui-container">
         <!-- Content goes here -->
     </div>
+    <div id="gacui-error-mask" class="gacui-error-mask">
+        <div class="gacui-error-cross"></div>
+    </div>
     <script lang="javascript">
         document.addEventListener('DOMContentLoaded', async () => {
             const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.getElementById('gacui-screen'));
+            const errorMask = document.getElementById('gacui-error-mask');
+            
             try {
                 await client.start();
             } catch (error) {
                 client.stop();
                 renderer.stop();
+                
+                // Move the error mask to cover gacui-screen after stopping
+                const gacuiScreen = document.getElementById('gacui-screen');
+                gacuiScreen.appendChild(errorMask);
+                
+                // Show the error mask just before alert
+                errorMask.classList.add('visible');
+                
                 alert(error.message);
             }
         });
