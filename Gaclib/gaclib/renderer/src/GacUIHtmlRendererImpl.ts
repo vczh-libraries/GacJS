@@ -435,8 +435,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     private _ioGetRelativeCoordinates(event: MouseEvent | WheelEvent): { x: number; y: number } {
         const rect = this._settings.target.getBoundingClientRect();
         return {
-            x: event.clientX - rect.left,
-            y: event.clientY - rect.top
+            x: Math.round(event.clientX - rect.left),
+            y: Math.round(event.clientY - rect.top)
         };
     }
 
