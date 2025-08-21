@@ -10,7 +10,7 @@
 </head>
 
 <body>
-    <div id="gacui-screen" class="gacui-container">
+    <div id="gacui-screen" class="gacui-container" tabindex="0">
         <!-- Content goes here -->
     </div>
     <div id="gacui-error-mask" class="gacui-error-mask">
@@ -25,6 +25,22 @@
             gacuiScreen.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
                 return false;
+            });
+            
+            // Focus the element to enable keyboard events
+            gacuiScreen.focus();
+            
+            // Ensure gacui-screen gets focus when user clicks anywhere on the page
+            document.addEventListener('click', (event) => {
+                // Only focus if the click target is not a naturally focusable element
+                const target = event.target;
+                const tagName = target.tagName.toLowerCase();
+                const isFocusableElement = ['input', 'button', 'select', 'textarea', 'a'].includes(tagName) ||
+                                          target.hasAttribute('tabindex');
+                
+                if (!isFocusableElement) {
+                    gacuiScreen.focus();
+                }
             });
             
             const [renderer, client] = await GacUIHtmlRenderer.runGacUI(gacuiScreen);

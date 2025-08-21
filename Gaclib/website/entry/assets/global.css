@@ -18,6 +18,9 @@ body {
     
     /* Disable text cursor when hovering over the container */
     cursor: default;
+    
+    /* Remove focus outline when element is focused */
+    outline: none;
 }
 
 .gacui-error-mask {
