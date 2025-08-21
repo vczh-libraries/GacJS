@@ -16,6 +16,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
 
+    /****************************************************************************************
+     * Constructor
+     ***************************************************************************************/
+
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
 
@@ -69,6 +73,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             },
             children: null
         }, new ElementManager(), this._provider);
+        this._installEvents();
     }
 
     private _areBoundsEqual(a: SCHEMA.NativeRect, b: SCHEMA.NativeRect): boolean {
@@ -101,6 +106,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestControllerConnectionStopped(): void {
         // TODO: report back to the caller
+        this._uninstallEvents();
     }
 
     /****************************************************************************************
@@ -417,4 +423,156 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         throw new Error('Should not be called (RequestRendererEndBoundary)');
     }
     /* eslint-enable @typescript-eslint/no-unused-vars */
+
+    /****************************************************************************************
+     * IO Events
+     ***************************************************************************************/
+
+    // Mouse event handlers
+    private _mouseDownHandler: (event: MouseEvent) => void;
+    private _mouseUpHandler: (event: MouseEvent) => void;
+    private _mouseDoubleClickHandler: (event: MouseEvent) => void;
+    private _mouseMoveHandler: (event: MouseEvent) => void;
+    private _mouseEnterHandler: (event: MouseEvent) => void;
+    private _mouseLeaveHandler: (event: MouseEvent) => void;
+    private _wheelHandler: (event: WheelEvent) => void;
+
+    private _installEvents(): void {
+        // Helper function to get relative coordinates
+        const getRelativeCoordinates = (event: MouseEvent): { x: number; y: number } => {
+            const rect = this._settings.target.getBoundingClientRect();
+            return {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        };
+
+        // Helper function to create IOMouseInfo
+        const createMouseInfo = (event: MouseEvent, wheel: number = 0): SCHEMA.IOMouseInfo => {
+            const coords = getRelativeCoordinates(event);
+            return {
+                ctrl: event.ctrlKey,
+                shift: event.shiftKey,
+                left: event.buttons === 1 || event.buttons === 3 || event.buttons === 5 || event.buttons === 7,
+                middle: event.buttons === 4 || event.buttons === 6 || event.buttons === 7,
+                right: event.buttons === 2 || event.buttons === 3 || event.buttons === 6 || event.buttons === 7,
+                x: { value: coords.x },
+                y: { value: coords.y },
+                wheel: wheel,
+                nonClient: false
+            };
+        };
+
+        // Helper function to get IOMouseButton from mouse event
+        const getMouseButton = (event: MouseEvent): SCHEMA.IOMouseButton => {
+            switch (event.button) {
+                case 0: return SCHEMA.IOMouseButton.Left;
+                case 1: return SCHEMA.IOMouseButton.Middle;
+                case 2: return SCHEMA.IOMouseButton.Right;
+                default: return SCHEMA.IOMouseButton.Left; // fallback
+            }
+        };
+
+        // Mouse down handler
+        this._mouseDownHandler = (event: MouseEvent) => {
+            if (this._events !== undefined) {
+                this._events.OnIOButtonDown({
+                    button: getMouseButton(event),
+                    info: createMouseInfo(event)
+                });
+            }
+        };
+
+        // Mouse up handler
+        this._mouseUpHandler = (event: MouseEvent) => {
+            if (this._events !== undefined) {
+                this._events.OnIOButtonUp({
+                    button: getMouseButton(event),
+                    info: createMouseInfo(event)
+                });
+            }
+        };
+
+        // Mouse double click handler
+        this._mouseDoubleClickHandler = (event: MouseEvent) => {
+            if (this._events !== undefined) {
+                this._events.OnIOButtonDoubleClick({
+                    button: getMouseButton(event),
+                    info: createMouseInfo(event)
+                });
+            }
+        };
+
+        // Mouse move handler
+        this._mouseMoveHandler = (event: MouseEvent) => {
+            if (this._events !== undefined) {
+                this._events.OnIOMouseMoving(createMouseInfo(event));
+            }
+        };
+
+        // Mouse enter handler
+        this._mouseEnterHandler = () => {
+            if (this._events !== undefined) {
+                this._events.OnIOMouseEntered();
+            }
+        };
+
+        // Mouse leave handler
+        this._mouseLeaveHandler = () => {
+            if (this._events !== undefined) {
+                this._events.OnIOMouseLeaved();
+            }
+        };
+
+        // Wheel handler
+        this._wheelHandler = (event: WheelEvent) => {
+            if (this._events !== undefined) {
+                // Normalize wheel delta to 120/-120 per tick
+                let wheel = 0;
+                if (event.deltaY !== 0) {
+                    // Vertical wheel (up/down)
+                    wheel = event.deltaY > 0 ? -120 : 120;
+                    this._events.OnIOVWheel(createMouseInfo(event, wheel));
+                } else if (event.deltaX !== 0) {
+                    // Horizontal wheel (left/right)
+                    wheel = event.deltaX > 0 ? -120 : 120;
+                    this._events.OnIOHWheel(createMouseInfo(event, wheel));
+                }
+            }
+            event.preventDefault(); // Prevent page scrolling
+        };
+
+        // Install event listeners
+        this._settings.target.addEventListener('mousedown', this._mouseDownHandler);
+        this._settings.target.addEventListener('mouseup', this._mouseUpHandler);
+        this._settings.target.addEventListener('dblclick', this._mouseDoubleClickHandler);
+        this._settings.target.addEventListener('mousemove', this._mouseMoveHandler);
+        this._settings.target.addEventListener('mouseenter', this._mouseEnterHandler);
+        this._settings.target.addEventListener('mouseleave', this._mouseLeaveHandler);
+        this._settings.target.addEventListener('wheel', this._wheelHandler);
+    }
+
+    private _uninstallEvents(): void {
+        if (this._mouseDownHandler !== undefined) {
+            this._settings.target.removeEventListener('mousedown', this._mouseDownHandler);
+        }
+        if (this._mouseUpHandler !== undefined) {
+            this._settings.target.removeEventListener('mouseup', this._mouseUpHandler);
+        }
+        if (this._mouseDoubleClickHandler !== undefined) {
+            this._settings.target.removeEventListener('dblclick', this._mouseDoubleClickHandler);
+        }
+        if (this._mouseMoveHandler !== undefined) {
+            this._settings.target.removeEventListener('mousemove', this._mouseMoveHandler);
+        }
+        if (this._mouseEnterHandler !== undefined) {
+            this._settings.target.removeEventListener('mouseenter', this._mouseEnterHandler);
+        }
+        if (this._mouseLeaveHandler !== undefined) {
+            this._settings.target.removeEventListener('mouseleave', this._mouseLeaveHandler);
+        }
+        if (this._wheelHandler !== undefined) {
+            this._settings.target.removeEventListener('wheel', this._wheelHandler);
+        }
+    }
 }
