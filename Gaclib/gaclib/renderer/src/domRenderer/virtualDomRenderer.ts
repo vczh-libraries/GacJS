@@ -80,11 +80,7 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     ) {
         super(id, props);
         this.htmlElement = document.createElement('div');
-
-        // Apply initial typed style if provided
-        if (props.typedDesc !== undefined) {
-            applyTypedStyle(this.htmlElement, props.typedDesc);
-        }
+        this.onUpdateTypedDesc(props.elementId, props.typedDesc);
     }
 
     protected getExpectedChildType(): string {
@@ -99,7 +95,9 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     protected onUpdateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
         void elementId; // elementId parameter added for consistency but not used in this implementation
         // Apply typed style to the HTML element
-        if (typedDesc !== undefined) {
+        if (typedDesc === undefined) {
+            applyCommonStyle(this.htmlElement);
+        } else {
             applyTypedStyle(this.htmlElement, typedDesc);
         }
     }
@@ -163,9 +161,6 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
             if (child instanceof VirtualDomHtmlRoot ||
                 child instanceof VirtualDomHtmlValidArea ||
                 child instanceof VirtualDomHtmlOrdinary) {
-                if (!child.props.typedDesc) {
-                    applyCommonStyle(child.htmlElement);
-                }
                 applyBounds(child.htmlElement, child.bounds);
 
                 if (child.props.typedDesc &&

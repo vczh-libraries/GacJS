@@ -279,6 +279,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
         this._renderingRecord.elements.updateDesc(id, typedDesc);
+        const virtualDom = this._renderingRecord.elementToDoms.get(id);
+        if (virtualDom) {
+            virtualDom.updateTypedDesc(id, typedDesc);
+        }
     }
 
     RequestRendererCreated(requestArgs: SCHEMA.TYPES.List<SCHEMA.RendererCreation>): void {
