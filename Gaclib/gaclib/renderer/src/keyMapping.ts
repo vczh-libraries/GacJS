@@ -358,6 +358,14 @@ function mapByKeyCode(keyCode: number): SCHEMA.TYPES.Key | null {
  * - Windows/Linux users expect Ctrl+C for copy
  * - Mac users expect Cmd+C for copy
  * By checking (event.ctrlKey || event.metaKey), we support both platforms.
+ * 
+ * CROSS-PLATFORM IOKeyInfo.ctrl MAPPING:
+ * Our IOKeyInfo.ctrl field is set to true when either ctrlKey OR metaKey is pressed,
+ * providing a unified interface for application logic. This means:
+ * - On Windows/Linux: Ctrl+C sets IOKeyInfo.ctrl = true
+ * - On Mac: Cmd+C also sets IOKeyInfo.ctrl = true
+ * This allows GacUI application code to handle keyboard shortcuts consistently
+ * without needing platform-specific logic.
  */
 export function shouldAllowBrowserDefault(event: KeyboardEvent): boolean {
     // Allow specific browser shortcuts that users expect to work
