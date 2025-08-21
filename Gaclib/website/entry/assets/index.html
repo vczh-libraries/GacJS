@@ -18,8 +18,16 @@
     </div>
     <script lang="javascript">
         document.addEventListener('DOMContentLoaded', async () => {
-            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.getElementById('gacui-screen'));
+            const gacuiScreen = document.getElementById('gacui-screen');
             const errorMask = document.getElementById('gacui-error-mask');
+            
+            // Disable context menu on the gacui-screen and all its child elements
+            gacuiScreen.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                return false;
+            });
+            
+            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(gacuiScreen);
             
             try {
                 await client.start();
@@ -28,7 +36,6 @@
                 renderer.stop();
                 
                 // Move the error mask to cover gacui-screen after stopping
-                const gacuiScreen = document.getElementById('gacui-screen');
                 gacuiScreen.appendChild(errorMask);
                 
                 // Show the error mask just before alert
