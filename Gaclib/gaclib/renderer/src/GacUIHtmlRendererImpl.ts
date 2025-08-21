@@ -507,7 +507,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
         return {
             code: keyCode,
-            ctrl: event.ctrlKey,
+            // Cross-platform compatibility: treat both Ctrl (Windows/Linux) and Cmd (Mac) as "ctrl"
+            // This allows application logic to work consistently across platforms without platform-specific code
+            ctrl: event.ctrlKey || event.metaKey,
             shift: event.shiftKey,
             alt: event.altKey,
             capslock: event.getModifierState('CapsLock'),
