@@ -428,12 +428,11 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      * IO Events
      ***************************************************************************************/
 
-    // Mouse event handlers map
-    private _mouseEventHandlers: Map<string, (event: MouseEvent) => void> = new Map();
-    private _wheelHandler: (event: WheelEvent) => void;
+    // Event handlers map for all types of events
+    private _eventHandlers: Map<string, EventListener> = new Map();
 
     // Helper method to get relative coordinates
-    private _ioGetRelativeCoordinates(event: MouseEvent): { x: number; y: number } {
+    private _ioGetRelativeCoordinates(event: MouseEvent | WheelEvent): { x: number; y: number } {
         const rect = this._settings.target.getBoundingClientRect();
         return {
             x: event.clientX - rect.left,
@@ -442,7 +441,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     // Helper method to create IOMouseInfo
-    private _ioCreateMouseInfo(event: MouseEvent, wheel: number = 0): SCHEMA.IOMouseInfo {
+    private _ioCreateMouseInfo(event: MouseEvent | WheelEvent, wheel: number = 0): SCHEMA.IOMouseInfo {
         const coords = this._ioGetRelativeCoordinates(event);
         return {
             ctrl: event.ctrlKey,
@@ -467,94 +466,93 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         }
     }
 
-    // Helper method to hook mouse events
-    private _ioHookMouseEvent(eventName: string, handler: (event: MouseEvent) => void): void {
-        this._mouseEventHandlers.set(eventName, handler);
+    // Helper method to hook any type of event
+    private _ioHookEvent(eventName: string, handler: EventListener): void {
+        this._eventHandlers.set(eventName, handler);
         this._settings.target.addEventListener(eventName, handler);
     }
 
     private _installEvents(): void {
         // Mouse down handler
-        this._ioHookMouseEvent('mousedown', (event: MouseEvent) => {
+        this._ioHookEvent('mousedown', (event: Event) => {
+            const mouseEvent = event as MouseEvent;
             if (this._events !== undefined) {
                 this._events.OnIOButtonDown({
-                    button: this._ioGetMouseButton(event),
-                    info: this._ioCreateMouseInfo(event)
+                    button: this._ioGetMouseButton(mouseEvent),
+                    info: this._ioCreateMouseInfo(mouseEvent)
                 });
             }
         });
 
         // Mouse up handler
-        this._ioHookMouseEvent('mouseup', (event: MouseEvent) => {
+        this._ioHookEvent('mouseup', (event: Event) => {
+            const mouseEvent = event as MouseEvent;
             if (this._events !== undefined) {
                 this._events.OnIOButtonUp({
-                    button: this._ioGetMouseButton(event),
-                    info: this._ioCreateMouseInfo(event)
+                    button: this._ioGetMouseButton(mouseEvent),
+                    info: this._ioCreateMouseInfo(mouseEvent)
                 });
             }
         });
 
         // Mouse double click handler
-        this._ioHookMouseEvent('dblclick', (event: MouseEvent) => {
+        this._ioHookEvent('dblclick', (event: Event) => {
+            const mouseEvent = event as MouseEvent;
             if (this._events !== undefined) {
                 this._events.OnIOButtonDoubleClick({
-                    button: this._ioGetMouseButton(event),
-                    info: this._ioCreateMouseInfo(event)
+                    button: this._ioGetMouseButton(mouseEvent),
+                    info: this._ioCreateMouseInfo(mouseEvent)
                 });
             }
         });
 
         // Mouse move handler
-        this._ioHookMouseEvent('mousemove', (event: MouseEvent) => {
+        this._ioHookEvent('mousemove', (event: Event) => {
+            const mouseEvent = event as MouseEvent;
             if (this._events !== undefined) {
-                this._events.OnIOMouseMoving(this._ioCreateMouseInfo(event));
+                this._events.OnIOMouseMoving(this._ioCreateMouseInfo(mouseEvent));
             }
         });
 
         // Mouse enter handler
-        this._ioHookMouseEvent('mouseenter', () => {
+        this._ioHookEvent('mouseenter', () => {
             if (this._events !== undefined) {
                 this._events.OnIOMouseEntered();
             }
         });
 
         // Mouse leave handler
-        this._ioHookMouseEvent('mouseleave', () => {
+        this._ioHookEvent('mouseleave', () => {
             if (this._events !== undefined) {
                 this._events.OnIOMouseLeaved();
             }
         });
 
-        // Wheel handler (special case since it's WheelEvent, not MouseEvent)
-        this._wheelHandler = (event: WheelEvent) => {
+        // Wheel handler
+        this._ioHookEvent('wheel', (event: Event) => {
+            const wheelEvent = event as WheelEvent;
             if (this._events !== undefined) {
                 // Normalize wheel delta to 120/-120 per tick
                 let wheel = 0;
-                if (event.deltaY !== 0) {
+                if (wheelEvent.deltaY !== 0) {
                     // Vertical wheel (up/down)
-                    wheel = event.deltaY > 0 ? -120 : 120;
-                    this._events.OnIOVWheel(this._ioCreateMouseInfo(event, wheel));
-                } else if (event.deltaX !== 0) {
+                    wheel = wheelEvent.deltaY > 0 ? -120 : 120;
+                    this._events.OnIOVWheel(this._ioCreateMouseInfo(wheelEvent, wheel));
+                } else if (wheelEvent.deltaX !== 0) {
                     // Horizontal wheel (left/right)
-                    wheel = event.deltaX > 0 ? -120 : 120;
-                    this._events.OnIOHWheel(this._ioCreateMouseInfo(event, wheel));
+                    wheel = wheelEvent.deltaX > 0 ? -120 : 120;
+                    this._events.OnIOHWheel(this._ioCreateMouseInfo(wheelEvent, wheel));
                 }
             }
-            event.preventDefault(); // Prevent page scrolling
-        };
-        this._settings.target.addEventListener('wheel', this._wheelHandler);
+            wheelEvent.preventDefault(); // Prevent page scrolling
+        });
     }
 
     private _uninstallEvents(): void {
-        // Remove all mouse event handlers using the map
-        for (const [eventName, handler] of this._mouseEventHandlers) {
+        // Remove all event handlers using the map
+        for (const [eventName, handler] of this._eventHandlers) {
             this._settings.target.removeEventListener(eventName, handler);
         }
-        this._mouseEventHandlers.clear();
-
-        // Remove wheel handler separately since it's not in the map
-        if (this._wheelHandler !== undefined) {
-            this._settings.target.removeEventListener('wheel', this._wheelHandler);
-        }
+        this._eventHandlers.clear();
     }
 }
