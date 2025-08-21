@@ -3,6 +3,74 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 /**
  * Maps JavaScript KeyboardEvent to GacUI Key enum values
  * Based on Windows Virtual Key codes used in the Key enum
+ * 
+ * COVERAGE ANALYSIS:
+ * This mapping covers all commonly used keys that are accessible through web browser keyboard events.
+ * The following groups of keys from the Key enum are intentionally NOT mapped because they are either
+ * not available on standard keyboards, not accessible via web browsers, or require special handling:
+ * 
+ * 1. MOUSE/BUTTON KEYS (not keyboard events):
+ *    - KEY_LBUTTON, KEY_RBUTTON, KEY_MBUTTON, KEY_XBUTTON1, KEY_XBUTTON2
+ *    These are mouse button codes, not keyboard keys, so they don't belong in keyboard event mapping.
+ * 
+ * 2. ASIAN LANGUAGE INPUT KEYS (IME-specific):
+ *    - KEY_KANA_HANGUL (Korean/Japanese Kana mode toggle)
+ *    - KEY_HANJA (Korean Hanja conversion)
+ *    - KEY_JUNJA, KEY_FINAL, KEY_KANJI (Japanese input method states)
+ *    - KEY_CONVERT, KEY_NONCONVERT (IME text conversion)
+ *    These require specialized Input Method Editor (IME) handling and are not standard keyboard events
+ *    in web browsers. They would need platform-specific implementation.
+ * 
+ * 3. SYSTEM-LEVEL SPECIAL KEYS (not accessible in browsers):
+ *    - KEY_ACCEPT, KEY_MODECHANGE (system mode changes)
+ *    - KEY_SLEEP (system sleep key)
+ *    - KEY_SEPARATOR (numpad separator, varies by locale)
+ *    These are typically handled at the OS level and not exposed to web applications for security reasons.
+ * 
+ * 4. VENDOR-SPECIFIC KEYBOARD KEYS (Fujitsu/OASYS):
+ *    - KEY_OEM_FJ_JISHO ('Dictionary' key on Fujitsu keyboards)
+ *    - KEY_OEM_FJ_MASSHOU ('Unregister word' key)
+ *    - KEY_OEM_FJ_TOUROKU ('Register word' key)
+ *    - KEY_OEM_FJ_LOYA, KEY_OEM_FJ_ROYA ('Left/Right OYAYUBI' keys)
+ *    These are specific to Fujitsu/OASYS keyboards and extremely rare in modern usage.
+ * 
+ * 5. BROWSER/MEDIA KEYS (may not be accessible or need special permission):
+ *    - KEY_BROWSER_* (BACK, FORWARD, REFRESH, STOP, SEARCH, FAVORITES, HOME)
+ *    - KEY_VOLUME_* (MUTE, DOWN, UP)
+ *    - KEY_MEDIA_* (NEXT_TRACK, PREV_TRACK, STOP, PLAY_PAUSE)
+ *    - KEY_LAUNCH_* (MAIL, MEDIA_SELECT, APP1, APP2)
+ *    Modern browsers often block these for security or require special permissions. They may be
+ *    handled by the browser itself rather than passed to web applications.
+ * 
+ * 6. EXTENDED/LEGACY OEM KEYS (rare or obsolete):
+ *    - KEY_OEM_8 (varies by keyboard layout)
+ *    - KEY_OEM_AX ('AX' key on Japanese AX keyboards - obsolete)
+ *    - KEY_OEM_102 ("<>" or "\|" on 102-key RT keyboards - legacy)
+ *    These are either obsolete or highly layout-specific and rarely encountered.
+ * 
+ * 7. INDUSTRIAL/SPECIALTY KEYS (ICO/Nokia/Ericsson terminals):
+ *    - KEY_ICO_* (HELP, 00, CLEAR - ICO terminal keys)
+ *    - KEY_OEM_* (RESET, JUMP, PA1-3, WSCTRL, CUSEL, ATTN, FINISH, COPY, AUTO, ENLW, BACKTAB)
+ *    These were used in industrial terminals, mainframe systems, and specialized equipment.
+ *    They are not present on modern consumer keyboards.
+ * 
+ * 8. SYSTEM/INTERNAL KEYS (not user-accessible):
+ *    - KEY_PROCESSKEY (used internally by IME)
+ *    - KEY_PACKET (used for Unicode character input)
+ *    - KEY_ATTN, KEY_CRSEL, KEY_EXSEL, KEY_EREOF (mainframe terminal functions)
+ *    - KEY_PLAY, KEY_ZOOM, KEY_NONAME, KEY_PA1, KEY_OEM_CLEAR (misc system functions)
+ *    These are used internally by the system or for specialized applications.
+ * 
+ * 9. GENERIC MODIFIER KEYS (replaced by specific L/R variants):
+ *    - KEY_SHIFT, KEY_CONTROL, KEY_MENU
+ *    These generic versions are covered by their specific left/right variants (KEY_LSHIFT/KEY_RSHIFT, etc.)
+ *    which provide more precise key identification.
+ * 
+ * The mapping focuses on keys that:
+ * - Are present on standard modern keyboards
+ * - Are accessible through web browser KeyboardEvent API
+ * - Are commonly used in desktop applications
+ * - Can be reliably detected across different platforms and browsers
  */
 export function mapJavaScriptKeyToGacUIKey(event: KeyboardEvent): SCHEMA.TYPES.Key | null {
     // Try mapping by event.code first (physical key layout)
