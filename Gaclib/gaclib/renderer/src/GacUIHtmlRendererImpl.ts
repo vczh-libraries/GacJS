@@ -7,6 +7,7 @@ import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
+    private _stopping = false;
 
     private _provider: IVirtualDomProvider;
     private _measurer: IElementMeasurer;
@@ -76,6 +77,15 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         this._installEvents();
     }
 
+    stop(): void {
+        this._stopping = true;
+        this._uninstallEvents();
+    }
+
+    requestStopToCore(): void {
+        throw new Error('Not Implemented (requestStopToCore)');
+    }
+
     private _areBoundsEqual(a: SCHEMA.NativeRect, b: SCHEMA.NativeRect): boolean {
         return a.x1.value === b.x1.value &&
             a.y1.value === b.y1.value &&
@@ -106,7 +116,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     RequestControllerConnectionStopped(): void {
         // TODO: report back to the caller
-        this._uninstallEvents();
+        this.stop();
     }
 
     /****************************************************************************************
@@ -278,6 +288,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     private _updateElement(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
+        if (this._stopping) {
+            return;
+        }
+        
         this._renderingRecord.elements.updateDesc(id, typedDesc);
         const virtualDom = this._renderingRecord.elementToDoms.get(id);
         if (virtualDom) {
@@ -316,10 +330,17 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererEndRendering(id: number): void {
+        if (this._stopping) {
+            this._responses.RespondRendererEndRendering(id, { fontHeights: [], minSizes: [], createdImages: [] });
+            return;
+        }
         this._measurer.RequestRendererEndRendering(id, this._renderingRecord);
     }
 
     RequestRendererRenderDom(requestArgs: SCHEMA.TYPES.Ptr<SCHEMA.RenderingDom>): void {
+        if (this._stopping) {
+            return;
+        }
         if (requestArgs) {
             this._renderingRecord = createVirtualDomFromRenderingDom(requestArgs, this._renderingRecord.elements, this._provider);
             this._provider.fixBounds(
@@ -332,6 +353,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestRendererRenderDomDiff(requestArgs: SCHEMA.RenderingDom_DiffsInOrder): void {
+        if (this._stopping) {
+            return;
+        }
         updateVirtualDomWithRenderingDomDiff(requestArgs, this._renderingRecord, this._provider);
         this._provider.fixBounds(
             this._renderingRecord.screen,

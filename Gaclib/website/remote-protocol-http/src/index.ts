@@ -24,16 +24,25 @@ interface ConnectResponse {
 class HttpClientImpl implements IRemoteProtocolHttpClient {
     public responses: IRemoteProtocolResponses;
     public events: IRemoteProtocolEvents;
+    private _stopping = false;
 
     constructor(private requests: IRemoteProtocolRequests, private host: string, private urls: ConnectResponse) {
         const callback: ProtocolInvokingHandler = (invoking => {
-            this.sendRequest(invoking).catch(error => { throw error; });
+            this.sendRequest(invoking).catch(error => {
+                if (!this._stopping) {
+                    throw error;
+                }
+            });
         });
         this.responses = new ResponseToJson(callback);
         this.events = new EventToJson(callback);
     }
 
     async sendRequest(invoking: ProtocolInvoking): Promise<void> {
+        if (this._stopping) {
+            return;
+        }
+
         const response = await fetch(`${this.host}${this.urls.response}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf8' },
@@ -47,7 +56,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
 
     async start(): Promise<void> {
         this.events.OnControllerConnect();
-        while (true) {
+        while (!this._stopping) {
             let responseText: string;
 
             try {
@@ -61,12 +70,18 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
                 }
 
                 responseText = await response.text();
+                if (this._stopping) {
+                    break;
+                }
             } catch {
                 continue;
             }
 
             const requests = JSON.parse(responseText) as string[];
             for (const request of requests) {
+                if (request.startsWith('!')) {
+                    throw new Error(request.substring(1));
+                }
                 const protocolInvoking = JSON.parse(request) as ProtocolInvoking;
                 jsonToRequest(protocolInvoking, this.requests);
             }
@@ -74,8 +89,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     }
 
     stop(): void {
-        // TODO: to break start() infinite loop
-        throw new Error('Not Implemented (stop)');
+        this._stopping = true;
     }
 }
 

@@ -15,7 +15,13 @@
     <script lang="javascript">
         document.addEventListener('DOMContentLoaded', async () => {
             const [renderer, client] = await GacUIHtmlRenderer.runGacUI(document.getElementById('gacui-screen'));
-            client.start(); // Don't await - let it run in background
+            try {
+                await client.start();
+            } catch (error) {
+                client.stop();
+                renderer.stop();
+                alert(error.message);
+            }
         });
     </script>
 </body>

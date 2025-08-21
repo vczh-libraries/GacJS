@@ -1,9 +1,11 @@
 # ToDo
 
 - Keyboard events.
-- Handle remote exception.
 - Make `index.html` resize window when browser view port changed.
 - Existing.
+  - `requestStopToCore`
+  - `RequestControllerConnectionStopped`
+  - Close menu items x4.
 
 ## Future
 

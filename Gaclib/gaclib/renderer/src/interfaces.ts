@@ -5,6 +5,8 @@ import { IElementMeasurer } from './dom/virtualDomBuilding';
 export interface IGacUIHtmlRenderer {
     get requests(): SCHEMA.IRemoteProtocolRequests;
     init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void;
+    stop(): void;
+    requestStopToCore(): void;
 }
 
 export interface GacUISettings {
