@@ -3,7 +3,7 @@ import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
-import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
+import { mapJavaScriptKeyToGacUIKey, shouldAllowBrowserDefault } from './keyMapping';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
@@ -616,8 +616,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                     this._events.OnIOKeyDown(keyInfo);
                 }
             }
-            // Prevent default behavior for most keys to avoid browser shortcuts
-            if (keyEvent.key !== 'F5' && keyEvent.key !== 'F12') {
+            
+            // Systematically prevent default behavior except for critical browser shortcuts
+            if (!shouldAllowBrowserDefault(keyEvent)) {
                 keyEvent.preventDefault();
             }
         });
@@ -636,8 +637,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                     this._events.OnIOKeyUp(keyInfo);
                 }
             }
-            // Prevent default behavior for most keys to avoid browser shortcuts
-            if (keyEvent.key !== 'F5' && keyEvent.key !== 'F12') {
+            
+            // Systematically prevent default behavior except for critical browser shortcuts
+            if (!shouldAllowBrowserDefault(keyEvent)) {
                 keyEvent.preventDefault();
             }
         });
