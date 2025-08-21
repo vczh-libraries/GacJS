@@ -410,6 +410,7 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
                 break;
             case SCHEMA.RenderingDom_DiffType.Deleted:
                 record.doms.delete(diff.id);
+                self.innerDom!.updateChildren([]);
                 if (self.innerDom!.props.elementId !== undefined) {
                     record.elementToDoms.delete(self.innerDom!.props.elementId);
                 }
