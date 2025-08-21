@@ -446,9 +446,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         return {
             ctrl: event.ctrlKey,
             shift: event.shiftKey,
-            left: event.buttons === 1 || event.buttons === 3 || event.buttons === 5 || event.buttons === 7,
-            middle: event.buttons === 4 || event.buttons === 6 || event.buttons === 7,
-            right: event.buttons === 2 || event.buttons === 3 || event.buttons === 6 || event.buttons === 7,
+            left: (event.buttons & 0x1) !== 0,
+            middle: (event.buttons & 0x4) !== 0,
+            right: (event.buttons & 0x2) !== 0,
             x: { value: coords.x },
             y: { value: coords.y },
             wheel: wheel,
