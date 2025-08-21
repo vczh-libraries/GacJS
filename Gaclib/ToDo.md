@@ -1,6 +1,5 @@
 # ToDo
 
-- Review `keyMapping.ts`
 - Global shortcut key.
   - `RequestIOUpdateGlobalShortcutKey`
   - Although we cannot make it actually global, but at least need to work in the browser window.
@@ -10,7 +9,7 @@
   - `RequestControllerConnectionStopped`
   - Close menu items x4.
 - Configuration
-  - Make `shouldAllowBrowserDefault` configurable.
+  - Review `keyMapping.ts` and make `shouldAllowBrowserDefault` configurable.
   - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
   - Could reuse `GacUISettings` for all of these.
 
