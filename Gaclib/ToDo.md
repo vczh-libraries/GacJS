@@ -1,6 +1,6 @@
 # ToDo
 
-- Keyboard events.
+- Review `keyMapping.ts`
 - Global shortcut key.
   - `RequestIOUpdateGlobalShortcutKey`
   - Although we cannot make it actually global, but at least need to work in the browser window.
