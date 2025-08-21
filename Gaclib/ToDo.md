@@ -3,9 +3,6 @@
 - Implement IO events.
 - Handle remote exception.
 - Make `index.html` resize window when browser view port changed.
-- Complete a demo, website and C++ renderer connect to Core in turns.
-  - in each turn do something and it will be taken to the next. (already doable with multiple C++ renderers).
-  - record as GIF
 
 ## Known Issues
 
