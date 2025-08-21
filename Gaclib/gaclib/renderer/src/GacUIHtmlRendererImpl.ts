@@ -3,6 +3,7 @@ import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
+import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
 
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
@@ -291,7 +292,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         if (this._stopping) {
             return;
         }
-        
+
         this._renderingRecord.elements.updateDesc(id, typedDesc);
         const virtualDom = this._renderingRecord.elementToDoms.get(id);
         if (virtualDom) {
@@ -459,6 +460,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     // Event handlers map for all types of events
     private _eventHandlers: Map<string, EventListener> = new Map();
 
+    // Key state tracking
+    private _pressedKeys: Set<SCHEMA.TYPES.Key> = new Set();
+
     // Helper method to get relative coordinates
     private _ioGetRelativeCoordinates(event: MouseEvent | WheelEvent): { x: number; y: number } {
         const rect = this._settings.target.getBoundingClientRect();
@@ -492,6 +496,23 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             case 2: return SCHEMA.IOMouseButton.Right;
             default: return undefined;
         }
+    }
+
+    // Helper method to create IOKeyInfo
+    private _ioCreateKeyInfo(event: KeyboardEvent, autoRepeatKeyDown: boolean): SCHEMA.IOKeyInfo | null {
+        const keyCode = mapJavaScriptKeyToGacUIKey(event);
+        if (keyCode === null) {
+            return null;
+        }
+
+        return {
+            code: keyCode,
+            ctrl: event.ctrlKey,
+            shift: event.shiftKey,
+            alt: event.altKey,
+            capslock: event.getModifierState('CapsLock'),
+            autoRepeatKeyDown: autoRepeatKeyDown
+        };
     }
 
     // Helper method to hook any type of event
@@ -577,6 +598,54 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             }
             wheelEvent.preventDefault(); // Prevent page scrolling
         });
+
+        // Key down handler
+        this._ioHookEvent('keydown', (event: Event) => {
+            const keyEvent = event as KeyboardEvent;
+            const keyCode = mapJavaScriptKeyToGacUIKey(keyEvent);
+            if (this._events !== undefined && keyCode !== null) {
+                // Check if this is an auto-repeat
+                const autoRepeatKeyDown = this._pressedKeys.has(keyCode);
+                
+                // Add to pressed keys set
+                this._pressedKeys.add(keyCode);
+
+                // Create key info and send event
+                const keyInfo = this._ioCreateKeyInfo(keyEvent, autoRepeatKeyDown);
+                if (keyInfo !== null) {
+                    this._events.OnIOKeyDown(keyInfo);
+                }
+            }
+            // Prevent default behavior for most keys to avoid browser shortcuts
+            if (keyEvent.key !== 'F5' && keyEvent.key !== 'F12') {
+                keyEvent.preventDefault();
+            }
+        });
+
+        // Key up handler
+        this._ioHookEvent('keyup', (event: Event) => {
+            const keyEvent = event as KeyboardEvent;
+            const keyCode = mapJavaScriptKeyToGacUIKey(keyEvent);
+            if (this._events !== undefined && keyCode !== null) {
+                // Remove from pressed keys set
+                this._pressedKeys.delete(keyCode);
+
+                // KeyUp always has autoRepeatKeyDown = false
+                const keyInfo = this._ioCreateKeyInfo(keyEvent, false);
+                if (keyInfo !== null) {
+                    this._events.OnIOKeyUp(keyInfo);
+                }
+            }
+            // Prevent default behavior for most keys to avoid browser shortcuts
+            if (keyEvent.key !== 'F5' && keyEvent.key !== 'F12') {
+                keyEvent.preventDefault();
+            }
+        });
+
+        // Focus lost handler - clear pressed keys to avoid stuck keys
+        this._ioHookEvent('blur', () => {
+            this._pressedKeys.clear();
+        });
     }
 
     private _uninstallEvents(): void {
@@ -585,5 +654,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             this._settings.target.removeEventListener(eventName, handler);
         }
         this._eventHandlers.clear();
+        
+        // Clear pressed keys state
+        this._pressedKeys.clear();
     }
 }
