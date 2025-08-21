@@ -457,12 +457,12 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     // Helper method to get IOMouseButton from mouse event
-    private _ioGetMouseButton(event: MouseEvent): SCHEMA.IOMouseButton {
+    private _ioGetMouseButton(event: MouseEvent): SCHEMA.IOMouseButton | undefined {
         switch (event.button) {
             case 0: return SCHEMA.IOMouseButton.Left;
             case 1: return SCHEMA.IOMouseButton.Middle;
             case 2: return SCHEMA.IOMouseButton.Right;
-            default: return SCHEMA.IOMouseButton.Left; // fallback
+            default: return undefined;
         }
     }
 
@@ -476,9 +476,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         // Mouse down handler
         this._ioHookEvent('mousedown', (event: Event) => {
             const mouseEvent = event as MouseEvent;
-            if (this._events !== undefined) {
+            const button = this._ioGetMouseButton(mouseEvent);
+            if (this._events !== undefined && button !== undefined) {
                 this._events.OnIOButtonDown({
-                    button: this._ioGetMouseButton(mouseEvent),
+                    button: button,
                     info: this._ioCreateMouseInfo(mouseEvent)
                 });
             }
@@ -487,9 +488,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         // Mouse up handler
         this._ioHookEvent('mouseup', (event: Event) => {
             const mouseEvent = event as MouseEvent;
-            if (this._events !== undefined) {
+            const button = this._ioGetMouseButton(mouseEvent);
+            if (this._events !== undefined && button !== undefined) {
                 this._events.OnIOButtonUp({
-                    button: this._ioGetMouseButton(mouseEvent),
+                    button: button,
                     info: this._ioCreateMouseInfo(mouseEvent)
                 });
             }
@@ -498,9 +500,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         // Mouse double click handler
         this._ioHookEvent('dblclick', (event: Event) => {
             const mouseEvent = event as MouseEvent;
-            if (this._events !== undefined) {
+            const button = this._ioGetMouseButton(mouseEvent);
+            if (this._events !== undefined && button !== undefined) {
                 this._events.OnIOButtonDoubleClick({
-                    button: this._ioGetMouseButton(mouseEvent),
+                    button: button,
                     info: this._ioCreateMouseInfo(mouseEvent)
                 });
             }
