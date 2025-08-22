@@ -38,6 +38,10 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
     }
 
     private _measureSolidLabel(id: SCHEMA.TYPES.Integer, request: SCHEMA.ElementSolidLabelMeasuringRequest, renderingRecord: VirtualDomRecord): SCHEMA.ElementSolidLabelMeasuringRequest | undefined {
+        if (renderingRecord.elements.getType(id) === undefined) {
+            // it has been deleted
+            return undefined;
+        }
         const typedDesc = renderingRecord.elements.getDescEnsured(id);
         if (typedDesc.type !== SCHEMA.RendererType.SolidLabel) {
             throw new Error(`Element type mismatch: expected ${SCHEMA.RendererType.SolidLabel}, got ${typedDesc.type}`);
