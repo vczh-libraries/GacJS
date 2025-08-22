@@ -86,31 +86,9 @@ body {
 }
 
 .gacui-success-tick {
-    position: relative;
-    width: 80%;
-    height: 80%;
-}
-
-.gacui-success-tick::before {
-    content: '';
-    position: absolute;
-    top: 45%;
-    left: 45%;
-    width: 25%;
-    height: 8px;
-    background-color: #00aa00;
-    transform: translate(-50%, -50%) rotate(45deg);
-    transform-origin: center;
-}
-
-.gacui-success-tick::after {
-    content: '';
-    position: absolute;
-    top: 55%;
-    left: 55%;
-    width: 50%;
-    height: 8px;
-    background-color: #00aa00;
-    transform: translate(-50%, -50%) rotate(-45deg);
-    transform-origin: center;
+    width: 200px;
+    height: 200px;
+    border: 6px solid #00aa00;
+    border-radius: 50%;
+    background-color: transparent;
 }

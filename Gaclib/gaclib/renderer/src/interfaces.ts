@@ -6,7 +6,7 @@ export interface IGacUIHtmlRenderer {
     get requests(): SCHEMA.IRemoteProtocolRequests;
     init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void;
     stop(): void;
-    requestStopToCore(): void;
+    requestStopToCore(forceExit: boolean): void;
 }
 
 export interface GacUISettings {

@@ -89,7 +89,9 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         this._uninstallEvents();
     }
 
-    requestStopToCore(): void {
+    requestStopToCore(forceExit: boolean): void {
+        void forceExit;
+        // TODO: call OnControllerRequestExit or OnControllerForceExit
         throw new Error('Not Implemented (requestStopToCore)');
     }
 

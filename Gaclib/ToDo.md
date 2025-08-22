@@ -4,8 +4,7 @@
 - Change cursor on element with cursor specified
 - Make `index.html` resize window when browser view port changed.
 - Existing.
-  - `requestStopToCore`
-  - Close menu items x4.
+  - `requestStopToCore`, add a button in `index.html` to call it.
 - Configuration
   - Review `keyMapping.ts` and make `shouldAllowBrowserDefault` configurable.
   - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
