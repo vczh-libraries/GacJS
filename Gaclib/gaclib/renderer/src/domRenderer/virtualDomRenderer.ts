@@ -10,6 +10,36 @@ import {
 } from '../dom/virtualDom';
 import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder, onSolidLabelResized } from './elementStyles';
 
+function mapCursorToCSS(cursor: SCHEMA.WindowSystemCursorType): string {
+    switch (cursor) {
+        case SCHEMA.WindowSystemCursorType.SmallWaiting:
+        case SCHEMA.WindowSystemCursorType.LargeWaiting:
+            return 'wait';
+        case SCHEMA.WindowSystemCursorType.Arrow:
+            return 'default';
+        case SCHEMA.WindowSystemCursorType.Cross:
+            return 'crosshair';
+        case SCHEMA.WindowSystemCursorType.Hand:
+            return 'pointer';
+        case SCHEMA.WindowSystemCursorType.Help:
+            return 'help';
+        case SCHEMA.WindowSystemCursorType.IBeam:
+            return 'text';
+        case SCHEMA.WindowSystemCursorType.SizeAll:
+            return 'move';
+        case SCHEMA.WindowSystemCursorType.SizeNESW:
+            return 'nesw-resize';
+        case SCHEMA.WindowSystemCursorType.SizeNS:
+            return 'ns-resize';
+        case SCHEMA.WindowSystemCursorType.SizeNWSE:
+            return 'nwse-resize';
+        case SCHEMA.WindowSystemCursorType.SizeWE:
+            return 'ew-resize';
+        default:
+            return 'default';
+    }
+}
+
 type VirtualDomHtmlTypes = VirtualDomHtmlRoot | VirtualDomHtmlValidArea | VirtualDomHtmlOrdinary;
 
 class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlTypes> {
@@ -99,6 +129,19 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
             applyCommonStyle(this.htmlElement);
         } else {
             applyTypedStyle(this.htmlElement, typedDesc);
+        }
+    }
+
+    updateProps(props: VirtualDomProperties): void {
+        // Call the base class implementation
+        super.updateProps(props);
+        
+        // Apply cursor style
+        if (props.cursor !== undefined) {
+            this.htmlElement.style.cursor = mapCursorToCSS(props.cursor);
+        } else {
+            // When cursor is undefined, use CSS inheritance from parent
+            this.htmlElement.style.cursor = 'inherit';
         }
     }
 
