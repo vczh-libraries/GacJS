@@ -1,8 +1,5 @@
 # ToDo
 
-- Global shortcut key.
-  - `RequestIOUpdateGlobalShortcutKey`
-  - Although we cannot make it actually global, but at least need to work in the browser window.
 - Make `index.html` resize window when browser view port changed.
 - Existing.
   - `requestStopToCore`

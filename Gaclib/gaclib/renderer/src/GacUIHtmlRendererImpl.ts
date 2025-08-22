@@ -148,6 +148,14 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      * IO
      ***************************************************************************************/
 
+    private _globalShortcutKeys: SCHEMA.GlobalShortcutKey[] = [];
+
+    RequestIOUpdateGlobalShortcutKey(requestArgs: SCHEMA.TYPES.List<SCHEMA.GlobalShortcutKey>): void {
+        if (requestArgs) {
+            this._globalShortcutKeys = requestArgs;
+        }
+    }
+
     RequestIOIsKeyPressing(id: number, requestArgs: SCHEMA.TYPES.Key): void {
         throw new Error(`Not Implemented (RequestIOIsKeyPressing)\nID: ${id}\nArguments: ${JSON.stringify(requestArgs, undefined, 4)}`);
     }
@@ -424,10 +432,6 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      * IO (ignored)
      ***************************************************************************************/
 
-    RequestIOUpdateGlobalShortcutKey(requestArgs: SCHEMA.TYPES.List<SCHEMA.GlobalShortcutKey>): void {
-        // ignored
-    }
-
     RequestIORequireCapture(): void {
         // ignored
     }
@@ -608,7 +612,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             if (this._events !== undefined && keyCode !== null) {
                 // Check if this is an auto-repeat
                 const autoRepeatKeyDown = this._pressedKeys.has(keyCode);
-                
+
                 // Add to pressed keys set
                 this._pressedKeys.add(keyCode);
 
@@ -616,9 +620,21 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                 const keyInfo = this._ioCreateKeyInfo(keyEvent, autoRepeatKeyDown);
                 if (keyInfo !== null) {
                     this._events.OnIOKeyDown(keyInfo);
+                    
+                    // Check for global shortcut key matches
+                    for (let i = 0; i < this._globalShortcutKeys.length; i++) {
+                        const shortcut = this._globalShortcutKeys[i];
+                        if (shortcut.code === keyInfo.code &&
+                            shortcut.ctrl === keyInfo.ctrl &&
+                            shortcut.shift === keyInfo.shift &&
+                            shortcut.alt === keyInfo.alt) {
+                            this._events.OnIOGlobalShortcutKey(shortcut.id);
+                            break;
+                        }
+                    }
                 }
             }
-            
+
             // Systematically prevent default behavior except for critical browser shortcuts
             if (!shouldAllowBrowserDefault(keyEvent)) {
                 keyEvent.preventDefault();
@@ -639,7 +655,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                     this._events.OnIOKeyUp(keyInfo);
                 }
             }
-            
+
             // Systematically prevent default behavior except for critical browser shortcuts
             if (!shouldAllowBrowserDefault(keyEvent)) {
                 keyEvent.preventDefault();
@@ -658,7 +674,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             this._settings.target.removeEventListener(eventName, handler);
         }
         this._eventHandlers.clear();
-        
+
         // Clear pressed keys state
         this._pressedKeys.clear();
     }
