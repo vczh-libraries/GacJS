@@ -122,8 +122,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     RequestControllerConnectionStopped(): void {
-        // TODO: report back to the caller
         this.stop();
+        throw new GacUIHtmlRendererExitError();
     }
 
     /****************************************************************************************

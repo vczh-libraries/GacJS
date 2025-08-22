@@ -5,9 +5,7 @@
 - Make `index.html` resize window when browser view port changed.
 - Existing.
   - `requestStopToCore`
-  - `RequestControllerConnectionStopped`
   - Close menu items x4.
-  - Green tick does not render
 - Configuration
   - Review `keyMapping.ts` and make `shouldAllowBrowserDefault` configurable.
   - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
