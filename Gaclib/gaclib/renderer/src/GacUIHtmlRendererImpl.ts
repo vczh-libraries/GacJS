@@ -90,9 +90,12 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     requestStopToCore(forceExit: boolean): void {
-        void forceExit;
-        // TODO: call OnControllerRequestExit or OnControllerForceExit
-        throw new Error('Not Implemented (requestStopToCore)');
+        if (forceExit) {
+            this._events.OnControllerForceExit();
+        }
+        else {
+            this._events.OnControllerRequestExit();
+        }
     }
 
     private _areBoundsEqual(a: SCHEMA.NativeRect, b: SCHEMA.NativeRect): boolean {

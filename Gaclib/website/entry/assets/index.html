@@ -13,6 +13,9 @@
     <div id="gacui-screen" class="gacui-container" tabindex="0">
         <!-- Content goes here -->
     </div>
+    <button onclick="gacuiRenderer.requestStopToCore(false)">Exit</button>
+    <button onclick="gacuiRenderer.requestStopToCore(true)">Force Exit</button>
+
     <div id="gacui-error-mask" class="gacui-error-mask">
         <div class="gacui-error-cross"></div>
     </div>
@@ -20,6 +23,8 @@
         <div class="gacui-success-tick"></div>
     </div>
     <script lang="javascript">
+        let gacuiRenderer;
+
         document.addEventListener('DOMContentLoaded', async () => {
             const gacuiScreen = document.getElementById('gacui-screen');
             const errorMask = document.getElementById('gacui-error-mask');
@@ -48,6 +53,7 @@
             });
 
             const [renderer, client] = await GacUIHtmlRenderer.runGacUI(gacuiScreen);
+            gacuiRenderer = renderer;
 
             try {
                 await client.start();
