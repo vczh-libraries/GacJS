@@ -1,7 +1,6 @@
 # ToDo
 
 - Sub window no border (why?)
-- Change cursor on element with cursor specified
 - Make `index.html` resize window when browser view port changed.
 - Existing.
   - `requestStopToCore`, add a button in `index.html` to call it.

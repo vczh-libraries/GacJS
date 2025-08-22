@@ -54,10 +54,7 @@ function mapHitTestToCSS(hitTestResult: SCHEMA.WindowHitTestResult): string | un
         case SCHEMA.WindowHitTestResult.BorderRightTop:
         case SCHEMA.WindowHitTestResult.BorderLeftBottom:
             return 'nesw-resize';
-        case SCHEMA.WindowHitTestResult.Title:
-            return 'move';
         default:
-            // For others (BorderNoSizing, ButtonMinimum, ButtonMaximum, ButtonClose, Client, Icon, NoDecision), inherit
             return undefined;
     }
 }
