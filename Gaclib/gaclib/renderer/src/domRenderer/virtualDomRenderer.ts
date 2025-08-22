@@ -10,7 +10,7 @@ import {
 } from '../dom/virtualDom';
 import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder, onSolidLabelResized } from './elementStyles';
 
-function mapCursorToCSS(cursor: SCHEMA.WindowSystemCursorType): string {
+function mapCursorToCSS(cursor: SCHEMA.WindowSystemCursorType): string | undefined {
     switch (cursor) {
         case SCHEMA.WindowSystemCursorType.SmallWaiting:
         case SCHEMA.WindowSystemCursorType.LargeWaiting:
@@ -36,7 +36,29 @@ function mapCursorToCSS(cursor: SCHEMA.WindowSystemCursorType): string {
         case SCHEMA.WindowSystemCursorType.SizeWE:
             return 'ew-resize';
         default:
-            return 'default';
+            return undefined;
+    }
+}
+
+function mapHitTestToCSS(hitTestResult: SCHEMA.WindowHitTestResult): string | undefined {
+    switch (hitTestResult) {
+        case SCHEMA.WindowHitTestResult.BorderLeft:
+        case SCHEMA.WindowHitTestResult.BorderRight:
+            return 'ew-resize';
+        case SCHEMA.WindowHitTestResult.BorderTop:
+        case SCHEMA.WindowHitTestResult.BorderBottom:
+            return 'ns-resize';
+        case SCHEMA.WindowHitTestResult.BorderLeftTop:
+        case SCHEMA.WindowHitTestResult.BorderRightBottom:
+            return 'nwse-resize';
+        case SCHEMA.WindowHitTestResult.BorderRightTop:
+        case SCHEMA.WindowHitTestResult.BorderLeftBottom:
+            return 'nesw-resize';
+        case SCHEMA.WindowHitTestResult.Title:
+            return 'move';
+        default:
+            // For others (BorderNoSizing, ButtonMinimum, ButtonMaximum, ButtonClose, Client, Icon, NoDecision), inherit
+            return undefined;
     }
 }
 
@@ -137,11 +159,19 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
         super.updateProps(props);
         
         // Apply cursor style
+        let cursorCSS: string | undefined;
+        
         if (props.cursor !== undefined) {
-            this.htmlElement.style.cursor = mapCursorToCSS(props.cursor);
+            cursorCSS = mapCursorToCSS(props.cursor);
+        } else if (props.hitTestResult !== undefined) {
+            cursorCSS = mapHitTestToCSS(props.hitTestResult);
+        }
+        
+        if (cursorCSS !== undefined) {
+            this.htmlElement.style.cursor = cursorCSS;
         } else {
-            // When cursor is undefined, use CSS inheritance from parent
-            this.htmlElement.style.cursor = 'inherit';
+            // Remove the style to use inheritance
+            this.htmlElement.style.removeProperty('cursor');
         }
     }
 
