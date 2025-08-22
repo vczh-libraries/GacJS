@@ -16,7 +16,7 @@ export async function runGacUI(target: HTMLElement): Promise<[IGacUIHtmlRenderer
 }
 
 // for elements.html
-export { applyBounds, applyTypedStyle, applyFeatureGates } from '@gaclib/renderer';
+export { GacUIHtmlRendererExitError, applyBounds, applyTypedStyle, applyFeatureGates } from '@gaclib/renderer';
 
 // for snapshots.html
 export { Snapshot } from './snapshotIndex';

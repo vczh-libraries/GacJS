@@ -5,6 +5,12 @@ import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWit
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 import { mapJavaScriptKeyToGacUIKey, shouldAllowBrowserDefault } from './keyMapping';
 
+export class GacUIHtmlRendererExitError extends Error {
+    constructor() {
+        super('IGacUIHtmlRenderer exited due to receiving RequestControllerConnectionStopped.');
+    }
+}
+
 export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
@@ -620,7 +626,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
                 const keyInfo = this._ioCreateKeyInfo(keyEvent, autoRepeatKeyDown);
                 if (keyInfo !== null) {
                     this._events.OnIOKeyDown(keyInfo);
-                    
+
                     // Check for global shortcut key matches
                     for (let i = 0; i < this._globalShortcutKeys.length; i++) {
                         const shortcut = this._globalShortcutKeys[i];

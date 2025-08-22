@@ -16,49 +16,55 @@
     <div id="gacui-error-mask" class="gacui-error-mask">
         <div class="gacui-error-cross"></div>
     </div>
+    <div id="gacui-success-mask" class="gacui-success-mask">
+        <div class="gacui-success-tick"></div>
+    </div>
     <script lang="javascript">
         document.addEventListener('DOMContentLoaded', async () => {
             const gacuiScreen = document.getElementById('gacui-screen');
             const errorMask = document.getElementById('gacui-error-mask');
-            
+            const successMask = document.getElementById('gacui-success-mask');
+
             // Disable context menu on the gacui-screen and all its child elements
             gacuiScreen.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
                 return false;
             });
-            
+
             // Focus the element to enable keyboard events
             gacuiScreen.focus();
-            
+
             // Ensure gacui-screen gets focus when user clicks anywhere on the page
             document.addEventListener('click', (event) => {
                 // Only focus if the click target is not a naturally focusable element
                 const target = event.target;
                 const tagName = target.tagName.toLowerCase();
                 const isFocusableElement = ['input', 'button', 'select', 'textarea', 'a'].includes(tagName) ||
-                                          target.hasAttribute('tabindex');
-                
+                    target.hasAttribute('tabindex');
+
                 if (!isFocusableElement) {
                     gacuiScreen.focus();
                 }
             });
-            
+
             const [renderer, client] = await GacUIHtmlRenderer.runGacUI(gacuiScreen);
-            
+
             try {
                 await client.start();
             } catch (error) {
                 client.stop();
                 renderer.stop();
-                
-                // Move the error mask to cover gacui-screen after stopping
-                gacuiScreen.appendChild(errorMask);
-                
-                // Show the error mask just before alert
-                errorMask.classList.add('visible');
-                
                 alert(error.message);
-                throw error;
+
+                if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError) {
+                    gacuiScreen.appendChild(successMask);
+                    successMask.classList.add('visible');
+                } else {
+                    gacuiScreen.appendChild(errorMask);
+                    errorMask.classList.add('visible');
+                    throw error;
+                }
+
             }
         });
     </script>
