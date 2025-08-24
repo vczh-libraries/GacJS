@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
+import { GacUISettings, IGacUIRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
@@ -7,11 +7,11 @@ import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
 
 export class GacUIHtmlRendererExitError extends Error {
     constructor() {
-        super('IGacUIHtmlRenderer exited due to receiving RequestControllerConnectionStopped.');
+        super('IGacUIRenderer exited due to receiving RequestControllerConnectionStopped.');
     }
 }
 
-export abstract class GacUIRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
+export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
     private _stopping = false;

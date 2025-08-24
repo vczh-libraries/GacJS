@@ -4,10 +4,8 @@ body {
 }
 
 .gacui-container {
-    /* Responsive width: minimum 320px, maximum 1280px, otherwise 95% of viewport width minus margin */
-    width: clamp(320px, calc(100vw - 40px), 1280px);
-    /* Responsive height: minimum 240px, maximum 960px, otherwise 95% of viewport height minus margin */
-    height: clamp(240px, calc(100vh - 80px), 960px);
+    width: clamp(640px, calc(100vw - 40px), 1280px);
+    height: clamp(480px, calc(100vh - 80px), 960px);
     overflow: hidden;
     box-sizing: border-box;
     position: relative;

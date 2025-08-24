@@ -1,11 +1,7 @@
 # ToDo
 
-- Make `index.html` resize window when browser view port changed.
-- More elegant way of helping people make `gacui-screen` focusable in `index.html`.
-
-## Future
-
 - `IGraphicsParagraph` and typing events.
+- More elegant way of helping people make `gacui-screen` focusable in `index.html`.
 
 ## Known Issues
 

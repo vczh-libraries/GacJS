@@ -2,7 +2,7 @@ import * as SCHEMA from '@gaclib/remote-protocol';
 import { ElementHTMLMeasurer } from './domRenderer/elementMeasurer';
 import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
 import { GacUIRendererImpl } from './GacUIRendererImpl';
-import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
+import { GacUISettings, IGacUIRenderer } from './interfaces';
 
 export class GacUIHtmlRendererImpl extends GacUIRendererImpl {
     start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void {
@@ -10,7 +10,7 @@ export class GacUIHtmlRendererImpl extends GacUIRendererImpl {
     }
 }
 
-export function createHtmlRenderer(settings: GacUISettings): IGacUIHtmlRenderer {
+export function createHtmlRenderer(settings: GacUISettings): IGacUIRenderer {
     return new GacUIHtmlRendererImpl(settings);
 }
 

@@ -1,6 +1,6 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 
-export interface IGacUIHtmlRenderer {
+export interface IGacUIRenderer {
     get requests(): SCHEMA.IRemoteProtocolRequests;
     start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
     stop(): void;

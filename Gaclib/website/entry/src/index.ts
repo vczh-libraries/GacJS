@@ -1,5 +1,5 @@
 import { connectHttpServer, IRemoteProtocolHttpClient } from '@gaclib-website/remote-protocol-http';
-import { createHtmlRenderer, IGacUIHtmlRenderer, GacUISettings } from '@gaclib/renderer'
+import { createHtmlRenderer, IGacUIRenderer, GacUISettings } from '@gaclib/renderer'
 
 /**
  * Determines if a key event should be allowed to pass through to the browser
@@ -76,7 +76,7 @@ export function isShortcutReservedForBrowser(event: KeyboardEvent): boolean {
     return false;
 }
 
-export async function runGacUI(settings: GacUISettings): Promise<[IGacUIHtmlRenderer, IRemoteProtocolHttpClient]> {
+export async function runGacUI(settings: GacUISettings): Promise<[IGacUIRenderer, IRemoteProtocolHttpClient]> {
     const renderer = createHtmlRenderer(settings);
     const client = await connectHttpServer('http://localhost:8888', renderer.requests);
     renderer.start(client.responses, client.events);
