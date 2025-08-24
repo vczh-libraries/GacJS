@@ -11,7 +11,7 @@ export class GacUIHtmlRendererExitError extends Error {
     }
 }
 
-export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
+export abstract class GacUIRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
     private _stopping = false;
@@ -24,13 +24,14 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
     private _fontConfig: SCHEMA.FontConfig;
+    private _resizeObserver: ResizeObserver;
 
     /****************************************************************************************
      * Font Configuration
      ***************************************************************************************/
 
-    private generateFontConfig(settings: GacUISettings): SCHEMA.FontConfig {
-        const styles = window.getComputedStyle(settings.target);
+    private generateFontConfig(): SCHEMA.FontConfig {
+        const styles = window.getComputedStyle(this._settings.target);
         const defaultFontFamily = styles.fontFamily;
 
         const defaultFont: SCHEMA.FontProperties = {
@@ -45,8 +46,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         };
 
         let supportedFonts: string[];
-        if (settings.fontFamilies !== undefined) {
-            supportedFonts = [...settings.fontFamilies];
+        if (this._settings.fontFamilies !== undefined) {
+            supportedFonts = [...this._settings.fontFamilies];
             if (!supportedFonts.includes(defaultFontFamily)) {
                 supportedFonts.unshift(defaultFontFamily);
             }
@@ -61,18 +62,36 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
     }
 
     /****************************************************************************************
+     * Size Configuration
+     ***************************************************************************************/
+
+    private _getBounds(): SCHEMA.NativeRect {
+        return {
+            x1: { value: 0 },
+            y1: { value: 0 },
+            x2: { value: this._settings.target.clientWidth },
+            y2: { value: this._settings.target.clientHeight }
+        };
+    }
+
+    private _onSizeChanged(): void {
+        const bounds = this._getBounds();
+        this._screenConfig.bounds = bounds;
+        this._screenConfig.clientBounds = bounds;
+        this._windowConfig.bounds = bounds;
+        this._windowConfig.clientBounds = bounds;
+        this._events.OnControllerScreenUpdated(this._screenConfig);
+        this._events.OnWindowBoundsUpdated(this._windowConfig);
+    }
+
+    /****************************************************************************************
      * Constructor
      ***************************************************************************************/
 
     constructor(private _settings: GacUISettings) {
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
 
-        const bounds: SCHEMA.NativeRect = {
-            x1: { value: 0 },
-            y1: { value: 0 },
-            x2: { value: _settings.target.clientWidth },
-            y2: { value: _settings.target.clientHeight }
-        };
+        const bounds = this._getBounds();
 
         const customFramePadding: SCHEMA.NativeMargin = {
             left: { value: 8 },
@@ -95,14 +114,16 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             customFramePadding,
         }
 
-        this._fontConfig = this.generateFontConfig(_settings);
+        this._fontConfig = this.generateFontConfig();
     }
 
     get requests(): SCHEMA.IRemoteProtocolRequests {
         return (<SCHEMA.IRemoteProtocolRequests>(<unknown>this));
     }
 
-    init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void {
+    abstract init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
+
+    protected _init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void {
         this._responses = responses;
         this._events = events;
         this._provider = provider;
@@ -120,10 +141,14 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             children: null
         }, new ElementManager(), this._provider);
         this._installEvents();
+
+        this._resizeObserver = new ResizeObserver(() => this._onSizeChanged());
+        this._resizeObserver.observe(this._settings.target);
     }
 
     stop(): void {
         this._stopping = true;
+        this._resizeObserver.disconnect();
         this._uninstallEvents();
     }
 
