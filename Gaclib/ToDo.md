@@ -1,6 +1,7 @@
 # ToDo
 
-- Sub window no border (why?)
+- Window no border.
+- Title font different.
 - Make `index.html` resize window when browser view port changed.
 - Configuration
   - Review `keyMapping.ts` and make `shouldAllowBrowserDefault` configurable.

@@ -23,6 +23,42 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
 
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
+    private _fontConfig: SCHEMA.FontConfig;
+
+    /****************************************************************************************
+     * Font Configuration
+     ***************************************************************************************/
+
+    private generateFontConfig(settings: GacUISettings): SCHEMA.FontConfig {
+        const styles = window.getComputedStyle(settings.target);
+        const defaultFontFamily = styles.fontFamily;
+
+        const defaultFont: SCHEMA.FontProperties = {
+            fontFamily: defaultFontFamily,
+            size: 12,
+            bold: false,
+            italic: false,
+            underline: false,
+            strikeline: false,
+            antialias: false,
+            verticalAntialias: false,
+        };
+
+        let supportedFonts: string[];
+        if (settings.fontFamilies !== undefined) {
+            supportedFonts = [...settings.fontFamilies];
+            if (!supportedFonts.includes(defaultFontFamily)) {
+                supportedFonts.unshift(defaultFontFamily);
+            }
+        } else {
+            supportedFonts = [defaultFontFamily];
+        }
+
+        return {
+            defaultFont,
+            supportedFonts,
+        };
+    }
 
     /****************************************************************************************
      * Constructor
@@ -34,8 +70,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         const bounds: SCHEMA.NativeRect = {
             x1: { value: 0 },
             y1: { value: 0 },
-            x2: { value: _settings.width },
-            y2: { value: _settings.height }
+            x2: { value: _settings.target.clientWidth },
+            y2: { value: _settings.target.clientHeight }
         };
 
         const customFramePadding: SCHEMA.NativeMargin = {
@@ -58,6 +94,8 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             sizeState: SCHEMA.WindowSizeState.Maximized,
             customFramePadding,
         }
+
+        this._fontConfig = this.generateFontConfig(_settings);
     }
 
     get requests(): SCHEMA.IRemoteProtocolRequests {
@@ -115,7 +153,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
      ***************************************************************************************/
 
     RequestControllerGetFontConfig(id: number): void {
-        this._responses.RespondControllerGetFontConfig(id, this._settings.fontConfig);
+        this._responses.RespondControllerGetFontConfig(id, this._fontConfig);
     }
 
     RequestControllerGetScreenConfig(id: number): void {

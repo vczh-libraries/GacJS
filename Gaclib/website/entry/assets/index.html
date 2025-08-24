@@ -52,7 +52,7 @@
                 }
             });
 
-            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(gacuiScreen);
+            const [renderer, client] = await GacUIHtmlRenderer.runGacUI({ target: gacuiScreen });
             gacuiRenderer = renderer;
 
             try {

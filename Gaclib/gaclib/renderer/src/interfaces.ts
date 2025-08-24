@@ -10,8 +10,6 @@ export interface IGacUIHtmlRenderer {
 }
 
 export interface GacUISettings {
-    width: number;
-    height: number;
     target: HTMLElement;
-    fontConfig: SCHEMA.FontConfig;
+    fontFamilies?: string[];
 }
