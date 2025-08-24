@@ -12,4 +12,5 @@ export interface IGacUIHtmlRenderer {
 export interface GacUISettings {
     target: HTMLElement;
     fontFamilies?: string[];
+    isShortcutReservedForBrowser: (event: KeyboardEvent) => boolean;
 }

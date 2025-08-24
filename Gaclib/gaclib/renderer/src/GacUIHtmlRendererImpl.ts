@@ -3,7 +3,7 @@ import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
-import { mapJavaScriptKeyToGacUIKey, shouldAllowBrowserDefault } from './keyMapping';
+import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
 
 export class GacUIHtmlRendererExitError extends Error {
     constructor() {
@@ -685,7 +685,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             }
 
             // Systematically prevent default behavior except for critical browser shortcuts
-            if (!shouldAllowBrowserDefault(keyEvent)) {
+            if (!this._settings.isShortcutReservedForBrowser(keyEvent)) {
                 keyEvent.preventDefault();
             }
         });
@@ -706,7 +706,7 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
             }
 
             // Systematically prevent default behavior except for critical browser shortcuts
-            if (!shouldAllowBrowserDefault(keyEvent)) {
+            if (!this._settings.isShortcutReservedForBrowser(keyEvent)) {
                 keyEvent.preventDefault();
             }
         });

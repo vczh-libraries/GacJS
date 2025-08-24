@@ -3,9 +3,7 @@
 - Window no border.
 - Title font different.
 - Make `index.html` resize window when browser view port changed.
-- Configuration
-  - Review `keyMapping.ts` and make `shouldAllowBrowserDefault` configurable.
-  - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
+- More elegant way of helping people make `gacui-screen` focusable in `index.html`.
 
 ## Future
 
