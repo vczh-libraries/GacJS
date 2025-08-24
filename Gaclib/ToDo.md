@@ -6,6 +6,7 @@
 - Configuration
   - Review `keyMapping.ts` and make `shouldAllowBrowserDefault` configurable.
   - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
+  - Font list
   - Could reuse `GacUISettings` for all of these.
 
 ## Future
