@@ -75,10 +75,10 @@ export class GacUIHtmlRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IRemote
         };
 
         const customFramePadding: SCHEMA.NativeMargin = {
-            left: { value: 0 },
-            top: { value: 0 },
-            right: { value: 0 },
-            bottom: { value: 0 },
+            left: { value: 8 },
+            top: { value: 8 },
+            right: { value: 8 },
+            bottom: { value: 8 },
         }
 
         this._screenConfig = {

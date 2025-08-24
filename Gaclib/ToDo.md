@@ -1,7 +1,5 @@
 # ToDo
 
-- Window no border.
-- Title font different.
 - Make `index.html` resize window when browser view port changed.
 - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
 
@@ -16,6 +14,8 @@
     - If feature gate `useWebkitLineClamp` is off, '...' won't render
     - If feature gate `useWebkitLineClamp` is on, sometimes '...' is missing with right alignment.
   - Vertical alignment doesn't work when the total text height is larger than its container.
+- In Chrome `Segoe WP SemiLight` for the window title seems to render like a default font. GacUI behaves correctly.
+  - May need to support font family substitution in `GacUIHtmlRendererImpl`.
 
 ## Further Experiments
 
