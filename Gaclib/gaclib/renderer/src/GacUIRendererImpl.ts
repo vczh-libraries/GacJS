@@ -121,9 +121,9 @@ export abstract class GacUIRendererImpl implements IGacUIHtmlRenderer, SCHEMA.IR
         return (<SCHEMA.IRemoteProtocolRequests>(<unknown>this));
     }
 
-    abstract init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
+    abstract start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
 
-    protected _init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void {
+    protected _start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void {
         this._responses = responses;
         this._events = events;
         this._provider = provider;

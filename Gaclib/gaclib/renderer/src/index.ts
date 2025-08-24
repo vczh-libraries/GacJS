@@ -5,8 +5,8 @@ import { GacUIRendererImpl } from './GacUIRendererImpl';
 import { GacUISettings, IGacUIHtmlRenderer } from './interfaces';
 
 export class GacUIHtmlRendererImpl extends GacUIRendererImpl {
-    init(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void {
-        this._init(responses, events, new VirtualDomHtmlProvider(), new ElementHTMLMeasurer(responses));
+    start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void {
+        super._start(responses, events, new VirtualDomHtmlProvider(), new ElementHTMLMeasurer(responses));
     }
 }
 
