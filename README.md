@@ -20,6 +20,12 @@ Run [RemotingTest_Core.vcxproj](https://github.com/vczh-libraries/GacUI/tree/mas
 
 You can start a local `RemotingTest_Win32_Renderer` with `/Http`, do something to the UI, and start the website, you can see the website take over the running UI on the fly.
 
+### Interacting with GacUI Core
+
+![GacUIHtml2](GacUIHtml1.gif)
+
+### Switching between Renderers
+
 ![GacUIHtml2](GacUIHtml2.gif)
 
 ## localhost/snapshots.html
