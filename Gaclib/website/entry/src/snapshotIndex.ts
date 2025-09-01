@@ -13,11 +13,43 @@ export const Snapshot: SnapshotEntry = {
             'content': {
                 'ControlTemplate.json': 'File',
                 'ControlThemeName.json': 'File',
+                'Dialog_Color': {
+                    'type': 'Folder',
+                    'content': {
+                        'OpenAndClose.json': 'File'
+                    }
+                },
+                'Dialog_File': {
+                    'type': 'Folder',
+                    'content': {
+                        'OpenAndClose.json': 'File'
+                    }
+                },
+                'Dialog_Font': {
+                    'type': 'Folder',
+                    'content': {
+                        'OpenAndClose.json': 'File'
+                    }
+                },
+                'Dialog_Message': {
+                    'type': 'Folder',
+                    'content': {
+                        'OpenAndClose.json': 'File'
+                    }
+                },
                 'FocusedAndDelete.json': 'File',
                 'FocusedAndDisable.json': 'File',
                 'FocusedAndHide.json': 'File',
                 'TabNavigate.json': 'File',
                 'TabNavigateWithContainer.json': 'File',
+                'Tooltip': {
+                    'type': 'Folder',
+                    'content': {
+                        'ShowTooltipAndLeave.json': 'File',
+                        'ShowTooltipAndSwitchToAnother.json': 'File',
+                        'ShowTooltipAndWaitForClosing.json': 'File'
+                    }
+                },
                 'Windows': {
                     'type': 'Folder',
                     'content': {
@@ -334,6 +366,7 @@ export const Snapshot: SnapshotEntry = {
                         'GuiBindableTextList': {
                             'type': 'Folder',
                             'content': {
+                                'CheckItemsByKey.json': 'File',
                                 'ClickVisibleItems.json': 'File',
                                 'GuiTextListItemTemplate': {
                                     'type': 'Folder',
@@ -774,6 +807,7 @@ export const Snapshot: SnapshotEntry = {
                         'GuiTextList': {
                             'type': 'Folder',
                             'content': {
+                                'CheckItemsByKey.json': 'File',
                                 'ClickVisibleItems.json': 'File',
                                 'GuiTextListItemTemplate': {
                                     'type': 'Folder',
@@ -940,6 +974,7 @@ export const Snapshot: SnapshotEntry = {
                                 'GuiDateComboBox': {
                                     'type': 'Folder',
                                     'content': {
+                                        'Alt.json': 'File',
                                         'Mouse.json': 'File',
                                         'Properties.json': 'File'
                                     }
