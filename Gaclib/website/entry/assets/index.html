@@ -30,6 +30,17 @@
             const errorMask = document.getElementById('gacui-error-mask');
             const successMask = document.getElementById('gacui-success-mask');
 
+            const settings = {
+                target: gacuiScreen,
+                isShortcutReservedForBrowser: GacUIHtmlRenderer.isShortcutReservedForBrowser,
+                suggestMinSize: (x, y) => {
+                    if (x < 320) x = 320;
+                    if (y < 240) y = 240;
+                    gacuiScreen.style.width = `clamp(${x}px, calc(100vw - 40px), 1280px)`;
+                    gacuiScreen.style.height = `clamp(${y}px, calc(100vh - 80px), 960px)`;
+                }
+            };
+
             // Disable context menu on the gacui-screen and all its child elements
             gacuiScreen.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
@@ -52,13 +63,11 @@
                 }
             });
 
-            const [renderer, client] = await GacUIHtmlRenderer.runGacUI({ 
-                target: gacuiScreen,
-                isShortcutReservedForBrowser: GacUIHtmlRenderer.isShortcutReservedForBrowser
-            });
+            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(settings);
             gacuiRenderer = renderer;
 
             try {
+                settings.suggestMinSize(0, 0);
                 await client.start();
             } catch (error) {
                 client.stop();
