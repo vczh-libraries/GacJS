@@ -218,6 +218,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
     }
 
+    RequestWindowNotifyMinSize(requestArgs: SCHEMA.NativeSize): void {
+        void requestArgs;
+    }
+
     /****************************************************************************************
      * IO
      ***************************************************************************************/

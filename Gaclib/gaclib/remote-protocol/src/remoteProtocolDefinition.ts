@@ -443,6 +443,7 @@ export interface IRemoteProtocolRequests {
     RequestWindowNotifySetClientSize(requestArgs: NativeSize): void;
     RequestWindowNotifyActivate(): void;
     RequestWindowNotifyShow(requestArgs: WindowShowing): void;
+    RequestWindowNotifyMinSize(requestArgs: NativeSize): void;
     RequestIOUpdateGlobalShortcutKey(requestArgs: TYPES.List<GlobalShortcutKey>): void;
     RequestIORequireCapture(): void;
     RequestIOReleaseCapture(): void;

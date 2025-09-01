@@ -105,6 +105,12 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
                 }
                 receiver.RequestWindowNotifyShow((<SCHEMA.WindowShowing>pi.arguments));
                 break;
+            case 'WindowNotifyMinSize':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestWindowNotifyMinSize((<SCHEMA.NativeSize>pi.arguments));
+                break;
             case 'IOUpdateGlobalShortcutKey':
                 if (pi.arguments === undefined) {
                     throw new Error('Missing arguments for request: ' + pi.name);
