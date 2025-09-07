@@ -11,6 +11,7 @@
 - range.getClientRects returns an array for each line. If LTR/RTL are mixed, a rect represents only one direction.
   - Try `Hello, مرحبا, world!`
   - Try chars in https://github.com/vczh-libraries/Vlpp/blob/master/Test/Source/Strings/TestStringConversion.cpp
+- To determine if a set of characters are grouped in a set of glyphs, test range.getClientRects from a starting point and keep adding characters, until rects changed.
 
 ## Known Issues
 
