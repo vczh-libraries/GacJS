@@ -10,6 +10,7 @@
   - But how do I traverse all caret positions in a paragraph?
 - range.getClientRects returns an array for each line. If LTR/RTL are mixed, a rect represents only one direction.
   - Try `Hello, مرحبا, world!`
+  - Try chars in https://github.com/vczh-libraries/Vlpp/blob/master/Test/Source/Strings/TestStringConversion.cpp
 
 ## Known Issues
 
