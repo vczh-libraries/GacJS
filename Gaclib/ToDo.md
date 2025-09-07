@@ -3,6 +3,12 @@
 - `IGraphicsParagraph` and typing events.
 - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
 
+## IGuiGraphicsParagraph
+
+- document.createRange().setStart/setEnd can locate character position if it is in a Text node.
+  - This means I can break a paragraph into a series of Span over Text, and calculate caret position easily.
+  - But how do I traverse all caret positions in a paragraph?
+
 ## Known Issues
 
 - Gaclib\gaclib\renderer\src\elementStyles.ts
