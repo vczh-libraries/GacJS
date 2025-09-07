@@ -8,6 +8,7 @@
 - document.createRange().setStart/setEnd can locate character position if it is in a Text node.
   - This means I can break a paragraph into a series of Span over Text, and calculate caret position easily.
   - But how do I traverse all caret positions in a paragraph?
+- range.getClientRects returns an array for each line. If LTR/RTL are mixed, a rect represents only one direction.
 
 ## Known Issues
 
