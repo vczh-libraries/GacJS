@@ -22,9 +22,20 @@ export interface TreeConfig {
 export function createTreeElement(tree: TreeFolder, config: TreeConfig, indent: number = 0): HTMLElement {
     const container = document.createElement('div');
 
+    // Filter out all folder X where X.json exists
+    const fileNames = new Set<string>();
+    Object.entries(tree.content).forEach(([name, entry]) => {
+        if (entry.type === 'File') {
+            fileNames.add(name);
+        }
+    });
+
     // Iterate through entries (already sorted in readSnapshot)
     Object.entries(tree.content).forEach(([name, entry]) => {
         if (entry.type === 'Folder') {
+            if (fileNames.has(`${name}.json`)) {
+                return;
+            }
             // Create folder element
             const folderDiv = document.createElement('div');
             folderDiv.className = 'tree-item tree-folder';
