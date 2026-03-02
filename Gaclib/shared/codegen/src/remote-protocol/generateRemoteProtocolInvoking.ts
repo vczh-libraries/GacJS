@@ -102,7 +102,7 @@ function generateInvoking(schema: Schema): string {
 |    semantic: 'Message' | 'Request' | 'Response' | 'Event';
 |    id?: number;
 |    name: string;
-|    arguments?: {};
+|    arguments?: {} | null;
 |}
 |
 |export type ProtocolInvokingHandler = (invoking: ProtocolInvoking) => void;

@@ -222,6 +222,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._settings.suggestMinSize(requestArgs.x.value, requestArgs.y.value);
     }
 
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     RequestWindowNotifySetCaret(requestArgs: SCHEMA.NativePoint): void {
         // to be implemented
     }
@@ -378,37 +379,41 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
      * Renderer (DocumentElement)
      ***************************************************************************************/
 
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+
     RequestRendererUpdateElement_DocumentParagraph(id: number, requestArgs: SCHEMA.ElementDesc_DocumentParagraph): void {
-        throw new Error("Not Implemented: RequestRendererUpdateElement_DocumentParagraph");
+        throw new Error('Not Implemented: RequestRendererUpdateElement_DocumentParagraph');
     }
 
     RequestDocumentParagraph_GetCaret(id: number, requestArgs: SCHEMA.GetCaretRequest): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_GetCaret");
+        throw new Error('Not Implemented: RequestDocumentParagraph_GetCaret');
     }
 
     RequestDocumentParagraph_GetCaretBounds(id: number, requestArgs: SCHEMA.GetCaretBoundsRequest): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_GetCaretBounds");
+        throw new Error('Not Implemented: RequestDocumentParagraph_GetCaretBounds');
     }
 
     RequestDocumentParagraph_GetInlineObjectFromPoint(id: number, requestArgs: SCHEMA.GetInlineObjectFromPointRequest): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_GetInlineObjectFromPoint");
+        throw new Error('Not Implemented: RequestDocumentParagraph_GetInlineObjectFromPoint');
     }
 
     RequestDocumentParagraph_GetNearestCaretFromTextPos(id: number, requestArgs: SCHEMA.GetNearestCaretFromTextPosRequest): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_GetNearestCaretFromTextPos");
+        throw new Error('Not Implemented: RequestDocumentParagraph_GetNearestCaretFromTextPos');
     }
 
     RequestDocumentParagraph_IsValidCaret(id: number, requestArgs: SCHEMA.IsValidCaretRequest): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_IsValidCaret");
+        throw new Error('Not Implemented: RequestDocumentParagraph_IsValidCaret');
     }
 
     RequestDocumentParagraph_OpenCaret(requestArgs: SCHEMA.OpenCaretRequest): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_OpenCaret");
+        throw new Error('Not Implemented: RequestDocumentParagraph_OpenCaret');
     }
 
     RequestDocumentParagraph_CloseCaret(requestArgs: SCHEMA.TYPES.Integer): void {
-        throw new Error("Not Implemented: RequestDocumentParagraph_CloseCaret");
+        throw new Error('Not Implemented: RequestDocumentParagraph_CloseCaret');
     }
+    
+    /* eslint-enable @typescript-eslint/no-unused-vars */
 
     /****************************************************************************************
      * Renderer
@@ -458,7 +463,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     RequestRendererEndRendering(id: number): void {
         if (this._stopping) {
-            this._responses.RespondRendererEndRendering(id, { fontHeights: [], minSizes: [], createdImages: [] });
+            this._responses.RespondRendererEndRendering(id, { fontHeights: [], minSizes: [], createdImages: [], inlineObjectBounds: [] });
             return;
         }
         this._measurer.RequestRendererEndRendering(id, this._renderingRecord);
@@ -573,6 +578,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     RequestRendererEndBoundary(): void {
         throw new Error('Should not be called (RequestRendererEndBoundary)');
     }
+
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
     /****************************************************************************************

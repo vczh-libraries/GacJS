@@ -3,7 +3,7 @@ import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle,
 import { IElementMeasurer, VirtualDomRecord } from '../dom/virtualDomBuilding';
 
 export class ElementHTMLMeasurer implements IElementMeasurer {
-    private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [] };
+    private _measuring: SCHEMA.ElementMeasurings = { fontHeights: [], minSizes: [], createdImages: [], inlineObjectBounds: [] };
     private _idRespondRendererEndRendering: SCHEMA.TYPES.Integer | undefined = undefined;
 
     private _textElementForTesting: HTMLElement = document.createElement('div');
@@ -147,7 +147,7 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
             this._measuringSolidLabels = remaining;
 
             this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
-            this._measuring = { fontHeights: [], minSizes: [], createdImages: [] };
+            this._measuring = { fontHeights: [], minSizes: [], createdImages: [], inlineObjectBounds: [] };
             this._idRespondRendererEndRendering = undefined;
         }
     }

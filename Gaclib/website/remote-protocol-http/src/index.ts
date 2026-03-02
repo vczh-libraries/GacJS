@@ -6,7 +6,8 @@ import {
     ProtocolInvokingHandler,
     jsonToRequest,
     ResponseToJson,
-    EventToJson
+    EventToJson,
+    CharacterEncoding
 } from '@gaclib/remote-protocol';
 
 export interface IRemoteProtocolHttpClient {
@@ -55,7 +56,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     }
 
     async start(): Promise<void> {
-        this.events.OnControllerConnect();
+        this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16 });
         while (!this._stopping) {
             let responseText: string;
 
