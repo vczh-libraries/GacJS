@@ -43,6 +43,18 @@
                 }
                 const trace = await response.json();
 
+                // Load individual frame files in parallel
+                const baseUrl = url.replace(/\.json$/, '');
+                const framePromises = trace.frames.map((_, i) =>
+                    fetch(`${baseUrl}/frame_${i}.json`).then(r => {
+                        if (!r.ok) {
+                            throw new Error(`HTTP error! status: ${r.status}`);
+                        }
+                        return r.json();
+                    })
+                );
+                trace.frames = await Promise.all(framePromises);
+
                 // Clear the existing frames list
                 const frameList = document.getElementById('frameList');
                 frameList.innerHTML = '';
