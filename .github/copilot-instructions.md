@@ -24,6 +24,9 @@ rendering a remote GUI in HTML via DOM and Canvas.
 - `yarn build` will always call `eslint`, do not call `npx eslint`.
 - `yarn test` will always call `vitest`, do not call `npx vitest`.
   - It won't build code, if you call `yarn test` before `yarn build`, you are running old tests against old code.
+- Playwright is installed with this repo.
+  - After a successful build, the website is accessible by `localhost:8896` automatically.
+  - If this host is unreachable, you can also host by yourself, and the root folder should be `(repo-root)/Gaclib/website/entry/lib/dest`, otherwise resources won't resolve correctly.
 
 ## Project Structure
 
