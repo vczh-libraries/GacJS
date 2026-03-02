@@ -63,6 +63,10 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
                 elements.createWithDesc(id, { type: SCHEMA.RendererType.ImageFrame, desc: copied });
                 break;
             }
+            case 'ElementDesc_DocumentParagraphFull': {
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.DocumentParagraph, desc: desc[1] });
+                break;
+            }
         }
     }
     const rootDom = createVirtualDomFromRenderingDom(frame.root!, elements, provider);

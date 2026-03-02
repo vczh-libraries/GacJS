@@ -226,10 +226,10 @@ export function normalizeText(desc: SCHEMA.ElementDesc_SolidLabel): string {
 
 function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
     if (desc.font === null) {
-        throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.font to exist.');
+        throw new Error('initializeText requires ElementDesc_SolidLabel.font to exist.');
     }
     if (desc.text === null) {
-        throw new Error('getStyle_SolidLabel_Border requires ElementDesc_SolidLabel.text to exist.');
+        throw new Error('initializeText requires ElementDesc_SolidLabel.text to exist.');
     }
 
     const ellipseWithWrapLine = desc.ellipse && desc.wrapLine;
@@ -304,6 +304,24 @@ function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabe
             onSolidLabelResized(textDiv);
         }
     }
+}
+
+/**********************************************************************
+ * DocumentParagraph
+ **********************************************************************/
+
+function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_DocumentParagraphFull): void {
+    if (desc.paragraph.text === null) {
+        throw new Error('initializeParagraph requires ElementDesc_DocumentParagraph.paragraph.text to exist.');
+    }
+
+    const thickness = '3px';
+    textDiv.style.cssText = [
+        'position: absolute; left: 0; top: 0; width: 100%; height: 100%;',
+        `background:`,
+        `  linear-gradient(to top right, transparent calc(50% - ${thickness}), red calc(50% - ${thickness}), red calc(50% + ${thickness}), transparent calc(50% + ${thickness})),`,
+        `  linear-gradient(to top left, transparent calc(50% - ${thickness}), red calc(50% - ${thickness}), red calc(50% + ${thickness}), transparent calc(50% + ${thickness}));`
+    ].join(' ');
 }
 
 /**********************************************************************
@@ -435,6 +453,13 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
                 target.style.cssText = CommonStyle;
                 const textDiv = ensureExtraBorderDiv(target);
                 initializeText(textDiv, typedDesc.desc);
+            }
+            break;
+        case SCHEMA.RendererType.DocumentParagraph:
+            {
+                target.style.cssText = CommonStyle;
+                const textDiv = ensureExtraBorderDiv(target);
+                initializeParagraph(textDiv, typedDesc.desc);
             }
             break;
         default:

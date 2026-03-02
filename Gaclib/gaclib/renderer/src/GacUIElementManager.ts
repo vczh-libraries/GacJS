@@ -11,7 +11,9 @@ export type TypedElementDesc =
     | { type: SCHEMA.RendererType.InnerShadow; desc: SCHEMA.ElementDesc_InnerShadow }
     | { type: SCHEMA.RendererType.ImageFrame; desc: SCHEMA.ElementDesc_ImageFrame }
     | { type: SCHEMA.RendererType.Polygon; desc: SCHEMA.ElementDesc_Polygon }
-    | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel };
+    | { type: SCHEMA.RendererType.SolidLabel; desc: SCHEMA.ElementDesc_SolidLabel }
+    | { type: SCHEMA.RendererType.DocumentParagraph; desc: SCHEMA.ElementDesc_DocumentParagraphFull }
+    ;
 
 interface ElementRecord {
     type: SCHEMA.RendererType;
