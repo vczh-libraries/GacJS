@@ -222,6 +222,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._settings.suggestMinSize(requestArgs.x.value, requestArgs.y.value);
     }
 
+    RequestWindowNotifySetCaret(requestArgs: SCHEMA.NativePoint): void {
+        // to be implemented
+    }
+
     /****************************************************************************************
      * IO
      ***************************************************************************************/
@@ -368,6 +372,42 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
 
         this._updateElement(finalRequestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: finalRequestArgs });
+    }
+
+    /****************************************************************************************
+     * Renderer (DocumentElement)
+     ***************************************************************************************/
+
+    RequestRendererUpdateElement_DocumentParagraph(id: number, requestArgs: SCHEMA.ElementDesc_DocumentParagraph): void {
+        throw new Error("Not Implemented: RequestRendererUpdateElement_DocumentParagraph");
+    }
+
+    RequestDocumentParagraph_GetCaret(id: number, requestArgs: SCHEMA.GetCaretRequest): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_GetCaret");
+    }
+
+    RequestDocumentParagraph_GetCaretBounds(id: number, requestArgs: SCHEMA.GetCaretBoundsRequest): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_GetCaretBounds");
+    }
+
+    RequestDocumentParagraph_GetInlineObjectFromPoint(id: number, requestArgs: SCHEMA.GetInlineObjectFromPointRequest): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_GetInlineObjectFromPoint");
+    }
+
+    RequestDocumentParagraph_GetNearestCaretFromTextPos(id: number, requestArgs: SCHEMA.GetNearestCaretFromTextPosRequest): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_GetNearestCaretFromTextPos");
+    }
+
+    RequestDocumentParagraph_IsValidCaret(id: number, requestArgs: SCHEMA.IsValidCaretRequest): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_IsValidCaret");
+    }
+
+    RequestDocumentParagraph_OpenCaret(requestArgs: SCHEMA.OpenCaretRequest): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_OpenCaret");
+    }
+
+    RequestDocumentParagraph_CloseCaret(requestArgs: SCHEMA.TYPES.Integer): void {
+        throw new Error("Not Implemented: RequestDocumentParagraph_CloseCaret");
     }
 
     /****************************************************************************************
