@@ -59,6 +59,7 @@ rendering a remote GUI in HTML via DOM and Canvas.
 - `/index.html` is an interactive UI for testing the remote protocol:
   - It requires an http server to run, which is not in this repo.
   - Start the server by running `start (repo-root)\..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http`.
+    - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.
   - You must use `start` as the process will block the powershell forever, until:
     - The "Fetal Error" button is clicked.
     - The exit button or menu is clicked.
