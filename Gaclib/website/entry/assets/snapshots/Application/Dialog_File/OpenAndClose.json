@@ -19,649 +19,314 @@
     [17, "SolidLabel"],
     [18, "Polygon"],
     [19, "ImageFrame"],
-    [20, "SolidLabel"]
+    [20, "SolidLabel"],
+    [21, "SolidBackground"],
+    [22, "SolidBorder"],
+    [23, "FocusRectangle"],
+    [24, "SolidLabel"],
+    [25, "SolidBackground"],
+    [26, "SolidBorder"],
+    [27, "FocusRectangle"],
+    [28, "SolidLabel"],
+    [29, "SolidBackground"],
+    [30, "SolidBorder"],
+    [31, "FocusRectangle"],
+    [32, "SolidLabel"],
+    [33, "SolidBackground"],
+    [34, "SolidBorder"],
+    [35, "FocusRectangle"],
+    [36, "SolidLabel"],
+    [37, "SolidBackground"],
+    [38, "SolidBorder"],
+    [39, "FocusRectangle"],
+    [40, "SolidLabel"],
+    [41, "SolidBackground"],
+    [42, "SolidBorder"],
+    [43, "SolidBackground"],
+    [44, "SolidBorder"],
+    [45, "FocusRectangle"],
+    [46, "SolidLabel"],
+    [47, "Polygon"],
+    [48, "SolidBackground"],
+    [49, "SolidBorder"],
+    [50, "FocusRectangle"],
+    [51, "SolidLabel"],
+    [52, "Polygon"],
+    [53, "Polygon"],
+    [54, "SolidBackground"],
+    [55, "SolidBorder"],
+    [56, "FocusRectangle"],
+    [57, "SolidLabel"],
+    [58, "Polygon"],
+    [59, "ImageFrame"],
+    [60, "SolidLabel"],
+    [63, "SolidBackground"],
+    [64, "SolidBorder"],
+    [65, "SolidBackground"],
+    [66, "SolidBorder"],
+    [67, "SolidBackground"],
+    [68, "SolidBorder"],
+    [69, "Polygon"],
+    [70, "Polygon"],
+    [71, "SolidBackground"],
+    [72, "SolidBackground"],
+    [73, "SolidBorder"],
+    [74, "Polygon"],
+    [75, "Polygon"],
+    [76, "SolidBackground"],
+    [77, "SolidLabel"],
+    [78, "SolidBackground"],
+    [79, "SolidBorder"],
+    [80, "SolidBackground"],
+    [81, "SolidBorder"],
+    [82, "Polygon"],
+    [83, "Polygon"],
+    [84, "SolidBackground"],
+    [85, "SolidBackground"],
+    [86, "SolidBorder"],
+    [87, "Polygon"],
+    [88, "Polygon"],
+    [89, "SolidBackground"],
+    [95, "SolidBackground"],
+    [96, "SolidBorder"],
+    [97, "SolidBackground"],
+    [98, "SolidBorder"],
+    [99, "Polygon"],
+    [100, "Polygon"],
+    [101, "SolidBackground"],
+    [102, "SolidBackground"],
+    [103, "SolidBorder"],
+    [104, "Polygon"],
+    [105, "Polygon"],
+    [106, "SolidBackground"],
+    [110, "SolidLabel"],
+    [111, "SolidBackground"],
+    [112, "SolidBorder"],
+    [113, "SolidBackground"],
+    [114, "SolidBorder"],
+    [115, "SolidLabel"],
+    [116, "SolidBackground"],
+    [117, "Polygon"],
+    [118, "SolidBackground"],
+    [119, "SolidBorder"],
+    [120, "FocusRectangle"],
+    [121, "SolidLabel"],
+    [122, "SolidBackground"],
+    [123, "SolidBorder"],
+    [124, "FocusRectangle"],
+    [125, "SolidLabel"],
+    [126, "SolidBackground"],
+    [127, "Polygon"],
+    [128, "Polygon"],
+    [129, "ImageFrame"],
+    [130, "SolidLabel"],
+    [131, "SolidBackground"],
+    [132, "ImageFrame"],
+    [133, "SolidLabel"],
+    [134, "DocumentParagraph"],
+    [135, "SolidBackground"],
+    [136, "SolidLabel"],
+    [137, "SolidBackground"],
+    [138, "Polygon"],
+    [139, "Polygon"],
+    [140, "ImageFrame"],
+    [141, "SolidLabel"],
+    [142, "SolidBackground"],
+    [143, "ImageFrame"],
+    [144, "SolidLabel"],
+    [145, "SolidBackground"],
+    [146, "Polygon"],
+    [147, "Polygon"],
+    [148, "ImageFrame"],
+    [149, "SolidLabel"],
+    [150, "SolidBackground"],
+    [151, "ImageFrame"],
+    [152, "SolidLabel"],
+    [153, "SolidBackground"],
+    [154, "ImageFrame"],
+    [155, "SolidLabel"],
+    [156, "SolidBackground"],
+    [157, "ImageFrame"],
+    [158, "SolidLabel"],
+    [159, "SolidBackground"],
+    [160, "ImageFrame"],
+    [161, "SolidLabel"],
+    [162, "DocumentParagraph"],
+    [166, "SolidBackground"],
+    [167, "ImageFrame"],
+    [168, "SolidLabel"],
+    [169, "SolidBackground"],
+    [170, "ImageFrame"],
+    [171, "SolidLabel"],
+    [172, "SolidBackground"],
+    [173, "ImageFrame"],
+    [174, "SolidLabel"],
+    [175, "SolidBackground"],
+    [176, "ImageFrame"],
+    [177, "SolidLabel"],
+    [178, "SolidBackground"],
+    [179, "ImageFrame"],
+    [180, "SolidLabel"]
   ],
-  "imageCreations": [],
-  "imageMetadatas": [],
+  "imageCreations": [
+    {"id": 2, "imageData": "iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAABmJLR0QA\/wD\/AP+gvaeTAAAKOElEQVR4nO3dS6xdVR3H8W+xXAqtYGLSUh426qAy0SgwMBAwwUec9QGmE2cMFCLBECYkonEKmqBOHGkrwkUSCpIYHwm0PKIJFRNiELUmSlSoRkUhaWmvrYN9bnLBq5x799rrv\/57fz\/Jf7rvf6+1fnefs89+gCRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkhRrQ3QDgTYDVwOXAztntQ24ANgCnB3XWvNOAS8BjwB3AK\/FtqOp2AbcCjwBvA6csXrXEnDXWiZBWquPAI\/SHTmiF\/xY6+fAxjnnQ5rLdcDTxC\/uqdTzwFlzzYz0f2wHDhC\/oKdYT+GRWD3sA14hfiFPue7FI7HWaBPwTeIXr9XVfgyx5rQF+DHxi9Z6Y92PH6f1FrYBzxK\/WK3VyyOx\/qfzMbwZyiOx\/ssm4DDxi9OarzwS6w08YZWvPBILgBuIX4yWIdY6XIS\/82YvP05P2CLxC9DqXx6JJ+g64heeVa48Ek\/Mk8QvOqtseSSeiGuJX2zWMOWReAIeJX6hWYa4KVkeqbMV+BN+1Bq7ReDTdE\/50Ih8nmH\/+5+gu394N7CDaT4PK\/oI7JF4xJ5guAVzH91vy1MXHVxDPFKbGeYBdEvAZyruR+uiQ2uIR+oTDLNAPltzJxKIDqwhHqk7KL8w7qu6BzlEh9UQj9R+yi6I4\/iddzXRQTXEI\/Uzyi6GA3XbTyM6pIZ4pH5P2YWwu2r3eUQH1BCP1N8ouwjeVbf9NKLDOW957XQypX9CmuJFGvOIDqYhHqnSk6\/VRYfSEI+UAa4jOpCGeKQMcB3RYTTEI2WA64gOoiEeKQNcR+lx\/vYA2zTECRngOkqP81kYYmGAaxlinA2xDHAlQ42zIZ44A1zHkONsiCfMANcx9Dgb4okywHXUGGdDPEEGuI5a42yIJ8YA11FznA3xhBjgOmqPsyGeCANcR8Q4G+IJMMB1RI2zIR45A1xH5Dgb4hEzwHVEj7MhHqnohTUVLYyzIR6hFhbWFLQyzoZ4ZFpZWGP3L+qGprV6gIQh9hm7WvZSdAPBPgUcIlmIDbCWTT3AAFcBz5EoxAZYy\/4c3UAjLgOORDcxLwOsZWkWbQUfAO6KbmIeG6IbmEPpE08Z9jnCe4Gj0U00ZAl4J93JvWZ5BNay3wG\/jG6iIRuBL0c38VYMsFY6GN1AY\/ZEN\/BWMnyc9CN0PdvoPkZviW6kEUs0\/jI8j8Ba6Rhwd3QTDWn+56QMRyOPwHVtAX4LXBjdSCOaXi8egfVmrwE34WWnKRhgreYg8KXoJjQO3swQYwPdXTrRNxlEl3pyQuKcCzxIfIgMcGJOSKwNwJ3AaeLDZIATckLasJvuhofoQBngZJyQdmwGvsC0bv5vWtO\/cc2UHsQM+9y6rcDNwC7g\/cG9DK3p9dJ0czMGuG3voQvyB4GLge3AJYzncsym10vTzc0YYK3FpNaLF3JIiRlgKTEDLCVmgKXEDLCUmAGWEjPAUmIGWErMAEuJGWApMQMsJWaApcQMsJSYAZYSM8BSYgZYSswAS4kZYCkxAywlZoClxAywlJgBlhIzwFJiBlhKzABLiRlgKTEDLCVmgKXEDLCUmAEexgKwD1gEjgKniH9Rde06Ndv3xdlYLPQaUaWV7Y3re4EXB+g7e704G5uhZVsvo5dlQs4C7hmg37HVPQz7yS\/LepmMLBNieNcW4qFkWS+TkWFC9g7Q59hrqI\/TGdZLMRuiG5hD6UEsvc8LwAvAuwtvd+z+AOwEXi+83dbXS1Gehe5vD4Z3PXYAu6KbyM4A97c7uoHE9kQ3kJ0B7u\/K6AYSc+x6avrz\/Uzr32mOA5sKb3MqTgDnFt5m6+ulKI\/A\/TV\/prJhp6MbyM4A9\/dydAOJHYtuIDsD3N8z0Q0k5tj1ZID7OxjdQGIPRTeQXdNf0GdaPynhhRzr44UcBXgE7u8kcHt0EwndRvnwqkFZrm31Zob5y5sZJiTLhHg74fzh9XbCCck2Id7Qv3p5Q\/8Amv6CPlN6EGvs8wLddb67gCvoLtzfWOHvtmSJ7kTVEeBhujPOJyv83YzrZd2abm5mUhOi3ia1XjwLLSVmgKXEDLCUmAGWEjPAUmIGWErMAEuJGWApMQMsJWaApcQMsJSYAZYSM8BSYgZYSswAS4kZYCkxAywlZoClxAywlJgBHsYCsA9YBI4Cp4h\/KmTtOjXb98XZWCz0GlGlle0xoT5WdvXysbITlWVCfLD7fOWD3Scmy4QY3rWFeChZ1stkZJiQvQP0OfYa6uN0hvVSTNMPrZ4pPYi+XrQNvl60AM9C97cHw7seO+hePaMeDHB\/u6MbSGxPdAPZGeD+roxuIDHHrqemP9\/PtP6d5jiwqfA2p+IEcG7hbba+XoryCNxf82cqG3Y6uoHsDHB\/L0c3kNix6AayM8D9PRPdQGKOXU8GuL+D0Q0k9lB0A9k1\/QV9pvWTEl7IsT5eyFGAR+D+TgK3RzeR0G2UD68alOXaVm9mmL+8mWFCskyItxPOH15vJ5yQbBPiDf2rlzf0D6DpL+gzpQexxj4v0F3nuwu4gu7C\/Y0V\/m5LluhOVB0BHqY743yywt\/NuF7WrenmZiY1IeptUuvFs9BSYgZYSswAS4kZYCkxAywlZoClxAywlJgBlhIzwFJiGQJc+vI735I3XqXntvnbHTME+LXC29teeHtqx0WFt\/dq4e0VN8UAX154e2pH6edMG+ACXiq8Pd+kMF6lX9XiE0cL2E\/Z+ztPABdX3QPVcCnd3JZcK9+qugfrkOEI\/OvC2zsH+ErhbSreV+nmtqTSa2+SPs4wT4i4qeZOaFC3MMwa+WjNnRir8+hO55eenCXg5or7oWHcAvyb8utjiPc2TdZhhvkPewZ4ALik3q6okEuBBxluXTxeb1fG71aGm6jl\/7bfAa6ne0C7F3u0Z4Fubm4Avkv5E1Zvrs\/V2a1+mn7ezwpbgT8CZ0c3oklYovtU1vzL1zKchQb4C\/DD6CY0GT8gQXghT4DBn35Uz93RDcwrU4APA09FN6HROwQ8Gd3EvDIFGODO6AY0ameAL0Y3sRbZAvw4cH90Exqte4EnoptYiyxnoVfaDvwKuCC6EY3KP4DLSHLyalm2IzB0dyfdGN2ERudGkoUX4G3RDazT88A2yt\/\/qWn6Ot3NEKroHOAxhr0axxp\/\/YTEV95l\/A680tvpTvt\/KLgP5fQccA3wz+hG1ivjd+CVXgU+CfwiuhGl8yzwMRKHd0y2AD8i\/uOYlaMeA85HTTkH+Abxi8Nqu75G4u+8U3A93W960QvFaqv+DuxBKVwIHABOE79wrPj6Ht3PjkrmWoZ9mofVdh2iO8us5K4Bvk\/3mpboRWUNWyeBR4CrmYDsvwOv1VZgH93D3T9M+ceQKsbrwE+Bh4BF4K+x7dQztQCvdB5wFd2rVnYC76ML+DvofpbyTGVbTtK9ZucVumuWXwB+AxwBngaOx7UmSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkTdd\/AB8A1goYRB78AAAAAElFTkSuQmCC", "imageDataOmitted": false},
+    {"id": 3, "imageData": "iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAABmJLR0QA\/wD\/AP+gvaeTAAAHuUlEQVR4nO3dzY9V5R3A8a+jAooUu2EUROOKdivapNGixlrTdAOoETesXLQQCU13Ltp\/wJoYQ6IrK76AtjEKSW2MZgA1uhBMXFjsqjUmVIiCoZSZYep08UhicC5zL\/d5Ob97v5\/kt33OOXPOd+77vSBJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkmK7rPUODGA5cAewHlj37UwCK4EVwBXtdq0vc8C\/gA+B14BXgdmmeyQVNgnsBA4BM8D8CM1nwP35\/lRSd9wF7AfO0T600vM4MJHlryY1dg\/wHu2jqj3PYcQKbDWwh\/YhGbE0oC3AKdoH1IUxYoWxDHiG9tF0bYxYnbcSOED7WLo6RqzOmgSO0D6Sro8Rq3N+gPEOMnvo\/htUNCaWAQdpH0W08ZZYnfA07WOIOkasph6ifQTRx4jVxGp8ndeIFdZe2l\/4ozQ+saVq7qH9BT+K4y2xqniX9hf7qI4Rq6g7aX+Rj\/oYsYrZT\/sLfBzGiJXdJOPxYfyujBErq99S9oKdBnYDm4CbgCvrHFbfJkhRGbFCOkS5C\/Ul0mvLXWfECmk5Zb6Abg74dcXjyMGIFc59lLkwf1PzIDIyYoXyGPkvyJeqHkF+Rqwwcl+oZ4nxmHcxRqwQPiDvRbi77u4XZcTqvH+S9wLcVHXvyzNiddqX5L34bqy7+1VMAH+ibsR+ikl9yf0SUtfepJGLEWtoJX6dcD7zepF+QXFQE8CzwNbWOzKGZoEzwEngBHAU+BQ4TPp5nzPtdq2t3Lcao67FY2Ln4jNDejfhTtL7+seKAQ\/OiLs754B9wIaeZ2\/EGPClMeLuzzvA3b1O4Kgw4EvX4oktZ\/DZD6xd+BTGZ8DD8ZY4xpwCHuxxDkMz4OEZcZzZBSxd+DTGZMB5eHc6zkyRfnFzJBhwPt4Sx5kjwKqFT2MsBpyXEceZI6Rf4AzNgPMz4jjzNsEfExtwGT4mjjO7Fj6FMRhwOUYcZx5e+BR2nwGX5d3pGHMSuK7HOew0Ay7PW+IY83yP89dpBlyHt8Tdn29IvxEWigHX4y1x9+dgr5PXVQZc1wTwJO0vVKf3\/Kzn2esgA27jfuAz2l+szvdn30XO21D8Sp3RsgTYDGwEbiX98JvfgdXeHLAGON56R\/rhLbAiuIL0D24z6dniacreCu+oc1jDM2BFtAbYS7mAp+odynAMWJFtI93lzX0dTwNXVTyOS2bAim47ZW6F7829o\/7chvR9u4BXCqy7PveCBiwt7Hek74fOaV3m9QxY6uFz4C+Z1zRgqaLXMq+X\/dNJBiz1djjzeisyr+c7saSLWELex8EzwLKM6xmwtIhOX8\/ehZYCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCM2ApMAOWAjNgKTADlgIzYCkwA5YCKxHwbOb1lmReT+pX7mtvJvN6RQL+T+b1rs+8ntSv1ZnXO515vRABr8+8ntSv2zKvFyLgY5nX25R5PalfGzOv9+\/M6xXxHDCfcaaBNVWPQIK1pGsv57X8bO6dLHEL\/Gnm9ZYCf8y8prSYJ0jXXk652yjiF+T9r3V+ttU8CI21HZS5hn9e8yAu1dWkp8tzH\/wcsL3icWg87QD+R\/7rdxq4quJxDOUgZf6DzQMvAzfUOxSNibXAnyl33U7VO5Th7aTcH+L8f7PngQeAm\/HNHhrcEtK18yDwIvmfsLpwHi1xEJeVWBRYBXwOXFlofSmSOdK9xi9yL1zqvdDHgb8VWluK5q8UiBfKfpjBl36k5PFSC5cM+CDwbsH1pQgOAO+UWrz0xwl\/X3h9qcvmgT+U3EDpgKeAPYW3IXXVC8Chkhso9Sz0d10P\/B1YWWFbUlecBH5MoSevzqvxjRzHgEcqbEfqkkcoHC\/A5aU38K1PgEnyf75S6qKnSB+GKK7GXejzlgJvAHdX3KZU21vAr8j\/1VILqhkwwArS0+q3VN6uVMPHwAbg61obrP2tlKeBXwIfVd6uVNoR4F4qxgttvlb2OOm\/1JsNti2VMEV6aHi89oZrPYl1oVnSR7d+CPyk0T5IOTwFbAX+23pHWnmA9JpZyY9yOU7u+QrYjAC4DtgNfEP7E+M4i80rpJdFdYE7KfttHo4zzBwgPX+jRWwA9pEeK7c+ac54zyzwOnAHHVT7deBBrQK2kL7c\/afk\/5pPaSEzwPvAq8Be4ETb3emt6wF\/19XA7aSfWlkH\/IgU+LXANfi9WBrMLOlngE6R3rN8FPgH8CHwHnC23a5JkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkvr1f+aP6dCi8HO2AAAAAElFTkSuQmCC", "imageDataOmitted": false}
+  ],
+  "imageMetadatas": [
+    {
+      "id": 2,
+      "format": "Png",
+      "frames": [
+        {
+          "size": {"x": 240, "y": 240}
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "format": "Png",
+      "frames": [
+        {
+          "size": {"x": 240, "y": 240}
+        }
+      ]
+    }
+  ],
   "frames": [
     {
-      "frameId": 4,
+      "frameId": 5,
       "frameName": "Ready",
       "windowSize": {
         "bounds": {
-          "x1": {"value": 272},
-          "y1": {"value": 224},
-          "x2": {"value": 752},
-          "y2": {"value": 544}
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
         },
         "clientBounds": {
-          "x1": {"value": 272},
-          "y1": {"value": 224},
-          "x2": {"value": 752},
-          "y2": {"value": 544}
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
         },
-        "sizeState": "Restored",
+        "sizeState": "Minimized",
         "customFramePadding": {
-          "left": {"value": 8},
-          "top": {"value": 8},
-          "right": {"value": 8},
-          "bottom": {"value": 8}
+          "left": {"value": 0},
+          "top": {"value": 0},
+          "right": {"value": 0},
+          "bottom": {"value": 0}
         }
       },
-      "elements": [
-        [
-          1,
-          [
-            "ElementDesc_SolidBackground",
-            {
-              "id": 1,
-              "backgroundColor": "#2D2D30",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          2,
-          [
-            "ElementDesc_SolidBorder",
-            {
-              "id": 2,
-              "borderColor": "#017ACC",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          3,
-          [
-            "ElementDesc_SolidBackground",
-            {
-              "id": 3,
-              "backgroundColor": "#3F3F46",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          4,
-          [
-            "ElementDesc_SolidBorder",
-            {
-              "id": 4,
-              "borderColor": "#54545C",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          6,
-          [
-            "ElementDesc_SolidLabel",
-            {
-              "id": 6,
-              "textColor": "#F1F1F1",
-              "horizontalAlignment": "Center",
-              "verticalAlignment": "Center",
-              "wrapLine": false,
-              "wrapLineHeightCalculation": false,
-              "ellipse": false,
-              "multiline": false,
-              "font": {"fontFamily": "GacUI Default Font", "size": 12, "bold": false, "italic": false, "underline": false, "strikeline": false, "antialias": true, "verticalAntialias": false},
-              "text": "",
-              "measuringRequest": "TotalSize"
-            }
-          ]
-        ],
-        [
-          7,
-          [
-            "ElementDesc_Polygon",
-            {
-              "id": 7,
-              "size": {"x": 24, "y": 16},
-              "borderColor": "#F1F1F1",
-              "backgroundColor": "#F1F1F1",
-              "points": [
-                {"x": 8, "y": 12},
-                {"x": 15, "y": 12},
-                {"x": 15, "y": 13},
-                {"x": 8, "y": 13}
-              ]
-            }
-          ]
-        ],
-        [
-          8,
-          [
-            "ElementDesc_SolidBackground",
-            {
-              "id": 8,
-              "backgroundColor": "#3F3F46",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          9,
-          [
-            "ElementDesc_SolidBorder",
-            {
-              "id": 9,
-              "borderColor": "#54545C",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          11,
-          [
-            "ElementDesc_SolidLabel",
-            {
-              "id": 11,
-              "textColor": "#F1F1F1",
-              "horizontalAlignment": "Center",
-              "verticalAlignment": "Center",
-              "wrapLine": false,
-              "wrapLineHeightCalculation": false,
-              "ellipse": false,
-              "multiline": false,
-              "font": {"fontFamily": "GacUI Default Font", "size": 12, "bold": false, "italic": false, "underline": false, "strikeline": false, "antialias": true, "verticalAntialias": false},
-              "text": "",
-              "measuringRequest": "TotalSize"
-            }
-          ]
-        ],
-        [
-          12,
-          [
-            "ElementDesc_Polygon",
-            {
-              "id": 12,
-              "size": {"x": 24, "y": 16},
-              "borderColor": "#F1F1F1",
-              "backgroundColor": "#F1F1F1",
-              "points": [
-                {"x": 6, "y": 2},
-                {"x": 17, "y": 2},
-                {"x": 17, "y": 13},
-                {"x": 6, "y": 13},
-                {"x": 6, "y": 2},
-                {"x": 6, "y": 2},
-                {"x": 6, "y": 13},
-                {"x": 17, "y": 13},
-                {"x": 17, "y": 4},
-                {"x": 6, "y": 4}
-              ]
-            }
-          ]
-        ],
-        [
-          13,
-          [
-            "ElementDesc_Polygon",
-            {
-              "id": 13,
-              "size": {"x": 24, "y": 16},
-              "borderColor": "#F1F1F1",
-              "backgroundColor": "#F1F1F1",
-              "points": [
-                {"x": 9, "y": 6},
-                {"x": 14, "y": 6},
-                {"x": 14, "y": 13},
-                {"x": 6, "y": 13},
-                {"x": 6, "y": 6},
-                {"x": 9, "y": 6},
-                {"x": 9, "y": 7},
-                {"x": 6, "y": 7},
-                {"x": 6, "y": 13},
-                {"x": 14, "y": 13},
-                {"x": 14, "y": 7},
-                {"x": 9, "y": 7},
-                {"x": 9, "y": 2},
-                {"x": 17, "y": 2},
-                {"x": 17, "y": 9},
-                {"x": 14, "y": 9},
-                {"x": 14, "y": 9},
-                {"x": 17, "y": 9},
-                {"x": 17, "y": 3},
-                {"x": 9, "y": 3}
-              ]
-            }
-          ]
-        ],
-        [
-          14,
-          [
-            "ElementDesc_SolidBackground",
-            {
-              "id": 14,
-              "backgroundColor": "#3F3F46",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          15,
-          [
-            "ElementDesc_SolidBorder",
-            {
-              "id": 15,
-              "borderColor": "#54545C",
-              "shape": {"shapeType": "Rectangle", "radiusX": 0, "radiusY": 0}
-            }
-          ]
-        ],
-        [
-          17,
-          [
-            "ElementDesc_SolidLabel",
-            {
-              "id": 17,
-              "textColor": "#F1F1F1",
-              "horizontalAlignment": "Center",
-              "verticalAlignment": "Center",
-              "wrapLine": false,
-              "wrapLineHeightCalculation": false,
-              "ellipse": false,
-              "multiline": false,
-              "font": {"fontFamily": "GacUI Default Font", "size": 12, "bold": false, "italic": false, "underline": false, "strikeline": false, "antialias": true, "verticalAntialias": false},
-              "text": "",
-              "measuringRequest": "TotalSize"
-            }
-          ]
-        ],
-        [
-          18,
-          [
-            "ElementDesc_Polygon",
-            {
-              "id": 18,
-              "size": {"x": 24, "y": 16},
-              "borderColor": "#F1F1F1",
-              "backgroundColor": "#F1F1F1",
-              "points": [
-                {"x": 7, "y": 2},
-                {"x": 11, "y": 6},
-                {"x": 12, "y": 6},
-                {"x": 16, "y": 2},
-                {"x": 17, "y": 3},
-                {"x": 13, "y": 7},
-                {"x": 13, "y": 8},
-                {"x": 17, "y": 12},
-                {"x": 16, "y": 13},
-                {"x": 12, "y": 9},
-                {"x": 11, "y": 9},
-                {"x": 7, "y": 13},
-                {"x": 6, "y": 12},
-                {"x": 10, "y": 8},
-                {"x": 10, "y": 7},
-                {"x": 6, "y": 3}
-              ]
-            }
-          ]
-        ],
-        [
-          19,
-          [
-            "ElementDesc_ImageFrame",
-            {"id": 19, "imageId": null, "imageFrame": 0, "horizontalAlignment": "Left", "verticalAlignment": "Top", "stretch": true, "enabled": true, "imageCreation": null}
-          ]
-        ],
-        [
-          20,
-          [
-            "ElementDesc_SolidLabel",
-            {
-              "id": 20,
-              "textColor": "#999999",
-              "horizontalAlignment": "Left",
-              "verticalAlignment": "Top",
-              "wrapLine": false,
-              "wrapLineHeightCalculation": false,
-              "ellipse": true,
-              "multiline": false,
-              "font": {"fontFamily": "Segoe WP SemiLight", "size": 14, "bold": false, "italic": false, "underline": false, "strikeline": false, "antialias": true, "verticalAntialias": false},
-              "text": "Dialog File Test",
-              "measuringRequest": "FontHeight"
-            }
-          ]
-        ]
-      ],
-      "root": {
-        "id": -1,
-        "content": {
-          "hitTestResult": null,
-          "cursor": null,
-          "element": null,
-          "bounds": {"x1": 0, "y1": 0, "x2": 0, "y2": 0},
-          "validArea": {"x1": 0, "y1": 0, "x2": 0, "y2": 0}
+      "elements": null,
+      "root": null
+    },
+    {
+      "frameId": 11,
+      "frameName": "Show Dialog",
+      "windowSize": {
+        "bounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
         },
-        "children": [
-          {
-            "id": 4,
-            "content": {
-              "hitTestResult": null,
-              "cursor": null,
-              "element": 1,
-              "bounds": {"x1": 0, "y1": 0, "x2": 480, "y2": 320},
-              "validArea": {"x1": 0, "y1": 0, "x2": 480, "y2": 320}
-            },
-            "children": [
-              {
-                "id": 8,
-                "content": {
-                  "hitTestResult": null,
-                  "cursor": null,
-                  "element": 2,
-                  "bounds": {"x1": 0, "y1": 0, "x2": 480, "y2": 320},
-                  "validArea": {"x1": 0, "y1": 0, "x2": 480, "y2": 320}
-                },
-                "children": [
-                  {
-                    "id": 6,
-                    "content": {
-                      "hitTestResult": "BorderLeftTop",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 0, "y1": 0, "x2": 8, "y2": 8},
-                      "validArea": {"x1": 0, "y1": 0, "x2": 8, "y2": 8}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 10,
-                    "content": {
-                      "hitTestResult": "BorderRightTop",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 472, "y1": 0, "x2": 480, "y2": 8},
-                      "validArea": {"x1": 472, "y1": 0, "x2": 480, "y2": 8}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 14,
-                    "content": {
-                      "hitTestResult": "BorderLeftBottom",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 0, "y1": 312, "x2": 8, "y2": 320},
-                      "validArea": {"x1": 0, "y1": 312, "x2": 8, "y2": 320}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 18,
-                    "content": {
-                      "hitTestResult": "BorderRightBottom",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 472, "y1": 312, "x2": 480, "y2": 320},
-                      "validArea": {"x1": 472, "y1": 312, "x2": 480, "y2": 320}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 22,
-                    "content": {
-                      "hitTestResult": "BorderLeft",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 0, "y1": 8, "x2": 8, "y2": 312},
-                      "validArea": {"x1": 0, "y1": 8, "x2": 8, "y2": 312}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 26,
-                    "content": {
-                      "hitTestResult": "BorderRight",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 472, "y1": 8, "x2": 480, "y2": 312},
-                      "validArea": {"x1": 472, "y1": 8, "x2": 480, "y2": 312}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 30,
-                    "content": {
-                      "hitTestResult": "BorderTop",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 8, "y1": 0, "x2": 472, "y2": 8},
-                      "validArea": {"x1": 8, "y1": 0, "x2": 472, "y2": 8}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 34,
-                    "content": {
-                      "hitTestResult": "BorderBottom",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 8, "y1": 312, "x2": 472, "y2": 320},
-                      "validArea": {"x1": 8, "y1": 312, "x2": 472, "y2": 320}
-                    },
-                    "children": null
-                  },
-                  {
-                    "id": 38,
-                    "content": {
-                      "hitTestResult": "ButtonMinimum",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 370, "y1": 8, "x2": 404, "y2": 36},
-                      "validArea": {"x1": 370, "y1": 8, "x2": 404, "y2": 36}
-                    },
-                    "children": [
-                      {
-                        "id": 12,
-                        "content": {
-                          "hitTestResult": null,
-                          "cursor": null,
-                          "element": 3,
-                          "bounds": {"x1": 371, "y1": 9, "x2": 403, "y2": 35},
-                          "validArea": {"x1": 371, "y1": 9, "x2": 403, "y2": 35}
-                        },
-                        "children": [
-                          {
-                            "id": 16,
-                            "content": {
-                              "hitTestResult": null,
-                              "cursor": null,
-                              "element": 4,
-                              "bounds": {"x1": 371, "y1": 9, "x2": 403, "y2": 35},
-                              "validArea": {"x1": 371, "y1": 9, "x2": 403, "y2": 35}
-                            },
-                            "children": [
-                              {
-                                "id": 24,
-                                "content": {
-                                  "hitTestResult": null,
-                                  "cursor": null,
-                                  "element": 6,
-                                  "bounds": {"x1": 375, "y1": 11, "x2": 399, "y2": 33},
-                                  "validArea": {"x1": 375, "y1": 11, "x2": 399, "y2": 33}
-                                },
-                                "children": [
-                                  {
-                                    "id": 28,
-                                    "content": {
-                                      "hitTestResult": null,
-                                      "cursor": null,
-                                      "element": 7,
-                                      "bounds": {"x1": 375, "y1": 11, "x2": 399, "y2": 33},
-                                      "validArea": {"x1": 375, "y1": 11, "x2": 399, "y2": 33}
-                                    },
-                                    "children": null
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "id": 42,
-                    "content": {
-                      "hitTestResult": "ButtonMaximum",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 404, "y1": 8, "x2": 438, "y2": 36},
-                      "validArea": {"x1": 404, "y1": 8, "x2": 438, "y2": 36}
-                    },
-                    "children": [
-                      {
-                        "id": 32,
-                        "content": {
-                          "hitTestResult": null,
-                          "cursor": null,
-                          "element": 8,
-                          "bounds": {"x1": 405, "y1": 9, "x2": 437, "y2": 35},
-                          "validArea": {"x1": 405, "y1": 9, "x2": 437, "y2": 35}
-                        },
-                        "children": [
-                          {
-                            "id": 36,
-                            "content": {
-                              "hitTestResult": null,
-                              "cursor": null,
-                              "element": 9,
-                              "bounds": {"x1": 405, "y1": 9, "x2": 437, "y2": 35},
-                              "validArea": {"x1": 405, "y1": 9, "x2": 437, "y2": 35}
-                            },
-                            "children": [
-                              {
-                                "id": 44,
-                                "content": {
-                                  "hitTestResult": null,
-                                  "cursor": null,
-                                  "element": 11,
-                                  "bounds": {"x1": 409, "y1": 11, "x2": 433, "y2": 33},
-                                  "validArea": {"x1": 409, "y1": 11, "x2": 433, "y2": 33}
-                                },
-                                "children": [
-                                  {
-                                    "id": 48,
-                                    "content": {
-                                      "hitTestResult": null,
-                                      "cursor": null,
-                                      "element": 12,
-                                      "bounds": {"x1": 409, "y1": 11, "x2": 433, "y2": 33},
-                                      "validArea": {"x1": 409, "y1": 11, "x2": 433, "y2": 33}
-                                    },
-                                    "children": null
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "id": 46,
-                    "content": {
-                      "hitTestResult": "ButtonClose",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 438, "y1": 8, "x2": 472, "y2": 36},
-                      "validArea": {"x1": 438, "y1": 8, "x2": 472, "y2": 36}
-                    },
-                    "children": [
-                      {
-                        "id": 56,
-                        "content": {
-                          "hitTestResult": null,
-                          "cursor": null,
-                          "element": 14,
-                          "bounds": {"x1": 439, "y1": 9, "x2": 471, "y2": 35},
-                          "validArea": {"x1": 439, "y1": 9, "x2": 471, "y2": 35}
-                        },
-                        "children": [
-                          {
-                            "id": 60,
-                            "content": {
-                              "hitTestResult": null,
-                              "cursor": null,
-                              "element": 15,
-                              "bounds": {"x1": 439, "y1": 9, "x2": 471, "y2": 35},
-                              "validArea": {"x1": 439, "y1": 9, "x2": 471, "y2": 35}
-                            },
-                            "children": [
-                              {
-                                "id": 68,
-                                "content": {
-                                  "hitTestResult": null,
-                                  "cursor": null,
-                                  "element": 17,
-                                  "bounds": {"x1": 443, "y1": 11, "x2": 467, "y2": 33},
-                                  "validArea": {"x1": 443, "y1": 11, "x2": 467, "y2": 33}
-                                },
-                                "children": [
-                                  {
-                                    "id": 72,
-                                    "content": {
-                                      "hitTestResult": null,
-                                      "cursor": null,
-                                      "element": 18,
-                                      "bounds": {"x1": 443, "y1": 11, "x2": 467, "y2": 33},
-                                      "validArea": {"x1": 443, "y1": 11, "x2": 467, "y2": 33}
-                                    },
-                                    "children": null
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "id": 50,
-                    "content": {
-                      "hitTestResult": "Title",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 8, "y1": 8, "x2": 370, "y2": 36},
-                      "validArea": {"x1": 8, "y1": 8, "x2": 370, "y2": 36}
-                    },
-                    "children": [
-                      {
-                        "id": 80,
-                        "content": {
-                          "hitTestResult": null,
-                          "cursor": null,
-                          "element": 20,
-                          "bounds": {"x1": 13, "y1": 13, "x2": 365, "y2": 31},
-                          "validArea": {"x1": 13, "y1": 13, "x2": 365, "y2": 31}
-                        },
-                        "children": null
-                      }
-                    ]
-                  },
-                  {
-                    "id": 54,
-                    "content": {
-                      "hitTestResult": "Client",
-                      "cursor": null,
-                      "element": null,
-                      "bounds": {"x1": 8, "y1": 36, "x2": 472, "y2": 312},
-                      "validArea": {"x1": 8, "y1": 36, "x2": 472, "y2": 312}
-                    },
-                    "children": null
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
+        "clientBounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "sizeState": "Minimized",
+        "customFramePadding": {
+          "left": {"value": 0},
+          "top": {"value": 0},
+          "right": {"value": 0},
+          "bottom": {"value": 0}
+        }
+      },
+      "elements": null,
+      "root": null
+    },
+    {
+      "frameId": 17,
+      "frameName": "Open: A",
+      "windowSize": {
+        "bounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "clientBounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "sizeState": "Minimized",
+        "customFramePadding": {
+          "left": {"value": 0},
+          "top": {"value": 0},
+          "right": {"value": 0},
+          "bottom": {"value": 0}
+        }
+      },
+      "elements": null,
+      "root": null
+    },
+    {
+      "frameId": 21,
+      "frameName": "Filter: Text Files",
+      "windowSize": {
+        "bounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "clientBounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "sizeState": "Minimized",
+        "customFramePadding": {
+          "left": {"value": 0},
+          "top": {"value": 0},
+          "right": {"value": 0},
+          "bottom": {"value": 0}
+        }
+      },
+      "elements": null,
+      "root": null
+    },
+    {
+      "frameId": 23,
+      "frameName": "Cancel",
+      "windowSize": {
+        "bounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "clientBounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "sizeState": "Minimized",
+        "customFramePadding": {
+          "left": {"value": 0},
+          "top": {"value": 0},
+          "right": {"value": 0},
+          "bottom": {"value": 0}
+        }
+      },
+      "elements": null,
+      "root": null
     }
   ]
 }

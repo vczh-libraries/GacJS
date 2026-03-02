@@ -111,6 +111,12 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
                 }
                 receiver.RequestWindowNotifyMinSize((<SCHEMA.NativeSize>pi.arguments));
                 break;
+            case 'WindowNotifySetCaret':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestWindowNotifySetCaret((<SCHEMA.NativePoint>pi.arguments));
+                break;
             case 'IOUpdateGlobalShortcutKey':
                 if (pi.arguments === undefined) {
                     throw new Error('Missing arguments for request: ' + pi.name);
@@ -182,6 +188,18 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
                     throw new Error('Missing arguments for request: ' + pi.name);
                 }
                 receiver.RequestRendererUpdateElement_ImageFrame((<SCHEMA.ElementDesc_ImageFrame>pi.arguments));
+                break;
+            case 'DocumentParagraph_OpenCaret':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_OpenCaret((<SCHEMA.OpenCaretRequest>pi.arguments));
+                break;
+            case 'DocumentParagraph_CloseCaret':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_CloseCaret((<SCHEMA.TYPES.Integer>pi.arguments));
                 break;
             case 'RendererCreated':
                 if (pi.arguments === undefined) {
@@ -262,6 +280,42 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
                 }
                 receiver.RequestImageCreated(pi.id, (<SCHEMA.ImageCreation>pi.arguments));
                 break;
+            case 'RendererUpdateElement_DocumentParagraph':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestRendererUpdateElement_DocumentParagraph(pi.id, (<SCHEMA.ElementDesc_DocumentParagraph>pi.arguments));
+                break;
+            case 'DocumentParagraph_GetCaret':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_GetCaret(pi.id, (<SCHEMA.GetCaretRequest>pi.arguments));
+                break;
+            case 'DocumentParagraph_GetCaretBounds':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_GetCaretBounds(pi.id, (<SCHEMA.GetCaretBoundsRequest>pi.arguments));
+                break;
+            case 'DocumentParagraph_GetInlineObjectFromPoint':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_GetInlineObjectFromPoint(pi.id, (<SCHEMA.GetInlineObjectFromPointRequest>pi.arguments));
+                break;
+            case 'DocumentParagraph_GetNearestCaretFromTextPos':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_GetNearestCaretFromTextPos(pi.id, (<SCHEMA.GetNearestCaretFromTextPosRequest>pi.arguments));
+                break;
+            case 'DocumentParagraph_IsValidCaret':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestDocumentParagraph_IsValidCaret(pi.id, (<SCHEMA.IsValidCaretRequest>pi.arguments));
+                break;
             case 'RendererEndRendering':
                 receiver.RequestRendererEndRendering(pi.id);
                 break;
@@ -329,6 +383,60 @@ export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
         });
     }
 
+    RespondRendererUpdateElement_DocumentParagraph(id: number, responseArgs: SCHEMA.UpdateElement_DocumentParagraphResponse): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'RendererUpdateElement_DocumentParagraph',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondDocumentParagraph_GetCaret(id: number, responseArgs: SCHEMA.GetCaretResponse): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'DocumentParagraph_GetCaret',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondDocumentParagraph_GetCaretBounds(id: number, responseArgs: SCHEMA.GetCaretBoundsResponse): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'DocumentParagraph_GetCaretBounds',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondDocumentParagraph_GetInlineObjectFromPoint(id: number, responseArgs: SCHEMA.TYPES.Nullable<SCHEMA.DocumentRun>): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'DocumentParagraph_GetInlineObjectFromPoint',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondDocumentParagraph_GetNearestCaretFromTextPos(id: number, responseArgs: SCHEMA.TYPES.Integer): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'DocumentParagraph_GetNearestCaretFromTextPos',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondDocumentParagraph_IsValidCaret(id: number, responseArgs: SCHEMA.TYPES.Boolean): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'DocumentParagraph_IsValidCaret',
+            arguments: responseArgs,
+        });
+    }
+
     RespondRendererEndRendering(id: number, responseArgs: SCHEMA.ElementMeasurings): void {
         this.callback({
             semantic: 'Response',
@@ -342,10 +450,11 @@ export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
 export class EventToJson implements SCHEMA.IRemoteProtocolEvents {
     constructor(private callback: ProtocolInvokingHandler) { }
 
-    OnControllerConnect(): void {
+    OnControllerConnect(eventArgs: SCHEMA.ControllerGlobalConfig): void {
         this.callback({
             semantic: 'Event',
             name: 'ControllerConnect',
+            arguments: eventArgs,
         });
     }
 

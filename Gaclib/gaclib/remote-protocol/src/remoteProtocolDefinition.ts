@@ -1,6 +1,12 @@
 import * as TYPES from './remoteProtocolPrimitiveTypes.js';
 export * as TYPES from './remoteProtocolPrimitiveTypes.js';
 
+export enum CharacterEncoding {
+    UTF8 = 'UTF8',
+    UTF16 = 'UTF16',
+    UTF32 = 'UTF32',
+}
+
 export enum WindowHitTestResult {
     BorderNoSizing = 'BorderNoSizing',
     BorderLeft = 'BorderLeft',
@@ -93,6 +99,23 @@ export enum ImageFormatType {
     Unknown = 'Unknown',
 }
 
+export enum BreakCondition {
+    StickToPreviousRun = 'StickToPreviousRun',
+    StickToNextRun = 'StickToNextRun',
+    Alone = 'Alone',
+}
+
+export enum CaretRelativePosition {
+    CaretFirst = 'CaretFirst',
+    CaretLast = 'CaretLast',
+    CaretLineFirst = 'CaretLineFirst',
+    CaretLineLast = 'CaretLineLast',
+    CaretMoveLeft = 'CaretMoveLeft',
+    CaretMoveRight = 'CaretMoveRight',
+    CaretMoveUp = 'CaretMoveUp',
+    CaretMoveDown = 'CaretMoveDown',
+}
+
 export enum RendererType {
     FocusRectangle = 'FocusRectangle',
     Raw = 'Raw',
@@ -105,8 +128,7 @@ export enum RendererType {
     SolidLabel = 'SolidLabel',
     Polygon = 'Polygon',
     ImageFrame = 'ImageFrame',
-    UnsupportedColorizedText = 'UnsupportedColorizedText',
-    UnsupportedDocument = 'UnsupportedDocument',
+    DocumentParagraph = 'DocumentParagraph',
 }
 
 export enum RenderingDom_DiffType {
@@ -114,6 +136,10 @@ export enum RenderingDom_DiffType {
     Created = 'Created',
     Modified = 'Modified',
 }
+
+export type DocumentRunProperty =
+    | ['DocumentTextRunProperty', DocumentTextRunProperty]
+    | ['DocumentInlineObjectRunProperty', DocumentInlineObjectRunProperty];
 
 export type UnitTest_ElementDescVariant =
     | ['ElementDesc_SolidBorder', ElementDesc_SolidBorder]
@@ -124,7 +150,8 @@ export type UnitTest_ElementDescVariant =
     | ['ElementDesc_InnerShadow', ElementDesc_InnerShadow]
     | ['ElementDesc_Polygon', ElementDesc_Polygon]
     | ['ElementDesc_SolidLabel', ElementDesc_SolidLabel]
-    | ['ElementDesc_ImageFrame', ElementDesc_ImageFrame];
+    | ['ElementDesc_ImageFrame', ElementDesc_ImageFrame]
+    | ['ElementDesc_DocumentParagraphFull', ElementDesc_DocumentParagraphFull];
 
 export interface NativeCoordinate {
     value: TYPES.Integer;
@@ -192,6 +219,10 @@ export interface ScreenConfig {
     clientBounds: NativeRect;
     scalingX: TYPES.Double;
     scalingY: TYPES.Double;
+}
+
+export interface ControllerGlobalConfig {
+    documentCaretFromEncoding: CharacterEncoding;
 }
 
 export interface WindowSizingConfig {
@@ -342,6 +373,90 @@ export interface ElementDesc_ImageFrame {
     imageCreation: TYPES.Nullable<ImageCreation>;
 }
 
+export interface DocumentTextRunProperty {
+    textColor: TYPES.Color;
+    backgroundColor: TYPES.Color;
+    fontProperties: FontProperties;
+}
+
+export interface DocumentInlineObjectRunProperty {
+    size: Size;
+    baseline: TYPES.Integer;
+    breakCondition: BreakCondition;
+    backgroundColor: TYPES.Color;
+    backgroundElementId: TYPES.Integer;
+    callbackId: TYPES.Integer;
+}
+
+export interface DocumentRun {
+    caretBegin: TYPES.Integer;
+    caretEnd: TYPES.Integer;
+    props: DocumentRunProperty;
+}
+
+export interface ElementDesc_DocumentParagraph {
+    id: TYPES.Integer;
+    text: TYPES.Nullable<TYPES.String>;
+    wrapLine: TYPES.Boolean;
+    maxWidth: TYPES.Integer;
+    alignment: ElementHorizontalAlignment;
+    runsDiff: TYPES.List<DocumentRun>;
+    createdInlineObjects: TYPES.List<TYPES.Integer>;
+    removedInlineObjects: TYPES.List<TYPES.Integer>;
+}
+
+export interface UpdateElement_DocumentParagraphResponse {
+    documentSize: Size;
+}
+
+export interface GetCaretRequest {
+    id: TYPES.Integer;
+    caret: TYPES.Integer;
+    relativePosition: CaretRelativePosition;
+}
+
+export interface GetCaretResponse {
+    newCaret: TYPES.Integer;
+    preferFrontSide: TYPES.Boolean;
+}
+
+export interface GetCaretBoundsRequest {
+    id: TYPES.Integer;
+}
+
+export interface GetCaretBoundsResponse {
+    frontSideBounds: TYPES.List<Rect>;
+    backSideBounds: TYPES.List<Rect>;
+}
+
+export interface GetInlineObjectFromPointRequest {
+    id: TYPES.Integer;
+    point: Point;
+}
+
+export interface GetNearestCaretFromTextPosRequest {
+    id: TYPES.Integer;
+    textPos: TYPES.Integer;
+    frontSide: TYPES.Boolean;
+}
+
+export interface IsValidCaretRequest {
+    id: TYPES.Integer;
+    caret: TYPES.Integer;
+}
+
+export interface OpenCaretRequest {
+    id: TYPES.Integer;
+    caret: TYPES.Integer;
+    caretColor: TYPES.Color;
+    frontSide: TYPES.Boolean;
+}
+
+export interface RenderInlineObjectRequest {
+    callbackId: TYPES.Integer;
+    location: Rect;
+}
+
 export interface RendererCreation {
     id: TYPES.Integer;
     type: RendererType;
@@ -376,10 +491,17 @@ export interface ElementMeasuring_ElementMinSize {
     minSize: Size;
 }
 
+export interface ElementMeasuring_InlineObjectBounds {
+    elementId: TYPES.Integer;
+    callbackId: TYPES.Integer;
+    bounds: Rect;
+}
+
 export interface ElementMeasurings {
     fontHeights: TYPES.List<ElementMeasuring_FontHeight>;
     minSizes: TYPES.List<ElementMeasuring_ElementMinSize>;
     createdImages: TYPES.List<ImageMetadata>;
+    inlineObjectBounds: TYPES.List<ElementMeasuring_InlineObjectBounds>;
 }
 
 export interface RenderingDomContent {
@@ -405,6 +527,11 @@ export interface RenderingDom_Diff {
 
 export interface RenderingDom_DiffsInOrder {
     diffsInOrder: TYPES.List<RenderingDom_Diff>;
+}
+
+export interface ElementDesc_DocumentParagraphFull {
+    paragraph: ElementDesc_DocumentParagraph;
+    caret: TYPES.Nullable<OpenCaretRequest>;
 }
 
 export interface UnitTest_RenderingFrame {
@@ -444,6 +571,7 @@ export interface IRemoteProtocolRequests {
     RequestWindowNotifyActivate(): void;
     RequestWindowNotifyShow(requestArgs: WindowShowing): void;
     RequestWindowNotifyMinSize(requestArgs: NativeSize): void;
+    RequestWindowNotifySetCaret(requestArgs: NativePoint): void;
     RequestIOUpdateGlobalShortcutKey(requestArgs: TYPES.List<GlobalShortcutKey>): void;
     RequestIORequireCapture(): void;
     RequestIOReleaseCapture(): void;
@@ -460,6 +588,14 @@ export interface IRemoteProtocolRequests {
     RequestImageCreated(id: number, requestArgs: ImageCreation): void;
     RequestImageDestroyed(requestArgs: TYPES.Integer): void;
     RequestRendererUpdateElement_ImageFrame(requestArgs: ElementDesc_ImageFrame): void;
+    RequestRendererUpdateElement_DocumentParagraph(id: number, requestArgs: ElementDesc_DocumentParagraph): void;
+    RequestDocumentParagraph_GetCaret(id: number, requestArgs: GetCaretRequest): void;
+    RequestDocumentParagraph_GetCaretBounds(id: number, requestArgs: GetCaretBoundsRequest): void;
+    RequestDocumentParagraph_GetInlineObjectFromPoint(id: number, requestArgs: GetInlineObjectFromPointRequest): void;
+    RequestDocumentParagraph_GetNearestCaretFromTextPos(id: number, requestArgs: GetNearestCaretFromTextPosRequest): void;
+    RequestDocumentParagraph_IsValidCaret(id: number, requestArgs: IsValidCaretRequest): void;
+    RequestDocumentParagraph_OpenCaret(requestArgs: OpenCaretRequest): void;
+    RequestDocumentParagraph_CloseCaret(requestArgs: TYPES.Integer): void;
     RequestRendererCreated(requestArgs: TYPES.List<RendererCreation>): void;
     RequestRendererDestroyed(requestArgs: TYPES.List<TYPES.Integer>): void;
     RequestRendererBeginRendering(requestArgs: ElementBeginRendering): void;
@@ -478,11 +614,17 @@ export interface IRemoteProtocolResponses {
     RespondIOIsKeyPressing(id: number, responseArgs: TYPES.Boolean): void;
     RespondIOIsKeyToggled(id: number, responseArgs: TYPES.Boolean): void;
     RespondImageCreated(id: number, responseArgs: ImageMetadata): void;
+    RespondRendererUpdateElement_DocumentParagraph(id: number, responseArgs: UpdateElement_DocumentParagraphResponse): void;
+    RespondDocumentParagraph_GetCaret(id: number, responseArgs: GetCaretResponse): void;
+    RespondDocumentParagraph_GetCaretBounds(id: number, responseArgs: GetCaretBoundsResponse): void;
+    RespondDocumentParagraph_GetInlineObjectFromPoint(id: number, responseArgs: TYPES.Nullable<DocumentRun>): void;
+    RespondDocumentParagraph_GetNearestCaretFromTextPos(id: number, responseArgs: TYPES.Integer): void;
+    RespondDocumentParagraph_IsValidCaret(id: number, responseArgs: TYPES.Boolean): void;
     RespondRendererEndRendering(id: number, responseArgs: ElementMeasurings): void;
 }
 
 export interface IRemoteProtocolEvents {
-    OnControllerConnect(): void;
+    OnControllerConnect(eventArgs: ControllerGlobalConfig): void;
     OnControllerDisconnect(): void;
     OnControllerRequestExit(): void;
     OnControllerForceExit(): void;
