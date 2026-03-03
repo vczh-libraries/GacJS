@@ -141,6 +141,17 @@ export type DocumentRunProperty =
     | ['DocumentTextRunProperty', DocumentTextRunProperty]
     | ['DocumentInlineObjectRunProperty', DocumentInlineObjectRunProperty];
 
+export type OrdinaryElementDescVariant =
+    | ['ElementDesc_SolidBorder', ElementDesc_SolidBorder]
+    | ['ElementDesc_SinkBorder', ElementDesc_SinkBorder]
+    | ['ElementDesc_SinkSplitter', ElementDesc_SinkSplitter]
+    | ['ElementDesc_SolidBackground', ElementDesc_SolidBackground]
+    | ['ElementDesc_GradientBackground', ElementDesc_GradientBackground]
+    | ['ElementDesc_InnerShadow', ElementDesc_InnerShadow]
+    | ['ElementDesc_Polygon', ElementDesc_Polygon]
+    | ['ElementDesc_SolidLabel', ElementDesc_SolidLabel]
+    | ['ElementDesc_ImageFrame', ElementDesc_ImageFrame];
+
 export type UnitTest_ElementDescVariant =
     | ['ElementDesc_SolidBorder', ElementDesc_SolidBorder]
     | ['ElementDesc_SinkBorder', ElementDesc_SinkBorder]
@@ -464,6 +475,7 @@ export interface RendererCreation {
 
 export interface ElementBeginRendering {
     frameId: TYPES.Integer;
+    updatedElements: TYPES.List<OrdinaryElementDescVariant>;
 }
 
 export interface ElementRendering {
@@ -577,17 +589,8 @@ export interface IRemoteProtocolRequests {
     RequestIOReleaseCapture(): void;
     RequestIOIsKeyPressing(id: number, requestArgs: TYPES.Key): void;
     RequestIOIsKeyToggled(id: number, requestArgs: TYPES.Key): void;
-    RequestRendererUpdateElement_SolidBorder(requestArgs: ElementDesc_SolidBorder): void;
-    RequestRendererUpdateElement_SinkBorder(requestArgs: ElementDesc_SinkBorder): void;
-    RequestRendererUpdateElement_SinkSplitter(requestArgs: ElementDesc_SinkSplitter): void;
-    RequestRendererUpdateElement_SolidBackground(requestArgs: ElementDesc_SolidBackground): void;
-    RequestRendererUpdateElement_GradientBackground(requestArgs: ElementDesc_GradientBackground): void;
-    RequestRendererUpdateElement_InnerShadow(requestArgs: ElementDesc_InnerShadow): void;
-    RequestRendererUpdateElement_Polygon(requestArgs: ElementDesc_Polygon): void;
-    RequestRendererUpdateElement_SolidLabel(requestArgs: ElementDesc_SolidLabel): void;
     RequestImageCreated(id: number, requestArgs: ImageCreation): void;
     RequestImageDestroyed(requestArgs: TYPES.Integer): void;
-    RequestRendererUpdateElement_ImageFrame(requestArgs: ElementDesc_ImageFrame): void;
     RequestRendererUpdateElement_DocumentParagraph(id: number, requestArgs: ElementDesc_DocumentParagraph): void;
     RequestDocumentParagraph_GetCaret(id: number, requestArgs: GetCaretRequest): void;
     RequestDocumentParagraph_GetCaretBounds(id: number, requestArgs: GetCaretBoundsRequest): void;

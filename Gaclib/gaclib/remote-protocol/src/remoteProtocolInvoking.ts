@@ -129,65 +129,11 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
             case 'IOReleaseCapture':
                 receiver.RequestIOReleaseCapture();
                 break;
-            case 'RendererUpdateElement_SolidBorder':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_SolidBorder((<SCHEMA.ElementDesc_SolidBorder>pi.arguments));
-                break;
-            case 'RendererUpdateElement_SinkBorder':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_SinkBorder((<SCHEMA.ElementDesc_SinkBorder>pi.arguments));
-                break;
-            case 'RendererUpdateElement_SinkSplitter':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_SinkSplitter((<SCHEMA.ElementDesc_SinkSplitter>pi.arguments));
-                break;
-            case 'RendererUpdateElement_SolidBackground':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_SolidBackground((<SCHEMA.ElementDesc_SolidBackground>pi.arguments));
-                break;
-            case 'RendererUpdateElement_GradientBackground':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_GradientBackground((<SCHEMA.ElementDesc_GradientBackground>pi.arguments));
-                break;
-            case 'RendererUpdateElement_InnerShadow':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_InnerShadow((<SCHEMA.ElementDesc_InnerShadow>pi.arguments));
-                break;
-            case 'RendererUpdateElement_Polygon':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_Polygon((<SCHEMA.ElementDesc_Polygon>pi.arguments));
-                break;
-            case 'RendererUpdateElement_SolidLabel':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_SolidLabel((<SCHEMA.ElementDesc_SolidLabel>pi.arguments));
-                break;
             case 'ImageDestroyed':
                 if (pi.arguments === undefined) {
                     throw new Error('Missing arguments for request: ' + pi.name);
                 }
                 receiver.RequestImageDestroyed((<SCHEMA.TYPES.Integer>pi.arguments));
-                break;
-            case 'RendererUpdateElement_ImageFrame':
-                if (pi.arguments === undefined) {
-                    throw new Error('Missing arguments for request: ' + pi.name);
-                }
-                receiver.RequestRendererUpdateElement_ImageFrame((<SCHEMA.ElementDesc_ImageFrame>pi.arguments));
                 break;
             case 'DocumentParagraph_OpenCaret':
                 if (pi.arguments === undefined) {
