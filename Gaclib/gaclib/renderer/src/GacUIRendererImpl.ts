@@ -412,7 +412,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     RequestDocumentParagraph_CloseCaret(requestArgs: SCHEMA.TYPES.Integer): void {
         throw new Error('Not Implemented: RequestDocumentParagraph_CloseCaret');
     }
-    
+
     /* eslint-enable @typescript-eslint/no-unused-vars */
 
     /****************************************************************************************
@@ -456,9 +456,44 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {
-        // nothing needs to be done
+        if (requestArgs.updatedElements) {
+            for (const elementDesc of requestArgs.updatedElements) {
+                switch (elementDesc[0]) {
+                    case 'ElementDesc_SolidBorder':
+                        this.RequestRendererUpdateElement_SolidBorder(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_SinkBorder':
+                        this.RequestRendererUpdateElement_SinkBorder(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_SinkSplitter':
+                        this.RequestRendererUpdateElement_SinkSplitter(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_SolidBackground':
+                        this.RequestRendererUpdateElement_SolidBackground(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_GradientBackground':
+                        this.RequestRendererUpdateElement_GradientBackground(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_InnerShadow':
+                        this.RequestRendererUpdateElement_InnerShadow(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_Polygon':
+                        this.RequestRendererUpdateElement_Polygon(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_SolidLabel':
+                        this.RequestRendererUpdateElement_SolidLabel(elementDesc[1]);
+                        break;
+                    case 'ElementDesc_ImageFrame':
+                        this.RequestRendererUpdateElement_ImageFrame(elementDesc[1]);
+                        break;
+                    default: {
+                        const _exhaustive: never = elementDesc;
+                        throw new Error(`Unknown type in ElementBeginRendering.updatedElements: ${(_exhaustive as SCHEMA.OrdinaryElementDescVariant)[0]}`);
+                    }
+                }
+            }
+        }
     }
 
     RequestRendererEndRendering(id: number): void {
