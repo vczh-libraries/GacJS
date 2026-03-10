@@ -58,7 +58,7 @@ export interface ParagraphLayout {
 
 function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, elements: ElementManager): HTMLSpanElement {
     const span = document.createElement('span');
-    span.style.cssText = `display: inline-block; width: ${props.size.x}px; height: ${props.size.y}px; position: relative; overflow: visible;`;
+    span.style.cssText = `display: inline-block; width: ${props.size.x}px; height: ${props.size.y}px; position: relative;`;
 
     if (props.backgroundElementId !== -1) {
         const imageDesc = elements.getDesc(props.backgroundElementId);
