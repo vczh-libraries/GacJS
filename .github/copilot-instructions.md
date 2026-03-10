@@ -11,10 +11,19 @@
 
 This repo contains TypeScript code for building a website,
 implementing an HTTP client to communicate with a remote server,
-rendering a remote GUI in HTML via DOM and Canvas.
+rendering a remote GUI in HTML via DOM.
 
-The GacUI folder is a submodule, containing the C++ authored http server (core side application) to test the website.
-DO NOT modify anything in the GacUI folder.
+GacUI uses an X-window-like remote protocol that allows a core application (server)
+to render its UI in a separate client process. This repo implements the client side
+for web browsers. The protocol is transport-agnostic; the HTTP implementation exists
+for demo/testing only.
+
+The GacUI folder is a submodule containing the C++ core application, unit test utilities,
+and an HTTP test server. DO NOT modify anything in the GacUI folder.
+
+See `doc/Protocol.md` for the remote protocol reference.
+See `doc/DOM.md` for how elements are rendered to HTML.
+See `doc/Projects.md` for the full package structure.
 
 # Validation after Code Change
 
@@ -43,7 +52,7 @@ DO NOT modify anything in the GacUI folder.
   - `(repo-root)/Gaclib/gaclib/remote-protocol`: all files in this folder.
   - `(repo-root)/Gaclib/website/entry/assets/snapshots`: all files in this folder.
 - Packages:
-  - `(repo-root)/Gaclib/gaclib/remote-protocol` is completedly generated:
+  - `(repo-root)/Gaclib/gaclib/remote-protocol` is completely generated:
     - DO NOT modify anything in this package.
     - If you find anything wrong, update `(repo-root)/Gaclib/shared/codegen/src/**/*.ts` and run `yarn codegen`.
     - It consumes `(repo-root)/Import/Metadata/RemoteProtocol.json` to generate remote protocol schema and parsing code.
@@ -53,18 +62,25 @@ DO NOT modify anything in the GacUI folder.
   - `(repo-root)/Gaclib/website/entry`:
     - The website for testing.
   - `(repo-root)/Gaclib/website/remote-protocol-http`:
-    - A bundle to support the website, wrapping all packages in `(repo-root)/Gaclib/gaclib/` with a simple API design.
+    - HTTP transport layer for the remote protocol (demo/testing only).
+    - Wraps `@gaclib/remote-protocol` with fetch-based HTTP client.
+  - `(repo-root)/Gaclib/shared/codegen`:
+    - Code generator that reads `(repo-root)/Import/Metadata/RemoteProtocol.json` and produces `@gaclib/remote-protocol`.
+    - Run `yarn codegen` to regenerate.
+  - `(repo-root)/Gaclib/shared/eslint-shared`:
+    - Shared ESLint configuration used by all packages.
 
 ## Hosting the Website
 
 - `/snapshots.html` is to view and render snapshots in `(repo-root)/Gaclib/website/entry/assets/snapshots`.
-- `/solidLabel.html` is a test page for rendering labels in different configuration.
+- `/solidLabel.html` is a test page for rendering SolidLabel elements in different configurations.
+- `/elements.html` is a test page for rendering various element types side by side.
 - `/index.html` is an interactive UI for testing the remote protocol:
   - It requires an http server to run, which is not in this repo.
   - Start the server by running `start (repo-root)\..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http`.
     - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.
   - You must use `start` as the process will block the powershell forever, until:
-    - The "Fetal Error" button is clicked.
+    - The "Fatal Error" button is clicked.
     - The exit button or menu is clicked.
     - The http server crashes for any reason.
   - When the server is running, you can open `/index.html` multiple times:
@@ -76,8 +92,8 @@ DO NOT modify anything in the GacUI folder.
 - Always prefer strict testing, like `===` instead of `==`.
 - Do not use `if (x)`, unless `x` is a boolean or nullable type.
   - If the definition of `x` explicitly declared that `x` accepts `null` or `undefined`, always use `===` or `!==` instead.
-- With type rich programming ultilizing the full ability of TypeScript
-- Well organized using design patterns, invers of dependency, combinators, etc
+- With type rich programming utilizing the full ability of TypeScript
+- Well organized using design patterns, inversion of dependency, combinators, etc
 - Follows open-closed principle and DRY (Don't Repeat Yourself)
 - Consistent with the rest of the project in coding style and naming convention
 
