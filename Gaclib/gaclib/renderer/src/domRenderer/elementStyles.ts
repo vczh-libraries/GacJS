@@ -1,5 +1,4 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { getFeatureGates } from '../featureGates';
 import { TypedElementDesc } from '../GacUIElementManager';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
@@ -95,83 +94,6 @@ function getStyle_InnerShadow(desc: SCHEMA.ElementDesc_InnerShadow): string {
 }
 
 /**********************************************************************
- * ImageFrame
- **********************************************************************/
-
-export function getImageFormatType(imageData: string): SCHEMA.ImageFormatType {
-    const bin = atob(imageData);
-    if (bin.substring(0, 2) === 'BM') {
-        return SCHEMA.ImageFormatType.Bmp;
-    } else if (bin.substring(0, 6) === 'GIF87a' || bin.substring(0, 6) === 'GIF89a') {
-        return SCHEMA.ImageFormatType.Gif;
-    } else if (bin.substring(0, 4) === '\x89PNG') {
-        return SCHEMA.ImageFormatType.Png;
-    } else if (bin.substring(0, 2) === 'II' || bin.substring(0, 2) === 'MM') {
-        return SCHEMA.ImageFormatType.Tiff;
-    } else if (bin.substring(0, 2) === '\xFF\xD8') {
-        return SCHEMA.ImageFormatType.Jpeg;
-    } else if (bin.substring(0, 4) === '\x00\x00\x01\x00' || bin.substring(0, 4) === '\x00\x00\x02\x00') {
-        return SCHEMA.ImageFormatType.Icon;
-    } else {
-        return SCHEMA.ImageFormatType.Unknown;
-    }
-}
-
-export function getImageContentType(type: SCHEMA.ImageFormatType): string {
-    switch (type) {
-        case SCHEMA.ImageFormatType.Bmp:
-            return 'image/bmp';
-        case SCHEMA.ImageFormatType.Gif:
-            return 'image/gif';
-        case SCHEMA.ImageFormatType.Png:
-            return 'image/png';
-        case SCHEMA.ImageFormatType.Tiff:
-            return 'image/tiff';
-        case SCHEMA.ImageFormatType.Jpeg:
-            return 'image/jpeg';
-        case SCHEMA.ImageFormatType.Icon:
-            return 'image/vnd.microsoft.icon';
-        default:
-            throw new Error('Unsupported image format');
-    }
-}
-
-export function getImageDataUrl(contentType: string, imageData: string): string {
-    return `data:${contentType};base64,${imageData}`;
-}
-
-export function getImageUrl(contentType: string, imageData: string): string {
-    return `url(${getImageDataUrl(contentType, imageData)})`;
-}
-
-function getStyle_ImageFrame(desc: SCHEMA.ElementDesc_ImageFrame): string {
-    if (desc.imageId === null) {
-        return '';
-    }
-    if (desc.imageCreation === null) {
-        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation to exist.');
-    }
-    if (desc.imageCreation.imageDataOmitted) {
-        throw new Error('getStyle_ImageFrame requires ElementDesc_ImageFrame.imageCreation.imageDataOmitted to be false.');
-    }
-
-    let positionStyle: string;
-    if (desc.stretch) {
-        positionStyle = `background-repeat: no-repeat; background-origin: border-box; background-size: 100% 100%;`;
-    } else {
-        positionStyle = `background-position-x: ${desc.horizontalAlignment.toLowerCase()}; background-position-y: ${desc.verticalAlignment.toLowerCase()}; background-repeat: no-repeat;`;
-    }
-
-    let filterStyle = '';
-    if (desc.enabled === false) {
-        filterStyle = `filter: grayscale(100%);`;
-    }
-
-    const imageStyle = `background-image: ${getImageUrl(getImageContentType(getImageFormatType(desc.imageCreation.imageData)), desc.imageCreation.imageData)};`;
-    return `${imageStyle} ${positionStyle} ${filterStyle}`;
-}
-
-/**********************************************************************
  * Polygon
  **********************************************************************/
 
@@ -194,135 +116,16 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
 }
 
 /**********************************************************************
- * SolidLabel
+ * Others
  **********************************************************************/
 
-const WebkitElementName = '$GacUI-WebkitElement';
+import { getStyle_ImageFrame } from './elementStyles_Image.js';
+import { initializeText } from './elementStyles_SolidLabel.js';
+import { initializeParagraph } from './elementStyles_DocumentParagraph.js';
 
-export function onSolidLabelResized(textDiv: HTMLElement): void {
-    const webkitElement = textDiv[WebkitElementName] as unknown as HTMLDivElement;
-    if (webkitElement !== undefined) {
-        const lineHeight = parseFloat(webkitElement.style.lineHeight) * (parseFloat(webkitElement.style.fontSize));
-        const lineClamp = Math.floor(textDiv.clientHeight / lineHeight);
-        webkitElement.style.webkitLineClamp = `${lineClamp}`;
-    }
-}
-
-export function getFontStyle(desc: SCHEMA.ElementDesc_SolidLabel): string {
-    const textDecorations: string[] = [];
-    if (desc.font!.underline) {
-        textDecorations.push('underline');
-    }
-    if (desc.font!.strikeline) {
-        textDecorations.push('line-through');
-    }
-
-    return `color: ${desc.textColor}; font-family: ${desc.font!.fontFamily}; line-height: 1.4; font-size: ${desc.font!.size}px; font-weight: ${desc.font!.bold ? 'bold' : 'normal'}; font-style: ${desc.font!.italic ? 'italic' : 'normal'};${textDecorations.length > 0 ? ` text-decoration: ${textDecorations.join(' ')};` : ''}`;
-}
-
-export function normalizeText(desc: SCHEMA.ElementDesc_SolidLabel): string {
-    return desc.multiline ? desc.text! : desc.text!.replaceAll('\r', '').split('\n').join(' ');
-}
-
-function initializeText(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_SolidLabel): void {
-    if (desc.font === null) {
-        throw new Error('initializeText requires ElementDesc_SolidLabel.font to exist.');
-    }
-    if (desc.text === null) {
-        throw new Error('initializeText requires ElementDesc_SolidLabel.text to exist.');
-    }
-
-    const ellipseWithWrapLine = desc.ellipse && desc.wrapLine;
-    const useWebkitLineClamp = getFeatureGates().useWebkitLineClamp;
-
-    delete textDiv[WebkitElementName];
-
-    let textElement = textDiv.childNodes[0] as unknown as HTMLDivElement;
-    if (textElement === undefined || textDiv.childNodes.length !== 1 || !(textElement instanceof HTMLDivElement)) {
-        textElement = document.createElement('div');
-        textDiv.replaceChildren(textElement);
-    } else {
-        textElement.replaceChildren();
-    }
-
-    if (ellipseWithWrapLine === false || useWebkitLineClamp === false) {
-        textElement.textContent = normalizeText(desc);
-    }
-
-    {
-        let verticalAlignStyle: string;
-        switch (desc.verticalAlignment) {
-            case SCHEMA.ElementVerticalAlignment.Center:
-                verticalAlignStyle = 'align-items: center;';
-                break;
-            case SCHEMA.ElementVerticalAlignment.Bottom:
-                verticalAlignStyle = 'align-items: flex-end;';
-                break;
-            default:
-                verticalAlignStyle = 'align-items: flex-start;';
-                break;
-        }
-
-        let horizontalAlignStyle: string;
-        switch (desc.horizontalAlignment) {
-            case SCHEMA.ElementHorizontalAlignment.Center:
-                horizontalAlignStyle = 'text-align: center;';
-                break;
-            case SCHEMA.ElementHorizontalAlignment.Right:
-                horizontalAlignStyle = 'text-align: right;';
-                break;
-            default:
-                horizontalAlignStyle = 'text-align: left;';
-                break;
-        }
-
-        const alignmentStyle = `display: flex; ${verticalAlignStyle} ${horizontalAlignStyle}`;
-        const sizeStyle = 'left: 0px; top: 0px; width: 100%; height: 100%;';
-
-        textDiv.style.cssText = `overflow:hidden; ${alignmentStyle} ${sizeStyle}`;
-    }
-
-    {
-        const fontStyle = getFontStyle(desc);
-        const flexItemStyle = 'flex: 0 1 auto; max-width: 100%; max-height: 100%; min-width: 100%; min-height: 0;';
-
-        if (ellipseWithWrapLine === false || useWebkitLineClamp === false) {
-            const formatStyle = `text-overflow: ${desc.ellipse ? 'ellipsis' : 'clip'}; white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-            textElement.style.cssText = `overflow:hidden; ${fontStyle} ${formatStyle} ${flexItemStyle}`;
-        } else {
-            textElement.style.cssText = `overflow:hidden; ${flexItemStyle}`;
-
-            const webkitElement = document.createElement('div');
-            textElement.replaceChildren(webkitElement);
-            textDiv[WebkitElementName] = webkitElement;
-
-            webkitElement.textContent = normalizeText(desc);
-
-            const formatStyle = `white-space: ${desc.wrapLine ? 'pre-wrap' : 'pre'};`;
-            webkitElement.style.cssText = `overflow:hidden; display: -webkit-box; -webkit-box-orient: vertical; ${fontStyle} ${formatStyle}`;
-
-            onSolidLabelResized(textDiv);
-        }
-    }
-}
-
-/**********************************************************************
- * DocumentParagraph
- **********************************************************************/
-
-function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_DocumentParagraphFull): void {
-    if (desc.paragraph.text === null) {
-        throw new Error('initializeParagraph requires ElementDesc_DocumentParagraph.paragraph.text to exist.');
-    }
-
-    const thickness = '3px';
-    textDiv.style.cssText = [
-        'position: absolute; left: 0; top: 0; width: 100%; height: 100%;',
-        `background:`,
-        `  linear-gradient(to top right, transparent calc(50% - ${thickness}), red calc(50% - ${thickness}), red calc(50% + ${thickness}), transparent calc(50% + ${thickness})),`,
-        `  linear-gradient(to top left, transparent calc(50% - ${thickness}), red calc(50% - ${thickness}), red calc(50% + ${thickness}), transparent calc(50% + ${thickness}));`
-    ].join(' ');
-}
+export * from './elementStyles_Image.js';
+export * from './elementStyles_SolidLabel.js';
+export * from './elementStyles_DocumentParagraph.js';
 
 /**********************************************************************
  * ExtraBorder Element Operations
