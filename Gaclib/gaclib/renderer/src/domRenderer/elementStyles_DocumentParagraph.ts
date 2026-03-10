@@ -92,7 +92,7 @@ function getTextRunStyle(props: SCHEMA.DocumentTextRunProperty): string {
         textDecorations.push('line-through');
     }
 
-    let style = `color: ${props.textColor}; font-family: ${font.fontFamily}; font-size: ${font.size}px; line-height: 1.4; font-weight: ${font.bold ? 'bold' : 'normal'}; font-style: ${font.italic ? 'italic' : 'normal'};`;
+    let style = `color: ${props.textColor}; font-family: ${font.fontFamily}; font-size: ${font.size}px; line-height: 1; font-weight: ${font.bold ? 'bold' : 'normal'}; font-style: ${font.italic ? 'italic' : 'normal'};`;
     if (textDecorations.length > 0) {
         style += ` text-decoration: ${textDecorations.join(' ')};`;
     }
@@ -250,7 +250,6 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         lines.push(line);
 
         const lineDiv = document.createElement('div');
-        lineDiv.style.cssText = 'margin: 0; padding: 0;';
         const isEmpty = lineRange.start === lineRange.end;
         if (isEmpty) {
             lineDiv.style.height = `${defaultFontSize}px`;
