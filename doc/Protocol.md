@@ -105,7 +105,7 @@ Manages the overall connection lifecycle, font/screen configuration.
 | `ControllerDisconnect` | — | Client requests disconnection |
 | `ControllerRequestExit` | — | Client politely asks the core to exit (e.g., user clicked close) |
 | `ControllerForceExit` | — | Client demands immediate shutdown |
-| `ControllerScreenUpdated` | `ScreenConfig` | Client reports that screen configuration has changed. Annotated `@DropRepeat` — consecutive identical values are dropped |
+| `ControllerScreenUpdated` | `ScreenConfig` | Client reports that screen configuration has changed. Annotated `@DropRepeat` — the server may ignore intermediate events and only process the last one |
 
 ### Supporting types
 
@@ -144,11 +144,11 @@ Controls the single main window's properties and state.
 | `WindowNotifyMinSize` | `NativeSize` | — | Set minimum window size |
 | `WindowNotifySetCaret` | `NativePoint` | — | Set IME caret position |
 
-All `WindowNotify*` messages are annotated `@DropRepeat` — consecutive identical values are dropped.
+All `WindowNotify*` messages are annotated `@DropRepeat` — the client may ignore intermediate messages and only process the last one.
 
 ### Events (Client → Core)
 
-Both events are annotated `@DropRepeat` — if multiple events of the same name are sent consecutively, the server may only process the last one; the client should not assume every event will be handled.
+Both events are annotated `@DropRepeat` — the server may ignore intermediate events and only process the last one. The client should not assume every `@DropRepeat` event will be handled.
 
 | Event | Payload | Description |
 |-------|---------|-------------|
@@ -526,7 +526,7 @@ Protocol definitions support annotations that control optimization behavior:
 
 | Annotation | Meaning |
 |------------|---------|
-| `@DropRepeat` | **On messages (Core → Client):** consecutive identical values are dropped — only changes are sent. **On events (Client → Core):** if multiple events of the same name are sent consecutively, the server may only pick up the last one. The client should not assume every `@DropRepeat` event will be handled — for example, resizing a window twice in quick succession should produce the same layout as resizing it once to the final size |
+| `@DropRepeat` | **On messages (Core → Client):** the client may ignore intermediate messages and only process the last one. **On events (Client → Core):** the server may ignore intermediate events and only process the last one — even when values differ. The client should not assume every `@DropRepeat` event will be handled. For example, resizing a window twice in quick succession should produce the same layout as resizing it once to the final size |
 | `@DropConsecutive` | Consecutive events may be coalesced (e.g., rapid mouse moves) |
 | `@Cpp(...)` | Maps to a C++ type (irrelevant for TypeScript implementation) |
 | `@CppNamespace(...)` | C++ namespace mapping (irrelevant for TypeScript implementation) |
