@@ -49,6 +49,14 @@ export interface ParagraphLayout {
 
 // TODO: updateParagraph with actual diffs.
 
+/*
+* TEST-NODE:
+* After yarn build the website will be automatically hosted
+* Open access snapshots.html
+* navigates to some random snapshots under the editor folder (a tree view node in that page)
+* open some random frames
+* and initializeParagraph should be called, make sure no runtime exception happens.
+*/
 export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_DocumentParagraphFull): ParagraphLayout {
     if (desc.paragraph.text === null) {
         throw new Error('initializeParagraph requires ElementDesc_DocumentParagraph.paragraph.text to exist.');
