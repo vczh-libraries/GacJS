@@ -148,10 +148,12 @@ All `WindowNotify*` messages are annotated `@DropRepeat` — consecutive identic
 
 ### Events (Client → Core)
 
+Both events are annotated `@DropRepeat` — if multiple events of the same name are sent consecutively, the server may only process the last one; the client should not assume every event will be handled.
+
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `WindowBoundsUpdated` | `WindowSizingConfig` | Client reports window geometry change (resize, move, state change) |
-| `WindowActivatedUpdated` | `bool` | Client reports activation state change |
+| `WindowBoundsUpdated` | `WindowSizingConfig` | Client reports window geometry change (resize, move, state change). Annotated `@DropRepeat` |
+| `WindowActivatedUpdated` | `bool` | Client reports activation state change. Annotated `@DropRepeat` |
 
 ### Supporting types
 
@@ -429,7 +431,7 @@ Rich text paragraph rendering with caret and inline objects.
 
 ### Document runs
 
-A `DocumentRun` covers a range of caret positions and has a `DocumentRunProperty` (union):
+A `DocumentRun` covers a range of caret positions (`caretBegin` to `caretEnd`) and has a `DocumentRunProperty` (union):
 
 - **DocumentTextRunProperty**: `textColor`, `backgroundColor: color`, `fontProperties: FontProperties`
 - **DocumentInlineObjectRunProperty**: `size: Size`, `baseline: int`, `breakCondition: BreakCondition`, `backgroundColor: color`, `backgroundElementId: int`, `callbackId: int`
@@ -484,9 +486,15 @@ struct RenderingDomContent {
 
 The root node always has `id = -1` with `bounds = {0, 0, 0, 0}`.
 
+### RenderingDom_DiffsInOrder
+
+| Type | Fields | Description |
+|------|--------|-------------|
+| `RenderingDom_DiffsInOrder` | `diffsInOrder: RenderingDom_Diff[]` | Wrapper containing an ordered list of DOM diffs |
+
 ### DOM diffs
 
-Each diff entry describes what happened to a single node:
+Each diff entry (`RenderingDom_Diff`) describes what happened to a single node:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -518,7 +526,7 @@ Protocol definitions support annotations that control optimization behavior:
 
 | Annotation | Meaning |
 |------------|---------|
-| `@DropRepeat` | Consecutive identical values are dropped — only changes are sent |
+| `@DropRepeat` | **On messages (Core → Client):** consecutive identical values are dropped — only changes are sent. **On events (Client → Core):** if multiple events of the same name are sent consecutively, the server may only pick up the last one. The client should not assume every `@DropRepeat` event will be handled — for example, resizing a window twice in quick succession should produce the same layout as resizing it once to the final size |
 | `@DropConsecutive` | Consecutive events may be coalesced (e.g., rapid mouse moves) |
 | `@Cpp(...)` | Maps to a C++ type (irrelevant for TypeScript implementation) |
 | `@CppNamespace(...)` | C++ namespace mapping (irrelevant for TypeScript implementation) |
