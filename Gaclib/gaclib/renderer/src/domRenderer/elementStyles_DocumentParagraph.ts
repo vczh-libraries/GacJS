@@ -47,6 +47,8 @@ export interface ParagraphLayout {
     lines: ParagraphLine[];
 }
 
+// TODO: updateParagraph with actual diffs.
+
 export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDesc_DocumentParagraphFull): ParagraphLayout {
     if (desc.paragraph.text === null) {
         throw new Error('initializeParagraph requires ElementDesc_DocumentParagraph.paragraph.text to exist.');
