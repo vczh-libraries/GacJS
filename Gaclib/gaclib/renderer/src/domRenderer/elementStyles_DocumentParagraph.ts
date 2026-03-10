@@ -16,6 +16,7 @@ import { getImageContentType, getImageDataUrl, getImageFormatType } from './elem
 *   size: The exact size of the HTML element, this is no arguable. Layout should performed according to this size.
 *     HTMLSpanElement should be an inline-block with hardcoded size, and position:relative.
 *   baseline: The distance between the top of the layouted element to the bottom of the rendered element.
+*     When baseline is -1, it is treated as size.y (normal placement).
 *     When baseline === size.y, it places normally.
 *     When baseline > size.y, it places lower.
 *     When baseline < size.y, it places higher.
@@ -67,7 +68,8 @@ function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, e
                 const contentType = getImageContentType(getImageFormatType(imageFrame.imageCreation.imageData));
                 const imgElement = document.createElement('img');
                 imgElement.src = getImageDataUrl(contentType, imageFrame.imageCreation.imageData);
-                imgElement.style.cssText = `width: ${props.size.x}px; height: ${props.size.y}px; position: absolute; top: ${props.baseline - props.size.y}px; left: 0;`;
+                const baseline = props.baseline === -1 ? props.size.y : props.baseline;
+                imgElement.style.cssText = `width: ${props.size.x}px; height: ${props.size.y}px; position: absolute; top: ${baseline - props.size.y}px; left: 0;`;
                 span.appendChild(imgElement);
             }
         }
@@ -235,6 +237,7 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
 
     // Build lines and populate the textDiv
     const lines: ParagraphLine[] = [];
+    const defaultFontSize = elements.defaultFontSize;
     textDiv.replaceChildren();
 
     for (const lineRange of lineRanges) {
@@ -247,6 +250,11 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         lines.push(line);
 
         const lineDiv = document.createElement('div');
+        lineDiv.style.cssText = 'margin: 0; padding: 0;';
+        const isEmpty = lineRange.start === lineRange.end;
+        if (isEmpty) {
+            lineDiv.style.height = `${defaultFontSize}px`;
+        }
         for (const block of blocks) {
             lineDiv.appendChild(block.element);
         }

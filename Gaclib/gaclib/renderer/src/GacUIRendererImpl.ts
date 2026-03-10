@@ -129,6 +129,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._provider = provider;
         this._measurer = measurer;
 
+        elements.defaultFontSize = this._fontConfig.defaultFont.size;
+
         this._renderingRecord = createVirtualDomFromRenderingDom({
             id: RootVirtualDomId,
             content: {

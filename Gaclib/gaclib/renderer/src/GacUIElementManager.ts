@@ -28,9 +28,18 @@ interface ElementRecord {
  */
 export class ElementManager {
     private _elements: Map<SCHEMA.TYPES.Integer, ElementRecord> = new Map();
+    private _defaultFontSize: number = 12;
 
     get elements(): ReadonlyMap<SCHEMA.TYPES.Integer, ElementRecord> {
         return this._elements;
+    }
+
+    get defaultFontSize(): number {
+        return this._defaultFontSize;
+    }
+
+    set defaultFontSize(value: number) {
+        this._defaultFontSize = value;
     }
 
     create(id: SCHEMA.TYPES.Integer, type: SCHEMA.RendererType): void {
