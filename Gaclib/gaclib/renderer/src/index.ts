@@ -1,12 +1,14 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { ElementHTMLMeasurer } from './domRenderer/elementMeasurer';
 import { VirtualDomHtmlProvider } from './domRenderer/virtualDomRenderer';
+import { ElementManager } from './GacUIElementManager';
 import { GacUIRendererImpl } from './GacUIRendererImpl';
 import { GacUISettings, IGacUIRenderer } from './interfaces';
 
 export class GacUIHtmlRendererImpl extends GacUIRendererImpl {
     start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void {
-        super._start(responses, events, new VirtualDomHtmlProvider(), new ElementHTMLMeasurer(responses));
+        const elements = new ElementManager();
+        super._start(responses, events, elements, new VirtualDomHtmlProvider(elements), new ElementHTMLMeasurer(responses));
     }
 }
 

@@ -7,7 +7,6 @@ import {
 
 export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_RenderingTrace, frameIndex: number): void {
     const frame = trace.frames![frameIndex];
-    const provider = new VirtualDomHtmlProvider();
 
     const elements: ElementManager = new ElementManager();
     for (const [id, type] of trace.createdElements!) {
@@ -69,6 +68,7 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
             }
         }
     }
+    const provider = new VirtualDomHtmlProvider(elements);
     const rootDom = createVirtualDomFromRenderingDom(frame.root!, elements, provider);
     provider.fixBounds(
         rootDom.screen,

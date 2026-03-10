@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from '../GacUIElementManager';
+import { ElementManager, TypedElementDesc } from '../GacUIElementManager';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
 const ExtraBorderNodeName = '$GacUI-ExtraBorder';
@@ -196,7 +196,7 @@ function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(ta
  * applyTypedStyle
  **********************************************************************/
 
-export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc): void {
+export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc, elements: ElementManager): void {
     const savedLeft = target.style.left;
     const savedTop = target.style.top;
     const savedWidth = target.style.width;
@@ -262,7 +262,7 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
             {
                 target.style.cssText = CommonStyle;
                 const textDiv = ensureExtraBorderDiv(target);
-                initializeParagraph(textDiv, typedDesc.desc);
+                initializeParagraph(textDiv, typedDesc.desc, elements);
             }
             break;
         default:

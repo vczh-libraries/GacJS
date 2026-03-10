@@ -123,7 +123,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     abstract start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
 
-    protected _start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, provider: IVirtualDomProvider, measurer: IElementMeasurer): void {
+    protected _start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents, elements: ElementManager, provider: IVirtualDomProvider, measurer: IElementMeasurer): void {
         this._responses = responses;
         this._events = events;
         this._provider = provider;
@@ -139,7 +139,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                 validArea: { x1: 0, y1: 0, x2: 0, y2: 0 }
             },
             children: null
-        }, new ElementManager(), this._provider);
+        }, elements, this._provider);
         this._installEvents();
 
         this._resizeObserver = new ResizeObserver(() => this._onSizeChanged());

@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { TypedElementDesc } from '../GacUIElementManager';
+import { ElementManager, TypedElementDesc } from '../GacUIElementManager';
 import {
     IVirtualDom,
     IVirtualDomProvider,
@@ -125,7 +125,8 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
 
     constructor(
         id: SCHEMA.TYPES.Integer,
-        props: VirtualDomProperties
+        props: VirtualDomProperties,
+        private readonly elements: ElementManager
     ) {
         super(id, props);
         this.htmlElement = document.createElement('div');
@@ -147,7 +148,7 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
         if (typedDesc === undefined) {
             applyCommonStyle(this.htmlElement);
         } else {
-            applyTypedStyle(this.htmlElement, typedDesc);
+            applyTypedStyle(this.htmlElement, typedDesc, this.elements);
         }
     }
 
@@ -184,11 +185,14 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
 }
 
 export class VirtualDomHtmlProvider implements IVirtualDomProvider {
+    constructor(private readonly elements: ElementManager) {
+    }
+
     createDom(
         id: SCHEMA.TYPES.Integer,
         props: VirtualDomProperties
     ): IVirtualDom {
-        return new VirtualDomHtmlOrdinary(id, props);
+        return new VirtualDomHtmlOrdinary(id, props, this.elements);
     }
 
     createDomForRoot(): IVirtualDom {

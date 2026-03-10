@@ -413,23 +413,28 @@ Image format is auto-detected from binary headers:
 
 Rich text rendering with caret support and inline objects.
 
-**Status: Not yet implemented.** Currently renders as a red X placeholder:
+Each paragraph consists of lines separated by `\r*\n`. Within each line, text content
+and inline objects are rendered as blocks:
 
-```css
-background:
-    linear-gradient(to top right, transparent calc(50% - 3px),
-                    red calc(50% - 3px), red calc(50% + 3px),
-                    transparent calc(50% + 3px)),
-    linear-gradient(to top left, transparent calc(50% - 3px),
-                    red calc(50% - 3px), red calc(50% + 3px),
-                    transparent calc(50% + 3px));
+- **Text blocks**: Consecutive `DocumentTextRunProperty` ranges and uncovered text between
+  inline objects are merged into a single `Text` node.
+- **Inline object blocks**: Each `DocumentInlineObjectRunProperty` becomes an `HTMLSpanElement`
+  with `display: inline-block` and hardcoded size. If `backgroundElementId` is not -1,
+  an `HTMLImageElement` is added as a child, sourced from the `ElementManager`.
+
+```html
+<div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+            white-space: pre-wrap; text-align: left; overflow: hidden;">
+  <div>Line 1 text<span style="display: inline-block; width: 20px;
+       height: 20px; position: relative;"><img .../></span>more text</div>
+  <div>Line 2 text</div>
+</div>
 ```
 
-When implemented, this will handle:
-- Rich text with mixed fonts, colors, and decorations
-- Inline objects embedded within text flow
-- Caret navigation and rendering
-- Line wrapping with configurable max width
+**Inline object baseline** offsets the content vertically via `position: absolute`:
+- `baseline === size.y`: content top at `0px` (normal)
+- `baseline > size.y`: content pushed down (`top > 0`)
+- `baseline < size.y`: content pushed up (`top < 0`)
 
 ---
 
