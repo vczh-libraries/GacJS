@@ -14,6 +14,7 @@ implementing an HTTP client to communicate with a remote server,
 rendering a remote GUI in HTML via DOM and Canvas.
 
 The GacUI folder is a submodule, containing the C++ authored http server (core side application) to test the website.
+DO NOT modify anything in the GacUI folder.
 
 # Validation after Code Change
 
