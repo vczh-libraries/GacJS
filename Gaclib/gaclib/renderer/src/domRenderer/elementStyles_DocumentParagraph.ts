@@ -57,7 +57,7 @@ export interface ParagraphLayout {
 
 function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, elements: ElementManager): HTMLSpanElement {
     const span = document.createElement('span');
-    span.style.cssText = `display: inline-block; width: ${props.size.x}px; height: ${props.size.y}px; position: relative;`;
+    span.style.cssText = `display: inline-block; width: ${props.size.x}px; height: ${props.size.y}px; position: relative; overflow: visible;`;
 
     if (props.backgroundElementId !== -1) {
         const imageDesc = elements.getDesc(props.backgroundElementId);
@@ -77,8 +77,45 @@ function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, e
 }
 
 /**********************************************************************
+ * Text Run Styling
+ **********************************************************************/
+
+function getTextRunStyle(props: SCHEMA.DocumentTextRunProperty): string {
+    const font = props.fontProperties;
+    const textDecorations: string[] = [];
+    if (font.underline) {
+        textDecorations.push('underline');
+    }
+    if (font.strikeline) {
+        textDecorations.push('line-through');
+    }
+
+    let style = `color: ${props.textColor}; font-family: ${font.fontFamily}; font-size: ${font.size}px; line-height: 1.4; font-weight: ${font.bold ? 'bold' : 'normal'}; font-style: ${font.italic ? 'italic' : 'normal'};`;
+    if (textDecorations.length > 0) {
+        style += ` text-decoration: ${textDecorations.join(' ')};`;
+    }
+    if (props.backgroundColor !== '#00000000' && props.backgroundColor !== '#000000') {
+        style += ` background-color: ${props.backgroundColor};`;
+    }
+    return style;
+}
+
+function createStyledTextSpan(text: string, props: SCHEMA.DocumentTextRunProperty): HTMLSpanElement {
+    const span = document.createElement('span');
+    span.style.cssText = getTextRunStyle(props);
+    span.textContent = text;
+    return span;
+}
+
+/**********************************************************************
  * Line Building
  **********************************************************************/
+
+interface RunOnLine {
+    start: number;
+    end: number;
+    run: SCHEMA.DocumentRun;
+}
 
 function buildBlocksForLine(
     text: string,
@@ -87,35 +124,47 @@ function buildBlocksForLine(
     runs: SCHEMA.DocumentRun[],
     elements: ElementManager
 ): ParagraphBlock[] {
-    const inlineObjectRuns = runs
-        .filter(r => r.props[0] === 'DocumentInlineObjectRunProperty' && r.caretBegin < lineEnd && r.caretEnd > lineStart)
-        .sort((a, b) => a.caretBegin - b.caretBegin);
+    // Collect all runs overlapping this line, clipped to line bounds
+    const runsOnLine: RunOnLine[] = runs
+        .filter(r => r.caretBegin < lineEnd && r.caretEnd > lineStart)
+        .map(r => ({
+            start: Math.max(r.caretBegin, lineStart),
+            end: Math.min(r.caretEnd, lineEnd),
+            run: r
+        }))
+        .sort((a, b) => a.start - b.start);
 
     const blocks: ParagraphBlock[] = [];
     let cursor = lineStart;
 
-    for (const run of inlineObjectRuns) {
-        const runStart = Math.max(run.caretBegin, lineStart);
-        const runEnd = Math.min(run.caretEnd, lineEnd);
-
-        if (cursor < runStart) {
+    for (const { start, end, run } of runsOnLine) {
+        // Gap before this run: plain Text node
+        if (cursor < start) {
             blocks.push({
                 start: cursor,
-                end: runStart,
-                element: document.createTextNode(text.substring(cursor, runStart))
+                end: start,
+                element: document.createTextNode(text.substring(cursor, start))
             });
         }
 
-        const inlineProps = run.props[1] as SCHEMA.DocumentInlineObjectRunProperty;
-        blocks.push({
-            start: runStart,
-            end: runEnd,
-            element: createInlineObjectSpan(inlineProps, elements)
-        });
+        if (run.props[0] === 'DocumentInlineObjectRunProperty') {
+            blocks.push({
+                start,
+                end,
+                element: createInlineObjectSpan(run.props[1], elements)
+            });
+        } else {
+            blocks.push({
+                start,
+                end,
+                element: createStyledTextSpan(text.substring(start, end), run.props[1])
+            });
+        }
 
-        cursor = runEnd;
+        cursor = end;
     }
 
+    // Remaining text after the last run
     if (cursor < lineEnd) {
         blocks.push({
             start: cursor,
@@ -182,7 +231,7 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
     }
 
     const wrapStyle = desc.paragraph.wrapLine ? 'pre-wrap' : 'pre';
-    textDiv.style.cssText = `position: absolute; left: 0; top: 0; width: 100%; height: 100%; white-space: ${wrapStyle}; text-align: ${alignStyle}; overflow: hidden;`;
+    textDiv.style.cssText = `position: absolute; left: 0; top: 0; width: 100%; height: 100%; white-space: ${wrapStyle}; text-align: ${alignStyle};`;
 
     // Build lines and populate the textDiv
     const lines: ParagraphLine[] = [];
