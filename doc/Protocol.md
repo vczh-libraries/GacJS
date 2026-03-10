@@ -15,8 +15,25 @@ Communication direction:
 > The protocol itself is transport-agnostic.
 > The HTTP implementation in this repo exists **only for demo/testing** purposes.
 
-Protocol definitions live in `GacUI/Source/PlatformProviders/Remote/Protocol/*.txt`.
-TypeScript code is generated into `Gaclib/gaclib/remote-protocol/`.
+## Source Locations
+
+**Protocol definitions** (the source of truth):
+- `GacUI/Source/PlatformProviders/Remote/Protocol/*.txt` — human-readable protocol schema
+- `GacUI/Source/PlatformProviders/Remote/Protocol/Generated/` — C++ generated code from the schema
+
+**Core (server) implementation:**
+- `GacUI/Source/PlatformProviders/Remote/` — the core-side remote protocol provider that drives the protocol from the GacUI application
+
+**Client (renderer) implementations:**
+
+| Implementation | Location | Purpose |
+|----------------|----------|---------|
+| Unit test client | `GacUI/Source/UnitTestUtilities/` | Captures rendering traces for automated testing; does not perform real rendering |
+| Native renderer | `GacUI/Source/PlatformProviders/RemoteRenderer/` | A real native-platform rendering client (C++) |
+| Web renderer | `Gaclib/gaclib/renderer/src/` | This repo's HTML/CSS renderer for web browsers (incomplete) |
+
+**TypeScript generated code:**
+- `Gaclib/gaclib/remote-protocol/` — generated from `Import/Metadata/RemoteProtocol.json` by `@gaclib-shared/codegen`
 
 ---
 

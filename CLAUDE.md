@@ -6,6 +6,10 @@
   - You must use formal PowerShell command names instead of their linux-like aliases.
   - You must use `;` instead of `&&` for executing multiple commands in order.
 - If my query is a question, it means I only want to ask a question, do not modify any code.
+- Before reading any file inside the `GacUI` submodule, always update it to the latest master branch first:
+  - `cd (repo-root)\GacUI ; git checkout master ; git pull ; cd ..`
+- Before implementing any change, read the relevant documentation in `doc/` first (`Protocol.md`, `DOM.md`, `Projects.md`). Understand the design before writing code.
+- Whenever an implementation change affects behavior documented in `doc/`, update the corresponding documentation to stay in sync.
 
 ## About this repo
 
@@ -76,8 +80,8 @@ See `doc/Projects.md` for the full package structure.
 - `/solidLabel.html` is a test page for rendering SolidLabel elements in different configurations.
 - `/elements.html` is a test page for rendering various element types side by side.
 - `/index.html` is an interactive UI for testing the remote protocol:
-  - It requires an http server to run, which is not in this repo.
-  - Start the server by running `start (repo-root)\..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http`.
+  - It requires an HTTP server to run. The server executable is built from the GacUI submodule at `(repo-root)/GacUI/Test/GacUISrc/RemotingTest_Core`.
+  - Start the server by running `start (repo-root)\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http`.
     - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.
   - You must use `start` as the process will block the powershell forever, until:
     - The "Fatal Error" button is clicked.
@@ -96,20 +100,3 @@ See `doc/Projects.md` for the full package structure.
 - Well organized using design patterns, inversion of dependency, combinators, etc
 - Follows open-closed principle and DRY (Don't Repeat Yourself)
 - Consistent with the rest of the project in coding style and naming convention
-
-### ASCII Art in Test Cases
-
-- Add ASCII art for all `IVirtualDom` building test cases except:
-  - The test case is designed for testing exceptions.
-  - The test case builds only one `IVirtualDom` from the root `RenderingDom`, no child nodes added.
-- Rectangles represents all `IVirtualDom` instances in a tree.
-- Each rectangle must be smaller but big enough to print the ID path.
-- When there are multiple `IVirtualDom`, the shapes don't have to maintain ratios of values.
-- Each rectangle prints the full path of IDs from the first child of the root all the way to itself.
-- When two `IVirtualDom` are created from one `RenderingDom`:
-  - The outer one prints the full path of IDs.
-  - The inner one prints the full path of IDs following a 'v' character, no space is needed.
-- A rectangle consists of multiple `+`, `-` and `|` characters.
-  - In the same graph, save value of `x1` and `x2` across multiple rectangles must be in the same column.
-  - Different values must be in different columns.
-  - Same for `y1` and `y2` about rows.
