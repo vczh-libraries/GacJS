@@ -13,6 +13,8 @@ This repo contains TypeScript code for building a website,
 implementing an HTTP client to communicate with a remote server,
 rendering a remote GUI in HTML via DOM and Canvas.
 
+The GacUI folder is a submodule, containing the C++ authored http server (core side application) to test the website.
+
 # Validation after Code Change
 
 - This repo uses `yarn` and `npm` to build.
