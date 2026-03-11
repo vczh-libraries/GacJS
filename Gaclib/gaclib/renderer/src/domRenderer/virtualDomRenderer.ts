@@ -155,16 +155,16 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     updateProps(props: VirtualDomProperties): void {
         // Call the base class implementation
         super.updateProps(props);
-        
+
         // Apply cursor style
         let cursorCSS: string | undefined;
-        
+
         if (props.cursor !== undefined) {
             cursorCSS = mapCursorToCSS(props.cursor);
         } else if (props.hitTestResult !== undefined) {
             cursorCSS = mapHitTestToCSS(props.hitTestResult);
         }
-        
+
         if (cursorCSS !== undefined) {
             this.htmlElement.style.cursor = cursorCSS;
         } else {

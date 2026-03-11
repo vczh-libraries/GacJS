@@ -122,7 +122,7 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
 
 import { getStyle_ImageFrame } from './elementStyles_Image.js';
 import { initializeText } from './elementStyles_SolidLabel.js';
-import { initializeParagraph, ParagraphLayout } from './elementStyles_DocumentParagraph.js';
+import { fillMeasurements, initializeParagraph, ParagraphLayout } from './elementStyles_DocumentParagraph.js';
 
 export * from './elementStyles_Image.js';
 export * from './elementStyles_SolidLabel.js';
@@ -314,4 +314,9 @@ export function applyBounds(target: HTMLElement, bounds: SCHEMA.Rect): void {
     target.style.top = `${bounds.y1}px`;
     target.style.width = `${bounds.x2 - bounds.x1}px`;
     target.style.height = `${bounds.y2 - bounds.y1}px`;
+
+    const paragraphLayout = getParagraphLayout(target);
+    if (paragraphLayout) {
+        fillMeasurements(getExtraBorder(target)!, paragraphLayout);
+    }
 }
