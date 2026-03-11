@@ -222,6 +222,8 @@ function buildBlocksForLine(
  * initializeParagraph
  **********************************************************************/
 
+const ParagraphMeasurementsNodeName = '$GacUI-ParagraphMeasurementsNodeName';
+
 export function fillParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
 }
 
