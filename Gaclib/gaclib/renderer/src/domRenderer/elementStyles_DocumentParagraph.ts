@@ -439,12 +439,24 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
     }
 
     textDiv[ParagraphMeasurementsNodeName] = elements;
+
+    if (!layout.caretVisible) {
+        setCaretVisible(textDiv, true, layout);
+    }
 }
 
 export function isCaretVisible(textDiv: HTMLElement): boolean {
+    // textDiv[ParagraphCaretNodeName] might exist or not
+    // when it exists, find out if it is visible
+    // when it does not exist, return false
 }
 
 export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: ParagraphLayout): void {
+    // if layout.caret is null, whatever visible is treat it as false
+    // if it is false, hide the caret
+    // if it is true, move the caret to the position hinted in the layout
+    // if the caret should be visible but textDiv[ParagraphCaretNodeName] does not exist, create it, it is an element representing the caret
+    // the caret will be a rectangle with expected height and 2 width, with the color in layout.caret.caretColor
 }
 
 /*
@@ -527,7 +539,7 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
     const layout: ParagraphLayout = {
         paragraph: desc.paragraph as SCHEMA.ElementDesc_DocumentParagraph & { text: string },
         caret: desc.caret,
-        caretVisible: elements.renderDebugInfo,
+        caretVisible: false,
         lines,
         defaultFontSize,
 
@@ -535,9 +547,5 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         units: [],
         inlineObjectBounds: null
     };
-
-    if (layout.caret && layout.caretVisible) {
-        setCaretVisible(textDiv, true, layout);
-    }
     return layout;
 }
