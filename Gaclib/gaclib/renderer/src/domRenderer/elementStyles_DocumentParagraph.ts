@@ -44,10 +44,33 @@ export interface ParagraphLine {
     blocks: ParagraphBlock[];
 }
 
+/*
+* start (inclusive) and end (exclusive) define the range in ParagraphLayout.paragraph.text
+* A unit is a minimum range of consecutive code points that can be selected.
+*   JavaScript code points should be UTF-16.
+*   Most of characters are a unit by itself.
+*   Some emojis and Chinese characters may consist of multiple code points.
+* An inline object (DocumentInlineObjectRunProperty) is one single unit.
+* The line separator /\r*\n/ is one single unit.
+* 
+* frontCaretBaseline and backCaretBaseline is the bottom point of the caret.
+* Both caret should share the same height.
+* For LTR text, frontCaretBaseline is the left edge of the caret, otherwise it is the right edge.
+* Inline objects and line separators are treated as LTR.
+*/
+export interface ParagraphEditUnit {
+    start: number;
+    end: number;
+    frontCaretBaseline: SCHEMA.Point;
+    backCaretBaseline: SCHEMA.Point;
+    caretHeight: SCHEMA.TYPES.Integer;
+}
+
 export interface ParagraphLayout {
     paragraph: SCHEMA.ElementDesc_DocumentParagraph & { text: string };
     caret: SCHEMA.TYPES.Nullable<SCHEMA.OpenCaretRequest>;
     lines: ParagraphLine[];
+    units: ParagraphEditUnit[];
 }
 
 // TODO: updateParagraph with actual diffs.
