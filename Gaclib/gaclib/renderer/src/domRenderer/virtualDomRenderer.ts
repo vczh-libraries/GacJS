@@ -8,7 +8,7 @@ import {
     VirtualDomBaseOrdinary,
     VirtualDomProperties
 } from '../dom/virtualDom';
-import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder, onSolidLabelResized } from './elementStyles';
+import { applyBounds, applyCommonStyle, applyTypedStyle, getExtraBorder, onSolidLabelResized, renderDebugInfo } from './elementStyles';
 
 function mapCursorToCSS(cursor: SCHEMA.WindowSystemCursorType): string | undefined {
     switch (cursor) {
@@ -236,6 +236,9 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
                 child instanceof VirtualDomHtmlValidArea ||
                 child instanceof VirtualDomHtmlOrdinary) {
                 applyBounds(child.htmlElement, child.bounds);
+                if (this.elements.renderDebugInfo) {
+                    renderDebugInfo(child.htmlElement);
+                }
 
                 if (child.props.typedDesc &&
                     child.props.typedDesc.type === SCHEMA.RendererType.SolidLabel &&

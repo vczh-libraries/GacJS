@@ -15,9 +15,21 @@ export type TypedElementDesc =
     | { type: SCHEMA.RendererType.DocumentParagraph; desc: SCHEMA.ElementDesc_DocumentParagraphFull }
     ;
 
-interface ElementRecord {
+export interface ElementRecord {
     type: SCHEMA.RendererType;
     desc?: TypedElementDesc;
+}
+
+export interface ElementManagerConfig {
+    renderDebugInfo: boolean;
+    defaultFontSize: number;
+}
+
+export function getDefaultElementManagerConfig(): ElementManagerConfig {
+    return {
+        renderDebugInfo: false,
+        defaultFontSize: 12
+    };
 }
 
 /*
@@ -28,18 +40,29 @@ interface ElementRecord {
  */
 export class ElementManager {
     private _elements: Map<SCHEMA.TYPES.Integer, ElementRecord> = new Map();
-    private _defaultFontSize: number = 12;
+    private _config: ElementManagerConfig;
+
+    constructor(config?: Partial<ElementManagerConfig>) {
+        this._config = getDefaultElementManagerConfig();
+        if (config) {
+            this._config = Object.assign(this._config, config);
+        }
+    }
 
     get elements(): ReadonlyMap<SCHEMA.TYPES.Integer, ElementRecord> {
         return this._elements;
     }
 
+    get renderDebugInfo(): boolean {
+        return this._config.renderDebugInfo;
+    }
+
     get defaultFontSize(): number {
-        return this._defaultFontSize;
+        return this._config.defaultFontSize;
     }
 
     set defaultFontSize(value: number) {
-        this._defaultFontSize = value;
+        this._config.defaultFontSize = value;
     }
 
     create(id: SCHEMA.TYPES.Integer, type: SCHEMA.RendererType): void {

@@ -320,3 +320,9 @@ export function applyBounds(target: HTMLElement, bounds: SCHEMA.Rect): void {
         fillMeasurements(getExtraBorder(target)!, paragraphLayout);
     }
 }
+
+export function renderDebugInfo(target: HTMLElement): void {
+    const paragraphLayout = getParagraphLayout(target);
+    if (paragraphLayout) {
+    }
+}

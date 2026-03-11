@@ -8,7 +8,7 @@ import {
 export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_RenderingTrace, frameIndex: number): void {
     const frame = trace.frames![frameIndex];
 
-    const elements: ElementManager = new ElementManager();
+    const elements: ElementManager = new ElementManager({ renderDebugInfo: true });
     for (const [id, type] of trace.createdElements!) {
         if (type === SCHEMA.RendererType.FocusRectangle || type === SCHEMA.RendererType.Raw) {
             elements.createWithDesc(id, { type });
