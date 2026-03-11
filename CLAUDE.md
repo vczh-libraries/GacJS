@@ -28,6 +28,7 @@ and an HTTP test server. DO NOT modify anything in the GacUI folder.
 See `doc/Protocol.md` for the remote protocol reference.
 See `doc/DOM.md` for how elements are rendered to HTML.
 See `doc/Projects.md` for the full package structure.
+See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 
 # Validation after Code Change
 
@@ -77,6 +78,7 @@ See `doc/Projects.md` for the full package structure.
 ## Hosting the Website
 
 - `/snapshots.html` is to view and render snapshots in `(repo-root)/Gaclib/website/entry/assets/snapshots`.
+  - When updating document rendering code, always verify the `InlineObjectWithCaret` snapshot renders correctly.
 - `/solidLabel.html` is a test page for rendering SolidLabel elements in different configurations.
 - `/elements.html` is a test page for rendering various element types side by side.
 - `/index.html` is an interactive UI for testing the remote protocol:

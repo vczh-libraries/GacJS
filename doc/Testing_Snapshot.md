@@ -2,9 +2,10 @@
 
 ## Overview
 
-The snapshot viewer at `/snapshots.html` renders GacUI unit test traces captured from the C++ test server.
-Each snapshot is a recorded sequence of rendering frames that can be replayed in the browser
-without running the server.
+The snapshot viewer at `/snapshots.html` is a pure TypeScript-implemented page,
+in the `@gaclib-website/entry` package. It renders GacUI unit test traces previously and stored as JSON files.
+Each snapshot is a recorded sequence of rendering frames that can be replayed
+in the browser without running the server.
 
 ## Snapshot File Structure
 
