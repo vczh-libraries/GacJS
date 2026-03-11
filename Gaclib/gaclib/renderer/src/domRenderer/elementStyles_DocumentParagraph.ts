@@ -77,6 +77,7 @@ export interface ParagraphEditUnit {
 export interface ParagraphLayout {
     paragraph: SCHEMA.ElementDesc_DocumentParagraph & { text: string };
     caret: SCHEMA.TYPES.Nullable<SCHEMA.OpenCaretRequest>;
+    caretVisible: boolean;
     lines: ParagraphLine[];
     defaultFontSize: number;
 
@@ -226,14 +227,11 @@ function buildBlocksForLine(
 }
 
 /**********************************************************************
- * initializeParagraph
+ * Measurement Helpers
  **********************************************************************/
 
 const ParagraphMeasurementsNodeName = '$GacUI-ParagraphMeasurementsNodeName';
-
-/**********************************************************************
- * Measurement Helpers
- **********************************************************************/
+const ParagraphCaretNodeName = '$GacUI-ParagraphCaretNodeName';
 
 function getCollapsedCaretRect(node: Node, offset: number): DOMRect | null {
     const range = document.createRange();
@@ -443,6 +441,12 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
     textDiv[ParagraphMeasurementsNodeName] = elements;
 }
 
+export function isCaretVisible(textDiv: HTMLElement): boolean {
+}
+
+export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: ParagraphLayout): void {
+}
+
 /*
 * TEST-NODE:
 * After yarn build the website will be automatically hosted
@@ -523,6 +527,7 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
     const layout: ParagraphLayout = {
         paragraph: desc.paragraph as SCHEMA.ElementDesc_DocumentParagraph & { text: string },
         caret: desc.caret,
+        caretVisible: elements.renderDebugInfo,
         lines,
         defaultFontSize,
 
@@ -530,5 +535,9 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         units: [],
         inlineObjectBounds: null
     };
+
+    if (layout.caret && layout.caretVisible) {
+        setCaretVisible(textDiv, true, layout);
+    }
     return layout;
 }
