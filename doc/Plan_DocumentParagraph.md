@@ -126,8 +126,18 @@ Navigate from a caret position using `CaretRelativePosition`:
 | `CaretMoveUp` | Move to previous line at same X offset |
 | `CaretMoveDown` | Move to next line at same X offset |
 
-All navigation uses `ParagraphEditUnit[]` from the layout. For Up/Down, find the unit
-whose X range contains the current caret's X position on the target line.
+All navigation uses `ParagraphEditUnit[]` from the layout.
+
+**Important: wrapped lines.** A single `ParagraphLine` can contain multiple visual
+(wrapped) lines when `wrapLine` is true. `CaretMoveUp` / `CaretMoveDown` must navigate
+between visual lines, not just `ParagraphLine`s. Use the Y coordinates of
+`ParagraphEditUnit.frontCaretBaseline` to detect visual line boundaries within a
+`ParagraphLine`.
+
+**Finding the target position on an adjacent visual line:** There may be no unit at the
+exact same X offset on the target line (the target line could be shorter, or have
+different character widths). In that case, find the unit whose X range is closest to
+the current caret's X position.
 
 Respond with `GetCaretResponse { newCaret, preferFrontSide }`.
 
@@ -135,9 +145,10 @@ Respond with `GetCaretResponse { newCaret, preferFrontSide }`.
 
 Return pixel bounds for every valid caret position (0 through text.length).
 
-Uses `ParagraphEditUnit[]`:
-- For each caret position, find the matching unit and extract the pixel rectangle
-  from `frontCaretBaseline` / `backCaretBaseline` / `caretHeight`.
+`ParagraphLayout.units` already contains all valid caret positions — a text position
+inside a unit (not at a unit boundary) is **not** a valid caret position. So we only
+need to iterate `units` and extract the pixel rectangles from each unit's
+`frontCaretBaseline` / `backCaretBaseline` / `caretHeight`.
 
 Respond with `GetCaretBoundsResponse { frontSideBounds, backSideBounds }`.
 
@@ -157,7 +168,8 @@ Respond with `int` (caret position).
 
 ### `RequestDocumentParagraph_IsValidCaret(id, requestArgs)`
 
-Check if a caret position falls on a valid unit boundary.
+Check if a caret position falls on a valid unit boundary in `ParagraphLayout.units`.
+A position inside a unit (not at `start` or `end`) is invalid.
 
 Respond with `bool`.
 
@@ -189,7 +201,9 @@ RendererBeginRendering({ updatedElements: [...] })
   → DocumentParagraph updates come via separate RequestRendererUpdateElement_DocumentParagraph
 
 RendererEndRendering(responseId)
-  → Collect SolidLabel/image measurements → respond
+  → Collect SolidLabel/image measurements
+  → Include ParagraphLayout.inlineObjectBounds in the response
+  → Respond
 
 RequestRendererUpdateElement_DocumentParagraph(responseId, { id: N, text: "...", runsDiff: [...], ... })
   → Build/update DOM
@@ -289,6 +303,24 @@ runs for the selection). These must be fast because:
 Since subsequent `runsDiff` values carry **incremental changes** (not a full replacement),
 the algorithm is:
 
+**Understanding runsDiff coverage:**
+
+The incremental `runsDiff` always covers complete affected regions, but may cut runs
+differently from the existing state. For example, given text `ABCDE` with existing
+style splits `A|BC|D|E`, if `CD` is selected and updated to the same style:
+- `runsDiff` will contain `B|CD` — because the existing `BC` run was partially affected,
+  the entire `BC` range is included in the diff along with `CD`.
+- The coverage is always complete: there are no gaps or partial overlaps to worry about.
+
+**Handling inline object changes:**
+
+When an inline object is deleted (`removedInlineObjects`), the text it covered remains.
+The corresponding `HTMLSpanElement` (inline-block) in the DOM must be replaced by a styled `<span>` covering the same text range.
+
+Conversely, when a new inline object is created (`createdInlineObjects`) and appears
+in `runsDiff`, the `Text` node covering that range must be replaced by an
+`HTMLSpanElement` for the inline object.
+
 **For each changed run in the incremental `runsDiff`:**
 
 1. Determine which lines are affected by the changed run's caret range.
@@ -296,6 +328,7 @@ the algorithm is:
 3. Compare with existing blocks:
    - **Same type, same range, same properties** → No change (skip).
    - **Same type, same range, different properties** → Update CSS inline style only.
+   - **Type changed** (text ↔ inline object) → Replace DOM node.
    - **Different structure** → Rebuild the line's DOM children.
 
 **Optimization for selection changes (the common case):**
@@ -346,9 +379,12 @@ This function replaces the `// TODO: updateParagraph with actual diffs` comment 
 1. Update `layout.paragraph` metadata (`wrapLine`, `maxWidth`, `alignment`).
 2. If `wrapLine`, `maxWidth`, or `alignment` changed: update `textDiv` CSS styles and
    each line's width constraints.
-3. Handle `removedInlineObjects`: find and remove corresponding spans.
-4. Handle `createdInlineObjects`: register new inline objects (DOM elements created on demand
-   when they appear in `runsDiff`).
+3. Handle `removedInlineObjects`: find the corresponding inline-object `<span>` elements
+   and replace them with `Text` nodes (or styled `<span>`s) covering the same text range.
+   The covering text is still present in the document — only the inline object is gone.
+4. Handle `createdInlineObjects`: register new inline object callback IDs. The actual DOM
+   nodes will be created when these objects appear in `runsDiff`, replacing the `Text`
+   nodes that previously covered those ranges.
 5. Merge the incremental `runsDiff` into the existing run list. For each affected line:
    - If structure unchanged (same boundaries and types): update span styles inline.
    - If structure changed: rebuild line DOM via `buildBlocksForLine()`.
@@ -366,6 +402,10 @@ a range `[start, end)` and has:
 - `frontCaretBaseline`: pixel coordinates of the front (left for LTR) caret
 - `backCaretBaseline`: pixel coordinates of the back (right for LTR) caret
 - `caretHeight`: pixel height of the caret
+
+**Only unit boundaries are valid caret positions.** A text position that falls inside
+a unit (i.e., not at the `start` or `end` of any unit) is NOT a valid caret position.
+`ParagraphLayout.units` already enumerates all valid positions.
 
 ### GetCaret Navigation
 
