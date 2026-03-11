@@ -82,33 +82,34 @@ Other methods (GetCaret, GetCaretBounds, etc.)
   inline objects added and deleted since the last call.
 - Must respond with `{ documentSize: { x, y } }` — the pixel dimensions of the rendered paragraph.
 
-**Critical timing issue — Layout before measurement:**
+**Measurement strategy — Immediate off-screen measurement:**
 
 `fillParagraphMeasurements()` uses `Range.getClientRects()` and `getBoundingClientRect()`
-to compute caret positions. These APIs require the DOM to be laid out (i.e., the element
-must be in the document, with CSS applied and bounds set).
+to compute caret positions. These APIs require the element to be in the document with
+CSS applied.
 
-However, `RequestRendererUpdateElement_DocumentParagraph` is called **during**
-`RendererBeginRendering`, **before** `RendererRenderDomDiff` which triggers `fixBounds()`
-that mounts elements into the document.
+`RequestRendererUpdateElement_DocumentParagraph` is a **standalone request** — it is NOT
+called during `RendererBeginRendering` (which only handles `OrdinaryElementDescVariant`,
+which excludes DocumentParagraph). It can arrive at any time.
 
-**Solution — Deferred measurement:**
+**Solution — Temporary off-screen attachment:**
 
-The response cannot be sent immediately. Instead:
+The paragraph's width is fully determined by `maxWidth` (or infinite when not wrapping),
+so we don't need the element to be placed in its final position to measure it. We can
+measure immediately:
 
-1. During `RequestRendererUpdateElement_DocumentParagraph`: Build/update the DOM structure,
-   store the pending response ID, and register a "needs measurement" flag.
-2. After `fixBounds()` mounts the DOM: Measure the paragraph's actual dimensions and
-   send the response.
+1. Build or update the paragraph DOM (via `initializeParagraph()` / `updateParagraph()`).
+2. If the element is not yet in the live DOM (i.e., `RequestRendererUpdateElement_DocumentParagraph`
+   arrived before the element was mounted), temporarily attach the `textDiv` to
+   `document.body` (invisible, off-screen).
+3. Call `fillParagraphMeasurements()` to compute caret positions and dimensions.
+4. Read the `textDiv`'s rendered size as `documentSize`.
+5. If we attached temporarily, detach the `textDiv`.
+6. Respond immediately with `{ documentSize: { x, y } }`.
 
-This mirrors how `ElementHTMLMeasurer` already defers `RespondRendererEndRendering` until
-image measurements complete. We extend this pattern:
-
-- Add a `_pendingParagraphMeasurements` queue in `ElementHTMLMeasurer` (or a new
-  `DocumentParagraphMeasurer` helper).
-- After `fixBounds()` runs in `RequestRendererRenderDom` / `RequestRendererRenderDomDiff`,
-  iterate pending paragraphs, call `fillParagraphMeasurements()`, read element dimensions,
-  and call `RespondRendererUpdateElement_DocumentParagraph()`.
+This follows the same pattern already used by `ElementHTMLMeasurer` for `FontHeight`
+measurement, which also attaches a temp element to `document.body`, measures, and
+removes it.
 
 ### `RequestDocumentParagraph_GetCaret(id, requestArgs)`
 
@@ -187,17 +188,19 @@ RendererBeginRendering({ updatedElements: [...] })
   → OrdinaryElementDescVariant does NOT include DocumentParagraph
   → DocumentParagraph updates come via separate RequestRendererUpdateElement_DocumentParagraph
 
-RequestRendererUpdateElement_DocumentParagraph(responseId, { id: N, text: "...", runsDiff: [...], ... })
-  → Build/update DOM, queue deferred measurement with responseId
-
 RendererEndRendering(responseId)
   → Collect SolidLabel/image measurements → respond
 
+RequestRendererUpdateElement_DocumentParagraph(responseId, { id: N, text: "...", runsDiff: [...], ... })
+  → Build/update DOM
+  → If element not yet in live DOM: temporarily attach textDiv to document.body
+  → fillParagraphMeasurements() → measure documentSize
+  → Detach if temporarily attached
+  → RespondRendererUpdateElement_DocumentParagraph(responseId, { documentSize })
+
 RendererRenderDomDiff(diffs)
   → fixBounds() mounts everything → triggers applyBounds()
-  → applyBounds() calls fillParagraphMeasurements() for paragraph elements
-  → After fixBounds(), flush deferred paragraph measurements
-  → RespondRendererUpdateElement_DocumentParagraph(responseId, { documentSize })
+  → applyBounds() calls fillParagraphMeasurements() for paragraph elements (re-measure)
 ```
 
 ### Element Lifecycle
@@ -215,55 +218,44 @@ RendererDestroyed      → element removed, ParagraphLayout discarded
 
 ## Layout and Measurement Strategy
 
-### The Problem
+### The Approach: Immediate Off-Screen Measurement
 
-`fillParagraphMeasurements()` needs DOM layout to be complete before it can measure.
-The DOM is only mounted during `fixBounds()`, which happens after
-`RequestRendererUpdateElement_DocumentParagraph` is called.
+`fillParagraphMeasurements()` needs the element in the document to use
+`Range.getClientRects()`. But `RequestRendererUpdateElement_DocumentParagraph` is a
+standalone request that can arrive before the element is mounted in its final DOM position.
 
-### The Solution: Deferred Response Pattern
+However, the paragraph's layout width is entirely determined by `maxWidth` (or infinite
+when `wrapLine` is false). It does not depend on the element's position in the DOM tree
+or on surrounding elements. So we can measure immediately by temporarily attaching to
+`document.body`.
 
-Add a deferred measurement queue to the measurer:
-
-```typescript
-interface PendingParagraphMeasurement {
-    responseId: number;
-    elementId: number;
-}
-```
-
-The flow:
+### The Flow
 
 1. `RequestRendererUpdateElement_DocumentParagraph(responseId, requestArgs)`:
-   - Build or update the DOM (create ParagraphLayout or patch existing).
-   - Store the update via `_updateElement()`.
-   - Push `{ responseId, elementId }` onto `_pendingParagraphMeasurements`.
+   - Build or update the DOM (create ParagraphLayout or patch existing via
+     `initializeParagraph()` / `updateParagraph()`).
+   - Check if the `textDiv` is in the live DOM.
+   - If NOT in the live DOM: temporarily attach it to `document.body` (invisible,
+     positioned off-screen).
+   - Call `fillParagraphMeasurements()` to compute caret positions and edit units.
+   - Read the rendered `documentSize` from the `textDiv`.
+   - If we attached temporarily, detach the `textDiv`.
+   - Call `_responses.RespondRendererUpdateElement_DocumentParagraph(responseId, { documentSize })`
+     **immediately** — no deferral needed.
 
-2. After `fixBounds()` in `RequestRendererRenderDom` / `RequestRendererRenderDomDiff`:
-   - For each pending measurement:
-     - Find the HTML element for the paragraph.
-     - `fillParagraphMeasurements()` has already been called by `applyBounds()`.
-     - Read the rendered dimensions from the `textDiv` (the extra border div).
-     - Call `_responses.RespondRendererUpdateElement_DocumentParagraph(responseId, { documentSize })`.
-   - Clear the queue.
-
-3. If `fixBounds()` hasn't happened yet (e.g., the paragraph is not yet in the DOM tree),
-   the measurement stays queued until the next `fixBounds()` call.
+2. When `fixBounds()` → `applyBounds()` later mounts the element in its final position,
+   `fillParagraphMeasurements()` is called again automatically (already wired up in
+   `applyBounds()`), which re-measures with the element in its real position.
 
 ### Why This Works
 
-- `applyBounds()` in `elementStyles.ts` already calls `fillParagraphMeasurements()` 
-  for any element with a `ParagraphLayout` — so by the time `fixBounds()` completes,
-  all paragraph measurements are filled.
-- The deferred pattern is already proven by `ElementHTMLMeasurer` for image metadata.
-- No additional frame delay: measurement happens in the same rendering cycle, just
-  after DOM mounting rather than before.
-
-### Fallback: Temporary Off-Screen Measurement
-
-If a paragraph needs to be measured before it's mounted (unlikely but possible in edge
-cases), we can temporarily attach the textDiv to `document.body` off-screen, measure,
-and detach. This is the same approach used for SolidLabel `TotalSize` measurement.
+- The paragraph's width is `maxWidth` (or unconstrained) — it doesn't depend on the
+  parent's layout.
+- `ElementHTMLMeasurer` already uses this exact pattern for `FontHeight` measurement:
+  create a temp element, attach to `document.body`, measure, detach.
+- The response is immediate: no queuing, no deferred flush, no frame delay.
+- If the element is already in the DOM (e.g., subsequent updates after initial mount),
+  we just measure in-place — no temporary attachment needed.
 
 ---
 
@@ -430,7 +422,7 @@ function findLineForCaret(layout: ParagraphLayout, caret: number): number {
 | Module | Changes |
 |--------|---------|
 | `GacUIRendererImpl.ts` | Implement all `RequestDocumentParagraph_*` and `RequestRendererUpdateElement_DocumentParagraph` methods |
-| `elementMeasurer.ts` | Add deferred paragraph measurement queue (`_pendingParagraphMeasurements`) |
+| `elementMeasurer.ts` | Add paragraph measurement helper (temporary off-screen attach/measure/detach) |
 | `elementStyles_DocumentParagraph.ts` | Export `updateParagraph()`, improve `buildBlocksForLine()` for reuse |
 
 ### Existing Reusable Code
@@ -596,14 +588,12 @@ function createTestEditUnits(ranges: [number, number][]): ParagraphEditUnit[] {
      call `_updateElement()`.
    - Handle subsequent calls (text === null): merge with existing desc, call
      `_updateElement()`.
-   - Queue deferred measurement.
+   - If element not yet in live DOM, temporarily attach `textDiv` to `document.body`.
+   - Call `fillParagraphMeasurements()`, read `documentSize`, respond immediately.
 
-2. Add deferred paragraph measurement to `ElementHTMLMeasurer`:
-   - Add `requestParagraphMeasurement(responseId, elementId)`.
-   - After `fixBounds()`, flush measurements and respond.
-
-3. Wire up the deferred measurement flush in `RequestRendererRenderDom` and
-   `RequestRendererRenderDomDiff`.
+2. Add paragraph measurement helper to `ElementHTMLMeasurer`:
+   - Temporary off-screen attach/measure/detach for elements not yet mounted.
+   - In-place measurement for elements already in the DOM.
 
 ### Phase 2: Incremental Updates
 
