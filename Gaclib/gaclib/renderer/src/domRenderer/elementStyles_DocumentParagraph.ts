@@ -420,11 +420,11 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
         const run = findRunForRange(runs, unit.start, unit.end);
         let borderColor: string;
         if (run !== undefined && run.props[0] === 'DocumentInlineObjectRunProperty') {
-            borderColor = '#FFFF00';
+            borderColor = '#606000';
         } else if (unit.frontCaretBaseline.x <= unit.backCaretBaseline.x) {
-            borderColor = '#00FF00';
+            borderColor = '#006000';
         } else {
-            borderColor = '#FF0000';
+            borderColor = '#600000';
         }
 
         const x1 = Math.min(unit.frontCaretBaseline.x, unit.backCaretBaseline.x);
@@ -446,17 +446,69 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
 }
 
 export function isCaretVisible(textDiv: HTMLElement): boolean {
-    // textDiv[ParagraphCaretNodeName] might exist or not
-    // when it exists, find out if it is visible
-    // when it does not exist, return false
+    const caretElement = textDiv[ParagraphCaretNodeName] as HTMLElement | undefined;
+    if (caretElement === undefined) return false;
+    return caretElement.style.display !== 'none';
 }
 
 export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: ParagraphLayout): void {
-    // if layout.caret is null, whatever visible is treat it as false
-    // if it is false, hide the caret
-    // if it is true, move the caret to the position hinted in the layout
-    // if the caret should be visible but textDiv[ParagraphCaretNodeName] does not exist, create it, it is an element representing the caret
-    // the caret will be a rectangle with expected height and 2 width, with the color in layout.caret.caretColor
+    if (layout.caret === null) {
+        visible = false;
+    }
+
+    layout.caretVisible = visible;
+
+    if (!visible) {
+        const caretElement = textDiv[ParagraphCaretNodeName] as HTMLElement | undefined;
+        if (caretElement !== undefined) {
+            caretElement.style.display = 'none';
+        }
+        return;
+    }
+
+    // Find the caret position from units
+    const caretPos = layout.caret!.caret;
+    const frontSide = layout.caret!.frontSide;
+    let caretX: number | undefined;
+    let caretY: number | undefined;
+    let caretHeight: number | undefined;
+
+    for (const unit of layout.units) {
+        if (frontSide && caretPos >= unit.start && caretPos < unit.end) {
+            caretX = unit.frontCaretBaseline.x;
+            caretY = unit.frontCaretBaseline.y;
+            caretHeight = unit.caretHeight;
+            break;
+        } else if (!frontSide && caretPos > unit.start && caretPos <= unit.end) {
+            caretX = unit.backCaretBaseline.x;
+            caretY = unit.backCaretBaseline.y;
+            caretHeight = unit.caretHeight;
+            break;
+        }
+    }
+
+    if (caretX === undefined || caretY === undefined || caretHeight === undefined) {
+        // Fallback: use defaultFontSize at origin if no unit matches
+        caretX = 0;
+        caretY = layout.defaultFontSize;
+        caretHeight = layout.defaultFontSize;
+    }
+
+    let caretElement = textDiv[ParagraphCaretNodeName] as HTMLElement | undefined;
+    if (caretElement === undefined) {
+        caretElement = document.createElement('div');
+        caretElement.style.position = 'absolute';
+        caretElement.style.pointerEvents = 'none';
+        textDiv.appendChild(caretElement);
+        textDiv[ParagraphCaretNodeName] = caretElement;
+    }
+
+    caretElement.style.display = 'block';
+    caretElement.style.left = `${caretX - 1}px`;
+    caretElement.style.top = `${caretY - caretHeight}px`;
+    caretElement.style.width = '2px';
+    caretElement.style.height = `${caretHeight}px`;
+    caretElement.style.backgroundColor = layout.caret!.caretColor;
 }
 
 /*
