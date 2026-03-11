@@ -2,6 +2,8 @@
 
 **Read the [LICENSE](https://github.com/vczh-libraries/GacJS/blob/master/LICENSE.md) first.**
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/vczh-libraries/GacJS)
+
 Running GacUI in Browsers!
 
 ## Building this Project
