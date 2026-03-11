@@ -30,7 +30,9 @@ import { getImageContentType, getImageDataUrl, getImageFormatType } from './elem
 export interface ParagraphBlock {
     start: number;
     end: number;
-    element: HTMLSpanElement | Text;
+    span: HTMLSpanElement;
+    text?: Text;
+    image?: HTMLImageElement;
 }
 
 /*
@@ -89,9 +91,15 @@ export interface ParagraphLayout {
  * Inline Object
  **********************************************************************/
 
-function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, elements: ElementManager): HTMLSpanElement {
+interface InlineObjectSpanResult {
+    span: HTMLSpanElement;
+    image?: HTMLImageElement;
+}
+
+function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, elements: ElementManager): InlineObjectSpanResult {
     const span = document.createElement('span');
     span.style.cssText = `display: inline-block; width: ${props.size.x}px; height: ${props.size.y}px; position: relative;`;
+    let image: HTMLImageElement | undefined;
 
     if (props.backgroundElementId !== -1) {
         const imageDesc = elements.getDesc(props.backgroundElementId);
@@ -99,16 +107,16 @@ function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, e
             const imageFrame = imageDesc.desc;
             if (imageFrame.imageCreation !== null && !imageFrame.imageCreation.imageDataOmitted) {
                 const contentType = getImageContentType(getImageFormatType(imageFrame.imageCreation.imageData));
-                const imgElement = document.createElement('img');
-                imgElement.src = getImageDataUrl(contentType, imageFrame.imageCreation.imageData);
+                image = document.createElement('img');
+                image.src = getImageDataUrl(contentType, imageFrame.imageCreation.imageData);
                 const baseline = props.baseline === -1 ? props.size.y : props.baseline;
-                imgElement.style.cssText = `width: ${props.size.x}px; height: ${props.size.y}px; position: absolute; top: ${baseline - props.size.y}px; left: 0;`;
-                span.appendChild(imgElement);
+                image.style.cssText = `width: ${props.size.x}px; height: ${props.size.y}px; position: absolute; top: ${baseline - props.size.y}px; left: 0;`;
+                span.appendChild(image);
             }
         }
     }
 
-    return span;
+    return { span, image };
 }
 
 /**********************************************************************
@@ -135,11 +143,24 @@ function getTextRunStyle(props: SCHEMA.DocumentTextRunProperty): string {
     return style;
 }
 
-function createStyledTextSpan(text: string, props: SCHEMA.DocumentTextRunProperty): HTMLSpanElement {
+interface StyledTextSpanResult {
+    span: HTMLSpanElement;
+    text: Text;
+}
+
+function createStyledTextSpan(content: string, props: SCHEMA.DocumentTextRunProperty): StyledTextSpanResult {
     const span = document.createElement('span');
     span.style.cssText = getTextRunStyle(props);
-    span.textContent = text;
-    return span;
+    const text = document.createTextNode(content);
+    span.appendChild(text);
+    return { span, text };
+}
+
+function createPlainTextSpan(content: string): { span: HTMLSpanElement; text: Text } {
+    const span = document.createElement('span');
+    const text = document.createTextNode(content);
+    span.appendChild(text);
+    return { span, text };
 }
 
 /**********************************************************************
@@ -173,27 +194,18 @@ function buildBlocksForLine(
     let cursor = lineStart;
 
     for (const { start, end, run } of runsOnLine) {
-        // Gap before this run: plain Text node
+        // Gap before this run: plain text span
         if (cursor < start) {
-            blocks.push({
-                start: cursor,
-                end: start,
-                element: document.createTextNode(text.substring(cursor, start))
-            });
+            const { span, text: textNode } = createPlainTextSpan(text.substring(cursor, start));
+            blocks.push({ start: cursor, end: start, span, text: textNode });
         }
 
         if (run.props[0] === 'DocumentInlineObjectRunProperty') {
-            blocks.push({
-                start,
-                end,
-                element: createInlineObjectSpan(run.props[1], elements)
-            });
+            const { span, image } = createInlineObjectSpan(run.props[1], elements);
+            blocks.push({ start, end, span, image });
         } else {
-            blocks.push({
-                start,
-                end,
-                element: createStyledTextSpan(text.substring(start, end), run.props[1])
-            });
+            const { span, text: textNode } = createStyledTextSpan(text.substring(start, end), run.props[1]);
+            blocks.push({ start, end, span, text: textNode });
         }
 
         cursor = end;
@@ -201,19 +213,13 @@ function buildBlocksForLine(
 
     // Remaining text after the last run
     if (cursor < lineEnd) {
-        blocks.push({
-            start: cursor,
-            end: lineEnd,
-            element: document.createTextNode(text.substring(cursor, lineEnd))
-        });
+        const { span, text: textNode } = createPlainTextSpan(text.substring(cursor, lineEnd));
+        blocks.push({ start: cursor, end: lineEnd, span, text: textNode });
     }
 
     if (blocks.length === 0) {
-        blocks.push({
-            start: lineStart,
-            end: lineEnd,
-            element: document.createTextNode('')
-        });
+        const { span, text: textNode } = createPlainTextSpan('');
+        blocks.push({ start: lineStart, end: lineEnd, span, text: textNode });
     }
 
     return blocks;
@@ -228,17 +234,6 @@ const ParagraphMeasurementsNodeName = '$GacUI-ParagraphMeasurementsNodeName';
 /**********************************************************************
  * Measurement Helpers
  **********************************************************************/
-
-function getTextNode(element: HTMLSpanElement | Text): Text | null {
-    if (element instanceof Text) {
-        return element;
-    }
-    const firstChild = element.firstChild;
-    if (firstChild instanceof Text) {
-        return firstChild;
-    }
-    return null;
-}
 
 function getCollapsedCaretRect(node: Node, offset: number): DOMRect | null {
     const range = document.createRange();
@@ -275,22 +270,20 @@ function findRunForRange(runs: SCHEMA.DocumentRun[], start: number, end: number)
 function getLineEdgePosition(line: ParagraphLine, atEnd: boolean, divRect: DOMRect): SCHEMA.Point {
     if (line.blocks.length > 0) {
         const block = atEnd ? line.blocks[line.blocks.length - 1] : line.blocks[0];
-        const textNode = getTextNode(block.element);
-        if (textNode !== null && textNode.length > 0) {
-            const rect = getCollapsedCaretRect(textNode, atEnd ? textNode.length : 0);
+        if (block.text !== undefined && block.text.length > 0) {
+            const rect = getCollapsedCaretRect(block.text, atEnd ? block.text.length : 0);
             if (rect !== null) {
                 return {
                     x: Math.round(rect.left - divRect.left),
                     y: Math.round(rect.bottom - divRect.top)
                 };
             }
-        } else if (block.element instanceof HTMLSpanElement) {
-            const rect = block.element.getBoundingClientRect();
-            return {
-                x: Math.round((atEnd ? rect.right : rect.left) - divRect.left),
-                y: Math.round(rect.bottom - divRect.top)
-            };
         }
+        const rect = block.span.getBoundingClientRect();
+        return {
+            x: Math.round((atEnd ? rect.right : rect.left) - divRect.left),
+            y: Math.round(rect.bottom - divRect.top)
+        };
     }
     const lineRect = line.element.getBoundingClientRect();
     return {
@@ -321,8 +314,7 @@ export function fillParagraphMeasurements(textDiv: HTMLElement, layout: Paragrap
             if (run !== undefined && run.props[0] === 'DocumentInlineObjectRunProperty') {
                 // Inline object: one single unit, treated as LTR
                 const props = run.props[1];
-                const span = block.element as HTMLSpanElement;
-                const rect = span.getBoundingClientRect();
+                const rect = block.span.getBoundingClientRect();
                 const frontX = Math.round(rect.left - divRect.left);
                 const backX = Math.round(rect.right - divRect.left);
                 const y = Math.round(rect.bottom - divRect.top);
@@ -345,8 +337,8 @@ export function fillParagraphMeasurements(textDiv: HTMLElement, layout: Paragrap
                 }
             } else {
                 // Text block: detect glyph clusters using Range.getClientRects
-                const textNode = getTextNode(block.element);
-                if (textNode === null || textNode.length === 0) continue;
+                const textNode = block.text;
+                if (textNode === undefined || textNode.length === 0) continue;
 
                 const nodeLength = textNode.length;
                 const measureRange = document.createRange();
@@ -494,6 +486,7 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
     }
 
     const wrapStyle = desc.paragraph.wrapLine ? 'pre-wrap' : 'pre';
+    const maxWidth = desc.paragraph.maxWidth;
     textDiv.style.cssText = `position: absolute; left: 0; top: 0; width: 100%; height: 100%; white-space: ${wrapStyle}; text-align: ${alignStyle};`;
 
     // Build lines and populate the textDiv
@@ -511,12 +504,18 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         };
         lines.push(line);
 
+        if (desc.paragraph.wrapLine && maxWidth > 0) {
+            line.element.style.width = `${maxWidth}px`;
+        } else if (!desc.paragraph.wrapLine) {
+            line.element.style.whiteSpace = 'nowrap';
+        }
+
         const isEmpty = lineRange.start === lineRange.end;
         if (isEmpty) {
             line.element.style.height = `${defaultFontSize}px`;
         }
         for (const block of blocks) {
-            line.element.appendChild(block.element);
+            line.element.appendChild(block.span);
         }
         textDiv.appendChild(line.element);
     }
