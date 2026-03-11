@@ -72,7 +72,7 @@
             } catch (error) {
                 client.stop();
                 renderer.stop();
-                alert(error.message);
+                alert(error.stack !== undefined ? `${error.message}\n\n${error.stack}` : error.message);
 
                 if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError) {
                     gacuiScreen.appendChild(successMask);
