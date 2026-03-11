@@ -42,6 +42,7 @@ export interface ParagraphLine {
     start: number;
     end: number;
     blocks: ParagraphBlock[];
+    element: HTMLDivElement;
 }
 
 /*
@@ -213,6 +214,9 @@ function buildBlocksForLine(
  * initializeParagraph
  **********************************************************************/
 
+export function fillMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
+}
+
 /*
 * TEST-NODE:
 * After yarn build the website will be automatically hosted
@@ -268,25 +272,26 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         const line: ParagraphLine = {
             start: lineRange.start,
             end: lineRange.end,
-            blocks
+            blocks,
+            element: document.createElement('div')
         };
         lines.push(line);
 
-        const lineDiv = document.createElement('div');
         const isEmpty = lineRange.start === lineRange.end;
         if (isEmpty) {
-            lineDiv.style.height = `${defaultFontSize}px`;
+            line.element.style.height = `${defaultFontSize}px`;
         }
         for (const block of blocks) {
-            lineDiv.appendChild(block.element);
+            line.element.appendChild(block.element);
         }
-        textDiv.appendChild(lineDiv);
+        textDiv.appendChild(line.element);
     }
 
     const layout: ParagraphLayout = {
         paragraph: desc.paragraph as SCHEMA.ElementDesc_DocumentParagraph & { text: string },
         caret: desc.caret,
-        lines
+        lines,
+        units: [] // Calculated later
     };
     return layout;
 }

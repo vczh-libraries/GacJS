@@ -3,6 +3,7 @@ import { ElementManager, TypedElementDesc } from '../GacUIElementManager';
 
 const CommonStyle = 'background-color: none; display: block; position:absolute; box-sizing: border-box; overflow:hidden;';
 const ExtraBorderNodeName = '$GacUI-ExtraBorder';
+const ParagraphLayoutNodeName = '$GacUI-ParagraphLayout';
 const SvgNS = 'http://www.w3.org/2000/svg';
 
 /**********************************************************************
@@ -121,7 +122,7 @@ function initializePolygon(svgElement: SVGSVGElement, desc: SCHEMA.ElementDesc_P
 
 import { getStyle_ImageFrame } from './elementStyles_Image.js';
 import { initializeText } from './elementStyles_SolidLabel.js';
-import { initializeParagraph } from './elementStyles_DocumentParagraph.js';
+import { initializeParagraph, ParagraphLayout } from './elementStyles_DocumentParagraph.js';
 
 export * from './elementStyles_Image.js';
 export * from './elementStyles_SolidLabel.js';
@@ -196,6 +197,22 @@ function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(ta
  * applyTypedStyle
  **********************************************************************/
 
+/*
+* If a HTMLElement is created for a DocumentParagraph element:
+*   Call getParagraphLayout to get the layout information.
+*   Call getExtraBorder to get the direct container for each ParagraphLine HTMLDivElement.
+*/
+export function getParagraphLayout(target: HTMLElement): ParagraphLayout | undefined {
+    return target[ParagraphLayoutNodeName] as unknown as ParagraphLayout | undefined;
+}
+
+function setParagraphLayout(target: HTMLElement, element: ParagraphLayout): void {
+    if (getParagraphLayout(target) !== undefined) {
+        throw new Error('setParagraphLayout cannot be called when a paragraph layout already exists');
+    }
+    target[ParagraphLayoutNodeName] = element;
+}
+
 export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc, elements: ElementManager): void {
     const savedLeft = target.style.left;
     const savedTop = target.style.top;
@@ -262,7 +279,8 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
             {
                 target.style.cssText = CommonStyle;
                 const textDiv = ensureExtraBorderDiv(target);
-                initializeParagraph(textDiv, typedDesc.desc, elements);
+                const layout = initializeParagraph(textDiv, typedDesc.desc, elements);
+                setParagraphLayout(target, layout);
             }
             break;
         default:
