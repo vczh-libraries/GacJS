@@ -4,6 +4,7 @@ import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
+import { fillParagraphMeasurements, getExtraBorder, getParagraphLayout, ParagraphEditUnit, ParagraphLayout, ParagraphLine, setCaretVisible } from './domRenderer/elementStyles';
 
 export class GacUIHtmlRendererExitError extends Error {
     constructor() {
@@ -381,41 +382,442 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
      * Renderer (DocumentElement)
      ***************************************************************************************/
 
-    /* eslint-disable @typescript-eslint/no-unused-vars */
+    // Map from element ID to paragraph tracking data
+    private _paragraphElements: Map<number, { htmlElement: HTMLElement; textDiv: HTMLElement }> = new Map();
+
+    private _getParagraphLayout(elementId: number): { layout: ParagraphLayout; textDiv: HTMLElement } {
+        const data = this._paragraphElements.get(elementId);
+        if (data === undefined) {
+            throw new Error(`Paragraph element ${elementId} not found.`);
+        }
+        const layout = getParagraphLayout(data.htmlElement);
+        if (layout === undefined) {
+            throw new Error(`Paragraph layout for element ${elementId} not found.`);
+        }
+        return { layout, textDiv: data.textDiv };
+    }
+
+    private _measureParagraphDocumentSize(textDiv: HTMLElement, layout: ParagraphLayout): SCHEMA.Size {
+        // Check if textDiv is in the live DOM
+        const isInDom = textDiv.isConnected;
+        if (!isInDom) {
+            // Temporarily attach off-screen for measurement
+            textDiv.style.position = 'absolute';
+            textDiv.style.left = '-9999px';
+            textDiv.style.top = '-9999px';
+            textDiv.style.visibility = 'hidden';
+            document.body.appendChild(textDiv);
+        }
+
+        fillParagraphMeasurements(textDiv, layout);
+        const documentSize: SCHEMA.Size = {
+            x: textDiv.scrollWidth,
+            y: textDiv.scrollHeight
+        };
+
+        if (!isInDom) {
+            document.body.removeChild(textDiv);
+        }
+
+        return documentSize;
+    }
 
     RequestRendererUpdateElement_DocumentParagraph(id: number, requestArgs: SCHEMA.ElementDesc_DocumentParagraph): void {
-        throw new Error('Not Implemented: RequestRendererUpdateElement_DocumentParagraph');
+        if (this._stopping) {
+            this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize: { x: 0, y: 0 } });
+            return;
+        }
+
+        const elementId = requestArgs.id;
+
+        // Build the full desc
+        let fullDesc: SCHEMA.ElementDesc_DocumentParagraphFull;
+        const existingTypedDesc = this._renderingRecord.elements.getDesc(elementId);
+
+        if (requestArgs.text !== null) {
+            // First call: text is the full document
+            fullDesc = {
+                paragraph: requestArgs,
+                caret: null
+            };
+        } else {
+            // Subsequent call: merge with existing desc
+            if (existingTypedDesc === undefined || existingTypedDesc.type !== SCHEMA.RendererType.DocumentParagraph) {
+                throw new Error(`Element ${elementId} is not a DocumentParagraph or has no previous desc.`);
+            }
+            const existingDesc = existingTypedDesc.desc;
+            fullDesc = {
+                paragraph: {
+                    ...existingDesc.paragraph,
+                    ...requestArgs,
+                    text: existingDesc.paragraph.text // text never changes incrementally
+                },
+                caret: existingDesc.caret
+            };
+        }
+
+        // Update via _updateElement which triggers applyTypedStyle → initializeParagraph
+        this._updateElement(elementId, { type: SCHEMA.RendererType.DocumentParagraph, desc: fullDesc });
+
+        // After _updateElement, find the htmlElement from the virtual DOM
+        const virtualDom = this._renderingRecord.elementToDoms.get(elementId);
+        const htmlElement: HTMLElement | undefined = virtualDom !== undefined && 'htmlElement' in virtualDom ? virtualDom.htmlElement as HTMLElement : undefined;
+
+        if (htmlElement !== undefined) {
+            const textDiv = getExtraBorder(htmlElement);
+            if (textDiv !== undefined) {
+                this._paragraphElements.set(elementId, { htmlElement, textDiv });
+                const layout = getParagraphLayout(htmlElement);
+                if (layout !== undefined) {
+                    const documentSize = this._measureParagraphDocumentSize(textDiv, layout);
+                    this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
+                    return;
+                }
+            }
+        }
+
+        // Element not yet in the DOM tree — create a temporary measurement
+        const layout = getParagraphLayout(htmlElement!);
+        if (layout !== undefined) {
+            const textDiv = getExtraBorder(htmlElement!)!;
+            const documentSize = this._measureParagraphDocumentSize(textDiv, layout);
+            this._paragraphElements.set(elementId, { htmlElement: htmlElement!, textDiv });
+            this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
+            return;
+        }
+
+        // Fallback: respond with zero size
+        this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize: { x: 0, y: 0 } });
     }
 
     RequestDocumentParagraph_GetCaret(id: number, requestArgs: SCHEMA.GetCaretRequest): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_GetCaret');
+        const { layout } = this._getParagraphLayout(requestArgs.id);
+        const text = layout.paragraph.text;
+        const units = layout.units;
+        const caret = requestArgs.caret;
+
+        let newCaret = caret;
+        let preferFrontSide = true;
+
+        switch (requestArgs.relativePosition) {
+            case SCHEMA.CaretRelativePosition.CaretFirst:
+                newCaret = 0;
+                preferFrontSide = true;
+                break;
+            case SCHEMA.CaretRelativePosition.CaretLast:
+                newCaret = text.length;
+                preferFrontSide = false;
+                break;
+            case SCHEMA.CaretRelativePosition.CaretMoveLeft:
+                {
+                    // Find the unit containing or just after the caret, then go to its start
+                    let found = false;
+                    for (let i = units.length - 1; i >= 0; i--) {
+                        if (units[i].end <= caret && units[i].start < caret) {
+                            newCaret = units[i].start;
+                            preferFrontSide = true;
+                            found = true;
+                            break;
+                        }
+                        if (units[i].start < caret) {
+                            newCaret = units[i].start;
+                            preferFrontSide = true;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        newCaret = 0;
+                        preferFrontSide = true;
+                    }
+                }
+                break;
+            case SCHEMA.CaretRelativePosition.CaretMoveRight:
+                {
+                    let found = false;
+                    for (const unit of units) {
+                        if (unit.start >= caret && unit.end > caret) {
+                            newCaret = unit.end;
+                            preferFrontSide = false;
+                            found = true;
+                            break;
+                        }
+                        if (unit.end > caret) {
+                            newCaret = unit.end;
+                            preferFrontSide = false;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        newCaret = text.length;
+                        preferFrontSide = false;
+                    }
+                }
+                break;
+            case SCHEMA.CaretRelativePosition.CaretLineFirst:
+                {
+                    const line = this._findLineForCaret(layout, caret);
+                    newCaret = line !== undefined ? line.start : 0;
+                    preferFrontSide = true;
+                }
+                break;
+            case SCHEMA.CaretRelativePosition.CaretLineLast:
+                {
+                    const line = this._findLineForCaret(layout, caret);
+                    newCaret = line !== undefined ? line.end : text.length;
+                    preferFrontSide = false;
+                }
+                break;
+            case SCHEMA.CaretRelativePosition.CaretMoveUp:
+            case SCHEMA.CaretRelativePosition.CaretMoveDown:
+                {
+                    // Find current caret X position
+                    const currentUnit = this._findUnitForCaret(units, caret);
+                    if (currentUnit === undefined) {
+                        // Can't navigate, stay at current position
+                        break;
+                    }
+                    const currentX = currentUnit.frontCaretBaseline.x;
+                    const currentY = currentUnit.frontCaretBaseline.y;
+
+                    // Find visual lines based on Y positions
+                    const isUp = requestArgs.relativePosition === SCHEMA.CaretRelativePosition.CaretMoveUp;
+                    let targetUnit: ParagraphEditUnit | undefined;
+                    let bestDistance = Infinity;
+
+                    for (const unit of units) {
+                        // Skip line separators (different Y for front and back)
+                        if (unit.frontCaretBaseline.y !== unit.backCaretBaseline.y) continue;
+
+                        if (isUp && unit.frontCaretBaseline.y < currentY) {
+                            // Look for closest unit on lines above
+                            const dx = Math.abs(unit.frontCaretBaseline.x - currentX);
+                            const dy = currentY - unit.frontCaretBaseline.y;
+                            // Prefer same visual line (smallest dy), then closest x
+                            const distance = dy * 10000 + dx;
+                            if (targetUnit === undefined ||
+                                unit.frontCaretBaseline.y > targetUnit.frontCaretBaseline.y ||
+                                (unit.frontCaretBaseline.y === targetUnit.frontCaretBaseline.y && dx < bestDistance % 10000)) {
+                                targetUnit = unit;
+                                bestDistance = distance;
+                            }
+                        } else if (!isUp && unit.frontCaretBaseline.y > currentY) {
+                            // Look for closest unit on lines below
+                            const dx = Math.abs(unit.frontCaretBaseline.x - currentX);
+                            const dy = unit.frontCaretBaseline.y - currentY;
+                            const distance = dy * 10000 + dx;
+                            if (targetUnit === undefined ||
+                                unit.frontCaretBaseline.y < targetUnit.frontCaretBaseline.y ||
+                                (unit.frontCaretBaseline.y === targetUnit.frontCaretBaseline.y && dx < bestDistance % 10000)) {
+                                targetUnit = unit;
+                                bestDistance = distance;
+                            }
+                        }
+                    }
+
+                    if (targetUnit !== undefined) {
+                        // Determine which edge of the target unit is closer to currentX
+                        const distFront = Math.abs(targetUnit.frontCaretBaseline.x - currentX);
+                        const distBack = Math.abs(targetUnit.backCaretBaseline.x - currentX);
+                        if (distFront <= distBack) {
+                            newCaret = targetUnit.start;
+                            preferFrontSide = true;
+                        } else {
+                            newCaret = targetUnit.end;
+                            preferFrontSide = false;
+                        }
+                    }
+                    // else stay at current position
+                }
+                break;
+        }
+
+        this._responses.RespondDocumentParagraph_GetCaret(id, { newCaret, preferFrontSide });
+    }
+
+    private _findLineForCaret(layout: ParagraphLayout, caret: number): ParagraphLine | undefined {
+        for (const line of layout.lines) {
+            if (caret >= line.start && caret <= line.end) {
+                return line;
+            }
+        }
+        // Check if caret is in a line separator
+        for (let i = 0; i < layout.lines.length - 1; i++) {
+            const line = layout.lines[i];
+            const next = layout.lines[i + 1];
+            if (caret > line.end && caret < next.start) {
+                return line;
+            }
+        }
+        return layout.lines.length > 0 ? layout.lines[layout.lines.length - 1] : undefined;
+    }
+
+    private _findUnitForCaret(units: ParagraphEditUnit[], caret: number): ParagraphEditUnit | undefined {
+        for (const unit of units) {
+            if (caret >= unit.start && caret <= unit.end) {
+                return unit;
+            }
+        }
+        return undefined;
     }
 
     RequestDocumentParagraph_GetCaretBounds(id: number, requestArgs: SCHEMA.GetCaretBoundsRequest): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_GetCaretBounds');
+        const { layout } = this._getParagraphLayout(requestArgs.id);
+        const units = layout.units;
+        const text = layout.paragraph.text;
+
+        // Build bounds for all valid caret positions (0 through text.length)
+        const frontSideBounds: SCHEMA.Rect[] = [];
+        const backSideBounds: SCHEMA.Rect[] = [];
+
+        for (let pos = 0; pos <= text.length; pos++) {
+            let frontRect: SCHEMA.Rect = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            let backRect: SCHEMA.Rect = { x1: 0, y1: 0, x2: 0, y2: 0 };
+
+            // Find unit where pos is at the front (start)
+            for (const unit of units) {
+                if (pos >= unit.start && pos < unit.end) {
+                    const x = unit.frontCaretBaseline.x;
+                    const y = unit.frontCaretBaseline.y;
+                    const h = unit.caretHeight;
+                    frontRect = { x1: x, y1: y - h, x2: x + 1, y2: y };
+                    break;
+                }
+            }
+
+            // Find unit where pos is at the back (end)
+            for (const unit of units) {
+                if (pos > unit.start && pos <= unit.end) {
+                    const x = unit.backCaretBaseline.x;
+                    const y = unit.backCaretBaseline.y;
+                    const h = unit.caretHeight;
+                    backRect = { x1: x, y1: y - h, x2: x + 1, y2: y };
+                    break;
+                }
+            }
+
+            frontSideBounds.push(frontRect);
+            backSideBounds.push(backRect);
+        }
+
+        this._responses.RespondDocumentParagraph_GetCaretBounds(id, { frontSideBounds, backSideBounds });
     }
 
     RequestDocumentParagraph_GetInlineObjectFromPoint(id: number, requestArgs: SCHEMA.GetInlineObjectFromPointRequest): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_GetInlineObjectFromPoint');
+        const { layout } = this._getParagraphLayout(requestArgs.id);
+        const runs = layout.paragraph.runsDiff ?? [];
+        const point = requestArgs.point;
+
+        for (const unit of layout.units) {
+            // Only check inline objects
+            if (unit.frontCaretBaseline.y !== unit.backCaretBaseline.y) continue;
+
+            const x1 = Math.min(unit.frontCaretBaseline.x, unit.backCaretBaseline.x);
+            const x2 = Math.max(unit.frontCaretBaseline.x, unit.backCaretBaseline.x);
+            const y2 = unit.frontCaretBaseline.y;
+            const y1 = y2 - unit.caretHeight;
+
+            if (point.x >= x1 && point.x <= x2 && point.y >= y1 && point.y <= y2) {
+                // Find the run for this unit
+                const run = runs.find(r =>
+                    r.caretBegin <= unit.start && r.caretEnd >= unit.end &&
+                    r.props[0] === 'DocumentInlineObjectRunProperty'
+                );
+                if (run !== undefined) {
+                    this._responses.RespondDocumentParagraph_GetInlineObjectFromPoint(id, run);
+                    return;
+                }
+            }
+        }
+
+        this._responses.RespondDocumentParagraph_GetInlineObjectFromPoint(id, null);
     }
 
     RequestDocumentParagraph_GetNearestCaretFromTextPos(id: number, requestArgs: SCHEMA.GetNearestCaretFromTextPosRequest): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_GetNearestCaretFromTextPos');
+        const { layout } = this._getParagraphLayout(requestArgs.id);
+        const units = layout.units;
+        const textPos = requestArgs.textPos;
+
+        // Find the unit containing or nearest to the text position
+        for (const unit of units) {
+            if (textPos >= unit.start && textPos <= unit.end) {
+                // Snap to nearest boundary
+                const distToStart = textPos - unit.start;
+                const distToEnd = unit.end - textPos;
+                this._responses.RespondDocumentParagraph_GetNearestCaretFromTextPos(id, distToStart <= distToEnd ? unit.start : unit.end);
+                return;
+            }
+        }
+
+        // Find nearest unit
+        let nearestPos = 0;
+        let nearestDist = Infinity;
+        for (const unit of units) {
+            const distToStart = Math.abs(textPos - unit.start);
+            const distToEnd = Math.abs(textPos - unit.end);
+            if (distToStart < nearestDist) {
+                nearestDist = distToStart;
+                nearestPos = unit.start;
+            }
+            if (distToEnd < nearestDist) {
+                nearestDist = distToEnd;
+                nearestPos = unit.end;
+            }
+        }
+
+        this._responses.RespondDocumentParagraph_GetNearestCaretFromTextPos(id, nearestPos);
     }
 
     RequestDocumentParagraph_IsValidCaret(id: number, requestArgs: SCHEMA.IsValidCaretRequest): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_IsValidCaret');
+        const { layout } = this._getParagraphLayout(requestArgs.id);
+        const caret = requestArgs.caret;
+
+        // Valid caret positions are at unit boundaries (start or end of any unit)
+        let valid = false;
+        for (const unit of layout.units) {
+            if (caret === unit.start || caret === unit.end) {
+                valid = true;
+                break;
+            }
+        }
+
+        this._responses.RespondDocumentParagraph_IsValidCaret(id, valid);
     }
 
     RequestDocumentParagraph_OpenCaret(requestArgs: SCHEMA.OpenCaretRequest): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_OpenCaret');
+        const data = this._paragraphElements.get(requestArgs.id);
+        if (data === undefined) return;
+
+        const layout = getParagraphLayout(data.htmlElement);
+        if (layout === undefined) return;
+
+        layout.caret = requestArgs;
+        setCaretVisible(data.textDiv, true, layout);
+
+        // Also update the stored desc
+        const typedDesc = this._renderingRecord.elements.getDesc(requestArgs.id);
+        if (typedDesc !== undefined && typedDesc.type === SCHEMA.RendererType.DocumentParagraph) {
+            typedDesc.desc.caret = requestArgs;
+        }
     }
 
     RequestDocumentParagraph_CloseCaret(requestArgs: SCHEMA.TYPES.Integer): void {
-        throw new Error('Not Implemented: RequestDocumentParagraph_CloseCaret');
-    }
+        const data = this._paragraphElements.get(requestArgs);
+        if (data === undefined) return;
 
-    /* eslint-enable @typescript-eslint/no-unused-vars */
+        const layout = getParagraphLayout(data.htmlElement);
+        if (layout === undefined) return;
+
+        layout.caret = null;
+        setCaretVisible(data.textDiv, false, layout);
+
+        // Also update the stored desc
+        const typedDesc = this._renderingRecord.elements.getDesc(requestArgs);
+        if (typedDesc !== undefined && typedDesc.type === SCHEMA.RendererType.DocumentParagraph) {
+            typedDesc.desc.caret = null;
+        }
+    }
 
     /****************************************************************************************
      * Renderer
@@ -793,6 +1195,28 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                             break;
                         }
                     }
+                }
+            }
+
+            // Send IOChar for printable characters
+            if (this._events !== undefined) {
+                const key = keyEvent.key;
+                let charCode: string | undefined;
+                if (key.length === 1) {
+                    charCode = key;
+                } else if (key === 'Enter') {
+                    charCode = '\r';
+                } else if (key === 'Tab') {
+                    charCode = '\t';
+                }
+                if (charCode !== undefined) {
+                    this._events.OnIOChar({
+                        code: charCode,
+                        ctrl: keyEvent.ctrlKey || keyEvent.metaKey,
+                        shift: keyEvent.shiftKey,
+                        alt: keyEvent.altKey,
+                        capslock: keyEvent.getModifierState('CapsLock')
+                    });
                 }
             }
 

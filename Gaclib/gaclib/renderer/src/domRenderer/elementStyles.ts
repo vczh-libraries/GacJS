@@ -206,10 +206,7 @@ export function getParagraphLayout(target: HTMLElement): ParagraphLayout | undef
     return target[ParagraphLayoutNodeName] as unknown as ParagraphLayout | undefined;
 }
 
-function setParagraphLayout(target: HTMLElement, element: ParagraphLayout): void {
-    if (getParagraphLayout(target) !== undefined) {
-        throw new Error('setParagraphLayout cannot be called when a paragraph layout already exists');
-    }
+export function setParagraphLayout(target: HTMLElement, element: ParagraphLayout): void {
     target[ParagraphLayoutNodeName] = element;
 }
 
@@ -279,8 +276,15 @@ export function applyTypedStyle(target: HTMLElement, typedDesc: TypedElementDesc
             {
                 target.style.cssText = CommonStyle;
                 const textDiv = ensureExtraBorderDiv(target);
-                const layout = initializeParagraph(textDiv, typedDesc.desc, elements);
-                setParagraphLayout(target, layout);
+                const existingLayout = getParagraphLayout(target);
+                if (existingLayout === undefined) {
+                    const layout = initializeParagraph(textDiv, typedDesc.desc, elements);
+                    setParagraphLayout(target, layout);
+                } else {
+                    // Subsequent update: rebuild with new desc
+                    const layout = initializeParagraph(textDiv, typedDesc.desc, elements);
+                    setParagraphLayout(target, layout);
+                }
             }
             break;
         default:

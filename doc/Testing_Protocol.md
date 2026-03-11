@@ -331,3 +331,50 @@ implemented — the server sends document paragraph requests that currently thro
 - GacUI renders dynamically — use longer timeouts for initial load.
 - The DOM structure is deeply nested `<div>` elements — use broad selectors.
 - Check `page.content()` to see what's actually rendered.
+
+---
+
+## Test Scripts
+
+### Testing_Protocol_SimpleTyping.js
+
+A standalone Playwright test script that verifies basic UI rendering and interaction
+with the GacUI remote protocol. Located at `doc/Testing_Protocol_SimpleTyping.js`.
+
+**Run:**
+```powershell
+cd Gaclib
+node ..\doc\Testing_Protocol_SimpleTyping.js
+```
+
+**What it tests (10 assertions):**
+
+1. **Page rendering** — Verifies that the page loads and renders correctly:
+   - At least 20 leaf text elements present
+   - Window title "Complete Control Showcase" visible
+   - All 7 main tab headers visible (List, Refresh List, Layout, Control, Misc, Window Manager, Exit)
+   - Sub-tab headers visible (TextList, ListView)
+
+2. **Button click** — Clicks the "Add 10 items" button on the TextList sub-tab and
+   verifies new items appear (leaf text count increases).
+
+3. **Sub-tab switching** — Clicks the "ListView" inner tab and verifies the content
+   changes (leaf text count increases significantly, "Detail" text appears).
+
+4. **Keyboard events** — Types keys (a, b, Enter) and verifies that IOKeyDown, IOKeyUp,
+   and IOChar events are sent to the C++ server via HTTP.
+
+**Prerequisites:**
+- `yarn build` in `Gaclib/`
+- `RemotingTest_Core.exe` built (via `scripts/start-test-server.ps1` or Visual Studio)
+- `npx playwright install chromium` (first time only)
+
+**Known limitation — main tab switching:**
+Main tab switching (List → Control, List → Misc, etc.) does not work in the remote
+protocol. The C++ server acknowledges clicks on main tab headers (sends IORequireCapture,
+IOReleaseCapture, and visual style updates such as highlight colors), but does not switch
+the tab page content. Sub-tab switching within a page works correctly. This is a
+server-side GacUI behavior and prevents E2E testing of features on other main tabs
+(e.g., typing in the Control > TextBox tab). All navigation methods have been tested and
+confirmed non-functional: mouse clicks, Alt+key shortcuts, Ctrl+Tab, Ctrl+PageDown,
+and keyboard Tab+Arrow navigation.

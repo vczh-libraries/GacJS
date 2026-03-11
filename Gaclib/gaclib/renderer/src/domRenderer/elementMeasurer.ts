@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle, normalizeText } from './elementStyles';
+import { getImageFormatType, getImageContentType, getImageDataUrl, getFontStyle, normalizeText, getParagraphLayout } from './elementStyles';
 import { IElementMeasurer, VirtualDomRecord } from '../dom/virtualDomBuilding';
 
 export class ElementHTMLMeasurer implements IElementMeasurer {
@@ -145,6 +145,19 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
                 }
             }
             this._measuringSolidLabels = remaining;
+
+            // Collect paragraph inline object bounds from all mounted paragraph elements
+            for (const [, virtualDom] of renderingRecord.elementToDoms) {
+                const htmlElement: HTMLElement | undefined = 'htmlElement' in virtualDom ? virtualDom.htmlElement as HTMLElement : undefined;
+                if (htmlElement !== undefined) {
+                    const paragraphLayout = getParagraphLayout(htmlElement);
+                    if (paragraphLayout !== undefined && paragraphLayout.inlineObjectBounds !== null) {
+                        for (const bound of paragraphLayout.inlineObjectBounds) {
+                            this._measuring.inlineObjectBounds!.push(bound);
+                        }
+                    }
+                }
+            }
 
             this._responses.RespondRendererEndRendering(this._idRespondRendererEndRendering, this._measuring);
             this._measuring = { fontHeights: [], minSizes: [], createdImages: [], inlineObjectBounds: [] };
