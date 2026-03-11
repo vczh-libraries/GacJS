@@ -218,15 +218,15 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
             throw new Error('fixBounds can only be called on root VirtualDom (with no parent).');
         }
 
-        // Apply bounds to all children recursively
-        this.fixBoundsRecursive(virtualDom);
-
         // Configure root element as container
         virtualDom.htmlElement.style.position = 'relative';
         virtualDom.htmlElement.style.boxSizing = 'border-box';
         virtualDom.htmlElement.style.width = `${width}px`;
         virtualDom.htmlElement.style.height = `${height}px`;
         target.replaceChildren(virtualDom.htmlElement);
+
+        // Apply bounds after mounting so getBoundingClientRect works for measurements
+        this.fixBoundsRecursive(virtualDom);
     }
 
     private fixBoundsRecursive(virtualDom: IVirtualDom): void {
