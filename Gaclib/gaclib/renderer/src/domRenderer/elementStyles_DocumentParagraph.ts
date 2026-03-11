@@ -214,7 +214,10 @@ function buildBlocksForLine(
  * initializeParagraph
  **********************************************************************/
 
-export function fillMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
+export function fillParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
+}
+
+export function renderParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
 }
 
 /*
