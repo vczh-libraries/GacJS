@@ -58,6 +58,11 @@ export interface ParagraphLine {
 * Both caret should share the same height.
 * For LTR text, frontCaretBaseline is the left edge of the caret, otherwise it is the right edge.
 * Inline objects and line separators are treated as LTR.
+* 
+* For text units and inline objects, frontCaretBaseline.y === backCaretBaseline.y, so they combined with caretHeight forms a rectangle.
+*   For inline objects with a callbackId !== -1, such rectagle will be copied to ParagraphLayout.inlineObjectBounds.
+*   elementId is ParagraphLayout.paragraph.id
+*   callbackId is DocumentInlineObjectRunProperty.callbackId
 */
 export interface ParagraphEditUnit {
     start: number;
