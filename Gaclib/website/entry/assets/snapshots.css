@@ -15,7 +15,7 @@ body {
 }
 
 .files-column {
-    width: 400px;
+    width: 640px;
     min-width: 200px;
     max-width: 60vw;
     border-right: 1px solid #dee2e6;
