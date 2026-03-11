@@ -398,16 +398,28 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         return { layout, textDiv: data.textDiv };
     }
 
-    private _measureParagraphDocumentSize(textDiv: HTMLElement, layout: ParagraphLayout): SCHEMA.Size {
-        // Check if textDiv is in the live DOM
-        const isInDom = textDiv.isConnected;
+    private _measureParagraphDocumentSize(htmlElement: HTMLElement, textDiv: HTMLElement, layout: ParagraphLayout): SCHEMA.Size {
+        const isInDom = htmlElement.isConnected;
+        let savedHtmlStyle: string | undefined;
+
         if (!isInDom) {
-            // Temporarily attach off-screen for measurement
-            textDiv.style.position = 'absolute';
-            textDiv.style.left = '-9999px';
-            textDiv.style.top = '-9999px';
-            textDiv.style.visibility = 'hidden';
-            document.body.appendChild(textDiv);
+            // Attach htmlElement (not textDiv) off-screen so the parent-child relationship is preserved
+            savedHtmlStyle = htmlElement.style.cssText;
+            htmlElement.style.position = 'absolute';
+            htmlElement.style.left = '-9999px';
+            htmlElement.style.top = '-9999px';
+            htmlElement.style.visibility = 'hidden';
+            document.body.appendChild(htmlElement);
+        }
+
+        // Override textDiv dimensions to measure natural content size
+        const savedHeight = textDiv.style.height;
+        const savedWidth = textDiv.style.width;
+        textDiv.style.height = 'auto';
+        if (!layout.paragraph.wrapLine) {
+            textDiv.style.width = 'auto';
+        } else if (layout.paragraph.maxWidth > 0) {
+            textDiv.style.width = `${layout.paragraph.maxWidth}px`;
         }
 
         fillParagraphMeasurements(textDiv, layout);
@@ -416,8 +428,13 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             y: textDiv.scrollHeight
         };
 
+        // Restore textDiv styles
+        textDiv.style.height = savedHeight;
+        textDiv.style.width = savedWidth;
+
         if (!isInDom) {
-            document.body.removeChild(textDiv);
+            document.body.removeChild(htmlElement);
+            htmlElement.style.cssText = savedHtmlStyle!;
         }
 
         return documentSize;
@@ -478,7 +495,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             this._paragraphElements.set(elementId, { htmlElement, textDiv });
             const layout = getParagraphLayout(htmlElement);
             if (layout !== undefined) {
-                const documentSize = this._measureParagraphDocumentSize(textDiv, layout);
+                const documentSize = this._measureParagraphDocumentSize(htmlElement, textDiv, layout);
                 this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
                 return;
             }

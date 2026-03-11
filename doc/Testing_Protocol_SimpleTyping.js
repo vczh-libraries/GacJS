@@ -1,7 +1,6 @@
 // Testing_Protocol_SimpleTyping.js
 //
-// Standalone Playwright test script that verifies basic UI rendering and interaction
-// with the GacUI remote protocol.
+// Standalone Playwright test script for the GacUI remote protocol.
 //
 // Usage:
 //   cd Gaclib
@@ -12,18 +11,13 @@
 //   - RemotingTest_Core.exe built (via scripts/start-test-server.ps1)
 //   - npx playwright install chromium  (first time only)
 //
-// What it tests:
-//   1. Page loads and GacUI UI renders correctly (23 leaf text elements)
-//   2. Sub-tab switching works (click "ListView" inner tab, verify content changes)
-//   3. Button click works (click "Add 10 items", verify new items appear)
-//   4. Keyboard events are sent to server (IOKeyDown/IOKeyUp/IOChar dispatched)
-//
-// Known limitation:
-//   Main tab switching (List/Control/Misc/etc.) does not work due to a server-side
-//   GacUI issue. The server acknowledges clicks on main tab headers (sends
-//   IORequireCapture, IOReleaseCapture, and visual style updates) but does not
-//   switch the tab page content. Sub-tab switching works correctly.
-//   This prevents testing typing in the Control > TextBox tab.
+// Test plan (the goal of the test plan cannot be changed):
+//   1. Launch the application (start the C++ server, open index.html in Playwright).
+//   2. Open the "Control" tab, find the text box next to the "Search:" label.
+//   3. Type text into the text box. Typing is implemented by sending IOChar messages.
+//      The client sends IOChar events and the core side judges which text box is active.
+//   4. Verify that the typed text appears in the text box.
+//   5. Kill the process directly and close the webpage. No elegant exit is needed.
 
 const path = require('path');
 
@@ -74,7 +68,10 @@ async function getLeafTextPositions(page) {
                 result.push({
                     text: d.textContent.trim(),
                     cx: r.x + r.width / 2,
-                    cy: r.y + r.height / 2
+                    cy: r.y + r.height / 2,
+                    right: r.x + r.width,
+                    y: r.y,
+                    height: r.height
                 });
             }
         }
@@ -106,7 +103,7 @@ async function main() {
             process.exit(1);
         }
 
-        // Setup
+        // Setup: kill any leftover server, start fresh
         killServer();
         await sleep(1000);
 
@@ -117,156 +114,120 @@ async function main() {
 
         browser = await chromium.launch({ headless: true });
         const page = await browser.newPage();
-
-        // Track IO events sent to server
-        // Protocol event names: IOKeyDown, IOKeyUp, IOChar, IOButtonDown, etc.
-        const ioEventNames = new Set();
-        page.on('request', req => {
-            if (req.url().includes(':8888')) {
-                const body = req.postData();
-                if (body !== null && body !== undefined) {
-                    for (const name of ['IOKeyDown', 'IOKeyUp', 'IOChar', 'IOButtonDown', 'IOButtonUp', 'IOMouseMoving', 'IOMouseEntered', 'IOMouseLeaved']) {
-                        if (body.includes(name)) {
-                            ioEventNames.add(name);
-                        }
-                    }
-                }
-            }
-        });
-
         await page.goto(WEBSITE_URL, { timeout: 30000 });
         await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
         await sleep(8000);
 
         // =====================================================================
-        // Test 1: Page renders correctly
+        // Step 1: Verify page loaded
         // =====================================================================
-        console.log('\nTest 1: Page rendering');
+        console.log('\nStep 1: Page rendering');
         const initial = await getLeafTexts(page);
-
         if (initial.length >= 20) {
-            pass(`Rendered ${initial.length} leaf text elements`);
+            pass(`Page rendered with ${initial.length} leaf text elements`);
         } else {
-            fail('Rendering', `Expected >=20 leaf texts, got ${initial.length}`);
-        }
-
-        if (initial.includes('Complete Control Showcase')) {
-            pass('Window title visible');
-        } else {
-            fail('Window title', 'Expected "Complete Control Showcase"');
-        }
-
-        const expectedTabs = ['List', 'Refresh List', 'Layout', 'Control', 'Misc', 'Window Manager', 'Exit'];
-        const missingTabs = expectedTabs.filter(t => !initial.includes(t));
-        if (missingTabs.length === 0) {
-            pass('All main tab headers visible');
-        } else {
-            fail('Tab headers', `Missing: ${missingTabs.join(', ')}`);
-        }
-
-        if (initial.includes('TextList') && initial.includes('ListView')) {
-            pass('Sub-tab headers visible (TextList, ListView)');
-        } else {
-            fail('Sub-tab headers', 'Expected TextList and ListView');
+            fail('Page rendering', `Expected >=20 leaf texts, got ${initial.length}`);
         }
 
         // =====================================================================
-        // Test 2: Button click (Add 10 items)
+        // Step 2: Open the "Control" tab
         // =====================================================================
-        console.log('\nTest 2: Button click');
-        const beforeBtn = await getLeafTexts(page);
-        const btnPositions = await getLeafTextPositions(page);
-        const addBtnPos = btnPositions.find(p => p.text === 'Add 10 items');
+        console.log('\nStep 2: Open the Control tab');
+        let positions = await getLeafTextPositions(page);
+        const controlTabPos = positions.find(p => p.text === 'Control');
 
-        if (addBtnPos !== undefined) {
-            await page.mouse.move(addBtnPos.cx, addBtnPos.cy);
+        if (controlTabPos === undefined) {
+            fail('Control tab', 'Could not find "Control" tab header');
+        } else {
+            // Click on the Control tab
+            await page.mouse.move(controlTabPos.cx, controlTabPos.cy);
             await sleep(500);
             await page.mouse.down();
             await sleep(200);
             await page.mouse.up();
             await sleep(5000);
 
-            const afterBtn = await getLeafTexts(page);
-            if (afterBtn.length > beforeBtn.length) {
-                pass(`Button click worked: ${beforeBtn.length} -> ${afterBtn.length} leaf texts`);
+            const afterControl = await getLeafTexts(page);
+            if (afterControl.includes('Search:') || afterControl.includes('Search:  ') || afterControl.some(t => t.startsWith('Search'))) {
+                pass('Control tab switched — "Search:" label found');
+            } else if (afterControl.includes('Document Editor (Ribbon)') || afterControl.includes('TextBox')) {
+                pass('Control tab switched — sub-tab headers visible');
             } else {
-                fail('Button click', `Leaf count unchanged: ${afterBtn.length}`);
+                fail('Control tab switch', `"Search:" not found after clicking Control tab. Texts: ${afterControl.slice(0, 30).join(', ')}`);
             }
-        } else {
-            fail('Button position', 'Could not find "Add 10 items" element');
         }
 
         // =====================================================================
-        // Test 3: Sub-tab switching (ListView)
+        // Step 3: Find the text box next to "Search:" and click on it
         // =====================================================================
-        console.log('\nTest 3: Sub-tab switching');
+        console.log('\nStep 3: Find and click the text box next to "Search:"');
+        positions = await getLeafTextPositions(page);
+        const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
 
-        const positions = await getLeafTextPositions(page);
-        const currentTexts = await getLeafTexts(page);
-        const listViewPos = positions.find(p => p.text === 'ListView');
-
-        if (listViewPos !== undefined) {
-            await page.mouse.move(listViewPos.cx, listViewPos.cy);
-            await sleep(1000);
-            await page.mouse.down();
-            await sleep(500);
-            await page.mouse.up();
-            await sleep(5000);
-
-            const afterLV = await getLeafTexts(page);
-            if (afterLV.length > currentTexts.length) {
-                pass(`Sub-tab switched: ${currentTexts.length} -> ${afterLV.length} leaf texts`);
-            } else {
-                fail('Sub-tab switch', `Leaf count unchanged: ${afterLV.length}`);
-            }
-
-            // Verify ListView content appeared
-            if (afterLV.includes('Detail')) {
-                pass('ListView content visible ("Detail" text found)');
-            } else {
-                fail('ListView content', 'Expected "Detail" in content');
-            }
+        if (searchLabelPos === undefined) {
+            fail('Search label', 'Could not find "Search:" label');
         } else {
-            fail('ListView position', 'Could not find ListView element');
+            pass(`Found "Search:" label at (${Math.round(searchLabelPos.cx)}, ${Math.round(searchLabelPos.cy)})`);
+
+            // Click to the right of "Search:" where the text box should be
+            const textBoxX = searchLabelPos.right + 30;
+            const textBoxY = searchLabelPos.cy;
+            await page.mouse.click(textBoxX, textBoxY);
+            await sleep(2000);
+            pass(`Clicked text box area at (${Math.round(textBoxX)}, ${Math.round(textBoxY)})`);
         }
 
         // =====================================================================
-        // Test 4: Keyboard events dispatched
+        // Step 4: Type text into the text box
         // =====================================================================
-        console.log('\nTest 4: Keyboard events');
-        // Click on the screen div to ensure it has focus for keyboard events
-        await page.click('#gacui-screen');
-        await sleep(1000);
-        ioEventNames.clear();
+        console.log('\nStep 4: Type text');
+        const testText = 'Hello';
 
-        // Type a few keys
-        await page.keyboard.press('a');
-        await sleep(500);
-        await page.keyboard.press('b');
-        await sleep(500);
-        await page.keyboard.press('Enter');
-        await sleep(1000);
-
-        const hasKeyDown = ioEventNames.has('IOKeyDown');
-        const hasKeyUp = ioEventNames.has('IOKeyUp');
-        const hasChar = ioEventNames.has('IOChar');
-
-        if (hasKeyDown) {
-            pass('IOKeyDown events sent');
-        } else {
-            fail('IOKeyDown', `No IOKeyDown events detected (events: ${[...ioEventNames].join(', ')})`);
+        // Click on the text box area to focus it on the server side
+        if (searchLabelPos !== undefined) {
+            const textBoxX = searchLabelPos.right + 30;
+            const textBoxY = searchLabelPos.cy;
+            await page.mouse.click(textBoxX, textBoxY);
+            await sleep(2000);
         }
 
-        if (hasKeyUp) {
-            pass('IOKeyUp events sent');
-        } else {
-            fail('IOKeyUp', `No IOKeyUp events detected`);
+        // Type characters one at a time with delay
+        for (const ch of testText) {
+            await page.keyboard.press(ch);
+            await sleep(300);
         }
+        await sleep(5000);
+        pass(`Typed "${testText}" via keyboard`);
 
-        if (hasChar) {
-            pass('IOChar events sent');
+        // =====================================================================
+        // Step 5: Verify typed text appears
+        // =====================================================================
+        console.log('\nStep 5: Verify typed text');
+
+        // Check the full text content of #gacui-screen (not just leaf divs)
+        // DocumentParagraph text is in <span> elements inside line <div>s,
+        // so searching only leaf divs would miss it.
+        const screenText = await page.evaluate(() => {
+            const screen = document.getElementById('gacui-screen');
+            return screen !== null ? screen.textContent : '';
+        });
+
+        const foundTypedText = screenText.includes(testText);
+        if (foundTypedText) {
+            pass(`Typed text "${testText}" found in page`);
         } else {
-            fail('IOChar', `No IOChar events detected`);
+            // Dump all text from spans for debugging
+            const spanTexts = await page.evaluate(() => {
+                const screen = document.getElementById('gacui-screen');
+                if (!screen) return [];
+                const texts = [];
+                for (const el of screen.querySelectorAll('span')) {
+                    const t = el.textContent.trim();
+                    if (t !== '') texts.push(t);
+                }
+                return texts;
+            });
+            fail('Typed text verification', `"${testText}" not found. Span texts: ${spanTexts.join(', ')}`);
         }
 
         // =====================================================================
@@ -282,6 +243,7 @@ async function main() {
         console.error(`[error] ${error.message}`);
         process.exitCode = 1;
     } finally {
+        // Step 5: Kill process directly — no elegant exit needed
         if (browser !== null) {
             await browser.close();
         }
