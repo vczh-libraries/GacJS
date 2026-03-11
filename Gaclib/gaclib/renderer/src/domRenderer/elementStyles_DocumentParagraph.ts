@@ -76,6 +76,7 @@ export interface ParagraphLayout {
     paragraph: SCHEMA.ElementDesc_DocumentParagraph & { text: string };
     caret: SCHEMA.TYPES.Nullable<SCHEMA.OpenCaretRequest>;
     lines: ParagraphLine[];
+    defaultFontSize: number;
 
     // All following members will be completed in fillParagraphMeasurements
     units: ParagraphEditUnit[];
@@ -224,10 +225,230 @@ function buildBlocksForLine(
 
 const ParagraphMeasurementsNodeName = '$GacUI-ParagraphMeasurementsNodeName';
 
+/**********************************************************************
+ * Measurement Helpers
+ **********************************************************************/
+
+function getTextNode(element: HTMLSpanElement | Text): Text | null {
+    if (element instanceof Text) {
+        return element;
+    }
+    const firstChild = element.firstChild;
+    if (firstChild instanceof Text) {
+        return firstChild;
+    }
+    return null;
+}
+
+function getCollapsedCaretRect(node: Node, offset: number): DOMRect | null {
+    const range = document.createRange();
+    range.setStart(node, offset);
+    range.setEnd(node, offset);
+    const rects = range.getClientRects();
+    if (rects.length > 0) {
+        return rects[0];
+    }
+    const bounding = range.getBoundingClientRect();
+    if (bounding.height > 0) {
+        return bounding;
+    }
+    return null;
+}
+
+function clientRectsChanged(prev: DOMRect[], curr: DOMRect[]): boolean {
+    if (prev.length !== curr.length) return true;
+    for (let i = 0; i < prev.length; i++) {
+        if (Math.abs(prev[i].left - curr[i].left) > 0.5 ||
+            Math.abs(prev[i].top - curr[i].top) > 0.5 ||
+            Math.abs(prev[i].right - curr[i].right) > 0.5 ||
+            Math.abs(prev[i].bottom - curr[i].bottom) > 0.5) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function findRunForRange(runs: SCHEMA.DocumentRun[], start: number, end: number): SCHEMA.DocumentRun | undefined {
+    return runs.find(r => r.caretBegin <= start && r.caretEnd >= end);
+}
+
+function getLineEdgePosition(line: ParagraphLine, atEnd: boolean, divRect: DOMRect): SCHEMA.Point {
+    if (line.blocks.length > 0) {
+        const block = atEnd ? line.blocks[line.blocks.length - 1] : line.blocks[0];
+        const textNode = getTextNode(block.element);
+        if (textNode !== null && textNode.length > 0) {
+            const rect = getCollapsedCaretRect(textNode, atEnd ? textNode.length : 0);
+            if (rect !== null) {
+                return {
+                    x: Math.round(rect.left - divRect.left),
+                    y: Math.round(rect.bottom - divRect.top)
+                };
+            }
+        } else if (block.element instanceof HTMLSpanElement) {
+            const rect = block.element.getBoundingClientRect();
+            return {
+                x: Math.round((atEnd ? rect.right : rect.left) - divRect.left),
+                y: Math.round(rect.bottom - divRect.top)
+            };
+        }
+    }
+    const lineRect = line.element.getBoundingClientRect();
+    return {
+        x: Math.round(lineRect.left - divRect.left),
+        y: Math.round(lineRect.bottom - divRect.top)
+    };
+}
+
+/**********************************************************************
+ * fillParagraphMeasurements / renderParagraphMeasurements
+ **********************************************************************/
+
 export function fillParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
+    const units: ParagraphEditUnit[] = [];
+    const inlineObjectBounds: SCHEMA.ElementMeasuring_InlineObjectBounds[] = [];
+    const runs = layout.paragraph.runsDiff ?? [];
+    const divRect = textDiv.getBoundingClientRect();
+    const defaultFontSize = layout.defaultFontSize;
+
+    for (let lineIndex = 0; lineIndex < layout.lines.length; lineIndex++) {
+        const line = layout.lines[lineIndex];
+
+        for (const block of line.blocks) {
+            if (block.start === block.end) continue;
+
+            const run = findRunForRange(runs, block.start, block.end);
+
+            if (run !== undefined && run.props[0] === 'DocumentInlineObjectRunProperty') {
+                // Inline object: one single unit, treated as LTR
+                const props = run.props[1];
+                const span = block.element as HTMLSpanElement;
+                const rect = span.getBoundingClientRect();
+                const frontX = Math.round(rect.left - divRect.left);
+                const backX = Math.round(rect.right - divRect.left);
+                const y = Math.round(rect.bottom - divRect.top);
+                const height = Math.round(rect.height);
+
+                units.push({
+                    start: block.start,
+                    end: block.end,
+                    frontCaretBaseline: { x: frontX, y },
+                    backCaretBaseline: { x: backX, y },
+                    caretHeight: height
+                });
+
+                if (props.callbackId !== -1) {
+                    inlineObjectBounds.push({
+                        elementId: layout.paragraph.id,
+                        callbackId: props.callbackId,
+                        bounds: { x1: frontX, y1: y - height, x2: backX, y2: y }
+                    });
+                }
+            } else {
+                // Text block: detect glyph clusters using Range.getClientRects
+                const textNode = getTextNode(block.element);
+                if (textNode === null || textNode.length === 0) continue;
+
+                const nodeLength = textNode.length;
+                const measureRange = document.createRange();
+                let cursor = 0;
+
+                while (cursor < nodeLength) {
+                    // Extend range character by character until getClientRects changes
+                    measureRange.setStart(textNode, cursor);
+                    measureRange.setEnd(textNode, cursor + 1);
+                    let prevRects = Array.from(measureRange.getClientRects());
+                    let unitEnd = cursor + 1;
+
+                    while (unitEnd < nodeLength) {
+                        measureRange.setEnd(textNode, unitEnd + 1);
+                        const newRects = Array.from(measureRange.getClientRects());
+                        if (clientRectsChanged(prevRects, newRects)) {
+                            break;
+                        }
+                        prevRects = newRects;
+                        unitEnd++;
+                    }
+
+                    // Use collapsed ranges at unit boundaries for caret positions
+                    const frontRect = getCollapsedCaretRect(textNode, cursor);
+                    const backRect = getCollapsedCaretRect(textNode, unitEnd);
+
+                    if (frontRect !== null && backRect !== null) {
+                        units.push({
+                            start: block.start + cursor,
+                            end: block.start + unitEnd,
+                            frontCaretBaseline: {
+                                x: Math.round(frontRect.left - divRect.left),
+                                y: Math.round(frontRect.bottom - divRect.top)
+                            },
+                            backCaretBaseline: {
+                                x: Math.round(backRect.left - divRect.left),
+                                y: Math.round(backRect.bottom - divRect.top)
+                            },
+                            caretHeight: Math.round(frontRect.height)
+                        });
+                    }
+
+                    cursor = unitEnd;
+                }
+            }
+        }
+
+        // Line separator unit between this line and the next
+        if (lineIndex < layout.lines.length - 1) {
+            const nextLine = layout.lines[lineIndex + 1];
+            units.push({
+                start: line.end,
+                end: nextLine.start,
+                frontCaretBaseline: getLineEdgePosition(line, true, divRect),
+                backCaretBaseline: getLineEdgePosition(nextLine, false, divRect),
+                caretHeight: defaultFontSize
+            });
+        }
+    }
+
+    layout.units = units;
+    layout.inlineObjectBounds = inlineObjectBounds.length > 0 ? inlineObjectBounds : null;
 }
 
 export function renderParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
+    // Remove previous measurement overlay elements
+    const existing = textDiv[ParagraphMeasurementsNodeName] as HTMLElement[] | undefined;
+    if (existing !== undefined) {
+        for (const el of existing) {
+            el.remove();
+        }
+    }
+
+    const elements: HTMLElement[] = [];
+    const runs = layout.paragraph.runsDiff ?? [];
+
+    for (const unit of layout.units) {
+        // Only render rectangles for text units and inline objects (same Y line)
+        if (unit.frontCaretBaseline.y !== unit.backCaretBaseline.y) continue;
+
+        const run = findRunForRange(runs, unit.start, unit.end);
+        let color: string;
+        if (run !== undefined && run.props[0] === 'DocumentInlineObjectRunProperty') {
+            color = 'rgba(255, 255, 0, 0.3)';
+        } else if (unit.frontCaretBaseline.x <= unit.backCaretBaseline.x) {
+            color = 'rgba(255, 0, 0, 0.3)';
+        } else {
+            color = 'rgba(0, 128, 0, 0.3)';
+        }
+
+        const x1 = Math.min(unit.frontCaretBaseline.x, unit.backCaretBaseline.x);
+        const x2 = Math.max(unit.frontCaretBaseline.x, unit.backCaretBaseline.x);
+        const y = unit.frontCaretBaseline.y;
+        const h = unit.caretHeight;
+
+        const div = document.createElement('div');
+        div.style.cssText = `position: absolute; left: ${x1}px; top: ${y - h}px; width: ${x2 - x1}px; height: ${h}px; background-color: ${color}; pointer-events: none;`;
+        textDiv.appendChild(div);
+        elements.push(div);
+    }
+
+    textDiv[ParagraphMeasurementsNodeName] = elements;
 }
 
 /*
@@ -304,6 +525,7 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         paragraph: desc.paragraph as SCHEMA.ElementDesc_DocumentParagraph & { text: string },
         caret: desc.caret,
         lines,
+        defaultFontSize,
 
         // fillParagraphMeasurements will take care of these
         units: [],
