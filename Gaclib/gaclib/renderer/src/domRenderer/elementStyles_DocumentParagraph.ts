@@ -71,7 +71,10 @@ export interface ParagraphLayout {
     paragraph: SCHEMA.ElementDesc_DocumentParagraph & { text: string };
     caret: SCHEMA.TYPES.Nullable<SCHEMA.OpenCaretRequest>;
     lines: ParagraphLine[];
+
+    // All following members will be completed in fillParagraphMeasurements
     units: ParagraphEditUnit[];
+    inlineObjectBounds: SCHEMA.ElementMeasurings['inlineObjectBounds'];
 }
 
 // TODO: updateParagraph with actual diffs.
@@ -294,7 +297,10 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
         paragraph: desc.paragraph as SCHEMA.ElementDesc_DocumentParagraph & { text: string },
         caret: desc.caret,
         lines,
-        units: [] // Calculated later
+
+        // fillParagraphMeasurements will take care of these
+        units: [],
+        inlineObjectBounds: null
     };
     return layout;
 }
