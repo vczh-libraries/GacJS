@@ -6,8 +6,8 @@
   - You must use formal PowerShell command names instead of their linux-like aliases.
   - You must use `;` instead of `&&` for executing multiple commands in order.
 - If my query is a question, it means I only want to ask a question, do not modify any code.
-- Before reading any file inside the `GacUI` submodule, always update it to the latest master branch first:
-  - `cd (repo-root)\GacUI ; git checkout master ; git pull ; cd ..`
+- Before reading any file inside the `GacUI` submodule, always ensure it is initialized first:
+  - `git submodule update --init --remote GacUI`
 - Before implementing any change, read the relevant documentation in `doc/` first (`Protocol.md`, `DOM.md`, `Projects.md`). Understand the design before writing code.
 - Whenever an implementation change affects behavior documented in `doc/`, update the corresponding documentation to stay in sync.
 
