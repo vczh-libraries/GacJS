@@ -114,6 +114,15 @@ async function main() {
 
         browser = await chromium.launch({ headless: true });
         const page = await browser.newPage();
+
+        // Detect crashes: index.html calls alert(error.message) on any exception.
+        // Playwright sees this as a 'dialog' event.
+        page.on('dialog', async dialog => {
+            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
+            failed++;
+            await dialog.dismiss();
+        });
+
         await page.goto(WEBSITE_URL, { timeout: 30000 });
         await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
         await sleep(8000);
