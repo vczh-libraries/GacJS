@@ -30,7 +30,7 @@ Communication direction:
 |----------------|----------|---------|
 | Unit test client | `GacUI/Source/UnitTestUtilities/` | Captures rendering traces for automated testing; does not perform real rendering |
 | Native renderer | `GacUI/Source/PlatformProviders/RemoteRenderer/` | A real native-platform rendering client (C++) |
-| Web renderer | `Gaclib/gaclib/renderer/src/` | This repo's HTML/CSS renderer for web browsers (incomplete) |
+| Web renderer | `Gaclib/gaclib/renderer/src/` | This repo's HTML/CSS renderer for web browsers |
 
 **TypeScript generated code:**
 - `Gaclib/gaclib/remote-protocol/` — generated from `Import/Metadata/RemoteProtocol.json` by `@gaclib-shared/codegen`

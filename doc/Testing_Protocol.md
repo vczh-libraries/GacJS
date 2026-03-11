@@ -308,10 +308,8 @@ netsh http add urlacl url=http://localhost:8888/ user=Everyone
 
 ### "Fatal Error" on index.html
 
-The server encountered an unimplemented protocol request. Check the C++ server console
-for the error message. This is expected until all `DocumentParagraph` methods are
-implemented — the server sends document paragraph requests that currently throw
-`Not Implemented` errors.
+The server encountered an unhandled protocol error. Check the C++ server console
+for the error message.
 
 ### Connection drops / No response
 

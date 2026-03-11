@@ -412,6 +412,8 @@ Image format is auto-detected from binary headers:
 ### DocumentParagraph
 
 Rich text rendering with caret support and inline objects.
+See [DocumentParagraph.md](DocumentParagraph.md) for the full implementation details
+(measurement, caret operations, hit-testing).
 
 Each paragraph consists of lines separated by `\r*\n`. Within each line, text content
 and inline objects are rendered as blocks:
