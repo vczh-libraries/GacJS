@@ -420,13 +420,13 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
         if (unit.frontCaretBaseline.y !== unit.backCaretBaseline.y) continue;
 
         const run = findRunForRange(runs, unit.start, unit.end);
-        let color: string;
+        let borderColor: string;
         if (run !== undefined && run.props[0] === 'DocumentInlineObjectRunProperty') {
-            color = 'rgba(255, 255, 0, 0.3)';
+            borderColor = '#FFFF00';
         } else if (unit.frontCaretBaseline.x <= unit.backCaretBaseline.x) {
-            color = 'rgba(255, 0, 0, 0.3)';
+            borderColor = '#00FF00';
         } else {
-            color = 'rgba(0, 128, 0, 0.3)';
+            borderColor = '#FF0000';
         }
 
         const x1 = Math.min(unit.frontCaretBaseline.x, unit.backCaretBaseline.x);
@@ -435,7 +435,7 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
         const h = unit.caretHeight;
 
         const div = document.createElement('div');
-        div.style.cssText = `position: absolute; left: ${x1}px; top: ${y - h}px; width: ${x2 - x1}px; height: ${h}px; background-color: ${color}; pointer-events: none;`;
+        div.style.cssText = `position: absolute; left: ${x1}px; top: ${y - h}px; width: ${x2 - x1}px; height: ${h}px; border: 1px solid ${borderColor}; box-sizing: border-box; pointer-events: none;`;
         textDiv.appendChild(div);
         elements.push(div);
     }
