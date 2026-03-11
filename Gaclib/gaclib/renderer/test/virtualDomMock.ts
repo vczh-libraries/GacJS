@@ -91,8 +91,10 @@ class VirtualDomMockOrdinary extends VirtualDomBaseOrdinary<VirtualDomMockTypes>
 export class VirtualDomProviderMock implements IVirtualDomProvider {
     createDom(
         id: SCHEMA.TYPES.Integer,
-        props: VirtualDomProperties
+        props: VirtualDomProperties,
+        pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>
     ): IVirtualDom {
+        void pendingElements;
         return new VirtualDomMockOrdinary(id, props);
     }
 

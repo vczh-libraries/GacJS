@@ -70,7 +70,8 @@ export interface IVirtualDom {
 export interface IVirtualDomProvider {
     createDom(
         id: SCHEMA.TYPES.Integer,
-        props: VirtualDomProperties): IVirtualDom;
+        props: VirtualDomProperties,
+        pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>): IVirtualDom;
     createDomForRoot(): IVirtualDom;
     createDomForValidArea(
         id: SCHEMA.TYPES.Integer,

@@ -203,6 +203,9 @@ function applyTypedStyle_WithShapedBorder<TDesc extends ElementDescWithShape>(ta
 *   Call getExtraBorder to get the direct container for each ParagraphLine HTMLDivElement.
 */
 export function getParagraphLayout(target: HTMLElement): ParagraphLayout | undefined {
+    if (!(target as unknown as HTMLElement | undefined)) {
+        throw new Error('getParagraphLayout: target is undefined');
+    }
     return target[ParagraphLayoutNodeName] as unknown as ParagraphLayout | undefined;
 }
 

@@ -56,6 +56,7 @@ function fillVirtualDom(
     record: VirtualDomRecord,
     provider: IVirtualDomProvider,
     id: SCHEMA.TYPES.Integer,
+    pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>
 ): IVirtualDom {
     // Create TypedElementDesc from element ID if present
     let typedDesc: TypedElementDesc | undefined = undefined;
@@ -74,7 +75,7 @@ function fillVirtualDom(
     };
 
     // Create the virtual DOM
-    const virtualDom = provider.createDom(id, props);
+    const virtualDom = provider.createDom(id, props, pendingElements);
 
     // Add to elementToDoms map if this DOM has an element
     if (content.element !== null) {
@@ -88,7 +89,7 @@ function fillVirtualDom(
     return virtualDom;
 }
 
-function createVirtualDom(id: SCHEMA.TYPES.Integer, content: SCHEMA.RenderingDomContent, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect): [IVirtualDom, IVirtualDom] {
+function createVirtualDom(id: SCHEMA.TYPES.Integer, content: SCHEMA.RenderingDomContent, record: VirtualDomRecord, provider: IVirtualDomProvider, parentValidArea?: SCHEMA.Rect, pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>): [IVirtualDom, IVirtualDom] {
     // Check for duplicate IDs
     if (record.doms.has(id)) {
         throw new Error(`Duplicate RenderingDom ID found: ${id}. Each RenderingDom must have a unique ID.`);
@@ -105,6 +106,7 @@ function createVirtualDom(id: SCHEMA.TYPES.Integer, content: SCHEMA.RenderingDom
             record,
             provider,
             id,
+            pendingElements
         );
 
         // Add to the doms map only if ID is not negative
@@ -124,6 +126,7 @@ function createVirtualDom(id: SCHEMA.TYPES.Integer, content: SCHEMA.RenderingDom
             record,
             provider,
             ClippedVirtualDomId,
+            pendingElements
         );
 
         // Add to the doms map only if ID is not negative
@@ -357,7 +360,7 @@ function ensureClippedHierarchy(
     return currentProps.outerDom!;
 }
 
-export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider): void {
+export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.RenderingDom_DiffsInOrder, record: VirtualDomRecord, provider: IVirtualDomProvider, pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>): void {
     if (!diffsInOrder.diffsInOrder) {
         return;
     }
@@ -372,7 +375,7 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
             case SCHEMA.RenderingDom_DiffType.Created:
                 {
                     const parent = props.get(self.parentId);
-                    const [outerDom, innerDom] = createVirtualDom(diff.id, diff.content!, record, provider, parent?.validArea);
+                    const [outerDom, innerDom] = createVirtualDom(diff.id, diff.content!, record, provider, parent?.validArea, pendingElements);
                     self.innerDom = innerDom;
                     self.outerDom = outerDom;
                 }

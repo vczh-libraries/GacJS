@@ -126,11 +126,18 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     constructor(
         id: SCHEMA.TYPES.Integer,
         props: VirtualDomProperties,
-        private readonly elements: ElementManager
+        private readonly elements: ElementManager,
+        pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>
     ) {
         super(id, props);
-        this.htmlElement = document.createElement('div');
-        this.onUpdateTypedDesc(props.elementId, props.typedDesc);
+        const pendingHtml = props.elementId !== undefined && pendingElements !== undefined ? pendingElements.get(props.elementId) : undefined;
+        if (pendingHtml !== undefined) {
+            this.htmlElement = pendingHtml;
+            pendingElements!.delete(props.elementId!);
+        } else {
+            this.htmlElement = document.createElement('div');
+            this.onUpdateTypedDesc(props.elementId, props.typedDesc);
+        }
     }
 
     protected getExpectedChildType(): string {
@@ -190,9 +197,10 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
 
     createDom(
         id: SCHEMA.TYPES.Integer,
-        props: VirtualDomProperties
+        props: VirtualDomProperties,
+        pendingElements?: Map<SCHEMA.TYPES.Integer, HTMLElement>
     ): IVirtualDom {
-        return new VirtualDomHtmlOrdinary(id, props, this.elements);
+        return new VirtualDomHtmlOrdinary(id, props, this.elements, pendingElements);
     }
 
     createDomForRoot(): IVirtualDom {

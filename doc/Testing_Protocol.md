@@ -347,22 +347,14 @@ cd Gaclib
 node ..\doc\Testing_Protocol_SimpleTyping.js
 ```
 
-**What it tests (10 assertions):**
+**The goal of the test plan cannot be changed.** The test must:
 
-1. **Page rendering** — Verifies that the page loads and renders correctly:
-   - At least 20 leaf text elements present
-   - Window title "Complete Control Showcase" visible
-   - All 7 main tab headers visible (List, Refresh List, Layout, Control, Misc, Window Manager, Exit)
-   - Sub-tab headers visible (TextList, ListView)
-
-2. **Button click** — Clicks the "Add 10 items" button on the TextList sub-tab and
-   verifies new items appear (leaf text count increases).
-
-3. **Sub-tab switching** — Clicks the "ListView" inner tab and verifies the content
-   changes (leaf text count increases significantly, "Detail" text appears).
-
-4. **Keyboard events** — Types keys (a, b, Enter) and verifies that IOKeyDown, IOKeyUp,
-   and IOChar events are sent to the C++ server via HTTP.
+1. Launch the application (start the C++ server, open `index.html` in Playwright).
+2. Open the "Control" tab, find the text box next to the "Search:" label.
+3. Type text into the text box. Typing is implemented by sending IOChar messages.
+   The client sends IOChar events and the core side judges which text box is active.
+4. Verify that the typed text appears in the text box.
+5. Kill the process directly and close the webpage. No elegant exit is needed.
 
 **Prerequisites:**
 - `yarn build` in `Gaclib/`

@@ -4,7 +4,7 @@ import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
-import { fillParagraphMeasurements, getExtraBorder, getParagraphLayout, ParagraphEditUnit, ParagraphLayout, ParagraphLine, setCaretVisible } from './domRenderer/elementStyles';
+import { applyTypedStyle, fillParagraphMeasurements, getExtraBorder, getParagraphLayout, ParagraphEditUnit, ParagraphLayout, ParagraphLine, setCaretVisible } from './domRenderer/elementStyles';
 
 export class GacUIHtmlRendererExitError extends Error {
     constructor() {
@@ -21,6 +21,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _measurer: IElementMeasurer;
     private _renderingRecord: VirtualDomRecord;
     private _images: Map<SCHEMA.TYPES.Integer, SCHEMA.ImageCreation> = new Map();
+    private _pendingElements: Map<SCHEMA.TYPES.Integer, HTMLElement> = new Map();
 
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
@@ -457,33 +458,30 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
 
         // Update via _updateElement which triggers applyTypedStyle → initializeParagraph
-        this._updateElement(elementId, { type: SCHEMA.RendererType.DocumentParagraph, desc: fullDesc });
+        const typedDesc: TypedElementDesc = { type: SCHEMA.RendererType.DocumentParagraph, desc: fullDesc };
+        this._updateElement(elementId, typedDesc);
 
         // After _updateElement, find the htmlElement from the virtual DOM
         const virtualDom = this._renderingRecord.elementToDoms.get(elementId);
-        const htmlElement: HTMLElement | undefined = virtualDom !== undefined && 'htmlElement' in virtualDom ? virtualDom.htmlElement as HTMLElement : undefined;
+        let htmlElement: HTMLElement | undefined = virtualDom !== undefined && 'htmlElement' in virtualDom ? virtualDom.htmlElement as HTMLElement : undefined;
 
-        if (htmlElement !== undefined) {
-            const textDiv = getExtraBorder(htmlElement);
-            if (textDiv !== undefined) {
-                this._paragraphElements.set(elementId, { htmlElement, textDiv });
-                const layout = getParagraphLayout(htmlElement);
-                if (layout !== undefined) {
-                    const documentSize = this._measureParagraphDocumentSize(textDiv, layout);
-                    this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
-                    return;
-                }
-            }
+        if (htmlElement === undefined) {
+            // Virtual DOM not yet created (RequestRendererRenderDomDiff hasn't run yet).
+            // Create a temporary HTML element, apply style, and add to pending list.
+            htmlElement = document.createElement('div');
+            applyTypedStyle(htmlElement, typedDesc, this._renderingRecord.elements);
+            this._pendingElements.set(elementId, htmlElement);
         }
 
-        // Element not yet in the DOM tree — create a temporary measurement
-        const layout = getParagraphLayout(htmlElement!);
-        if (layout !== undefined) {
-            const textDiv = getExtraBorder(htmlElement!)!;
-            const documentSize = this._measureParagraphDocumentSize(textDiv, layout);
-            this._paragraphElements.set(elementId, { htmlElement: htmlElement!, textDiv });
-            this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
-            return;
+        const textDiv = getExtraBorder(htmlElement);
+        if (textDiv !== undefined) {
+            this._paragraphElements.set(elementId, { htmlElement, textDiv });
+            const layout = getParagraphLayout(htmlElement);
+            if (layout !== undefined) {
+                const documentSize = this._measureParagraphDocumentSize(textDiv, layout);
+                this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
+                return;
+            }
         }
 
         // Fallback: respond with zero size
@@ -927,7 +925,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         if (this._stopping) {
             return;
         }
-        updateVirtualDomWithRenderingDomDiff(requestArgs, this._renderingRecord, this._provider);
+        const pendingElements = this._pendingElements.size > 0 ? this._pendingElements : undefined;
+        updateVirtualDomWithRenderingDomDiff(requestArgs, this._renderingRecord, this._provider, pendingElements);
+        this._pendingElements = new Map();
         this._provider.fixBounds(
             this._renderingRecord.screen,
             this._settings.target,

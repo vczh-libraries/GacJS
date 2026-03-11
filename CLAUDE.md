@@ -93,6 +93,12 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
     - All previous unclosed `/index.htm.` will lose connection.
     - UI state is supposed to transfer to the new `/index.htm.`.
 
+## Debugging with Playwright and index.html
+
+- When running Playwright tests against `index.html`, you can inject `throw new Error('UNIQUE_WORD')` into the TypeScript source to locate where an error occurs.
+- When the injected error is thrown, the browser will show a dialog box (from the unhandled error), and Playwright will see it. This tells you exactly where the error happens.
+- Use a unique word in the error message so you can search for it and confirm which code path triggered.
+
 ## TypeScript/JavaScript coding guidelines
 
 - Always prefer strict testing, like `===` instead of `==`.
