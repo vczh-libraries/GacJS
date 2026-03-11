@@ -47,11 +47,14 @@ RequestRendererUpdateElement_DocumentParagraph(id, requestArgs)
     │
     ├── First call (text !== null): Build full ParagraphLayout
     │   ├── Merge requestArgs into ElementDesc_DocumentParagraphFull
+    │   ├── runsDiff + createdInlineObjects represent the complete document
     │   ├── Store via _updateElement() → applyTypedStyle() → initializeParagraph()
     │   └── Respond with documentSize after layout
     │
-    └── Subsequent calls (text === null): Incremental style update
-        ├── Patch runsDiff into existing ParagraphLayout
+    └── Subsequent calls (text === null): Incremental update
+        ├── runsDiff carries incremental changes (not a full replacement)
+        ├── createdInlineObjects / removedInlineObjects track additions/deletions
+        ├── Patch incremental diffs into existing ParagraphLayout
         ├── Update only affected DOM spans
         └── Respond with documentSize after layout
 
@@ -72,12 +75,11 @@ Other methods (GetCaret, GetCaretBounds, etc.)
 **Key behaviors:**
 - `requestArgs.text` is non-null only on the first call (full document creation).
   The text never changes incrementally — changing text requires recreating the document.
-- Subsequent calls have `requestArgs.text === null` and carry only `runsDiff` changes
-  (style updates, inline object changes).
-- `requestArgs.runsDiff` contains the **complete** set of runs after the change, not a diff
-  against the previous runs. Each call replaces the previous runs.
-- `requestArgs.createdInlineObjects` / `requestArgs.removedInlineObjects` track inline
-  object lifecycle.
+- On the first call (`text !== null`), `runsDiff` and `createdInlineObjects` represent
+  the **complete** document (there is nothing to delete on the first call).
+- On subsequent calls (`text === null`), `runsDiff` carries **incremental changes** only
+  (not a full replacement). `createdInlineObjects` and `removedInlineObjects` track
+  inline objects added and deleted since the last call.
 - Must respond with `{ documentSize: { x, y } }` — the pixel dimensions of the rendered paragraph.
 
 **Critical timing issue — Layout before measurement:**
@@ -202,10 +204,10 @@ RendererRenderDomDiff(diffs)
 
 ```
 RendererCreated        → element registered in ElementManager
-RequestRendererUpdateElement_DocumentParagraph (first)  → full document built
-RequestRendererUpdateElement_DocumentParagraph (subsequent) → incremental style changes
+RequestRendererUpdateElement_DocumentParagraph (first)  → full document built (runsDiff = complete)
+RequestRendererUpdateElement_DocumentParagraph (subsequent) → incremental style changes (runsDiff = diff)
 RequestDocumentParagraph_*  → caret navigation, bounds queries
-RequestRendererUpdateElement_DocumentParagraph (with new runs) → style/selection changes
+RequestRendererUpdateElement_DocumentParagraph (with new runs) → incremental style/selection changes
 RendererDestroyed      → element removed, ParagraphLayout discarded
 ```
 
@@ -271,8 +273,8 @@ and detach. This is the same approach used for SolidLabel `TotalSize` measuremen
 
 Selection changes are the most frequent incremental update. When a user drags to select
 text, the core sends rapid `RequestRendererUpdateElement_DocumentParagraph` calls with
-only `runsDiff` changes (the selection adds background colors to text runs). These must
-be fast because:
+only `runsDiff` changes (incremental run diffs that update background colors on text
+runs for the selection). These must be fast because:
 
 1. Each mouse move during a drag generates a new selection update.
 2. The user perceives lag if DOM manipulation takes >16ms per frame.
@@ -286,20 +288,20 @@ be fast because:
 | `wrapLine` | Initial value | May change | Global layout property |
 | `maxWidth` | Initial value | May change | Global layout property |
 | `alignment` | Initial value | May change | Global layout property |
-| `runsDiff` | Complete runs | Complete replacement runs | Full set of current runs |
-| `createdInlineObjects` | Initial set | New objects | Newly created inline objects |
-| `removedInlineObjects` | Empty | Removed IDs | Inline objects to remove |
+| `runsDiff` | Complete document runs | Incremental changes only | First call = full; subsequent = diff |
+| `createdInlineObjects` | Complete set | Newly added objects | First call = full; subsequent = additions |
+| `removedInlineObjects` | Empty (nothing to delete) | Deleted object IDs | Only on subsequent calls |
 
 ### Incremental DOM Update Algorithm
 
-Since `runsDiff` provides the **complete** current set of runs (not a delta), the
-algorithm is:
+Since subsequent `runsDiff` values carry **incremental changes** (not a full replacement),
+the algorithm is:
 
-**For each line in the existing ParagraphLayout:**
+**For each changed run in the incremental `runsDiff`:**
 
-1. Compute the new set of `ParagraphBlock`s that the current `runsDiff` would produce
-   for this line's text range.
-2. Compare with existing blocks:
+1. Determine which lines are affected by the changed run's caret range.
+2. For each affected line, recompute the `ParagraphBlock`s from the merged runs.
+3. Compare with existing blocks:
    - **Same type, same range, same properties** → No change (skip).
    - **Same type, same range, different properties** → Update CSS inline style only.
    - **Different structure** → Rebuild the line's DOM children.
@@ -353,11 +355,12 @@ This function replaces the `// TODO: updateParagraph with actual diffs` comment 
 2. If `wrapLine`, `maxWidth`, or `alignment` changed: update `textDiv` CSS styles and
    each line's width constraints.
 3. Handle `removedInlineObjects`: find and remove corresponding spans.
-4. Handle `createdInlineObjects`: no DOM changes needed yet — they'll appear in `runsDiff`.
-5. For each line, diff old runs vs new runs within that line range:
+4. Handle `createdInlineObjects`: register new inline objects (DOM elements created on demand
+   when they appear in `runsDiff`).
+5. Merge the incremental `runsDiff` into the existing run list. For each affected line:
    - If structure unchanged (same boundaries and types): update span styles inline.
    - If structure changed: rebuild line DOM via `buildBlocksForLine()`.
-6. Update `layout.paragraph.runsDiff` to the new runs.
+6. Update `layout.paragraph.runsDiff` to the merged result.
 
 ---
 
