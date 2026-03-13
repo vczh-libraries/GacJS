@@ -334,6 +334,21 @@ for the error message.
 
 ## Test Scripts
 
+**Prerequisites:**
+- `yarn build` in `Gaclib/`
+- `RemotingTest_Core.exe` built (via `scripts/start-test-server.ps1` or Visual Studio)
+- `npx playwright install chromium` (first time only)
+
+**Crash detection:**
+`index.html` calls `alert(error.message)` when any exception occurs during the
+remote protocol session. In Playwright, this triggers a `dialog` event. The test
+script listens for this event via `page.on('dialog', ...)` and logs the dialog
+message as `[CRASH]`. If a dialog appears, it means a JavaScript error was thrown
+and the test will report a failure. When debugging manually, you can also inject
+`throw new Error('UNIQUE_WORD')` in the TypeScript source to locate where an error
+occurs — the browser will show an alert with the error message, and Playwright will
+capture it via the dialog event.
+
 ### Testing_Protocol_SimpleTyping.js
 
 A standalone Playwright test script that verifies basic UI rendering and interaction
@@ -353,18 +368,3 @@ node ..\doc\Testing_Protocol_SimpleTyping.js
    The client sends IOChar events and the core side judges which text box is active.
 4. Verify that the typed text appears in the text box.
 5. Kill the process directly and close the webpage. No elegant exit is needed.
-
-**Prerequisites:**
-- `yarn build` in `Gaclib/`
-- `RemotingTest_Core.exe` built (via `scripts/start-test-server.ps1` or Visual Studio)
-- `npx playwright install chromium` (first time only)
-
-**Crash detection:**
-`index.html` calls `alert(error.message)` when any exception occurs during the
-remote protocol session. In Playwright, this triggers a `dialog` event. The test
-script listens for this event via `page.on('dialog', ...)` and logs the dialog
-message as `[CRASH]`. If a dialog appears, it means a JavaScript error was thrown
-and the test will report a failure. When debugging manually, you can also inject
-`throw new Error('UNIQUE_WORD')` in the TypeScript source to locate where an error
-occurs — the browser will show an alert with the error message, and Playwright will
-capture it via the dialog event.
