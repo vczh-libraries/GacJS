@@ -401,3 +401,31 @@ node ..\doc\Testing_Protocol_Font.js
    **[VERIFY]** The selected text turns white; in the non-selected region, `C..K` still
    has a bigger size and `H..M` still has color `#00FFFF`.
 9. Kill the process directly and close the webpage. No elegant exit is needed.
+
+### Testing_Protocol_ImageInText.js
+
+A standalone Playwright test script that verifies inline image insertion and rendering
+in the GacUI rich-text document editor. Located at
+`doc/Testing_Protocol_ImageInText.js`.
+
+**Run:**
+```powershell
+cd Gaclib
+node ..\doc\Testing_Protocol_ImageInText.js
+```
+
+**The goal of the test plan cannot be changed.** The test must:
+
+1. Launch the application (start the C++ server, open `index.html` in Playwright).
+2. Open the "Control" tab, click the rich-text document editor (the large area at the
+   bottom).
+3. Type `ABC` into the editor.
+4. Click the "Insert" tab in the ribbon, then click the "Insert Image" button. A file
+   dialog opens with two lists and a text box at the bottom. Click the text box, type
+   `C:\5900.png`, then click OK. An image is inserted after `ABC` on the same line.
+5. Press Home, then type `X`.
+   **[VERIFY]** The content is `XABC` followed by an inline image that is visible.
+6. Press Ctrl+A to select all content.
+   **[VERIFY]** The content is `XABC` followed by an inline image, and the image has a
+   visible selection indicator (background overlay).
+7. Kill the process directly and close the webpage. No elegant exit is needed.
