@@ -4,7 +4,7 @@ import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
-import { applyTypedStyle, fillParagraphMeasurements, getExtraBorder, getParagraphLayout, ParagraphEditUnit, ParagraphLayout, ParagraphLine, setCaretVisible } from './domRenderer/elementStyles';
+import { applyTypedStyle, fillParagraphMeasurements, getExtraBorder, getParagraphLayout, ParagraphEditUnit, ParagraphLayout, ParagraphLine, setCaretVisible, updateParagraphInlineImages } from './domRenderer/elementStyles';
 
 export class GacUIHtmlRendererExitError extends Error {
     constructor() {
@@ -412,6 +412,15 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
 
         this._updateElement(finalRequestArgs.id, { type: SCHEMA.RendererType.ImageFrame, desc: finalRequestArgs });
+
+        // Patch inline object images in paragraphs that reference this ImageFrame.
+        // This handles the case where the paragraph was built before the ImageFrame desc was available.
+        for (const [, data] of this._paragraphElements) {
+            const layout = getParagraphLayout(data.htmlElement);
+            if (layout !== undefined) {
+                updateParagraphInlineImages(layout, finalRequestArgs.id, this._renderingRecord.elements);
+            }
+        }
     }
 
     /****************************************************************************************

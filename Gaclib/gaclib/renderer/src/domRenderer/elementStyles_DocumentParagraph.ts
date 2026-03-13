@@ -88,6 +88,44 @@ export interface ParagraphLayout {
 
 // TODO: updateParagraph with actual diffs.
 
+/**
+ * Patch inline object images that were missing during paragraph initialization.
+ * Called when an ImageFrame element is updated after the paragraph was built,
+ * so that deferred images get their src set.
+ */
+export function updateParagraphInlineImages(layout: ParagraphLayout, imageFrameElementId: number, elements: ElementManager): void {
+    const runs = layout.paragraph.runsDiff ?? [];
+    for (const line of layout.lines) {
+        for (const block of line.blocks) {
+            if (block.image !== undefined) continue; // already has image
+            const run = runs.find(r =>
+                r.caretBegin <= block.start && r.caretEnd >= block.end &&
+                r.props[0] === 'DocumentInlineObjectRunProperty'
+            );
+            if (run === undefined || run.props[0] !== 'DocumentInlineObjectRunProperty') continue;
+            const props = run.props[1];
+            if (props.backgroundElementId !== imageFrameElementId) continue;
+
+            // Check if the span has matching data attribute
+            if (block.span.dataset.backgroundElementId !== String(imageFrameElementId)) continue;
+
+            const imageDesc = elements.getDesc(imageFrameElementId);
+            if (imageDesc === undefined || imageDesc.type !== SCHEMA.RendererType.ImageFrame) continue;
+            const imageFrame = imageDesc.desc;
+            if (imageFrame.imageCreation === null || imageFrame.imageCreation.imageDataOmitted) continue;
+
+            const contentType = getImageContentType(getImageFormatType(imageFrame.imageCreation.imageData));
+            const image = document.createElement('img');
+            image.src = getImageDataUrl(contentType, imageFrame.imageCreation.imageData);
+            const baseline = props.baseline === -1 ? props.size.y : props.baseline;
+            image.style.cssText = `width: ${props.size.x}px; height: ${props.size.y}px; position: absolute; top: ${baseline - props.size.y}px; left: 0;`;
+            // Insert image before any existing overlay div
+            block.span.insertBefore(image, block.span.firstChild);
+            block.image = image;
+        }
+    }
+}
+
 /**********************************************************************
  * Inline Object
  **********************************************************************/
@@ -97,12 +135,34 @@ interface InlineObjectSpanResult {
     image?: HTMLImageElement;
 }
 
+/**
+ * Parse a #RRGGBBAA or #RRGGBB color string into an rgba() CSS value with halved alpha.
+ * Used to create a semi-transparent selection overlay on inline objects.
+ */
+function toSelectionOverlayColor(color: string): string | undefined {
+    if (color === '#00000000' || color === '#000000') {
+        return undefined;
+    }
+    const hex = color.startsWith('#') ? color.slice(1) : color;
+    if (hex.length < 6) return undefined;
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const a = hex.length >= 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1.0;
+    // Halve the alpha to keep the image visible underneath
+    const halfAlpha = Math.max(a * 0.5, 0.25);
+    return `rgba(${r}, ${g}, ${b}, ${halfAlpha.toFixed(2)})`;
+}
+
 function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, elements: ElementManager): InlineObjectSpanResult {
     const span = document.createElement('span');
     span.style.cssText = `display: inline-block; width: ${props.size.x}px; height: ${props.size.y}px; position: relative;`;
     let image: HTMLImageElement | undefined;
 
     if (props.backgroundElementId !== -1) {
+        // Store the element ID on the span for deferred image patching
+        span.dataset.backgroundElementId = String(props.backgroundElementId);
+
         const imageDesc = elements.getDesc(props.backgroundElementId);
         if (imageDesc !== undefined && imageDesc.type === SCHEMA.RendererType.ImageFrame) {
             const imageFrame = imageDesc.desc;
@@ -115,6 +175,14 @@ function createInlineObjectSpan(props: SCHEMA.DocumentInlineObjectRunProperty, e
                 span.appendChild(image);
             }
         }
+    }
+
+    // Apply selection overlay when backgroundColor indicates selection
+    const overlayColor = toSelectionOverlayColor(props.backgroundColor);
+    if (overlayColor !== undefined) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: ${overlayColor}; pointer-events: none;`;
+        span.appendChild(overlay);
     }
 
     return { span, image };
