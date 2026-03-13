@@ -368,3 +368,36 @@ node ..\doc\Testing_Protocol_SimpleTyping.js
    The client sends IOChar events and the core side judges which text box is active.
 4. Verify that the typed text appears in the text box.
 5. Kill the process directly and close the webpage. No elegant exit is needed.
+
+### Testing_Protocol_Font.js
+
+A standalone Playwright test script that verifies font/color formatting and incremental
+selection rendering in the GacUI rich-text document editor. Located at
+`doc/Testing_Protocol_Font.js`.
+
+**Run:**
+```powershell
+cd Gaclib
+node ..\doc\Testing_Protocol_Font.js
+```
+
+**The goal of the test plan cannot be changed.** The test must:
+
+1. Launch the application (start the C++ server, open `index.html` in Playwright).
+2. Open the "Control" tab, click the rich-text document editor (the large area at the
+   bottom).
+3. Type `ABCDEFGHIJKLMN` into the editor.
+4. Select the range `C..K` (characters C through K). Open the font dialog from the
+   toolbar, select the only available font, pick a bigger text size so the OK button
+   becomes enabled, then click OK.
+5. Select the range `H..M`. Open the text-color dialog from the toolbar (not the
+   background-color button), change the first of the three text boxes to `0`, then
+   click OK.
+6. **[VERIFY]** Confirm that `C..K` renders at a bigger font size and `H..M` renders
+   with color `#00FFFF`.
+7. Click the rich editor again and press Home so the cursor jumps to position 0.
+   **[VERIFY]** Same size/color checks as step 6.
+8. Press Shift+Right 14 times. After each keypress:
+   **[VERIFY]** The selected text turns white; in the non-selected region, `C..K` still
+   has a bigger size and `H..M` still has color `#00FFFF`.
+9. Kill the process directly and close the webpage. No elegant exit is needed.
