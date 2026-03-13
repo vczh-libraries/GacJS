@@ -12,6 +12,41 @@ export class GacUIHtmlRendererExitError extends Error {
     }
 }
 
+/**
+ * Merge incremental `runsDiff` into an accumulated run list.
+ * Each diff run "stamps" over the existing runs at its range,
+ * preserving existing runs outside the diff range.
+ */
+function mergeRunsDiff(
+    existingRuns: SCHEMA.DocumentRun[],
+    diffRuns: SCHEMA.DocumentRun[]
+): SCHEMA.DocumentRun[] {
+    let result = [...existingRuns];
+
+    for (const diff of diffRuns) {
+        const newResult: SCHEMA.DocumentRun[] = [];
+        for (const existing of result) {
+            if (existing.caretEnd <= diff.caretBegin || existing.caretBegin >= diff.caretEnd) {
+                // No overlap — keep existing run as-is
+                newResult.push(existing);
+            } else {
+                // Overlap — keep only the non-overlapping parts of the existing run
+                if (existing.caretBegin < diff.caretBegin) {
+                    newResult.push({ ...existing, caretEnd: diff.caretBegin });
+                }
+                if (existing.caretEnd > diff.caretEnd) {
+                    newResult.push({ ...existing, caretBegin: diff.caretEnd });
+                }
+            }
+        }
+        newResult.push(diff);
+        result = newResult;
+    }
+
+    result.sort((a, b) => a.caretBegin - b.caretBegin);
+    return result;
+}
+
 export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemoteProtocolRequests {
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
@@ -464,11 +499,16 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                 throw new Error(`Element ${elementId} is not a DocumentParagraph or has no previous desc.`);
             }
             const existingDesc = existingTypedDesc.desc;
+            const mergedRunsDiff = mergeRunsDiff(
+                existingDesc.paragraph.runsDiff ?? [],
+                requestArgs.runsDiff ?? []
+            );
             fullDesc = {
                 paragraph: {
                     ...existingDesc.paragraph,
                     ...requestArgs,
-                    text: existingDesc.paragraph.text // text never changes incrementally
+                    text: existingDesc.paragraph.text, // text never changes incrementally
+                    runsDiff: mergedRunsDiff
                 },
                 caret: existingDesc.caret
             };

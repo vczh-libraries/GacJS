@@ -91,7 +91,8 @@ async function getLeafTextPositions(page) {
     });
 }
 
-/** Return per-character styles from the largest DocumentParagraph element. */
+/** Return per-character styles from the largest DocumentParagraph element.
+ *  Uses getComputedStyle to capture inherited styles from plain spans. */
 async function getDocCharStyles(page) {
     return page.evaluate(() => {
         const screen = document.getElementById('gacui-screen');
@@ -112,8 +113,9 @@ async function getDocCharStyles(page) {
         if (!container) return [];
         const chars = [];
         for (const span of container.querySelectorAll('span')) {
-            const fs = parseFloat(span.style.fontSize) || 0;
-            const color = span.style.color || '';
+            const computed = window.getComputedStyle(span);
+            const fs = parseFloat(computed.fontSize) || 0;
+            const color = computed.color || '';
             for (const ch of span.textContent) {
                 chars.push({ char: ch, fontSize: fs, color });
             }
@@ -225,6 +227,69 @@ async function findAndClick(page, textToFind, positions) {
     return true;
 }
 
+/**
+ * Find icon buttons (small elements with background-image) in a bounding box.
+ * Returns sorted by (y, x).
+ */
+async function findIconButtonsInArea(page, xMin, xMax, yMin, yMax) {
+    return page.evaluate(({ xMin, xMax, yMin, yMax }) => {
+        const screen = document.getElementById('gacui-screen');
+        if (!screen) return [];
+        const result = [];
+        for (const div of screen.querySelectorAll('div')) {
+            const bi = div.style.backgroundImage;
+            if (bi && bi !== 'none') {
+                const r = div.getBoundingClientRect();
+                const cx = r.x + r.width / 2;
+                const cy = r.y + r.height / 2;
+                if (cx >= xMin && cx <= xMax && cy >= yMin && cy <= yMax &&
+                    r.width >= 8 && r.width <= 32 && r.height >= 8 && r.height <= 32) {
+                    result.push({ cx, cy, x: r.x, y: r.y, w: r.width, h: r.height });
+                }
+            }
+        }
+        return result.sort((a, b) => a.cy - b.cy || a.cx - b.cx);
+    }, { xMin, xMax, yMin, yMax });
+}
+
+/**
+ * Group icon buttons into rows by Y coordinate (within tolerance).
+ * Returns array of rows sorted top-to-bottom; each row sorted left-to-right.
+ */
+function groupIntoRows(icons, tolerance) {
+    const rows = [];
+    for (const icon of icons) {
+        let found = false;
+        for (const row of rows) {
+            if (Math.abs(row[0].cy - icon.cy) < (tolerance || 5)) {
+                row.push(icon);
+                found = true;
+                break;
+            }
+        }
+        if (!found) rows.push([icon]);
+    }
+    rows.sort((a, b) => a[0].cy - b[0].cy);
+    for (const row of rows) {
+        row.sort((a, b) => a.cx - b.cx);
+    }
+    return rows;
+}
+
+/**
+ * Compare 'before' and 'after' leaf text snapshots. Return texts present only
+ * in 'after' (i.e. dialog-specific elements).
+ */
+function findNewTexts(before, after) {
+    return after.filter(a =>
+        !before.some(b =>
+            b.text === a.text &&
+            Math.abs(b.cx - a.cx) < 8 &&
+            Math.abs(b.cy - a.cy) < 8
+        )
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -271,6 +336,9 @@ async function main() {
             failed++;
             await dialog.dismiss();
         });
+
+        // Forward browser console messages (renderer logging) to Node stdout
+        page.on('console', () => {});
 
         await page.goto(WEBSITE_URL, { timeout: 30000 });
         await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
@@ -369,52 +437,87 @@ async function main() {
         await sleep(1000);
         pass('Selected C..K');
 
-        // Click "Set Font ..." button
+        // Find the "Set Font ..." icon button in the "Text" ribbon group.
+        // The buttons are icon-only (no text labels). We locate them by finding
+        // icon elements near the "Text" group label. The layout has 2 rows:
+        //   Row 0: Bold, Italic, EditHyperlink, RemoveHyperlink
+        //   Row 1: Font, Color, BackColor, (maybe Underline, Strike too)
+        // "Set Font" is Row 1 index 0, "Text Color" is Row 1 index 1.
         positions = await getLeafTextPositions(page);
-        const fontBtn = positions.find(p => p.text === 'Set Font ...');
-        if (!fontBtn) {
-            fail('Font button', `Could not find "Set Font ..." in: ${positions.map(p => p.text).join(', ')}`);
-        } else {
-            await clickAt(page, fontBtn.cx, fontBtn.cy);
-            await sleep(3000);
-            pass('Clicked "Set Font ..."');
+        const textGroupLabel = positions.find(p => p.text === 'Text');
+        const iconLabelsLabel = positions.find(p => p.text === 'Icon Labels');
+
+        let fontBtnPos = null;
+        let colorBtnPos = null;
+
+        if (textGroupLabel) {
+            // Search area: above the "Text" label, roughly the group's width
+            const xMin = textGroupLabel.left - 20;
+            const xMax = iconLabelsLabel ? iconLabelsLabel.left : textGroupLabel.right + 200;
+            const yMin = textGroupLabel.top - 100;
+            const yMax = textGroupLabel.top;
+
+            const icons = await findIconButtonsInArea(page, xMin, xMax, yMin, yMax);
+            const rows = groupIntoRows(icons, 5);
+
+            console.log(`  Icon rows in Text group: ${rows.map(r => r.length).join(', ')} (total ${icons.length})`);
+            for (let ri = 0; ri < rows.length; ri++) {
+                console.log(`    Row ${ri}: ${rows[ri].map(i => `(${Math.round(i.cx)},${Math.round(i.cy)})`).join(' ')}`);
+            }
+
+            // In a 2-row arrangement, the last row starts with Group 2 (Font, Color,
+            // BackColor) followed by Group 3 (EditHyperlink, RemoveHyperlink).
+            // Font is always at index 0, Color at index 1 in the last row.
+            if (rows.length >= 2) {
+                const lastRow = rows[rows.length - 1];
+                if (lastRow.length >= 2) {
+                    fontBtnPos = lastRow[0];
+                    colorBtnPos = lastRow[1];
+                }
+                if (fontBtnPos) {
+                    pass(`Found Font icon at (${Math.round(fontBtnPos.cx)}, ${Math.round(fontBtnPos.cy)})`);
+                }
+            }
         }
 
-        // -- Font dialog interaction --
-        positions = await getLeafTextPositions(page);
-        const chooseFontTitle = positions.find(p => p.text === 'Choose Font');
+        // Record leaf texts BEFORE opening the dialog (to detect new dialog texts)
+        const textsBeforeFont = await getLeafTextPositions(page);
+
+        if (fontBtnPos) {
+            await clickAt(page, fontBtnPos.cx, fontBtnPos.cy);
+            await sleep(3000);
+            pass('Clicked Font icon button');
+        } else {
+            fail('Font button', 'Could not locate Font icon button in Text group');
+        }
+
+        // -- Font dialog interaction using "new texts" approach --
+        const textsAfterFont = await getLeafTextPositions(page);
+        const newFontTexts = findNewTexts(textsBeforeFont, textsAfterFont);
+        console.log(`  Dialog new texts: ${newFontTexts.map(t => t.text).join(', ')}`);
+
+        const chooseFontTitle = newFontTexts.find(p => p.text === 'Choose Font');
         if (!chooseFontTitle) {
-            fail('Font dialog', `Dialog did not appear. Texts: ${positions.map(p => p.text).join(', ')}`);
+            fail('Font dialog', 'Dialog did not appear');
         } else {
             pass('Font dialog opened');
 
-            // Identify dialog bounds (rough)
-            const dlgLeft = chooseFontTitle.left - 10;
-            const dlgTop = chooseFontTitle.top - 10;
-            const dlgRight = dlgLeft + 400;
-            const dlgBottom = dlgTop + 420;
-
-            // Known dialog labels
             const knownLabels = new Set([
                 'Choose Font', 'Font:', 'Size:', 'Preview:', 'ABCxyz', 'OK', 'Cancel'
             ]);
+            const sizeLabel = newFontTexts.find(p => p.text === 'Size:');
 
-            // Find font names: non-numeric, non-label texts in left half of dialog
-            const dlgMidX = (dlgLeft + dlgRight) / 2;
-            const fontLabel = positions.find(p => p.text === 'Font:');
-            const sizeLabel = positions.find(p => p.text === 'Size:');
-            const fontNames = positions.filter(p =>
-                p.cx >= dlgLeft && p.cx <= dlgMidX &&
-                p.cy > (fontLabel ? fontLabel.cy + 10 : dlgTop + 30) &&
-                p.cy < dlgBottom - 40 &&
+            // Instead of clicking list items, directly type in the Size text box.
+            // The Size text box is below the "Size:" label.
+            // First select a font by clicking the font name in the font list.
+            const fontNames = newFontTexts.filter(p =>
                 !knownLabels.has(p.text) &&
-                !/^\d+$/.test(p.text)
+                !/^\d+$/.test(p.text) &&
+                (sizeLabel ? p.cx < sizeLabel.cx : p.cx < chooseFontTitle.cx + 100)
             );
-
-            console.log(`  Font names found: ${fontNames.map(f => f.text).join(', ')}`);
+            console.log(`  Font names: ${fontNames.map(f => f.text).join(', ')}`);
 
             if (fontNames.length > 0) {
-                // Click the first font name
                 await clickAt(page, fontNames[0].cx, fontNames[0].cy);
                 await sleep(1000);
                 pass(`Selected font: "${fontNames[0].text}"`);
@@ -422,41 +525,40 @@ async function main() {
                 fail('Select font', 'No font names found in dialog');
             }
 
-            // Enter bigger size in the Size text box
+            // Type the desired size directly in the Size text box
+            // The text box is right below "Size:" label
             if (sizeLabel) {
-                // The text box is below the "Size:" label
+                // The text box is below the Size: label — click just below it
                 const sizeBoxX = sizeLabel.cx;
-                const sizeBoxY = sizeLabel.cy + 25;
+                const sizeBoxY = sizeLabel.bottom + 10;
                 await clickAt(page, sizeBoxX, sizeBoxY);
                 await sleep(500);
                 await page.keyboard.press('Control+a');
                 await sleep(300);
                 await page.keyboard.type(String(BIG_SIZE));
                 await sleep(1000);
-                pass(`Typed size ${BIG_SIZE}`);
+                pass(`Typed size ${BIG_SIZE} in Size text box`);
             } else {
-                fail('Size text box', 'Could not find "Size:" label');
+                fail('Size text box', 'Could not find Size: label');
             }
 
             // Click OK
             await sleep(500);
-            const okBtn = positions.find(p =>
-                p.text === 'OK' &&
-                p.cx >= dlgLeft && p.cx <= dlgRight &&
-                p.cy >= dlgTop && p.cy <= dlgBottom
-            );
-            if (okBtn) {
-                await clickAt(page, okBtn.cx, okBtn.cy);
+            const fontOk = newFontTexts.find(p => p.text === 'OK');
+            if (fontOk) {
+                await clickAt(page, fontOk.cx, fontOk.cy);
                 await sleep(3000);
                 pass('Clicked OK in font dialog');
             } else {
-                // Try finding OK anywhere
-                if (await findAndClick(page, 'OK')) {
-                    await sleep(3000);
-                    pass('Clicked OK (fallback)');
-                } else {
-                    fail('Font dialog OK', 'Could not find OK button');
-                }
+                fail('Font dialog OK', 'Could not find OK button');
+            }
+
+            // Verify dialog closed
+            const afterFontOk = await getLeafTextPositions(page);
+            if (afterFontOk.some(p => p.text === 'Choose Font')) {
+                fail('Font dialog close', 'Font dialog still open after clicking OK');
+            } else {
+                pass('Font dialog closed');
             }
         }
 
@@ -485,22 +587,26 @@ async function main() {
         await sleep(1000);
         pass('Selected H..M');
 
-        // Click "Text Color ..." button
-        positions = await getLeafTextPositions(page);
-        const colorBtn = positions.find(p => p.text === 'Text Color ...');
-        if (!colorBtn) {
-            fail('Color button', `Could not find "Text Color ..." in: ${positions.map(p => p.text).join(', ')}`);
-        } else {
-            await clickAt(page, colorBtn.cx, colorBtn.cy);
+        // Record texts before opening color dialog
+        const textsBeforeColor = await getLeafTextPositions(page);
+
+        // Click "Text Color ..." icon button
+        if (colorBtnPos) {
+            await clickAt(page, colorBtnPos.cx, colorBtnPos.cy);
             await sleep(3000);
-            pass('Clicked "Text Color ..."');
+            pass('Clicked Text Color icon button');
+        } else {
+            fail('Color button', 'Could not locate Text Color icon button');
         }
 
-        // -- Color dialog interaction --
-        positions = await getLeafTextPositions(page);
-        const redLabel = positions.find(p => p.text === 'Red:');
+        // -- Color dialog interaction using "new texts" approach --
+        const textsAfterColor = await getLeafTextPositions(page);
+        const newColorTexts = findNewTexts(textsBeforeColor, textsAfterColor);
+        console.log(`  Color dialog new texts: ${newColorTexts.map(t => t.text).join(', ')}`);
+
+        const redLabel = newColorTexts.find(p => p.text === 'Red:');
         if (!redLabel) {
-            fail('Color dialog', `Dialog did not appear. Texts: ${positions.map(p => p.text).join(', ')}`);
+            fail('Color dialog', `Dialog did not appear. New texts: ${newColorTexts.map(t=>t.text).join(', ')}`);
         } else {
             pass('Color dialog opened');
 
@@ -518,13 +624,22 @@ async function main() {
             pass('Set Red to 0');
 
             // Click OK
-            const colorDlgOk = positions.find(p => p.text === 'OK');
-            if (colorDlgOk) {
-                await clickAt(page, colorDlgOk.cx, colorDlgOk.cy);
+            await sleep(500);
+            const colorOk = newColorTexts.find(p => p.text === 'OK');
+            if (colorOk) {
+                await clickAt(page, colorOk.cx, colorOk.cy);
                 await sleep(3000);
                 pass('Clicked OK in color dialog');
             } else {
                 fail('Color dialog OK', 'Could not find OK button');
+            }
+
+            // Verify dialog closed
+            const afterColorOk = await getLeafTextPositions(page);
+            if (afterColorOk.some(p => p.text === 'Red:')) {
+                fail('Color dialog close', 'Color dialog still open after clicking OK');
+            } else {
+                pass('Color dialog closed');
             }
         }
 
