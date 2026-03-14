@@ -29,80 +29,21 @@
 //      a visible selection indicator (background overlay).
 //   7. Kill the process directly and close the webpage. No elegant exit is needed.
 
-const path = require('path');
+const {
+    sleep,
+    getLeafTextPositions,
+    findEditorCenter,
+    clickAt,
+    findAndClick,
+    findNewTexts,
+    runTest
+} = require('./Testing_Protocol');
 
-const REPO_ROOT = path.resolve(__dirname, '..');
-const GACLIB_ROOT = path.resolve(REPO_ROOT, 'Gaclib');
-
-const { chromium } = require(path.resolve(GACLIB_ROOT, 'node_modules', '@playwright', 'test'));
-const { execSync, exec } = require('child_process');
-const { existsSync } = require('fs');
-
-const SERVER_EXE = path.resolve(REPO_ROOT, 'GacUI', 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
-const WEBSITE_URL = 'http://localhost:8896/index.html';
 const TYPED_TEXT = 'ABC';
 
-function killServer() {
-    try {
-        execSync('taskkill /F /IM RemotingTest_Core.exe', { stdio: 'ignore' });
-    } catch {
-        // Process may not exist
-    }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // ---------------------------------------------------------------------------
-// Helpers
+// Helpers (unique to this test)
 // ---------------------------------------------------------------------------
-
-async function getLeafTextPositions(page) {
-    return page.evaluate(() => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return [];
-        const result = [];
-        for (const d of screen.querySelectorAll('div')) {
-            if (d.childElementCount === 0 && d.textContent.trim() !== '') {
-                const r = d.getBoundingClientRect();
-                result.push({
-                    text: d.textContent.trim(),
-                    cx: r.x + r.width / 2,
-                    cy: r.y + r.height / 2,
-                    right: r.x + r.width,
-                    left: r.x,
-                    top: r.y,
-                    bottom: r.y + r.height,
-                    width: r.width,
-                    height: r.height
-                });
-            }
-        }
-        return result;
-    });
-}
-
-/** Find the editor (largest pre-wrap element) center coordinates. */
-async function findEditorCenter(page) {
-    return page.evaluate(() => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return null;
-        let best = null;
-        let maxArea = 0;
-        for (const div of screen.querySelectorAll('div')) {
-            if (div.style.whiteSpace === 'pre-wrap') {
-                const r = div.getBoundingClientRect();
-                const area = r.width * r.height;
-                if (area > maxArea) {
-                    maxArea = area;
-                    best = { cx: r.x + r.width / 2, cy: r.y + r.height / 2 };
-                }
-            }
-        }
-        return best;
-    });
-}
 
 /**
  * Check the editor content: extract text and inline images.
@@ -172,14 +113,6 @@ async function getEditorContent(page) {
     });
 }
 
-async function clickAt(page, x, y) {
-    await page.mouse.move(x, y);
-    await sleep(200);
-    await page.mouse.down();
-    await sleep(100);
-    await page.mouse.up();
-}
-
 async function doubleClickAt(page, x, y) {
     await page.mouse.move(x, y);
     await sleep(200);
@@ -192,80 +125,12 @@ async function doubleClickAt(page, x, y) {
     await page.mouse.up({ clickCount: 2 });
 }
 
-async function findAndClick(page, textToFind, positions) {
-    const pos = (positions || await getLeafTextPositions(page)).find(p => p.text === textToFind);
-    if (!pos) return false;
-    await clickAt(page, pos.cx, pos.cy);
-    return true;
-}
-
-/**
- * Compare 'before' and 'after' leaf text snapshots. Return texts present only
- * in 'after' (i.e. dialog-specific elements).
- */
-function findNewTexts(before, after) {
-    return after.filter(a =>
-        !before.some(b =>
-            b.text === a.text &&
-            Math.abs(b.cx - a.cx) < 8 &&
-            Math.abs(b.cy - a.cy) < 8
-        )
-    );
-}
-
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function main() {
-    let serverProcess = null;
-    let browser = null;
-    let passed = 0;
-    let failed = 0;
-
-    function pass(name) {
-        passed++;
-        console.log(`  [PASS] ${name}`);
-    }
-
-    function fail(name, detail) {
-        failed++;
-        console.log(`  [FAIL] ${name}: ${detail}`);
-    }
-
-    try {
-        // -----------------------------------------------------------------
-        // Prerequisites
-        // -----------------------------------------------------------------
-        if (!existsSync(SERVER_EXE)) {
-            console.error(`Server executable not found: ${SERVER_EXE}`);
-            console.error('Run: scripts/start-test-server.ps1 to build it.');
-            process.exit(1);
-        }
-
-        killServer();
-        await sleep(1000);
-
-        serverProcess = exec(`"${SERVER_EXE}" /Http`);
-        serverProcess.stdout?.on('data', () => {});
-        serverProcess.stderr?.on('data', () => {});
-        await sleep(3000);
-
-        browser = await chromium.launch({ headless: true });
-        const page = await browser.newPage();
-
-        page.on('dialog', async dialog => {
-            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
-            failed++;
-            await dialog.dismiss();
-        });
-
-        page.on('console', () => {});
-
-        await page.goto(WEBSITE_URL, { timeout: 30000 });
-        await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await sleep(8000);
-
+    const result = await runTest('ImageInText', async (page, pass, fail) => {
         // =================================================================
         // Step 1: Page loaded
         // =================================================================
@@ -587,26 +452,15 @@ async function main() {
         } else {
             fail('Image present (selected)', 'No <img> element found after Ctrl+A');
         }
+    });
 
-        // =================================================================
-        // Summary
-        // =================================================================
-        console.log(`\n${'='.repeat(50)}`);
-        console.log(`Results: ${passed} passed, ${failed} failed`);
-        if (failed > 0) {
-            process.exitCode = 1;
-        }
-
-    } catch (error) {
-        console.error(`[error] ${error.message}`);
-        console.error(error.stack);
+    if (result.failed > 0) {
         process.exitCode = 1;
-    } finally {
-        if (browser !== null) {
-            await browser.close();
-        }
-        killServer();
     }
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = { main };

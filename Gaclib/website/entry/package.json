@@ -10,7 +10,8 @@
         "esbuild-dev": "node ./lib/esbuild.js",
         "esbuild-ship": "node ./lib/esbuild.js --ship",
         "build": "npm-run-all2 -s build-ts build-assets esbuild-dev",
-        "build-ship": "npm-run-all2 -s build-ts build-assets esbuild-ship"
+        "build-ship": "npm-run-all2 -s build-ts build-assets esbuild-ship",
+        "test": "vitest run"
     },
     "license": "Apache-2.0",
     "devDependencies": {

@@ -82,8 +82,10 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - `/solidLabel.html` is a test page for rendering SolidLabel elements in different configurations.
 - `/elements.html` is a test page for rendering various element types side by side.
 - `/index.html` is an interactive UI for testing the remote protocol:
-  - It requires an HTTP server to run. The server executable is built from the GacUI submodule at `(repo-root)/GacUI/Test/GacUISrc/RemotingTest_Core`.
-  - Start the server by running `start (repo-root)\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http`.
+  - It requires an HTTP server to run. The server executable is `RemotingTest_Core` from the GacUI repo.
+    - If `(repo-root)\..\GacUI` exists (a sibling clone), use that: `(repo-root)\..\GacUI\Test\GacUISrc\RemotingTest_Core`.
+    - Otherwise fall back to the submodule: `(repo-root)\GacUI\Test\GacUISrc\RemotingTest_Core`.
+  - Start the server by running `start <GacUI>\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http` (where `<GacUI>` is the resolved path above).
     - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.
   - You must use `start` as the process will block the powershell forever, until:
     - The "Fatal Error" button is clicked.

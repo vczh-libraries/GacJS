@@ -19,29 +19,16 @@
 //   4. Verify that the typed text appears in the text box.
 //   5. Kill the process directly and close the webpage. No elegant exit is needed.
 
-const path = require('path');
+const {
+    sleep,
+    getLeafTextPositions,
+    clickAt,
+    runTest
+} = require('./Testing_Protocol');
 
-const REPO_ROOT = path.resolve(__dirname, '..');
-const GACLIB_ROOT = path.resolve(REPO_ROOT, 'Gaclib');
-
-const { chromium } = require(path.resolve(GACLIB_ROOT, 'node_modules', '@playwright', 'test'));
-const { execSync, exec } = require('child_process');
-const { existsSync } = require('fs');
-
-const SERVER_EXE = path.resolve(REPO_ROOT, 'GacUI', 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
-const WEBSITE_URL = 'http://localhost:8896/index.html';
-
-function killServer() {
-    try {
-        execSync('taskkill /F /IM RemotingTest_Core.exe', { stdio: 'ignore' });
-    } catch {
-        // Process may not exist
-    }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+// ---------------------------------------------------------------------------
+// Helpers (unique to this test)
+// ---------------------------------------------------------------------------
 
 async function getLeafTexts(page) {
     return page.evaluate(() => {
@@ -57,76 +44,12 @@ async function getLeafTexts(page) {
     });
 }
 
-async function getLeafTextPositions(page) {
-    return page.evaluate(() => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return [];
-        const result = [];
-        for (const d of screen.querySelectorAll('div')) {
-            if (d.childElementCount === 0 && d.textContent.trim() !== '') {
-                const r = d.getBoundingClientRect();
-                result.push({
-                    text: d.textContent.trim(),
-                    cx: r.x + r.width / 2,
-                    cy: r.y + r.height / 2,
-                    right: r.x + r.width,
-                    y: r.y,
-                    height: r.height
-                });
-            }
-        }
-        return result;
-    });
-}
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 
 async function main() {
-    let serverProcess = null;
-    let browser = null;
-    let passed = 0;
-    let failed = 0;
-
-    function pass(name) {
-        passed++;
-        console.log(`  [PASS] ${name}`);
-    }
-
-    function fail(name, detail) {
-        failed++;
-        console.log(`  [FAIL] ${name}: ${detail}`);
-    }
-
-    try {
-        // Prerequisites check
-        if (!existsSync(SERVER_EXE)) {
-            console.error(`Server executable not found: ${SERVER_EXE}`);
-            console.error('Run: scripts/start-test-server.ps1 to build it.');
-            process.exit(1);
-        }
-
-        // Setup: kill any leftover server, start fresh
-        killServer();
-        await sleep(1000);
-
-        serverProcess = exec(`"${SERVER_EXE}" /Http`);
-        serverProcess.stdout?.on('data', () => {});
-        serverProcess.stderr?.on('data', () => {});
-        await sleep(3000);
-
-        browser = await chromium.launch({ headless: true });
-        const page = await browser.newPage();
-
-        // Detect crashes: index.html calls alert(error.message) on any exception.
-        // Playwright sees this as a 'dialog' event.
-        page.on('dialog', async dialog => {
-            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
-            failed++;
-            await dialog.dismiss();
-        });
-
-        await page.goto(WEBSITE_URL, { timeout: 30000 });
-        await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await sleep(8000);
-
+    const result = await runTest('SimpleTyping', async (page, pass, fail) => {
         // =====================================================================
         // Step 1: Verify page loaded
         // =====================================================================
@@ -149,11 +72,7 @@ async function main() {
             fail('Control tab', 'Could not find "Control" tab header');
         } else {
             // Click on the Control tab
-            await page.mouse.move(controlTabPos.cx, controlTabPos.cy);
-            await sleep(500);
-            await page.mouse.down();
-            await sleep(200);
-            await page.mouse.up();
+            await clickAt(page, controlTabPos.cx, controlTabPos.cy);
             await sleep(5000);
 
             const afterControl = await getLeafTexts(page);
@@ -181,7 +100,7 @@ async function main() {
             // Click to the right of "Search:" where the text box should be
             const textBoxX = searchLabelPos.right + 30;
             const textBoxY = searchLabelPos.cy;
-            await page.mouse.click(textBoxX, textBoxY);
+            await clickAt(page, textBoxX, textBoxY);
             await sleep(2000);
             pass(`Clicked text box area at (${Math.round(textBoxX)}, ${Math.round(textBoxY)})`);
         }
@@ -196,7 +115,7 @@ async function main() {
         if (searchLabelPos !== undefined) {
             const textBoxX = searchLabelPos.right + 30;
             const textBoxY = searchLabelPos.cy;
-            await page.mouse.click(textBoxX, textBoxY);
+            await clickAt(page, textBoxX, textBoxY);
             await sleep(2000);
         }
 
@@ -238,26 +157,15 @@ async function main() {
             });
             fail('Typed text verification', `"${testText}" not found. Span texts: ${spanTexts.join(', ')}`);
         }
+    });
 
-        // =====================================================================
-        // Summary
-        // =====================================================================
-        console.log(`\n${'='.repeat(50)}`);
-        console.log(`Results: ${passed} passed, ${failed} failed`);
-        if (failed > 0) {
-            process.exitCode = 1;
-        }
-
-    } catch (error) {
-        console.error(`[error] ${error.message}`);
+    if (result.failed > 0) {
         process.exitCode = 1;
-    } finally {
-        // Step 5: Kill process directly — no elegant exit needed
-        if (browser !== null) {
-            await browser.close();
-        }
-        killServer();
     }
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = { main };

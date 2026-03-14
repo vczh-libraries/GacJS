@@ -224,8 +224,13 @@ import { test, expect } from '@playwright/test';
 import { exec, execSync } from 'child_process';
 import path from 'path';
 
-// Resolve from the repo root (two levels up from Gaclib/tests/)
-const SERVER_EXE = path.resolve(__dirname, '../../GacUI/Test/GacUISrc/x64/Debug/RemotingTest_Core.exe');
+// Prefer a sibling GacUI clone over the submodule.
+// When REPO-ROOT\..\GacUI exists, use that; otherwise fall back to REPO-ROOT\GacUI.
+const REPO_ROOT = path.resolve(__dirname, '../..');
+const GACUI_ROOT = fs.existsSync(path.resolve(REPO_ROOT, '..', 'GacUI'))
+    ? path.resolve(REPO_ROOT, '..', 'GacUI')
+    : path.resolve(REPO_ROOT, 'GacUI');
+const SERVER_EXE = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
 const WEBSITE_URL = 'http://localhost:8896/index.html';
 
 test.describe('DocumentParagraph live tests', () => {

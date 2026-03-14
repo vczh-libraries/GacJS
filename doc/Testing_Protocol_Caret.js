@@ -40,96 +40,24 @@
 //      position-4 caret from step 7).
 //   11. Kill the process directly and close the webpage. No elegant exit is needed.
 
-const path = require('path');
+const {
+    sleep,
+    getLeafTextPositions,
+    findEditorCenter,
+    clickAt,
+    findAndClick,
+    findNewTexts,
+    findIconButtonsInArea,
+    groupIntoRows,
+    runTest
+} = require('./Testing_Protocol');
 
-const REPO_ROOT = path.resolve(__dirname, '..');
-const GACLIB_ROOT = path.resolve(REPO_ROOT, 'Gaclib');
-
-const { chromium } = require(path.resolve(GACLIB_ROOT, 'node_modules', '@playwright', 'test'));
-const { execSync, exec } = require('child_process');
-const { existsSync } = require('fs');
-
-const SERVER_EXE = path.resolve(REPO_ROOT, 'GacUI', 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
-const WEBSITE_URL = 'http://localhost:8896/index.html';
 const TYPED_TEXT = 'ABCD';
 const BIG_SIZE = 24;
 
-function killServer() {
-    try {
-        execSync('taskkill /F /IM RemotingTest_Core.exe', { stdio: 'ignore' });
-    } catch {
-        // Process may not exist
-    }
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // ---------------------------------------------------------------------------
-// Helpers
+// Helpers (unique to this test)
 // ---------------------------------------------------------------------------
-
-async function getLeafTextPositions(page) {
-    return page.evaluate(() => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return [];
-        const result = [];
-        for (const d of screen.querySelectorAll('div')) {
-            if (d.childElementCount === 0 && d.textContent.trim() !== '') {
-                const r = d.getBoundingClientRect();
-                result.push({
-                    text: d.textContent.trim(),
-                    cx: r.x + r.width / 2,
-                    cy: r.y + r.height / 2,
-                    right: r.x + r.width,
-                    left: r.x,
-                    top: r.y,
-                    bottom: r.y + r.height,
-                    width: r.width,
-                    height: r.height
-                });
-            }
-        }
-        return result;
-    });
-}
-
-/** Find the editor (largest pre-wrap element) center coordinates. */
-async function findEditorCenter(page) {
-    return page.evaluate(() => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return null;
-        let best = null;
-        let maxArea = 0;
-        for (const div of screen.querySelectorAll('div')) {
-            if (div.style.whiteSpace === 'pre-wrap') {
-                const r = div.getBoundingClientRect();
-                const area = r.width * r.height;
-                if (area > maxArea) {
-                    maxArea = area;
-                    best = { cx: r.x + r.width / 2, cy: r.y + r.height / 2 };
-                }
-            }
-        }
-        return best;
-    });
-}
-
-async function clickAt(page, x, y) {
-    await page.mouse.move(x, y);
-    await sleep(200);
-    await page.mouse.down();
-    await sleep(100);
-    await page.mouse.up();
-}
-
-async function findAndClick(page, textToFind, positions) {
-    const pos = (positions || await getLeafTextPositions(page)).find(p => p.text === textToFind);
-    if (!pos) return false;
-    await clickAt(page, pos.cx, pos.cy);
-    return true;
-}
 
 /**
  * Find all visible caret divs in the screen.
@@ -169,111 +97,12 @@ async function findCarets(page) {
     });
 }
 
-/**
- * Find icon buttons (small elements with background-image) in a bounding box.
- */
-async function findIconButtonsInArea(page, xMin, xMax, yMin, yMax) {
-    return page.evaluate(({ xMin, xMax, yMin, yMax }) => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return [];
-        const result = [];
-        for (const div of screen.querySelectorAll('div')) {
-            const bi = div.style.backgroundImage;
-            if (bi && bi !== 'none') {
-                const r = div.getBoundingClientRect();
-                const cx = r.x + r.width / 2;
-                const cy = r.y + r.height / 2;
-                if (cx >= xMin && cx <= xMax && cy >= yMin && cy <= yMax &&
-                    r.width >= 8 && r.width <= 32 && r.height >= 8 && r.height <= 32) {
-                    result.push({ cx, cy, x: r.x, y: r.y, w: r.width, h: r.height });
-                }
-            }
-        }
-        return result.sort((a, b) => a.cy - b.cy || a.cx - b.cx);
-    }, { xMin, xMax, yMin, yMax });
-}
-
-function groupIntoRows(icons, tolerance) {
-    const rows = [];
-    for (const icon of icons) {
-        let found = false;
-        for (const row of rows) {
-            if (Math.abs(row[0].cy - icon.cy) < (tolerance || 5)) {
-                row.push(icon);
-                found = true;
-                break;
-            }
-        }
-        if (!found) rows.push([icon]);
-    }
-    rows.sort((a, b) => a[0].cy - b[0].cy);
-    for (const row of rows) {
-        row.sort((a, b) => a.cx - b.cx);
-    }
-    return rows;
-}
-
-function findNewTexts(before, after) {
-    return after.filter(a =>
-        !before.some(b =>
-            b.text === a.text &&
-            Math.abs(b.cx - a.cx) < 8 &&
-            Math.abs(b.cy - a.cy) < 8
-        )
-    );
-}
-
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function main() {
-    let serverProcess = null;
-    let browser = null;
-    let passed = 0;
-    let failed = 0;
-
-    function pass(name) {
-        passed++;
-        console.log(`  [PASS] ${name}`);
-    }
-
-    function fail(name, detail) {
-        failed++;
-        console.log(`  [FAIL] ${name}: ${detail}`);
-    }
-
-    try {
-        // -----------------------------------------------------------------
-        // Prerequisites
-        // -----------------------------------------------------------------
-        if (!existsSync(SERVER_EXE)) {
-            console.error(`Server executable not found: ${SERVER_EXE}`);
-            console.error('Run: scripts/start-test-server.ps1 to build it.');
-            process.exit(1);
-        }
-
-        killServer();
-        await sleep(1000);
-
-        serverProcess = exec(`"${SERVER_EXE}" /Http`);
-        serverProcess.stdout?.on('data', () => {});
-        serverProcess.stderr?.on('data', () => {});
-        await sleep(3000);
-
-        browser = await chromium.launch({ headless: true });
-        const page = await browser.newPage();
-
-        page.on('dialog', async dialog => {
-            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
-            failed++;
-            await dialog.dismiss();
-        });
-
-        await page.goto(WEBSITE_URL, { timeout: 30000 });
-        await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await sleep(8000);
-
+    const result = await runTest('Caret', async (page, pass, fail) => {
         // =================================================================
         // Step 1: Page loaded
         // =================================================================
@@ -567,11 +396,6 @@ async function main() {
         }
 
         // Verify: positions 0,1,4 should be shorter; positions 2,3 should be taller
-        // (0-indexed: pos 0=before A, 1=after A, 2=after B, 3=after C, 4=after D)
-        // frontSide caret: after B means the front of the unit starting at B (big),
-        // after C means the front of the unit starting at C (big).
-        // Actually from the test plan: 3rd position (after B) and 4th position (after C)
-        // have taller caret. Positions are 1-indexed in the plan.
         if (rightCaretHeights.every(h => h > 0)) {
             const shortHeights = [rightCaretHeights[0], rightCaretHeights[1], rightCaretHeights[4]];
             const tallHeights = [rightCaretHeights[2], rightCaretHeights[3]];
@@ -619,8 +443,6 @@ async function main() {
         }
 
         // Verify: positions 1,4 should be shorter; positions 2,3 should be taller
-        // (1-indexed from test plan: 2nd=before C, 3rd=before B are tall)
-        // leftCaretHeights[0]=before D, [1]=before C, [2]=before B, [3]=before A
         if (leftCaretHeights.every(h => h > 0)) {
             const shortHeights = [leftCaretHeights[0], leftCaretHeights[3]];
             const tallHeights = [leftCaretHeights[1], leftCaretHeights[2]];
@@ -693,25 +515,15 @@ async function main() {
         } else {
             fail('Caret after End', 'No caret found');
         }
+    });
 
-        // =================================================================
-        // Summary
-        // =================================================================
-        console.log(`\n${'='.repeat(50)}`);
-        console.log(`Results: ${passed} passed, ${failed} failed`);
-        if (failed > 0) {
-            process.exitCode = 1;
-        }
-
-    } catch (error) {
-        console.error(`[error] ${error.message}`);
+    if (result.failed > 0) {
         process.exitCode = 1;
-    } finally {
-        if (browser !== null) {
-            await browser.close();
-        }
-        killServer();
     }
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = { main };

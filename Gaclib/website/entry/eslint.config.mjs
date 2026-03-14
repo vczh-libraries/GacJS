@@ -4,6 +4,9 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
     ...eslintShared,
     {
+        ignores: ['test/**'],
+    },
+    {
         languageOptions: {
             parserOptions: {
                 projectService: true,
