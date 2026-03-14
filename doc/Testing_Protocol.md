@@ -388,7 +388,8 @@ node ..\doc\Testing_Protocol_Font.js
    bottom).
 3. Type `ABCDEFGHIJKLMN` into the editor.
 4. Select the range `C..K` (characters C through K). Open the font dialog from the
-   toolbar, select the only available font, pick a bigger text size so the OK button
+   toolbar. **[VERIFY]** The first font name in the font list is not quoted (no `"`
+   around it). Select the only available font, pick a bigger text size so the OK button
    becomes enabled, then click OK.
 5. Select the range `H..M`. Open the text-color dialog from the toolbar (not the
    background-color button), change the first of the three text boxes to `0`, then
@@ -421,8 +422,9 @@ node ..\doc\Testing_Protocol_ImageInText.js
    bottom).
 3. Type `ABC` into the editor.
 4. Click the "Insert" tab in the ribbon, then click the "Insert Image" button. A file
-   dialog opens with two lists and a text box at the bottom. Click the text box, type
-   `C:\5900.png`, then click OK. An image is inserted after `ABC` on the same line.
+   dialog opens with two lists and a text box at the bottom. Double-click `C:` on the
+   right list to navigate into the `C:` drive. Then click the text box, type
+   `5900.png`, then click OK. An image is inserted after `ABC` on the same line.
 5. Press Home, then type `X`.
    **[VERIFY]** The content is `XABC` followed by an inline image that is visible.
 6. Press Ctrl+A to select all content.

@@ -19,7 +19,8 @@
 //      at the bottom).
 //   3. Type ABC into the editor.
 //   4. Click the "Insert" tab in the ribbon, then click "Insert Image ..." button.
-//      In the file dialog, click the filename text box, type C:\5900.png, click OK.
+//      In the file dialog, double-click C: on the right list to navigate into the
+//      C: drive. Then click the filename text box, type 5900.png, click OK.
 //      An image is inserted after ABC on the same line.
 //   5. Press Home, then type X.
 //      [VERIFY] The content is XABC followed by an inline image that is visible.
@@ -177,6 +178,18 @@ async function clickAt(page, x, y) {
     await page.mouse.down();
     await sleep(100);
     await page.mouse.up();
+}
+
+async function doubleClickAt(page, x, y) {
+    await page.mouse.move(x, y);
+    await sleep(200);
+    await page.mouse.down({ clickCount: 1 });
+    await sleep(50);
+    await page.mouse.up({ clickCount: 1 });
+    await sleep(50);
+    await page.mouse.down({ clickCount: 2 });
+    await sleep(50);
+    await page.mouse.up({ clickCount: 2 });
 }
 
 async function findAndClick(page, textToFind, positions) {
@@ -415,36 +428,61 @@ async function main() {
         }
 
         // The filename text box should be above the OK/Cancel buttons.
-        // Click in the area roughly above OK and to the right of center.
-        if (okBtn && dialogBounds) {
-            // The textbox is typically the full width between the filename label and the right edge,
-            // positioned above the OK button. Let's click a bit above the OK button, centered.
-            const textBoxX = (dialogBounds.minX + dialogBounds.maxX) / 2 + 50;
-            const textBoxY = okBtn.top - 30;
+        // First, double-click "C:" in the right list to navigate into the C: drive.
+        const cDriveItem = newDialogTexts.find(p => p.text === 'C:');
+        if (cDriveItem) {
+            await doubleClickAt(page, cDriveItem.cx, cDriveItem.cy);
+            await sleep(5000);
+            pass(`Double-clicked C: at (${Math.round(cDriveItem.cx)}, ${Math.round(cDriveItem.cy)})`);
+        } else {
+            fail('C: drive', `Could not find "C:" in dialog. Available: ${newDialogTexts.map(t => t.text).join(', ')}`);
+        }
+
+        // Now click the filename text box and type just the filename
+        // Re-detect dialog elements after navigation
+        const textsAfterNav = await getLeafTextPositions(page);
+        const newNavTexts = findNewTexts(textsBeforeDialog, textsAfterNav);
+        const okBtnAfterNav = newNavTexts.find(p =>
+            p.text === 'OK' || p.text === 'Open' || p.text === '打开'
+        );
+        const navDialogBounds = (() => {
+            if (newNavTexts.length === 0) return dialogBounds;
+            const minX = Math.min(...newNavTexts.map(t => t.left));
+            const maxX = Math.max(...newNavTexts.map(t => t.left + t.width));
+            const minY = Math.min(...newNavTexts.map(t => t.top));
+            const maxY = Math.max(...newNavTexts.map(t => t.top + t.height));
+            return { minX, maxX, minY, maxY };
+        })();
+
+        const effectiveOk = okBtnAfterNav || okBtn;
+        const effectiveBounds = navDialogBounds || dialogBounds;
+
+        if (effectiveOk && effectiveBounds) {
+            const textBoxX = (effectiveBounds.minX + effectiveBounds.maxX) / 2 + 50;
+            const textBoxY = effectiveOk.top - 30;
             await clickAt(page, textBoxX, textBoxY);
             await sleep(1000);
             pass(`Clicked filename area at (${Math.round(textBoxX)}, ${Math.round(textBoxY)})`);
-        } else if (dialogBounds) {
-            // Fallback: click near bottom center of dialog
-            const textBoxX = (dialogBounds.minX + dialogBounds.maxX) / 2 + 50;
-            const textBoxY = dialogBounds.maxY - 50;
+        } else if (effectiveBounds) {
+            const textBoxX = (effectiveBounds.minX + effectiveBounds.maxX) / 2 + 50;
+            const textBoxY = effectiveBounds.maxY - 50;
             await clickAt(page, textBoxX, textBoxY);
             await sleep(1000);
             pass('Clicked estimated filename area (fallback)');
         }
 
-        // Clear any existing text and type the file path
+        // Clear any existing text and type just the filename
         await page.keyboard.press('Control+a');
         await sleep(300);
-        await page.keyboard.type('C:\\5900.png');
+        await page.keyboard.type('5900.png');
         await sleep(2000);
-        pass('Typed file path: C:\\5900.png');
+        pass('Typed file path: 5900.png');
 
         // Click OK
-        if (okBtn) {
-            await clickAt(page, okBtn.cx, okBtn.cy);
+        if (effectiveOk) {
+            await clickAt(page, effectiveOk.cx, effectiveOk.cy);
             await sleep(5000);
-            pass(`Clicked ${okBtn.text} button`);
+            pass(`Clicked ${effectiveOk.text} button`);
         } else {
             fail('OK button', 'Could not find OK/Open button in dialog');
         }

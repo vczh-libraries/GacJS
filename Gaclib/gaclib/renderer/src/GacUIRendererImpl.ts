@@ -67,9 +67,13 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
      * Font Configuration
      ***************************************************************************************/
 
+    private static stripFontQuotes(fontFamily: string): string {
+        return fontFamily.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+    }
+
     private generateFontConfig(): SCHEMA.FontConfig {
         const styles = window.getComputedStyle(this._settings.target);
-        const defaultFontFamily = styles.fontFamily;
+        const defaultFontFamily = GacUIRendererImpl.stripFontQuotes(styles.fontFamily.split(',')[0].trim());
 
         const defaultFont: SCHEMA.FontProperties = {
             fontFamily: defaultFontFamily,
@@ -84,7 +88,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
         let supportedFonts: string[];
         if (this._settings.fontFamilies !== undefined) {
-            supportedFonts = [...this._settings.fontFamilies];
+            supportedFonts = this._settings.fontFamilies.map(f => GacUIRendererImpl.stripFontQuotes(f));
             if (!supportedFonts.includes(defaultFontFamily)) {
                 supportedFonts.unshift(defaultFontFamily);
             }
@@ -1096,6 +1100,11 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     // Key state tracking
     private _pressedKeys: Set<SCHEMA.TYPES.Key> = new Set();
 
+    // Double-click tracking: when mousedown has detail===2, we need to send
+    // dblclick before the subsequent mouseup to match GacUI's expected order:
+    // down → up → down → dblclick → up
+    private _pendingDoubleClick: { button: SCHEMA.IOMouseButton; info: SCHEMA.IOMouseInfo } | undefined = undefined;
+
     // Helper method to get relative coordinates
     private _ioGetRelativeCoordinates(event: MouseEvent | WheelEvent): { x: number; y: number } {
         const rect = this._settings.target.getBoundingClientRect();
@@ -1162,10 +1171,13 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             const mouseEvent = event as MouseEvent;
             const button = this._ioGetMouseButton(mouseEvent);
             if (this._events !== undefined && button !== undefined) {
-                this._events.OnIOButtonDown({
-                    button: button,
-                    info: this._ioCreateMouseInfo(mouseEvent)
-                });
+                const info = this._ioCreateMouseInfo(mouseEvent);
+                this._events.OnIOButtonDown({ button, info });
+                // When detail >= 2, this is the second mousedown of a double-click.
+                // Store it so we can send dblclick before the subsequent mouseup.
+                if (mouseEvent.detail >= 2) {
+                    this._pendingDoubleClick = { button, info };
+                }
             }
         });
 
@@ -1174,6 +1186,11 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             const mouseEvent = event as MouseEvent;
             const button = this._ioGetMouseButton(mouseEvent);
             if (this._events !== undefined && button !== undefined) {
+                // If there's a pending double-click for this button, send it before mouseup
+                if (this._pendingDoubleClick !== undefined && this._pendingDoubleClick.button === button) {
+                    this._events.OnIOButtonDoubleClick(this._pendingDoubleClick);
+                    this._pendingDoubleClick = undefined;
+                }
                 this._events.OnIOButtonUp({
                     button: button,
                     info: this._ioCreateMouseInfo(mouseEvent)
@@ -1181,17 +1198,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             }
         });
 
-        // Mouse double click handler
-        this._ioHookEvent('dblclick', (event: Event) => {
-            const mouseEvent = event as MouseEvent;
-            const button = this._ioGetMouseButton(mouseEvent);
-            if (this._events !== undefined && button !== undefined) {
-                this._events.OnIOButtonDoubleClick({
-                    button: button,
-                    info: this._ioCreateMouseInfo(mouseEvent)
-                });
-            }
-        });
+        // Browser dblclick event is no longer used because we send dblclick
+        // from the mouseup handler above to ensure correct ordering:
+        // down → up → down → dblclick → up
 
         // Mouse move handler
         this._ioHookEvent('mousemove', (event: Event) => {

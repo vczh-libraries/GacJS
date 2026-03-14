@@ -517,6 +517,16 @@ async function main() {
             );
             console.log(`  Font names: ${fontNames.map(f => f.text).join(', ')}`);
 
+            // Verify the first font name is not quoted
+            if (fontNames.length > 0) {
+                const firstName = fontNames[0].text;
+                if (firstName.startsWith('"') || firstName.startsWith("'")) {
+                    fail('Font name not quoted', `First font name is quoted: ${firstName}`);
+                } else {
+                    pass(`Font name not quoted: "${firstName}"`);
+                }
+            }
+
             if (fontNames.length > 0) {
                 await clickAt(page, fontNames[0].cx, fontNames[0].cy);
                 await sleep(1000);
