@@ -86,8 +86,6 @@ export interface ParagraphLayout {
     inlineObjectBounds: SCHEMA.ElementMeasurings['inlineObjectBounds'];
 }
 
-// TODO: updateParagraph with actual diffs.
-
 /**
  * Patch inline object images that were missing during paragraph initialization.
  * Called when an ImageFrame element is updated after the paragraph was built,

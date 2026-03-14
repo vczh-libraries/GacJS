@@ -346,19 +346,13 @@ Scans `ParagraphEditUnit[]`:
 
 ## Known Limitations
 
-1. **No incremental update**: `updateParagraph()` is not yet implemented.
-   `initializeParagraph()` does a full DOM rebuild on every
-   `RequestRendererUpdateElement_DocumentParagraph` call, including for selection-only
-   style changes. A `// TODO: updateParagraph with actual diffs.` comment remains
-   in `elementStyles_DocumentParagraph.ts`.
-
-2. **No separate modules**: The plan originally proposed extracting caret navigation,
+1. **No separate modules**: The plan originally proposed extracting caret navigation,
    hit-testing, and incremental update logic into separate modules
    (`documentParagraphCaret.ts`, `documentParagraphHitTest.ts`,
    `documentParagraphUpdater.ts`). All logic currently lives inline in
    `GacUIRendererImpl.ts`.
 
-3. **Caret blinking**: The client maintains its own blink timer. When `OpenCaret`
+2. **Caret blinking**: The client maintains its own blink timer. When `OpenCaret`
    is received, `_startCaretBlink()` creates a `setInterval(500)` that toggles
    `layout.caretVisible` and calls `setCaretVisible()` every 500 ms. The timer is
    stopped by `_stopCaretBlink()` when `CloseCaret` is received or a new `OpenCaret`
