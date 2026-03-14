@@ -1,8 +1,6 @@
 # ToDo
 
 - Paragraph not blink
-- Font name has extra quots
-- Double click not implemented
 - Verify IME supports
 - Click the X button (by hittest) should close the main window
 - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
