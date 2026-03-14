@@ -18,11 +18,13 @@
 //   6. Select BC (Home, Right 1, Shift+Right 2). Open the font dialog, select the
 //      only font, pick size 24, click OK.
 //   7. Press Home then Right 4 times (5 positions total).
-//      [VERIFY] Positions 3 and 4 (after B, after C) have a taller caret; 1, 2,
-//      and 5 have a shorter caret.
+//      [VERIFY] Positions 2 and 3 (after A, after B) have a taller caret
+//      (frontSide: caret uses the font of the character ahead); 1, 4, and 5
+//      have a shorter caret.
 //   8. Press Left 4 times back to position 0 (4 positions).
-//      [VERIFY] Positions 2 and 3 (before C, before B) have a taller caret; 1
-//      and 4 have a shorter caret.
+//      [VERIFY] Positions 1 and 2 (before D, before C) have a taller caret
+//      (backSide: caret uses the font of the character behind); 3 and 4 have
+//      a shorter caret.
 //   9. Press Ctrl+A to select all, then press Home.
 //      [VERIFY] A caret is visible at the expected position.
 //   10. Press End.
@@ -83,6 +85,23 @@ async function findCarets(page) {
         }
         return carets;
     });
+}
+
+/**
+ * Poll for visible carets over a full blink cycle.
+ * The caret blinks every 500ms, so polling for 1200ms at 100ms intervals
+ * guarantees catching it during a visible phase.
+ * Use this instead of a single findCarets() call when we just need to know
+ * whether a caret exists (regardless of blink state).
+ */
+async function waitForCaret(page, timeout = 1200) {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+        const carets = await findCarets(page);
+        if (carets.length >= 1) return carets;
+        await sleep(100);
+    }
+    return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -254,7 +273,7 @@ describe('Caret', () => {
         await sleep(1500);
 
         // Position 0 (before A)
-        let carets = await findCarets(ctx.page);
+        let carets = await waitForCaret(ctx.page);
         rightCaretHeights.push(carets.length >= 1 ? carets[0].height : 0);
         const posNames = ['before A', 'after A', 'after B', 'after C', 'after D'];
         console.log(`  Pos 0 (${posNames[0]}): h=${rightCaretHeights[0].toFixed(1)}`);
@@ -262,7 +281,7 @@ describe('Caret', () => {
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowRight');
             await sleep(1500);
-            carets = await findCarets(ctx.page);
+            carets = await waitForCaret(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             rightCaretHeights.push(h);
             console.log(`  Pos ${i} (${posNames[i]}): h=${h.toFixed(1)}`);
@@ -273,12 +292,13 @@ describe('Caret', () => {
             expect.soft(rightCaretHeights[i], `Position ${i} should have visible caret`).toBeGreaterThan(0);
         }
 
-        // Positions 2,3 (after B, after C) should be taller than positions 0,1,4
+        // Positions 1,2 (after A, after B) should be taller than positions 0,3,4
+        // frontSide: caret uses the font of the character ahead (to the right)
         if (rightCaretHeights.every(h => h > 0)) {
-            const maxShort = Math.max(rightCaretHeights[0], rightCaretHeights[1], rightCaretHeights[4]);
-            const minTall = Math.min(rightCaretHeights[2], rightCaretHeights[3]);
-            console.log(`  Short heights (pos 0,1,4): ${[rightCaretHeights[0], rightCaretHeights[1], rightCaretHeights[4]].map(h => h.toFixed(1)).join(', ')}`);
-            console.log(`  Tall heights (pos 2,3): ${[rightCaretHeights[2], rightCaretHeights[3]].map(h => h.toFixed(1)).join(', ')}`);
+            const maxShort = Math.max(rightCaretHeights[0], rightCaretHeights[3], rightCaretHeights[4]);
+            const minTall = Math.min(rightCaretHeights[1], rightCaretHeights[2]);
+            console.log(`  Short heights (pos 0,3,4): ${[rightCaretHeights[0], rightCaretHeights[3], rightCaretHeights[4]].map(h => h.toFixed(1)).join(', ')}`);
+            console.log(`  Tall heights (pos 1,2): ${[rightCaretHeights[1], rightCaretHeights[2]].map(h => h.toFixed(1)).join(', ')}`);
             expect.soft(minTall, 'Tall carets should be taller than short carets').toBeGreaterThan(maxShort + 2);
         }
     });
@@ -290,7 +310,7 @@ describe('Caret', () => {
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowLeft');
             await sleep(1500);
-            const carets = await findCarets(ctx.page);
+            const carets = await waitForCaret(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             leftCaretHeights.push(h);
             console.log(`  Left ${i} (${posNames[i - 1]}): h=${h.toFixed(1)}`);
@@ -300,14 +320,15 @@ describe('Caret', () => {
             expect.soft(leftCaretHeights[i], `Left position ${i} should have visible caret`).toBeGreaterThan(0);
         }
 
-        // Positions 1,2 (before C, before B) should be taller; 0,3 shorter
+        // Positions 0,1 (before D, before C) should be taller; 2,3 shorter
+        // backSide: caret uses the font of the character behind (to the left)
         if (leftCaretHeights.every(h => h > 0)) {
-            const shortHeights = [leftCaretHeights[0], leftCaretHeights[3]];
-            const tallHeights = [leftCaretHeights[1], leftCaretHeights[2]];
+            const shortHeights = [leftCaretHeights[2], leftCaretHeights[3]];
+            const tallHeights = [leftCaretHeights[0], leftCaretHeights[1]];
             const maxShort = Math.max(...shortHeights);
             const minTall = Math.min(...tallHeights);
-            console.log(`  Short heights (before D, before A): ${shortHeights.map(h => h.toFixed(1)).join(', ')}`);
-            console.log(`  Tall heights (before C, before B): ${tallHeights.map(h => h.toFixed(1)).join(', ')}`);
+            console.log(`  Short heights (before B, before A): ${shortHeights.map(h => h.toFixed(1)).join(', ')}`);
+            console.log(`  Tall heights (before D, before C): ${tallHeights.map(h => h.toFixed(1)).join(', ')}`);
             expect.soft(minTall, 'Tall carets should be taller than short carets').toBeGreaterThan(maxShort + 2);
         }
     });
@@ -318,7 +339,7 @@ describe('Caret', () => {
         await ctx.page.keyboard.press('Home');
         await sleep(1500);
 
-        const carets = await findCarets(ctx.page);
+        const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after Ctrl+A + Home: ${carets.length}`);
         expect.soft(carets.length, 'Caret should be visible after Ctrl+A + Home').toBeGreaterThanOrEqual(1);
 
@@ -335,7 +356,7 @@ describe('Caret', () => {
         await ctx.page.keyboard.press('End');
         await sleep(1500);
 
-        const carets = await findCarets(ctx.page);
+        const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after End: ${carets.length}`);
         expect.soft(carets.length, 'Caret should be visible after End').toBeGreaterThanOrEqual(1);
 
