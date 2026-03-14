@@ -207,73 +207,56 @@ Playwright is installed with this repo. Install browsers if needed:
 npx playwright install chromium
 ```
 
-### Test Strategy
+### Test File Structure
 
-Create Playwright tests that:
+All protocol tests live under `Gaclib/website/entry/test/`:
 
-1. Start the C++ server process
-2. Launch a browser pointing to `index.html`
-3. Interact with the UI (click, type, drag)
-4. Verify DOM state (screenshots, element queries)
-5. Kill the C++ server process
+- `Testing_Protocol.js` — Shared utilities and vitest lifecycle (`setupProtocolTest`,
+  DOM helpers, click helpers, path constants).
+- `Testing_Protocol_SimpleTyping.js` — Basic UI rendering and keyboard input test.
+- `Testing_Protocol_Caret.js` — Caret rendering, blinking, and positioning test.
+- `Testing_Protocol_Font.js` — Font/color formatting and incremental selection test.
+- `Testing_Protocol_ImageInText.js` — Inline image insertion and rendering test.
+
+Each test file is a vitest suite that uses `setupProtocolTest()` from the shared
+module, which registers `beforeAll`/`afterAll` hooks to start/stop the C++ server
+and launch/close the headless Chromium browser.
 
 ### Example Test Structure
 
-```typescript
-import { test, expect } from '@playwright/test';
-import { exec, execSync } from 'child_process';
-import path from 'path';
+```javascript
+import { describe, test, expect } from 'vitest';
+import {
+    sleep,
+    getLeafTextPositions,
+    clickAt,
+    setupProtocolTest
+} from './Testing_Protocol.js';
 
-// Prefer a sibling GacUI clone over the submodule.
-// When REPO-ROOT\..\GacUI exists, use that; otherwise fall back to REPO-ROOT\GacUI.
-const REPO_ROOT = path.resolve(__dirname, '../..');
-const GACUI_ROOT = fs.existsSync(path.resolve(REPO_ROOT, '..', 'GacUI'))
-    ? path.resolve(REPO_ROOT, '..', 'GacUI')
-    : path.resolve(REPO_ROOT, 'GacUI');
-const SERVER_EXE = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
-const WEBSITE_URL = 'http://localhost:8896/index.html';
+describe('MyTest', () => {
+    const ctx = setupProtocolTest();
 
-test.describe('DocumentParagraph live tests', () => {
-    let serverProcess: ReturnType<typeof exec>;
-
-    test.beforeAll(async () => {
-        // Start the C++ server
-        serverProcess = exec(`"${SERVER_EXE}" /Http`);
-        // Wait for server to be ready
-        await new Promise(resolve => setTimeout(resolve, 3000));
+    test('Step 1: Page rendering', async () => {
+        const positions = await getLeafTextPositions(ctx.page);
+        expect(positions.length).toBeGreaterThanOrEqual(20);
     });
 
-    test.afterAll(async () => {
-        // Kill the server
-        try {
-            execSync('taskkill /F /IM RemotingTest_Core.exe', { stdio: 'ignore' });
-        } catch { /* may already be dead */ }
-    });
-
-    test('document editor renders text', async ({ page }) => {
-        await page.goto(WEBSITE_URL);
-        // Wait for GacUI to initialize
-        await page.waitForSelector('#gacui-screen div', { timeout: 10000 });
-        // Navigate to the Control tab with document editor
-        // ... click on tabs ...
-        // Verify document content appears
-    });
-
-    test('text selection updates styles incrementally', async ({ page }) => {
-        await page.goto(WEBSITE_URL);
-        // ... navigate to document editor ...
-        // Click and drag to select text
-        // Verify selection highlighting appears in DOM
+    test('Step 2: Interact with UI', async () => {
+        // Click, type, verify using ctx.page ...
     });
 });
 ```
 
-### Running Playwright Tests
+### Running Tests
 
 ```powershell
 cd Gaclib
-npx playwright test
+yarn test
 ```
+
+This runs all vitest suites across all packages, including the protocol tests.
+Test files run sequentially (`fileParallelism: false`) since they share the
+same stateful HTTP server.
 
 ### Important Playwright Notes
 
@@ -356,13 +339,13 @@ capture it via the dialog event.
 
 ### Testing_Protocol_SimpleTyping.js
 
-A standalone Playwright test script that verifies basic UI rendering and interaction
-with the GacUI remote protocol. Located at `doc/Testing_Protocol_SimpleTyping.js`.
+A vitest suite that verifies basic UI rendering and interaction with the GacUI
+remote protocol. Located at `Gaclib/website/entry/test/Testing_Protocol_SimpleTyping.js`.
 
 **Run:**
 ```powershell
 cd Gaclib
-node ..\doc\Testing_Protocol_SimpleTyping.js
+yarn test
 ```
 
 **The goal of the test plan cannot be changed.** The test must:
@@ -376,14 +359,14 @@ node ..\doc\Testing_Protocol_SimpleTyping.js
 
 ### Testing_Protocol_Font.js
 
-A standalone Playwright test script that verifies font/color formatting and incremental
-selection rendering in the GacUI rich-text document editor. Located at
-`doc/Testing_Protocol_Font.js`.
+A vitest suite that verifies font/color formatting and incremental selection
+rendering in the GacUI rich-text document editor. Located at
+`Gaclib/website/entry/test/Testing_Protocol_Font.js`.
 
 **Run:**
 ```powershell
 cd Gaclib
-node ..\doc\Testing_Protocol_Font.js
+yarn test
 ```
 
 **The goal of the test plan cannot be changed.** The test must:
@@ -410,14 +393,14 @@ node ..\doc\Testing_Protocol_Font.js
 
 ### Testing_Protocol_ImageInText.js
 
-A standalone Playwright test script that verifies inline image insertion and rendering
-in the GacUI rich-text document editor. Located at
-`doc/Testing_Protocol_ImageInText.js`.
+A vitest suite that verifies inline image insertion and rendering in the GacUI
+rich-text document editor. Located at
+`Gaclib/website/entry/test/Testing_Protocol_ImageInText.js`.
 
 **Run:**
 ```powershell
 cd Gaclib
-node ..\doc\Testing_Protocol_ImageInText.js
+yarn test
 ```
 
 **The goal of the test plan cannot be changed.** The test must:
@@ -439,14 +422,14 @@ node ..\doc\Testing_Protocol_ImageInText.js
 
 ### Testing_Protocol_Caret.js
 
-A standalone Playwright test script that verifies caret rendering, blinking, positioning,
-and size in the GacUI rich-text document editor and text boxes. Located at
-`doc/Testing_Protocol_Caret.js`.
+A vitest suite that verifies caret rendering, blinking, positioning, and size
+in the GacUI rich-text document editor and text boxes. Located at
+`Gaclib/website/entry/test/Testing_Protocol_Caret.js`.
 
 **Run:**
 ```powershell
 cd Gaclib
-node ..\doc\Testing_Protocol_Caret.js
+yarn test
 ```
 
 **The goal of the test plan cannot be changed.** The test must:

@@ -1,0 +1,350 @@
+// Testing_Protocol_Caret.js
+//
+// Vitest test suite that verifies caret rendering, blinking, positioning,
+// and size in the GacUI rich-text document editor and text boxes.
+//
+// Test plan (the goal of the test plan cannot be changed):
+//   1. Launch the application (start the C++ server, open index.html in Playwright).
+//   2. Open the "Control" tab. Click the text box next to "Search:" so the caret
+//      becomes active.
+//      [VERIFY] A caret is visible in the Search text box.
+//   3. Click the rich-text document editor (the large area at the bottom).
+//      [VERIFY] The caret in the Search text box disappears, and a caret appears
+//      in the rich-text editor.
+//   4. Test caret blinking: wait 0.6 seconds.
+//      [VERIFY] The caret is now invisible (blinked off). Wait 0.6 seconds.
+//      [VERIFY] The caret is now visible again (blinked on).
+//   5. Type ABCD into the editor.
+//   6. Select BC (Home, Right 1, Shift+Right 2). Open the font dialog, select the
+//      only font, pick size 24, click OK.
+//   7. Press Home then Right 4 times (5 positions total).
+//      [VERIFY] Positions 3 and 4 (after B, after C) have a taller caret; 1, 2,
+//      and 5 have a shorter caret.
+//   8. Press Left 4 times back to position 0 (4 positions).
+//      [VERIFY] Positions 2 and 3 (before C, before B) have a taller caret; 1
+//      and 4 have a shorter caret.
+//   9. Press Ctrl+A to select all, then press Home.
+//      [VERIFY] A caret is visible at the expected position.
+//   10. Press End.
+//      [VERIFY] A caret is visible at the expected position.
+//   11. Kill the process directly and close the webpage. No elegant exit is needed.
+
+import { describe, test, expect } from 'vitest';
+import {
+    sleep,
+    getLeafTextPositions,
+    findEditorCenter,
+    clickAt,
+    findAndClick,
+    findNewTexts,
+    findIconButtonsInArea,
+    groupIntoRows,
+    setupProtocolTest
+} from './Testing_Protocol.js';
+
+const TYPED_TEXT = 'ABCD';
+const BIG_SIZE = 24;
+
+// ---------------------------------------------------------------------------
+// Helpers (unique to this test)
+// ---------------------------------------------------------------------------
+
+/**
+ * Find all visible caret divs in the screen.
+ * A caret is a narrow (width <= 4px) absolutely positioned div with a
+ * background color and display !== 'none', inside a pre-wrap container.
+ */
+async function findCarets(page) {
+    return page.evaluate(() => {
+        const screen = document.getElementById('gacui-screen');
+        if (!screen) return [];
+        const carets = [];
+        for (const div of screen.querySelectorAll('div')) {
+            const style = div.style;
+            if (style.position !== 'absolute') continue;
+            if (style.display === 'none') continue;
+            if (!style.backgroundColor || style.backgroundColor === 'transparent') continue;
+            const w = parseFloat(style.width);
+            if (isNaN(w) || w > 4) continue;
+            const h = parseFloat(style.height);
+            if (isNaN(h) || h < 4) continue;
+            const parent = div.parentElement;
+            if (!parent) continue;
+            const parentWs = parent.style.whiteSpace;
+            if (parentWs !== 'pre-wrap' && parentWs !== 'pre') continue;
+            const r = div.getBoundingClientRect();
+            carets.push({
+                x: r.x,
+                y: r.y,
+                width: r.width,
+                height: r.height,
+                backgroundColor: style.backgroundColor
+            });
+        }
+        return carets;
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Test suite
+// ---------------------------------------------------------------------------
+
+describe('Caret', () => {
+    const ctx = setupProtocolTest();
+    const rightCaretHeights = [];
+
+    test('Step 1: Page rendering', async () => {
+        const positions = await getLeafTextPositions(ctx.page);
+        expect(positions.length).toBeGreaterThanOrEqual(20);
+    });
+
+    test('Step 2: Open Control tab and click Search text box', async () => {
+        let positions = await getLeafTextPositions(ctx.page);
+        expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
+        await sleep(5000);
+
+        positions = await getLeafTextPositions(ctx.page);
+        const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
+        if (docEditorTab) {
+            await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
+            await sleep(3000);
+        }
+
+        positions = await getLeafTextPositions(ctx.page);
+        const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
+        expect(searchLabelPos).toBeDefined();
+
+        await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
+        await sleep(2000);
+
+        const carets = await findCarets(ctx.page);
+        console.log(`  Carets found after clicking Search: ${carets.length}`);
+        expect.soft(carets.length, 'Caret visible in Search text box').toBeGreaterThanOrEqual(1);
+    });
+
+    test('Step 3: Click the rich-text editor', async () => {
+        const editorPos = await findEditorCenter(ctx.page);
+        expect(editorPos).not.toBeNull();
+
+        await clickAt(ctx.page, editorPos.cx, editorPos.cy);
+        await sleep(2000);
+
+        const carets = await findCarets(ctx.page);
+        console.log(`  Carets found after clicking editor: ${carets.length}`);
+        expect.soft(carets.length, 'Caret should appear in editor').toBe(1);
+    });
+
+    test('Step 4: Test caret blinking', async () => {
+        await sleep(600);
+        let carets = await findCarets(ctx.page);
+        console.log(`  After 0.6s: ${carets.length} caret(s) visible`);
+        expect.soft(carets.length, 'Caret should blink off after 0.6s').toBe(0);
+
+        await sleep(600);
+        carets = await findCarets(ctx.page);
+        console.log(`  After another 0.6s: ${carets.length} caret(s) visible`);
+        expect.soft(carets.length, 'Caret should blink on after another 0.6s').toBeGreaterThanOrEqual(1);
+    });
+
+    test('Step 5: Type ABCD', async () => {
+        await ctx.page.keyboard.press('Control+a');
+        await sleep(1000);
+        await ctx.page.keyboard.press('Delete');
+        await sleep(2000);
+
+        for (const ch of TYPED_TEXT) {
+            await ctx.page.keyboard.press(ch);
+            await sleep(300);
+        }
+        await sleep(3000);
+
+        const screenText = await ctx.page.evaluate(() => {
+            const screen = document.getElementById('gacui-screen');
+            return screen !== null ? screen.textContent : '';
+        });
+        expect(screenText).toContain(TYPED_TEXT);
+    });
+
+    test('Step 6: Select BC and apply font size 24', async () => {
+        await ctx.page.keyboard.press('Home');
+        await sleep(500);
+        await ctx.page.keyboard.press('ArrowRight');
+        await sleep(200);
+        for (let i = 0; i < 2; i++) {
+            await ctx.page.keyboard.press('Shift+ArrowRight');
+            await sleep(200);
+        }
+        await sleep(1000);
+
+        const positions = await getLeafTextPositions(ctx.page);
+        const textGroupLabel = positions.find(p => p.text === 'Text');
+        const iconLabelsLabel = positions.find(p => p.text === 'Icon Labels');
+
+        let fontBtnPos = null;
+
+        if (textGroupLabel) {
+            const xMin = textGroupLabel.left - 20;
+            const xMax = iconLabelsLabel ? iconLabelsLabel.left : textGroupLabel.right + 200;
+            const yMin = textGroupLabel.top - 100;
+            const yMax = textGroupLabel.top;
+
+            const icons = await findIconButtonsInArea(ctx.page, xMin, xMax, yMin, yMax);
+            const rows = groupIntoRows(icons, 5);
+            console.log(`  Icon rows in Text group: ${rows.map(r => r.length).join(', ')} (total ${icons.length})`);
+
+            if (rows.length >= 2) {
+                const lastRow = rows[rows.length - 1];
+                if (lastRow.length >= 1) {
+                    fontBtnPos = lastRow[0];
+                }
+            }
+        }
+
+        const textsBeforeFont = await getLeafTextPositions(ctx.page);
+
+        expect(fontBtnPos, 'Font icon button not found').not.toBeNull();
+        await clickAt(ctx.page, fontBtnPos.cx, fontBtnPos.cy);
+        await sleep(3000);
+
+        const textsAfterFont = await getLeafTextPositions(ctx.page);
+        const newFontTexts = findNewTexts(textsBeforeFont, textsAfterFont);
+        console.log(`  Dialog new texts: ${newFontTexts.map(t => t.text).join(', ')}`);
+
+        const chooseFontTitle = newFontTexts.find(p => p.text === 'Choose Font');
+        expect(chooseFontTitle, 'Font dialog did not appear').toBeDefined();
+
+        const knownLabels = new Set([
+            'Choose Font', 'Font:', 'Size:', 'Preview:', 'ABCxyz', 'OK', 'Cancel'
+        ]);
+        const sizeLabel = newFontTexts.find(p => p.text === 'Size:');
+
+        const fontNames = newFontTexts.filter(p =>
+            !knownLabels.has(p.text) &&
+            !/^\d+$/.test(p.text) &&
+            (sizeLabel ? p.cx < sizeLabel.cx : p.cx < chooseFontTitle.cx + 100)
+        );
+
+        if (fontNames.length > 0) {
+            await clickAt(ctx.page, fontNames[0].cx, fontNames[0].cy);
+            await sleep(1000);
+        }
+
+        if (sizeLabel) {
+            await clickAt(ctx.page, sizeLabel.cx, sizeLabel.bottom + 10);
+            await sleep(500);
+            await ctx.page.keyboard.press('Control+a');
+            await sleep(300);
+            await ctx.page.keyboard.type(String(BIG_SIZE));
+            await sleep(1000);
+        }
+
+        const fontOk = newFontTexts.find(p => p.text === 'OK');
+        expect(fontOk, 'OK button not found in font dialog').toBeDefined();
+        await clickAt(ctx.page, fontOk.cx, fontOk.cy);
+        await sleep(3000);
+    });
+
+    test('Step 7: Right-arrow caret sizes (frontSide)', async () => {
+        const editorPos = await findEditorCenter(ctx.page);
+        if (editorPos) {
+            await clickAt(ctx.page, editorPos.cx, editorPos.cy);
+            await sleep(1000);
+        }
+        await ctx.page.keyboard.press('Home');
+        await sleep(1500);
+
+        // Position 0 (before A)
+        let carets = await findCarets(ctx.page);
+        rightCaretHeights.push(carets.length >= 1 ? carets[0].height : 0);
+        const posNames = ['before A', 'after A', 'after B', 'after C', 'after D'];
+        console.log(`  Pos 0 (${posNames[0]}): h=${rightCaretHeights[0].toFixed(1)}`);
+
+        for (let i = 1; i <= 4; i++) {
+            await ctx.page.keyboard.press('ArrowRight');
+            await sleep(1500);
+            carets = await findCarets(ctx.page);
+            const h = carets.length >= 1 ? carets[0].height : 0;
+            rightCaretHeights.push(h);
+            console.log(`  Pos ${i} (${posNames[i]}): h=${h.toFixed(1)}`);
+        }
+
+        // All positions should have visible carets
+        for (let i = 0; i < 5; i++) {
+            expect.soft(rightCaretHeights[i], `Position ${i} should have visible caret`).toBeGreaterThan(0);
+        }
+
+        // Positions 2,3 (after B, after C) should be taller than positions 0,1,4
+        if (rightCaretHeights.every(h => h > 0)) {
+            const maxShort = Math.max(rightCaretHeights[0], rightCaretHeights[1], rightCaretHeights[4]);
+            const minTall = Math.min(rightCaretHeights[2], rightCaretHeights[3]);
+            console.log(`  Short heights (pos 0,1,4): ${[rightCaretHeights[0], rightCaretHeights[1], rightCaretHeights[4]].map(h => h.toFixed(1)).join(', ')}`);
+            console.log(`  Tall heights (pos 2,3): ${[rightCaretHeights[2], rightCaretHeights[3]].map(h => h.toFixed(1)).join(', ')}`);
+            expect.soft(minTall, 'Tall carets should be taller than short carets').toBeGreaterThan(maxShort + 2);
+        }
+    });
+
+    test('Step 8: Left-arrow caret sizes (backSide)', async () => {
+        const leftCaretHeights = [];
+        const posNames = ['before D', 'before C', 'before B', 'before A'];
+
+        for (let i = 1; i <= 4; i++) {
+            await ctx.page.keyboard.press('ArrowLeft');
+            await sleep(1500);
+            const carets = await findCarets(ctx.page);
+            const h = carets.length >= 1 ? carets[0].height : 0;
+            leftCaretHeights.push(h);
+            console.log(`  Left ${i} (${posNames[i - 1]}): h=${h.toFixed(1)}`);
+        }
+
+        for (let i = 0; i < 4; i++) {
+            expect.soft(leftCaretHeights[i], `Left position ${i} should have visible caret`).toBeGreaterThan(0);
+        }
+
+        // Positions 1,2 (before C, before B) should be taller; 0,3 shorter
+        if (leftCaretHeights.every(h => h > 0)) {
+            const shortHeights = [leftCaretHeights[0], leftCaretHeights[3]];
+            const tallHeights = [leftCaretHeights[1], leftCaretHeights[2]];
+            const maxShort = Math.max(...shortHeights);
+            const minTall = Math.min(...tallHeights);
+            console.log(`  Short heights (before D, before A): ${shortHeights.map(h => h.toFixed(1)).join(', ')}`);
+            console.log(`  Tall heights (before C, before B): ${tallHeights.map(h => h.toFixed(1)).join(', ')}`);
+            expect.soft(minTall, 'Tall carets should be taller than short carets').toBeGreaterThan(maxShort + 2);
+        }
+    });
+
+    test('Step 9: Ctrl+A then Home', async () => {
+        await ctx.page.keyboard.press('Control+a');
+        await sleep(2000);
+        await ctx.page.keyboard.press('Home');
+        await sleep(1500);
+
+        const carets = await findCarets(ctx.page);
+        console.log(`  Carets after Ctrl+A + Home: ${carets.length}`);
+        expect.soft(carets.length, 'Caret should be visible after Ctrl+A + Home').toBeGreaterThanOrEqual(1);
+
+        if (carets.length >= 1 && rightCaretHeights[0] > 0) {
+            console.log(`    caret h=${carets[0].height.toFixed(1)}, expected ≈${rightCaretHeights[0].toFixed(1)}`);
+            expect.soft(
+                Math.abs(carets[0].height - rightCaretHeights[0]),
+                'Caret height should match position 0'
+            ).toBeLessThan(2);
+        }
+    });
+
+    test('Step 10: Press End', async () => {
+        await ctx.page.keyboard.press('End');
+        await sleep(1500);
+
+        const carets = await findCarets(ctx.page);
+        console.log(`  Carets after End: ${carets.length}`);
+        expect.soft(carets.length, 'Caret should be visible after End').toBeGreaterThanOrEqual(1);
+
+        if (carets.length >= 1 && rightCaretHeights[4] > 0) {
+            console.log(`    caret h=${carets[0].height.toFixed(1)}, expected ≈${rightCaretHeights[4].toFixed(1)}`);
+            expect.soft(
+                Math.abs(carets[0].height - rightCaretHeights[4]),
+                'Caret height should match position 4'
+            ).toBeLessThan(2);
+        }
+    });
+});
