@@ -657,6 +657,11 @@ export function initializeParagraph(textDiv: HTMLElement, desc: SCHEMA.ElementDe
     const defaultFontSize = elements.defaultFontSize;
     textDiv.replaceChildren();
 
+    // replaceChildren() removed all DOM children including any caret/measurement
+    // overlays — clear the stale references so they will be recreated on demand.
+    textDiv[ParagraphCaretNodeName] = undefined;
+    textDiv[ParagraphMeasurementsNodeName] = undefined;
+
     for (const lineRange of lineRanges) {
         const blocks = buildBlocksForLine(text, lineRange.start, lineRange.end, runs, elements);
         const line: ParagraphLine = {
