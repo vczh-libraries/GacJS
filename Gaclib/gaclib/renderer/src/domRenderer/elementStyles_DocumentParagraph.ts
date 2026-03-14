@@ -467,6 +467,12 @@ export function fillParagraphMeasurements(textDiv: HTMLElement, layout: Paragrap
 
     layout.units = units;
     layout.inlineObjectBounds = inlineObjectBounds.length > 0 ? inlineObjectBounds : null;
+
+    // Restore caret after paragraph re-initialization destroyed the old caret div
+    if (layout.caret !== null) {
+        layout.caretVisible = true;
+        setCaretVisible(textDiv, true, layout);
+    }
 }
 
 export function renderParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
@@ -537,6 +543,8 @@ export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: 
     // Find the caret position from units.
     // frontSide === true  → use *backCaretBaseline* of the unit that ends at the caret position (prior unit).
     // frontSide === false → use *frontCaretBaseline* of the unit that starts at the caret position (next unit).
+    // At boundaries (e.g. position 0 with frontSide=true, or last position with frontSide=false)
+    // the preferred side has no matching unit, so we fall back to the other side.
     const caretPos = layout.caret!.caret;
     const frontSide = layout.caret!.frontSide;
     let caretX: number | undefined;
@@ -557,8 +565,25 @@ export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: 
         }
     }
 
+    // Boundary fallback: preferred side had no match, try the other side
     if (caretX === undefined || caretY === undefined || caretHeight === undefined) {
-        // Fallback: use defaultFontSize at origin if no unit matches
+        for (const unit of layout.units) {
+            if (frontSide && caretPos >= unit.start && caretPos < unit.end) {
+                caretX = unit.frontCaretBaseline.x;
+                caretY = unit.frontCaretBaseline.y;
+                caretHeight = unit.caretHeight;
+                break;
+            } else if (!frontSide && caretPos > unit.start && caretPos <= unit.end) {
+                caretX = unit.backCaretBaseline.x;
+                caretY = unit.backCaretBaseline.y;
+                caretHeight = unit.caretHeight;
+                break;
+            }
+        }
+    }
+
+    if (caretX === undefined || caretY === undefined || caretHeight === undefined) {
+        // Final fallback: use defaultFontSize at origin if no unit matches at all
         caretX = 0;
         caretY = layout.defaultFontSize;
         caretHeight = layout.defaultFontSize;

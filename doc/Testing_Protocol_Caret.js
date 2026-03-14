@@ -32,7 +32,13 @@
 //   8. Press Left 4 times back to position 0 (4 positions).
 //      [VERIFY] Positions 2 and 3 (before C, before B) have a taller caret; 1
 //      and 4 have a shorter caret.
-//   9. Kill the process directly and close the webpage. No elegant exit is needed.
+//   9. Press Ctrl+A to select all, then press Home.
+//      [VERIFY] A caret is visible at the expected position (matching the
+//      position-0 caret from step 7).
+//   10. Press End.
+//      [VERIFY] A caret is visible at the expected position (matching the
+//      position-4 caret from step 7).
+//   11. Kill the process directly and close the webpage. No elegant exit is needed.
 
 const path = require('path');
 
@@ -638,6 +644,54 @@ async function main() {
             pass('Left-arrow: all 4 positions had visible caret (blink reset)');
         } else {
             fail('Left-arrow visibility', `Not all positions had visible caret: ${leftCaretHeights.join(', ')}`);
+        }
+
+        // =================================================================
+        // Step 9: Ctrl+A then Home — verify caret survives selection
+        // =================================================================
+        console.log('\nStep 9: Ctrl+A then Home');
+        await page.keyboard.press('Control+a');
+        await sleep(2000);
+        await page.keyboard.press('Home');
+        await sleep(1500);
+
+        carets = await findCarets(page);
+        console.log(`  Carets after Ctrl+A + Home: ${carets.length}`);
+        if (carets.length >= 1) {
+            console.log(`    caret at (${carets[0].x.toFixed(1)}, ${carets[0].y.toFixed(1)}) h=${carets[0].height.toFixed(1)}`);
+            // Should match position 0 from step 7 (before A — short height)
+            if (rightCaretHeights[0] > 0 && Math.abs(carets[0].height - rightCaretHeights[0]) < 2) {
+                pass(`Caret after Home matches pos-0 height (${carets[0].height.toFixed(1)} ≈ ${rightCaretHeights[0].toFixed(1)})`);
+            } else if (rightCaretHeights[0] > 0) {
+                fail('Caret after Home height', `Got ${carets[0].height.toFixed(1)}, expected ≈${rightCaretHeights[0].toFixed(1)}`);
+            } else {
+                pass('Caret visible after Ctrl+A + Home');
+            }
+        } else {
+            fail('Caret after Ctrl+A + Home', 'No caret found');
+        }
+
+        // =================================================================
+        // Step 10: Press End — verify caret at end position
+        // =================================================================
+        console.log('\nStep 10: Press End');
+        await page.keyboard.press('End');
+        await sleep(1500);
+
+        carets = await findCarets(page);
+        console.log(`  Carets after End: ${carets.length}`);
+        if (carets.length >= 1) {
+            console.log(`    caret at (${carets[0].x.toFixed(1)}, ${carets[0].y.toFixed(1)}) h=${carets[0].height.toFixed(1)}`);
+            // Should match position 4 from step 7 (after D — short height)
+            if (rightCaretHeights[4] > 0 && Math.abs(carets[0].height - rightCaretHeights[4]) < 2) {
+                pass(`Caret after End matches pos-4 height (${carets[0].height.toFixed(1)} ≈ ${rightCaretHeights[4].toFixed(1)})`);
+            } else if (rightCaretHeights[4] > 0) {
+                fail('Caret after End height', `Got ${carets[0].height.toFixed(1)}, expected ≈${rightCaretHeights[4].toFixed(1)}`);
+            } else {
+                pass('Caret visible after End');
+            }
+        } else {
+            fail('Caret after End', 'No caret found');
         }
 
         // =================================================================

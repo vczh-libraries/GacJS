@@ -471,4 +471,10 @@ node ..\doc\Testing_Protocol_Caret.js
    before D, before C, before B, before A):
    **[VERIFY]** The caret is visible. The 2nd position (before C) and 3rd position
    (before B) have a taller caret. The 1st and 4th positions have a shorter caret.
-9. Kill the process directly and close the webpage. No elegant exit is needed.
+9. Press Ctrl+A to select all, then press Home.
+   **[VERIFY]** A caret is visible at the expected position (matching the
+   position-0 caret from step 7).
+10. Press End.
+    **[VERIFY]** A caret is visible at the expected position (matching the
+    position-4 caret from step 7).
+11. Kill the process directly and close the webpage. No elegant exit is needed.
