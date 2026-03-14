@@ -1,6 +1,5 @@
 # ToDo
 
-- Paragraph not blink
 - Verify IME supports
 - Click the X button (by hittest) should close the main window
 - More elegant way of helping people make `gacui-screen` focusable in `index.html`.
