@@ -63,6 +63,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _fontConfig: SCHEMA.FontConfig;
     private _resizeObserver: ResizeObserver;
 
+    private _caretBlinkTimer: ReturnType<typeof setInterval> | null = null;
+    private _caretBlinkElementId: number | null = null;
+
     /****************************************************************************************
      * Font Configuration
      ***************************************************************************************/
@@ -191,8 +194,33 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     stop(): void {
         this._stopping = true;
+        this._stopCaretBlink();
         this._resizeObserver.disconnect();
         this._uninstallEvents();
+    }
+
+    private _stopCaretBlink(): void {
+        if (this._caretBlinkTimer !== null) {
+            clearInterval(this._caretBlinkTimer);
+            this._caretBlinkTimer = null;
+        }
+        this._caretBlinkElementId = null;
+    }
+
+    private _startCaretBlink(elementId: number): void {
+        this._stopCaretBlink();
+        this._caretBlinkElementId = elementId;
+        this._caretBlinkTimer = setInterval(() => {
+            if (this._caretBlinkElementId === null) return;
+            const data = this._paragraphElements.get(this._caretBlinkElementId);
+            if (data === undefined) return;
+            const layout = getParagraphLayout(data.htmlElement);
+            if (layout === undefined) return;
+            if (layout.caret === null) return;
+
+            layout.caretVisible = !layout.caretVisible;
+            setCaretVisible(data.textDiv, layout.caretVisible, layout);
+        }, 500);
     }
 
     requestStopToCore(forceExit: boolean): void {
@@ -861,7 +889,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         if (layout === undefined) return;
 
         layout.caret = requestArgs;
+        layout.caretVisible = true;
         setCaretVisible(data.textDiv, true, layout);
+        this._startCaretBlink(requestArgs.id);
 
         // Also update the stored desc
         const typedDesc = this._renderingRecord.elements.getDesc(requestArgs.id);
@@ -878,7 +908,11 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         if (layout === undefined) return;
 
         layout.caret = null;
+        layout.caretVisible = false;
         setCaretVisible(data.textDiv, false, layout);
+        if (this._caretBlinkElementId === requestArgs) {
+            this._stopCaretBlink();
+        }
 
         // Also update the stored desc
         const typedDesc = this._renderingRecord.elements.getDesc(requestArgs);

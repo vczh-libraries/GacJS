@@ -431,3 +431,44 @@ node ..\doc\Testing_Protocol_ImageInText.js
    **[VERIFY]** The content is `XABC` followed by an inline image, and the image has a
    visible selection indicator (background overlay).
 7. Kill the process directly and close the webpage. No elegant exit is needed.
+
+### Testing_Protocol_Caret.js
+
+A standalone Playwright test script that verifies caret rendering, blinking, positioning,
+and size in the GacUI rich-text document editor and text boxes. Located at
+`doc/Testing_Protocol_Caret.js`.
+
+**Run:**
+```powershell
+cd Gaclib
+node ..\doc\Testing_Protocol_Caret.js
+```
+
+**The goal of the test plan cannot be changed.** The test must:
+
+1. Launch the application (start the C++ server, open `index.html` in Playwright).
+2. Open the "Control" tab. Click the text box next to the "Search:" label so the
+   text box caret becomes active.
+   **[VERIFY]** A caret is visible in the Search text box.
+3. Click the rich-text document editor (the large area at the bottom).
+   **[VERIFY]** The caret in the Search text box disappears, and a caret appears
+   in the rich-text editor.
+4. Test caret blinking: after the caret is shown in the rich-text editor, wait 0.6
+   seconds.
+   **[VERIFY]** The caret is now invisible (blinked off). Wait another 0.6 seconds.
+   **[VERIFY]** The caret is now visible again (blinked on).
+5. Type `ABCD` into the editor.
+6. Select `BC` (press Home, Right 1, Shift+Right 2). Open the font dialog from the
+   toolbar, select the only available font, pick a bigger text size (24), then click
+   OK.
+7. Press Home so the caret is at position 0 (before `A`). Then press Right 4 times
+   to reach the end. After each Right press (5 caret positions total: before A,
+   after A, after B, after C, after D):
+   **[VERIFY]** The caret is visible (OpenCaret resets blink). The 3rd position
+   (after B) and 4th position (after C) have a taller caret matching the bigger
+   font size. The 1st, 2nd, and 5th positions have a shorter (default-size) caret.
+8. Press Left 4 times back to position 0. After each Left press (4 positions:
+   before D, before C, before B, before A):
+   **[VERIFY]** The caret is visible. The 2nd position (before C) and 3rd position
+   (before B) have a taller caret. The 1st and 4th positions have a shorter caret.
+9. Kill the process directly and close the webpage. No elegant exit is needed.

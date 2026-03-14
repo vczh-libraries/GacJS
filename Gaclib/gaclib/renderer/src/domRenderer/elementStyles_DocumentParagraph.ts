@@ -508,8 +508,8 @@ export function renderParagraphMeasurements(textDiv: HTMLElement, layout: Paragr
 
     textDiv[ParagraphMeasurementsNodeName] = elements;
 
-    if (!layout.caretVisible) {
-        setCaretVisible(textDiv, true, layout);
+    if (layout.caret !== null) {
+        setCaretVisible(textDiv, layout.caretVisible, layout);
     }
 }
 
@@ -534,7 +534,9 @@ export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: 
         return;
     }
 
-    // Find the caret position from units
+    // Find the caret position from units.
+    // frontSide === true  → use *backCaretBaseline* of the unit that ends at the caret position (prior unit).
+    // frontSide === false → use *frontCaretBaseline* of the unit that starts at the caret position (next unit).
     const caretPos = layout.caret!.caret;
     const frontSide = layout.caret!.frontSide;
     let caretX: number | undefined;
@@ -542,14 +544,14 @@ export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: 
     let caretHeight: number | undefined;
 
     for (const unit of layout.units) {
-        if (frontSide && caretPos >= unit.start && caretPos < unit.end) {
-            caretX = unit.frontCaretBaseline.x;
-            caretY = unit.frontCaretBaseline.y;
-            caretHeight = unit.caretHeight;
-            break;
-        } else if (!frontSide && caretPos > unit.start && caretPos <= unit.end) {
+        if (frontSide && caretPos > unit.start && caretPos <= unit.end) {
             caretX = unit.backCaretBaseline.x;
             caretY = unit.backCaretBaseline.y;
+            caretHeight = unit.caretHeight;
+            break;
+        } else if (!frontSide && caretPos >= unit.start && caretPos < unit.end) {
+            caretX = unit.frontCaretBaseline.x;
+            caretY = unit.frontCaretBaseline.y;
             caretHeight = unit.caretHeight;
             break;
         }
