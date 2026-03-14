@@ -258,88 +258,74 @@ with the measured `documentSize`.
 
 ## Caret Operations
 
-### GetCaret
+### GetCaret — Navigation
 
-Navigates from a caret position using `CaretRelativePosition`. All navigation uses
-`ParagraphEditUnit[]` and `ParagraphLine[]` from the stored `ParagraphLayout`.
+The core asks the client to compute a new caret position relative to the current one
+(e.g., move left, move to line start). The client walks the `ParagraphEditUnit[]` and
+`ParagraphLine[]` stored in the `ParagraphLayout` to resolve the request.
 
-| Direction | Behavior |
-|-----------|----------|
-| `CaretFirst` | Return 0 |
-| `CaretLast` | Return `text.length` |
-| `CaretLineFirst` | First caret position on current line (`line.start`) |
-| `CaretLineLast` | Last caret position on current line (`line.end`) |
-| `CaretMoveLeft` | Move to the start of the unit containing or preceding the caret |
-| `CaretMoveRight` | Move to the end of the unit containing or following the caret |
-| `CaretMoveUp` | Find the unit on the previous visual line closest to the current X coordinate |
-| `CaretMoveDown` | Find the unit on the next visual line closest to the current X coordinate |
+**Horizontal movement** (Left / Right) snaps to the nearest edit-unit boundary in
+the requested direction. Because edit units already account for multi-code-point
+characters and inline objects, this naturally produces the correct "one character"
+or "one object" step.
 
-**Line detection** (`_findLineForCaret`): walks `ParagraphLine[]` to find which line
-a caret belongs to. If the caret falls between two lines (in a line separator), the
-preceding line is returned.
+**Vertical movement** (Up / Down) first determines which visual line the caret is
+on by comparing baseline Y coordinates. It then finds the edit unit on the adjacent
+visual line whose X position is closest to the current caret's X, preserving the
+horizontal intent across lines. This works correctly even when a single
+`ParagraphLine` wraps into multiple visual lines.
 
-**Up/down navigation**: Uses the Y coordinate of `ParagraphEditUnit.frontCaretBaseline`
-to detect visual lines. This correctly handles wrapped lines within a single
-`ParagraphLine`. Selects the unit on the target visual line whose X position is closest
-to the current caret's X.
+**Line boundary** (LineFirst / LineLast) uses `_findLineForCaret()` to locate the
+`ParagraphLine` that contains the caret, then returns `line.start` or `line.end`.
+When the caret falls exactly at a line separator, the preceding line is chosen.
 
-Responds with `{ newCaret, preferFrontSide }`.
+The response includes `preferFrontSide` — a hint that tells the core which side of
+the boundary the caret logically belongs to after the move.
 
-### OpenCaret / CloseCaret
+### OpenCaret / CloseCaret — Rendering and Blinking
 
-- `OpenCaret`: stores the `OpenCaretRequest` in the `ParagraphLayout.caret` field,
-  calls `setCaretVisible(textDiv, true, layout)`, and starts the client-side blink
-  timer via `_startCaretBlink(elementId)` (which stops any previous timer first).
-  Also updates the stored element desc.
-- `CloseCaret`: sets `ParagraphLayout.caret = null`, calls
-  `setCaretVisible(textDiv, false, layout)`, and stops the blink timer if active.
-  Also updates the stored element desc.
+`OpenCaret` activates the caret: it records the caret position and color in the
+`ParagraphLayout`, renders a 2px-wide colored bar at the correct pixel position,
+and starts a client-side blink timer that toggles the bar's visibility every 500 ms.
 
-Both are fire-and-forget messages (no response).
+The caret bar's position is determined by the **frontSide** flag in the request.
+When a caret sits at the boundary between two characters with different font sizes,
+the flag decides which character's metrics (baseline and height) are used to size and
+position the bar. If the preferred side has no matching edit unit (e.g., at the very
+beginning or end of the text), the opposite side is tried; if neither matches, the
+bar falls back to the paragraph's default font size at position (0, 0).
 
-`setCaretVisible()` creates or reuses a `<div>` (stored as `$GacUI-ParagraphCaretNodeName`
-on the textDiv) styled as a 2px-wide colored bar. The bar's position depends on
-`OpenCaretRequest.frontSide`:
+`CloseCaret` hides the bar, clears the stored caret state, and stops the blink timer.
 
-- When `frontSide === true`: scans for the unit where `caretPos > unit.start &&
-  caretPos <= unit.end` and uses `backCaretBaseline`.
-- When `frontSide === false`: scans for the unit where `caretPos >= unit.start &&
-  caretPos < unit.end` and uses `frontCaretBaseline`.
-- **Fallback**: if the preferred side finds no matching unit, tries the opposite side.
-- **Final fallback**: if no unit matches at all, places the caret at `(0, defaultFontSize)`
-  with `height = defaultFontSize`.
+Both are fire-and-forget messages (no response expected).
 
 ---
 
 ## Caret Bounds
 
-`RequestDocumentParagraph_GetCaretBounds` returns pixel rectangles for every valid
-caret position (0 through `text.length`).
+The core needs pixel rectangles for every caret position so it can render selections
+and map mouse clicks to text offsets. `GetCaretBounds` computes a 1px-wide rectangle
+for each position from 0 to `text.length`, using the edit unit whose range covers
+that position.
 
-For each position, it scans `ParagraphEditUnit[]`:
-- **Front-side bound**: the unit where `pos >= start && pos < end` →
-  use `frontCaretBaseline`.
-- **Back-side bound**: the unit where `pos > start && pos <= end` →
-  use `backCaretBaseline`.
+Each position produces two bounds — a **front-side** bound (using the unit that
+starts at or before the position) and a **back-side** bound (using the unit that
+ends at or after the position). These differ at character boundaries where the
+neighboring characters have different font sizes or sit on different visual lines.
 
-Each bound is a 1px-wide rectangle from baseline minus caret height to baseline.
-
-Responds with `{ frontSideBounds, backSideBounds }` — arrays of `Rect`, one per
-caret position.
+The response contains `{ frontSideBounds, backSideBounds }` — parallel arrays of
+`Rect`, one entry per caret position.
 
 ---
 
 ## Inline Object Hit-Testing
 
-`RequestDocumentParagraph_GetInlineObjectFromPoint` tests a pixel coordinate against
-inline objects.
-
-Iterates `ParagraphEditUnit[]`:
-1. Skip units where `frontCaretBaseline.y !== backCaretBaseline.y` (line separators).
-2. Compute the bounding rectangle from the unit's front/back X and baseline Y / caret height.
-3. If the point falls inside the rectangle, search `runsDiff` for a
-   `DocumentInlineObjectRunProperty` run covering that unit's range.
-4. Return the matching `DocumentRun`, or `null` if nothing matches.
+`GetInlineObjectFromPoint` determines whether a pixel coordinate falls on an inline
+object (e.g., an embedded image). It iterates the edit units, skipping line
+separators (which span two visual lines and cannot be inline objects), and checks
+whether the point lies within each unit's bounding rectangle. When a hit is found,
+it looks up the corresponding `DocumentInlineObjectRunProperty` from `runsDiff` and
+returns that run. If nothing matches, it returns `null`.
 
 ---
 
