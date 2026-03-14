@@ -1,6 +1,7 @@
 # ToDo
 
 - Paragraph not blink
+- Font name has extra quots
 - Double click not implemented
 - Verify IME supports
 - Click the X button (by hittest) should close the main window
