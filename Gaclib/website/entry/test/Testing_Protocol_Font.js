@@ -367,7 +367,7 @@ describe('Font', () => {
     test('Step 9: Shift+Right loop (14 presses)', async () => {
         for (let press = 1; press <= 14; press++) {
             await ctx.page.keyboard.press('Shift+ArrowRight');
-            await sleep(1500);
+            await sleep(300);
 
             const allChars = await getDocCharStyles(ctx.page);
             const styles = extractTypedStyles(allChars);

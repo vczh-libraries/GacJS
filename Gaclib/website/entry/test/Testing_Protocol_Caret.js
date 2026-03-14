@@ -270,7 +270,7 @@ describe('Caret', () => {
             await sleep(1000);
         }
         await ctx.page.keyboard.press('Home');
-        await sleep(1500);
+        await sleep(300);
 
         // Position 0 (before A)
         let carets = await waitForCaret(ctx.page);
@@ -280,7 +280,7 @@ describe('Caret', () => {
 
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowRight');
-            await sleep(1500);
+            await sleep(300);
             carets = await waitForCaret(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             rightCaretHeights.push(h);
@@ -309,7 +309,7 @@ describe('Caret', () => {
 
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowLeft');
-            await sleep(1500);
+            await sleep(300);
             const carets = await waitForCaret(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             leftCaretHeights.push(h);
@@ -337,7 +337,7 @@ describe('Caret', () => {
         await ctx.page.keyboard.press('Control+a');
         await sleep(2000);
         await ctx.page.keyboard.press('Home');
-        await sleep(1500);
+        await sleep(300);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after Ctrl+A + Home: ${carets.length}`);
@@ -354,7 +354,7 @@ describe('Caret', () => {
 
     test('Step 10: Press End', async () => {
         await ctx.page.keyboard.press('End');
-        await sleep(1500);
+        await sleep(300);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after End: ${carets.length}`);
