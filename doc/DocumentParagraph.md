@@ -150,7 +150,10 @@ on every update — there is no incremental `updateParagraph()` yet.
    - If `!wrapLine`, set `white-space: nowrap` on the line div.
    - If the line is empty, set `height: {defaultFontSize}px` so it takes space.
    - Append all block spans as children of the line div.
-4. **Replace textDiv children** with the newly built line divs.
+4. **Replace textDiv children** with the newly built line divs. After
+   `replaceChildren()`, clear the stale caret and measurement overlay references
+   (`ParagraphCaretNodeName` and `ParagraphMeasurementsNodeName`) so they will be
+   recreated on demand.
 5. Return a `ParagraphLayout` with empty `units` (filled later by measurement).
 
 **Block building** (`buildBlocksForLine()`):
@@ -187,7 +190,9 @@ the element's position in the final DOM tree.
    If `!wrapLine`, also set `width: auto`. If `wrapLine && maxWidth > 0`, set
    `width: {maxWidth}px`.
 4. Call `fillParagraphMeasurements(textDiv, layout)` to compute edit units and
-   inline object bounds.
+   inline object bounds. If `layout.caret !== null`, this also restores the caret
+   by calling `setCaretVisible(textDiv, true, layout)` — the previous caret `<div>`
+   was destroyed when `initializeParagraph()` replaced textDiv's children.
 5. Read `textDiv.scrollWidth` and `textDiv.scrollHeight` as the document size.
 6. Restore `textDiv.style.height` and `textDiv.style.width`.
 7. If temporarily attached: detach `htmlElement` from `document.body` and restore
@@ -282,15 +287,27 @@ Responds with `{ newCaret, preferFrontSide }`.
 
 ### OpenCaret / CloseCaret
 
-- `OpenCaret`: stores the `OpenCaretRequest` in the `ParagraphLayout.caret` field and
-  calls `setCaretVisible(textDiv, true, layout)`. Also updates the stored element desc.
-- `CloseCaret`: sets `ParagraphLayout.caret = null` and calls
-  `setCaretVisible(textDiv, false, layout)`. Also updates the stored element desc.
+- `OpenCaret`: stores the `OpenCaretRequest` in the `ParagraphLayout.caret` field,
+  calls `setCaretVisible(textDiv, true, layout)`, and starts the client-side blink
+  timer via `_startCaretBlink(elementId)` (which stops any previous timer first).
+  Also updates the stored element desc.
+- `CloseCaret`: sets `ParagraphLayout.caret = null`, calls
+  `setCaretVisible(textDiv, false, layout)`, and stops the blink timer if active.
+  Also updates the stored element desc.
 
 Both are fire-and-forget messages (no response).
 
 `setCaretVisible()` creates or reuses a `<div>` (stored as `$GacUI-ParagraphCaretNodeName`
-on the textDiv) styled as a 2px-wide colored bar at the caret's pixel position.
+on the textDiv) styled as a 2px-wide colored bar. The bar's position depends on
+`OpenCaretRequest.frontSide`:
+
+- When `frontSide === true`: scans for the unit where `caretPos > unit.start &&
+  caretPos <= unit.end` and uses `backCaretBaseline`.
+- When `frontSide === false`: scans for the unit where `caretPos >= unit.start &&
+  caretPos < unit.end` and uses `frontCaretBaseline`.
+- **Fallback**: if the preferred side finds no matching unit, tries the opposite side.
+- **Final fallback**: if no unit matches at all, places the caret at `(0, defaultFontSize)`
+  with `height = defaultFontSize`.
 
 ---
 
@@ -355,5 +372,9 @@ Scans `ParagraphEditUnit[]`:
    `documentParagraphUpdater.ts`). All logic currently lives inline in
    `GacUIRendererImpl.ts`.
 
-3. **Caret blinking**: The core handles blinking by sending `OpenCaret`/`CloseCaret`
-   periodically. There is no client-side blink timer.
+3. **Caret blinking**: The client maintains its own blink timer. When `OpenCaret`
+   is received, `_startCaretBlink()` creates a `setInterval(500)` that toggles
+   `layout.caretVisible` and calls `setCaretVisible()` every 500 ms. The timer is
+   stopped by `_stopCaretBlink()` when `CloseCaret` is received or a new `OpenCaret`
+   replaces it. The core sends `OpenCaret` once to start blinking and `CloseCaret`
+   once to stop it — it does not send periodic messages.
