@@ -15,9 +15,8 @@ Start a website from there and you can enjoy the demo!
 
 ## localhost/
 
-**STILL UNDER DEVELOPMENT**
-
 This is an interactive GacUI renderer.
+
 Run [RemotingTest_Core.vcxproj](https://github.com/vczh-libraries/GacUI/tree/master/Test/GacUISrc/RemotingTest_Core) with `/Http` and open this page.
 
 You can start a local `RemotingTest_Win32_Renderer` with `/Http`, do something to the UI, and start the website, you can see the website take over the running UI on the fly.
@@ -31,5 +30,7 @@ You can start a local `RemotingTest_Win32_Renderer` with `/Http`, do something t
 ![GacUIHtml2](GacUIHtml2.gif)
 
 ## localhost/snapshots.html
+
+A demo for rendering [GacUI Unit Test with Snapshots](https://github.com/vczh-libraries/GacUI/tree/master/Test/GacUISrc/UnitTestViewer)
 
 ![SnapshotViewer](SnapshotViewer.png)
