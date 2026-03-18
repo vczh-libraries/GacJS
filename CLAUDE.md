@@ -121,8 +121,12 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - `REPO-ROOT\doc\Testing_Protocol.md` describes how the implementation of remote protocol is testing.
 - `REPO-ROOT\Gaclib\website\entry\test` has many E2E test cases that start `RemotingTest_Core` and run `index.html` with playwright.
 - During investigation of a bug that involves many part of the renderer, you are recommended to create a new test case like these to confirm the regression, which is also a good measurement to see if the bug is properly fixed.
-- 300ms should be enough for waiting the UI to refresh.
-- The caret blinks in the focused text box every 500ms.
+- Wait time standard:
+  - All tests are running against a local HTTP server, the latency is very low.
+  - Starting up could take a little bit longer, 1200ms is enough.
+  - 300ms should be enough for waiting the UI to refresh. If 300ms is not enough, try from 400-800ms.
+  - Keep the number small with your best effort.
+  - The caret blinks in the focused text box every 500ms.
 
 ## TypeScript/JavaScript coding guidelines
 
