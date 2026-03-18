@@ -217,10 +217,12 @@ All protocol tests live under `Gaclib/website/entry/test/`:
 - `Testing_Protocol_Caret.js` — Caret rendering, blinking, and positioning test.
 - `Testing_Protocol_Font.js` — Font/color formatting and incremental selection test.
 - `Testing_Protocol_ImageInText.js` — Inline image insertion and rendering test.
+- `Testing_Protocol_RendererSwitching.js` — Renderer switching (reconnection) test.
 
-Each test file is a vitest suite that uses `setupProtocolTest()` from the shared
+Each test file is a vitest suite. Most use `setupProtocolTest()` from the shared
 module, which registers `beforeAll`/`afterAll` hooks to start/stop the C++ server
-and launch/close the headless Chromium browser.
+and launch/close the headless Chromium browser. `Testing_Protocol_RendererSwitching.js`
+manages its own lifecycle because it opens multiple pages in the same browser context.
 
 ### Example Test Structure
 
@@ -419,6 +421,35 @@ yarn test
    **[VERIFY]** The content is `XABC` followed by an inline image, and the image has a
    visible selection indicator (background overlay).
 7. Kill the process directly and close the webpage. No elegant exit is needed.
+
+### Testing_Protocol_RendererSwitching.js
+
+A vitest suite that verifies renderer switching (reconnection). When a new browser
+tab opens `index.html`, it connects to the C++ server, taking over the session from
+any previous tab. The new tab should see the same UI state (typed text, selection,
+etc.). Located at `Gaclib/website/entry/test/Testing_Protocol_RendererSwitching.js`.
+
+This test does **not** use `setupProtocolTest()` — it manages its own browser context
+(multiple pages in the same context) and server lifecycle.
+
+**Run:**
+```powershell
+cd Gaclib
+yarn test
+```
+
+**The goal of the test plan cannot be changed.** The test must:
+
+1. Launch the application (start the C++ server, open `index.html` in Playwright).
+2. Open the "Control" tab, find the text box next to the "Search:" label.
+3. Type "Hello" into the text box.
+4. Open a second browser tab with `index.html` (renderer switching).
+   The second tab should take over and display the same UI state.
+5. Verify the second tab renders and contains the typed text "Hello".
+6. Select part of the text in the text box.
+7. Open a third browser tab with `index.html` (another renderer switch).
+8. Verify the third tab renders and contains the typed text with selection.
+9. Kill the process directly and close all webpages. No elegant exit is needed.
 
 ### Testing_Protocol_Caret.js
 
