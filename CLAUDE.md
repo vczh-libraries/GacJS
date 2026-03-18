@@ -101,6 +101,27 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - When the injected error is thrown, the browser will show a dialog box (from the unhandled error), and Playwright will see it. This tells you exactly where the error happens.
 - Use a unique word in the error message so you can search for it and confirm which code path triggered.
 
+## Debugging the RemotingTest_Core HTTP Server
+
+- Always start it with the `/Http` argument.
+- Always start it async, because `RemotingTest_Core` never ends until you kill the process.
+- You can temporarily enabled remote protocol message logging:
+  - The flag is in `<GacUI>\Test\GacUISrc\RemotingTest_Core\CoreChannel.cpp`.
+  - Uncomment `//#define PRINT_PROTOCOL_JSON` to make it work.
+    - You should always revert it (aka comment it) after investigation.
+  - All messages sending between `RemotingTest_Core` and `index.html` will print on the CLI.
+- You are always recommended to run a debugger to launch it, read these documents:
+  - `<GacUI>\.github\Guidelines\Building.md.md`
+  - `<GacUI>\.github\Guidelines\Running-CLI.md`
+  - `<GacUI>\.github\Guidelines\Debugging.md`
+  - You are required to always follow the instruction above to launch or debug `RemotingTest_Core`.
+
+## E2E Testing
+
+- `REPO-ROOT\doc\Testing_Protocol.md` describes how the implementation of remote protocol is testing.
+- `REPO-ROOT\Gaclib\website\entry\test` has many E2E test cases that start `RemotingTest_Core` and run `index.html` with playwright.
+- During investigation of a bug that involves many part of the renderer, you are recommended to create a new test case like these to confirm the regression, which is also a good measurement to see if the bug is properly fixed.
+
 ## TypeScript/JavaScript coding guidelines
 
 - Always prefer strict testing, like `===` instead of `==`.
