@@ -462,6 +462,26 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     // Map from element ID to paragraph tracking data
     private _paragraphElements: Map<number, { htmlElement: HTMLElement; textDiv: HTMLElement }> = new Map();
 
+    private _reconcileParagraphElements(): void {
+        for (const [elementId, data] of this._paragraphElements) {
+            const virtualDom = this._renderingRecord.elementToDoms.get(elementId);
+            if (virtualDom === undefined || !('htmlElement' in virtualDom)) {
+                continue;
+            }
+            const newHtml = virtualDom.htmlElement as HTMLElement;
+            if (newHtml === data.htmlElement) {
+                continue;
+            }
+            const newTextDiv = getExtraBorder(newHtml);
+            if (newTextDiv !== undefined) {
+                this._paragraphElements.set(elementId, { htmlElement: newHtml, textDiv: newTextDiv });
+                if (this._caretBlinkElementId === elementId) {
+                    this._startCaretBlink(elementId);
+                }
+            }
+        }
+    }
+
     private _getParagraphLayout(elementId: number): { layout: ParagraphLayout; textDiv: HTMLElement } {
         const data = this._paragraphElements.get(elementId);
         if (data === undefined) {
@@ -773,9 +793,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
             // Find unit where pos is at the front (start)
             for (const unit of units) {
-                if (pos >= unit.start && pos < unit.end) {
-                    const x = unit.frontCaretBaseline.x;
-                    const y = unit.frontCaretBaseline.y;
+                if (pos >= unit.start && pos <= unit.end) {
+                    const x = pos < unit.end ? unit.frontCaretBaseline.x : unit.backCaretBaseline.x;
+                    const y = pos < unit.end ? unit.frontCaretBaseline.y : unit.backCaretBaseline.y;
                     const h = unit.caretHeight;
                     frontRect = { x1: x, y1: y - h, x2: x + 1, y2: y };
                     break;
@@ -784,9 +804,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
             // Find unit where pos is at the back (end)
             for (const unit of units) {
-                if (pos > unit.start && pos <= unit.end) {
-                    const x = unit.backCaretBaseline.x;
-                    const y = unit.backCaretBaseline.y;
+                if (pos >= unit.start && pos <= unit.end) {
+                    const x = pos > unit.start ? unit.backCaretBaseline.x : unit.frontCaretBaseline.x;
+                    const y = pos > unit.start ? unit.backCaretBaseline.y : unit.frontCaretBaseline.y;
                     const h = unit.caretHeight;
                     backRect = { x1: x, y1: y - h, x2: x + 1, y2: y };
                     break;
@@ -1022,6 +1042,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                 this._windowConfig.bounds.x2.value - this._windowConfig.bounds.x1.value,
                 this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value
             );
+            this._reconcileParagraphElements();
         }
     }
 
@@ -1038,6 +1059,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             this._windowConfig.bounds.x2.value - this._windowConfig.bounds.x1.value,
             this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value
         );
+        this._reconcileParagraphElements();
     }
 
     /* eslint-disable @typescript-eslint/no-unused-vars */

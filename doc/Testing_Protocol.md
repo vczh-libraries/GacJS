@@ -215,6 +215,8 @@ All protocol tests live under `Gaclib/website/entry/test/`:
   DOM helpers, click helpers, path constants).
 - `Testing_Protocol_SimpleTyping.js` — Basic UI rendering and keyboard input test.
 - `Testing_Protocol_Caret.js` — Caret rendering, blinking, and positioning test.
+- `Testing_Protocol_Caret2.js` — Cursor style after tab switch, caret blinking after tab switch,
+  and end-of-line caret positioning test.
 - `Testing_Protocol_Font.js` — Font/color formatting and incremental selection test.
 - `Testing_Protocol_ImageInText.js` — Inline image insertion and rendering test.
 - `Testing_Protocol_RendererSwitching.js` — Renderer switching (reconnection) test.
@@ -421,6 +423,38 @@ yarn test
    **[VERIFY]** The content is `XABC` followed by an inline image, and the image has a
    visible selection indicator (background overlay).
 7. Kill the process directly and close the webpage. No elegant exit is needed.
+
+### Testing_Protocol_Caret2.js
+
+A vitest suite that verifies cursor style preservation after tab switching, caret
+blinking after tab switching, and end-of-line caret positioning. Located at
+`Gaclib/website/entry/test/Testing_Protocol_Caret2.js`.
+
+**Run:**
+```powershell
+cd Gaclib
+yarn test
+```
+
+**The goal of the test plan cannot be changed.** The test must:
+
+1. Launch the application (start the C++ server, open `index.html` in Playwright).
+2. Open the "Control" tab. Click the text box next to "Search:" so the caret
+   becomes active. Type "Hello" into the text box.
+3. Switch to the "List" tab, wait, then switch back to the "Control" tab.
+   **[VERIFY]** The cursor CSS on the text box area is `text` (IBeam), not `default`.
+4. Click the text box again.
+   **[VERIFY]** A caret is visible. Wait 0.6 seconds.
+   **[VERIFY]** The caret blinks off. Wait 0.6 seconds.
+   **[VERIFY]** The caret blinks on again.
+5. Click the rich-text document editor. Type `ABCDEF`.
+6. Press Home to move the caret to position 0.
+   **[VERIFY]** The caret is at the leftmost position of the text.
+7. Press End to move the caret to the end of the line.
+   **[VERIFY]** The caret is at the rightmost position (after the last character),
+   not before the last character. The End-key caret position matches the position
+   reached by pressing Right arrow 6 times from Home.
+8. Kill the process directly and close the webpage. No elegant exit is needed.
 
 ### Testing_Protocol_RendererSwitching.js
 

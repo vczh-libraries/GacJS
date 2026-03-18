@@ -158,6 +158,8 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
         } else {
             applyTypedStyle(this.htmlElement, typedDesc, this.elements);
         }
+        // applyCommonStyle/applyTypedStyle replaces cssText, so re-apply cursor
+        this.applyCursorStyle(this.props);
     }
 
     private applyCursorStyle(props: VirtualDomProperties): void {
