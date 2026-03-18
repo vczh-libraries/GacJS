@@ -138,6 +138,7 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
             this.htmlElement = document.createElement('div');
             this.onUpdateTypedDesc(props.elementId, props.typedDesc);
         }
+        this.applyCursorStyle(props);
     }
 
     protected getExpectedChildType(): string {
@@ -159,11 +160,7 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
         }
     }
 
-    updateProps(props: VirtualDomProperties): void {
-        // Call the base class implementation
-        super.updateProps(props);
-
-        // Apply cursor style
+    private applyCursorStyle(props: VirtualDomProperties): void {
         let cursorCSS: string | undefined;
 
         if (props.cursor !== undefined) {
@@ -178,6 +175,14 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
             // Remove the style to use inheritance
             this.htmlElement.style.removeProperty('cursor');
         }
+    }
+
+    updateProps(props: VirtualDomProperties): void {
+        // Call the base class implementation
+        super.updateProps(props);
+
+        // Apply cursor style
+        this.applyCursorStyle(props);
     }
 
     protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
