@@ -454,7 +454,10 @@ yarn test
    **[VERIFY]** The caret is at the rightmost position (after the last character),
    not before the last character. The End-key caret position matches the position
    reached by pressing Right arrow 6 times from Home.
-8. Kill the process directly and close the webpage. No elegant exit is needed.
+8. Press Home, then click with the mouse to the right of the last character.
+   **[VERIFY]** The caret jumps to the end of the line (same position as End key),
+   not before the last character.
+9. Kill the process directly and close the webpage. No elegant exit is needed.
 
 ### Testing_Protocol_RendererSwitching.js
 
