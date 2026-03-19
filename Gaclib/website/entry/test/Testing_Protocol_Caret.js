@@ -120,13 +120,13 @@ describe('Caret', () => {
     test('Step 2: Open Control tab and click Search text box', async () => {
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(200);
+        await sleep(250);
 
         positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
-            await sleep(200);
+            await sleep(250);
         }
 
         positions = await getLeafTextPositions(ctx.page);
@@ -134,7 +134,7 @@ describe('Caret', () => {
         expect(searchLabelPos).toBeDefined();
 
         await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(200);
+        await sleep(250);
 
         const carets = await findCarets(ctx.page);
         console.log(`  Carets found after clicking Search: ${carets.length}`);
@@ -167,15 +167,15 @@ describe('Caret', () => {
 
     test('Step 5: Type ABCD', async () => {
         await ctx.page.keyboard.press('Control+a');
-        await sleep(200);
+        await sleep(250);
         await ctx.page.keyboard.press('Delete');
-        await sleep(200);
+        await sleep(250);
 
         for (const ch of TYPED_TEXT) {
             await ctx.page.keyboard.press(ch);
-            await sleep(200);
+            await sleep(250);
         }
-        await sleep(200);
+        await sleep(250);
 
         const screenText = await ctx.page.evaluate(() => {
             const screen = document.getElementById('gacui-screen');
@@ -186,14 +186,14 @@ describe('Caret', () => {
 
     test('Step 6: Select BC and apply font size 24', async () => {
         await ctx.page.keyboard.press('Home');
-        await sleep(200);
+        await sleep(250);
         await ctx.page.keyboard.press('ArrowRight');
-        await sleep(200);
+        await sleep(250);
         for (let i = 0; i < 2; i++) {
             await ctx.page.keyboard.press('Shift+ArrowRight');
-            await sleep(200);
+            await sleep(250);
         }
-        await sleep(200);
+        await sleep(250);
 
         const positions = await getLeafTextPositions(ctx.page);
         const textGroupLabel = positions.find(p => p.text === 'Text');
@@ -223,7 +223,7 @@ describe('Caret', () => {
 
         expect(fontBtnPos, 'Font icon button not found').not.toBeNull();
         await clickAt(ctx.page, fontBtnPos.cx, fontBtnPos.cy);
-        await sleep(200);
+        await sleep(250);
 
         const textsAfterFont = await getLeafTextPositions(ctx.page);
         const newFontTexts = findNewTexts(textsBeforeFont, textsAfterFont);
@@ -245,32 +245,32 @@ describe('Caret', () => {
 
         if (fontNames.length > 0) {
             await clickAt(ctx.page, fontNames[0].cx, fontNames[0].cy);
-            await sleep(200);
+            await sleep(250);
         }
 
         if (sizeLabel) {
             await clickAt(ctx.page, sizeLabel.cx, sizeLabel.bottom + 10);
-            await sleep(200);
+            await sleep(250);
             await ctx.page.keyboard.press('Control+a');
-            await sleep(200);
+            await sleep(250);
             await ctx.page.keyboard.type(String(BIG_SIZE));
-            await sleep(200);
+            await sleep(250);
         }
 
         const fontOk = newFontTexts.find(p => p.text === 'OK');
         expect(fontOk, 'OK button not found in font dialog').toBeDefined();
         await clickAt(ctx.page, fontOk.cx, fontOk.cy);
-        await sleep(200);
+        await sleep(250);
     });
 
     test('Step 7: Right-arrow caret sizes (frontSide)', async () => {
         const editorPos = await findEditorCenter(ctx.page);
         if (editorPos) {
             await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-            await sleep(200);
+            await sleep(250);
         }
         await ctx.page.keyboard.press('Home');
-        await sleep(200);
+        await sleep(250);
 
         // Position 0 (before A)
         let carets = await waitForCaret(ctx.page);
@@ -280,7 +280,7 @@ describe('Caret', () => {
 
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowRight');
-            await sleep(200);
+            await sleep(250);
             carets = await waitForCaret(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             rightCaretHeights.push(h);
@@ -309,7 +309,7 @@ describe('Caret', () => {
 
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowLeft');
-            await sleep(200);
+            await sleep(250);
             const carets = await waitForCaret(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             leftCaretHeights.push(h);
@@ -335,9 +335,9 @@ describe('Caret', () => {
 
     test('Step 9: Ctrl+A then Home', async () => {
         await ctx.page.keyboard.press('Control+a');
-        await sleep(200);
+        await sleep(250);
         await ctx.page.keyboard.press('Home');
-        await sleep(200);
+        await sleep(250);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after Ctrl+A + Home: ${carets.length}`);
@@ -354,7 +354,7 @@ describe('Caret', () => {
 
     test('Step 10: Press End', async () => {
         await ctx.page.keyboard.press('End');
-        await sleep(200);
+        await sleep(250);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after End: ${carets.length}`);

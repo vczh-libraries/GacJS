@@ -56,7 +56,7 @@ describe('SimpleTyping', () => {
         expect(controlTabPos).toBeDefined();
 
         await clickAt(ctx.page, controlTabPos.cx, controlTabPos.cy);
-        await sleep(200);
+        await sleep(250);
 
         const afterControl = await getLeafTexts(ctx.page);
         const hasExpectedContent =
@@ -72,19 +72,19 @@ describe('SimpleTyping', () => {
         expect(searchLabelPos).toBeDefined();
 
         await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(200);
+        await sleep(250);
     });
 
     test('Step 4: Type text', async () => {
         expect(searchLabelPos).toBeDefined();
         await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(200);
+        await sleep(250);
 
         for (const ch of 'Hello') {
             await ctx.page.keyboard.press(ch);
-            await sleep(200);
+            await sleep(250);
         }
-        await sleep(200);
+        await sleep(250);
     });
 
     test('Step 5: Verify typed text', async () => {
