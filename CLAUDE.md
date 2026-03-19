@@ -124,9 +124,11 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - Wait time standard:
   - All tests are running against a local HTTP server, the latency is very low.
   - Starting up could take a little bit longer, 1200ms is enough.
-  - 300ms should be enough for waiting the UI to refresh. If 300ms is not enough, try from 400-800ms.
+  - 200ms is the minimum stable wait for UI refresh (tab switch, dialog open/close, post-typing settle, click). 150ms causes failures in dialog operations.
   - Keep the number small with your best effort.
   - The caret blinks in the focused text box every 500ms.
+  - Before testing caret blink on/off phases, wait 1000ms (2 full blink cycles) so the caret synchronizes to a known phase. Then use 600ms intervals to capture each blink state.
+  - Mouse interactions in `clickAt` use 200ms after move and 100ms after mouse-down; do not reduce these.
 
 ## TypeScript/JavaScript coding guidelines
 
