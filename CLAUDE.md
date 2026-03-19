@@ -123,9 +123,10 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - During investigation of a bug that involves many part of the renderer, you are recommended to create a new test case like these to confirm the regression, which is also a good measurement to see if the bug is properly fixed.
 - Wait time standard:
   - All tests are running against a local HTTP server, the latency is very low.
+  - All numbers below are applicable to most of the cases. When facing a very complex UI causing these numbers to fail, figure out the most smallest reasonable wait time just for that test case, do not affect the standard and others.
+  - Keep the number small with your best effort.
   - Starting up could take a little bit longer, 1200ms is enough.
   - 200ms is the minimum stable wait for UI refresh (tab switch, dialog open/close, post-typing settle, click). 150ms causes failures in dialog operations.
-  - Keep the number small with your best effort.
   - The caret blinks in the focused text box every 500ms.
   - Before testing caret blink on/off phases, wait 1000ms (2 full blink cycles) so the caret synchronizes to a known phase. Then use 600ms intervals to capture each blink state.
   - Mouse interactions in `clickAt` use 200ms after move and 100ms after mouse-down; do not reduce these.
