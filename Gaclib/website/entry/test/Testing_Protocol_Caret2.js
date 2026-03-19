@@ -116,13 +116,13 @@ describe('Caret2', () => {
     test('Step 2: Open Control tab and type in Search text box', async () => {
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(5000);
+        await sleep(800);
 
         positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
-            await sleep(3000);
+            await sleep(800);
         }
 
         positions = await getLeafTextPositions(ctx.page);
@@ -152,12 +152,12 @@ describe('Caret2', () => {
         // Switch to List tab
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'List', positions)).toBe(true);
-        await sleep(5000);
+        await sleep(800);
 
         // Switch back to Control tab
         positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(5000);
+        await sleep(800);
 
         // Ensure the Document Editor (Ribbon) sub-tab is active
         positions = await getLeafTextPositions(ctx.page);
@@ -185,11 +185,11 @@ describe('Caret2', () => {
 
         // Wait long enough for the protocol round-trip and a full blink cycle
         // so the caret reaches a known blink state (visible at a cycle boundary).
-        await sleep(2000);
+        await sleep(1000);
 
-        // At 2000ms after click, the caret should be visible (2000ms = 4 × 500ms cycles)
+        // The caret should be visible after the click
         let carets = await findCarets(ctx.page);
-        console.log(`  Carets after 2s: ${carets.length}`);
+        console.log(`  Carets after click: ${carets.length}`);
         expect.soft(carets.length, 'Caret should be visible after clicking').toBeGreaterThanOrEqual(1);
 
         // Wait 0.6s — should catch the off phase
@@ -236,7 +236,7 @@ describe('Caret2', () => {
 
     test('Step 6: Press Home — caret at leftmost position', async () => {
         await ctx.page.keyboard.press('Home');
-        await sleep(500);
+        await sleep(300);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after Home: ${carets.length}`);
@@ -250,7 +250,7 @@ describe('Caret2', () => {
 
     test('Step 7: Press End — caret after last character', async () => {
         await ctx.page.keyboard.press('End');
-        await sleep(500);
+        await sleep(300);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after End: ${carets.length}`);

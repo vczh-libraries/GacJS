@@ -209,7 +209,7 @@ export function setupProtocolTest() {
         const serverProcess = exec(`"${SERVER_EXE}" /Http`);
         serverProcess.stdout?.on('data', () => {});
         serverProcess.stderr?.on('data', () => {});
-        await sleep(3000);
+        await sleep(1200);
 
         browser = await chromium.launch({ headless: true });
         page = await browser.newPage();
@@ -222,7 +222,7 @@ export function setupProtocolTest() {
 
         await page.goto(WEBSITE_URL, { timeout: 30000 });
         await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await sleep(8000);
+        await sleep(1200);
     });
 
     afterAll(async () => {

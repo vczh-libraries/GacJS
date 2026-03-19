@@ -61,7 +61,7 @@ async function getScreenText(page) {
 
 async function waitForRendering(page, timeoutMs = 30000) {
     await page.waitForSelector('#gacui-screen div div', { timeout: timeoutMs });
-    await sleep(8000);
+    await sleep(1200);
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ describe('RendererSwitching', () => {
         const serverProcess = exec(`"${SERVER_EXE}" /Http`);
         serverProcess.stdout?.on('data', () => {});
         serverProcess.stderr?.on('data', () => {});
-        await sleep(3000);
+        await sleep(1200);
 
         browser = await chromium.launch({ headless: true });
         context = await browser.newContext();
@@ -124,7 +124,7 @@ describe('RendererSwitching', () => {
         expect(controlTabPos).toBeDefined();
 
         await clickAt(page1, controlTabPos.cx, controlTabPos.cy);
-        await sleep(5000);
+        await sleep(800);
 
         const afterControl = await getLeafTexts(page1);
         const hasExpectedContent =
@@ -140,13 +140,13 @@ describe('RendererSwitching', () => {
         expect(searchLabelPos).toBeDefined();
 
         await clickAt(page1, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(2000);
+        await sleep(300);
 
         for (const ch of 'Hello') {
             await page1.keyboard.press(ch);
             await sleep(300);
         }
-        await sleep(3000);
+        await sleep(800);
 
         const screenText = await getScreenText(page1);
         expect(screenText).toContain('Hello');
@@ -177,11 +177,11 @@ describe('RendererSwitching', () => {
 
         // Click on the text box
         await clickAt(page2, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(2000);
+        await sleep(300);
 
         // Select all text with Ctrl+A then move to select partial
         await page2.keyboard.press('Home');
-        await sleep(500);
+        await sleep(300);
         // Select "Hel" by shift+right 3 times
         for (let i = 0; i < 3; i++) {
             await page2.keyboard.down('Shift');
@@ -189,7 +189,7 @@ describe('RendererSwitching', () => {
             await page2.keyboard.up('Shift');
             await sleep(300);
         }
-        await sleep(2000);
+        await sleep(300);
     });
 
     test('Step 7+8: Switch to third page and verify "Hello" with rendering', async () => {

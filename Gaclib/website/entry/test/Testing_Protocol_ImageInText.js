@@ -124,13 +124,13 @@ describe('ImageInText', () => {
     test('Step 2: Open the Control tab', async () => {
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(5000);
+        await sleep(800);
 
         positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
-            await sleep(3000);
+            await sleep(800);
         }
     });
 
@@ -139,18 +139,18 @@ describe('ImageInText', () => {
         expect(editorPos).not.toBeNull();
 
         await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-        await sleep(2000);
+        await sleep(300);
 
         await ctx.page.keyboard.press('Control+a');
-        await sleep(1000);
+        await sleep(300);
         await ctx.page.keyboard.press('Delete');
-        await sleep(2000);
+        await sleep(300);
 
         for (const ch of TYPED_TEXT) {
             await ctx.page.keyboard.press(ch);
             await sleep(200);
         }
-        await sleep(3000);
+        await sleep(800);
 
         const content = await getEditorContent(ctx.page);
         expect(content.text).toContain(TYPED_TEXT);
@@ -163,7 +163,7 @@ describe('ImageInText', () => {
         expect(insertTab, 'Could not find "Insert" ribbon tab').toBeDefined();
 
         await clickAt(ctx.page, insertTab.cx, insertTab.cy);
-        await sleep(3000);
+        await sleep(800);
 
         // Click "Insert Image ..." button
         positions = await getLeafTextPositions(ctx.page);
@@ -171,10 +171,9 @@ describe('ImageInText', () => {
         expect(insertImageBtn, 'Could not find "Insert Image" button').toBeDefined();
 
         await clickAt(ctx.page, insertImageBtn.cx, insertImageBtn.cy);
-        await sleep(3000);
+        await sleep(800);
 
         // Detect the file dialog
-        await sleep(3000);
         const textsBeforeDialog = positions;
         const textsAfterDialog = await getLeafTextPositions(ctx.page);
         const newDialogTexts = findNewTexts(textsBeforeDialog, textsAfterDialog);
@@ -185,7 +184,7 @@ describe('ImageInText', () => {
         const cDriveItem = newDialogTexts.find(p => p.text === 'C:');
         if (cDriveItem) {
             await doubleClickAt(ctx.page, cDriveItem.cx, cDriveItem.cy);
-            await sleep(5000);
+            await sleep(800);
         }
 
         // Find dialog bounds and OK button after navigation
@@ -213,25 +212,24 @@ describe('ImageInText', () => {
             const textBoxX = (dialogBounds.minX + dialogBounds.maxX) / 2 + 50;
             const textBoxY = okBtn.top - 30;
             await clickAt(ctx.page, textBoxX, textBoxY);
-            await sleep(1000);
+            await sleep(300);
         } else if (dialogBounds) {
             const textBoxX = (dialogBounds.minX + dialogBounds.maxX) / 2 + 50;
             const textBoxY = dialogBounds.maxY - 50;
             await clickAt(ctx.page, textBoxX, textBoxY);
-            await sleep(1000);
+            await sleep(300);
         }
 
         await ctx.page.keyboard.press('Control+a');
         await sleep(300);
         await ctx.page.keyboard.type('5900.png');
-        await sleep(2000);
+        await sleep(300);
 
         expect(okBtn, 'OK/Open button not found').toBeDefined();
         await clickAt(ctx.page, okBtn.cx, okBtn.cy);
-        await sleep(5000);
+        await sleep(800);
 
         // Verify image was inserted
-        await sleep(3000);
         const content = await getEditorContent(ctx.page);
         console.log(`  After insert: text="${content.text}", images=${content.images.length}`);
         expect.soft(content.images.length, 'Image should be inserted').toBeGreaterThan(0);
@@ -241,13 +239,13 @@ describe('ImageInText', () => {
         const editorPos = await findEditorCenter(ctx.page);
         if (editorPos) {
             await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-            await sleep(1000);
+            await sleep(300);
         }
 
         await ctx.page.keyboard.press('Home');
-        await sleep(1000);
+        await sleep(300);
         await ctx.page.keyboard.press('X');
-        await sleep(3000);
+        await sleep(800);
 
         const content = await getEditorContent(ctx.page);
         console.log(`  Content: text="${content.text}", images=${JSON.stringify(content.images)}`);
@@ -265,7 +263,7 @@ describe('ImageInText', () => {
 
     test('Step 6: Ctrl+A and verify selection indicator', async () => {
         await ctx.page.keyboard.press('Control+a');
-        await sleep(3000);
+        await sleep(300);
 
         const content = await getEditorContent(ctx.page);
         console.log(`  Content: text="${content.text}", images=${JSON.stringify(content.images)}`);
