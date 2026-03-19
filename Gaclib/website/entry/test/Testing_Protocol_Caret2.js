@@ -116,13 +116,13 @@ describe('Caret2', () => {
     test('Step 2: Open Control tab and type in Search text box', async () => {
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(800);
+        await sleep(200);
 
         positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
-            await sleep(800);
+            await sleep(200);
         }
 
         positions = await getLeafTextPositions(ctx.page);
@@ -133,13 +133,13 @@ describe('Caret2', () => {
         searchTextBoxY = searchLabelPos.cy;
 
         await clickAt(ctx.page, searchTextBoxX, searchTextBoxY);
-        await sleep(300);
+        await sleep(200);
 
         for (const ch of 'Hello') {
             await ctx.page.keyboard.press(ch);
-            await sleep(300);
+            await sleep(200);
         }
-        await sleep(300);
+        await sleep(200);
 
         const screenText = await ctx.page.evaluate(() => {
             const screen = document.getElementById('gacui-screen');
@@ -152,19 +152,19 @@ describe('Caret2', () => {
         // Switch to List tab
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'List', positions)).toBe(true);
-        await sleep(800);
+        await sleep(200);
 
         // Switch back to Control tab
         positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(800);
+        await sleep(200);
 
         // Ensure the Document Editor (Ribbon) sub-tab is active
         positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
-            await sleep(300);
+            await sleep(200);
         }
 
         // Find the Search text box position again
@@ -213,19 +213,19 @@ describe('Caret2', () => {
         expect(editorPos).not.toBeNull();
 
         await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-        await sleep(300);
+        await sleep(200);
 
         // Clear any existing text
         await ctx.page.keyboard.press('Control+a');
-        await sleep(300);
+        await sleep(200);
         await ctx.page.keyboard.press('Delete');
-        await sleep(300);
+        await sleep(200);
 
         for (const ch of 'ABCDEF') {
             await ctx.page.keyboard.press(ch);
-            await sleep(300);
+            await sleep(200);
         }
-        await sleep(300);
+        await sleep(200);
 
         const screenText = await ctx.page.evaluate(() => {
             const screen = document.getElementById('gacui-screen');
@@ -236,7 +236,7 @@ describe('Caret2', () => {
 
     test('Step 6: Press Home — caret at leftmost position', async () => {
         await ctx.page.keyboard.press('Home');
-        await sleep(300);
+        await sleep(200);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after Home: ${carets.length}`);
@@ -250,7 +250,7 @@ describe('Caret2', () => {
 
     test('Step 7: Press End — caret after last character', async () => {
         await ctx.page.keyboard.press('End');
-        await sleep(300);
+        await sleep(200);
 
         const carets = await waitForCaret(ctx.page);
         console.log(`  Carets after End: ${carets.length}`);
@@ -270,12 +270,12 @@ describe('Caret2', () => {
             // Additionally verify the caret moved right by pressing Right from Home
             // Navigate: Home, then Right 6 times to reach end
             await ctx.page.keyboard.press('Home');
-            await sleep(300);
+            await sleep(200);
             for (let i = 0; i < 6; i++) {
                 await ctx.page.keyboard.press('ArrowRight');
                 await sleep(200);
             }
-            await sleep(300);
+            await sleep(200);
 
             const rightCarets = await waitForCaret(ctx.page);
             if (rightCarets.length >= 1) {
@@ -293,7 +293,7 @@ describe('Caret2', () => {
     test('Step 8: Press Home then mouse-click at end of line', async () => {
         // First go to Home so caret is at the start
         await ctx.page.keyboard.press('Home');
-        await sleep(300);
+        await sleep(200);
 
         const homeCaret = await waitForCaret(ctx.page);
         expect.soft(homeCaret.length, 'Caret should be visible after Home').toBeGreaterThanOrEqual(1);
@@ -305,7 +305,7 @@ describe('Caret2', () => {
         const clickX = endCaretXSaved + 20;
         const clickY = homeCaret[0].y + homeCaret[0].height / 2;
         await clickAt(ctx.page, clickX, clickY);
-        await sleep(300);
+        await sleep(200);
 
         const clickCarets = await waitForCaret(ctx.page);
         console.log(`  Carets after clicking past end of text: ${clickCarets.length}`);

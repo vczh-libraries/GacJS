@@ -124,7 +124,7 @@ describe('RendererSwitching', () => {
         expect(controlTabPos).toBeDefined();
 
         await clickAt(page1, controlTabPos.cx, controlTabPos.cy);
-        await sleep(800);
+        await sleep(200);
 
         const afterControl = await getLeafTexts(page1);
         const hasExpectedContent =
@@ -140,13 +140,13 @@ describe('RendererSwitching', () => {
         expect(searchLabelPos).toBeDefined();
 
         await clickAt(page1, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(300);
+        await sleep(200);
 
         for (const ch of 'Hello') {
             await page1.keyboard.press(ch);
-            await sleep(300);
+            await sleep(200);
         }
-        await sleep(800);
+        await sleep(200);
 
         const screenText = await getScreenText(page1);
         expect(screenText).toContain('Hello');
@@ -177,19 +177,19 @@ describe('RendererSwitching', () => {
 
         // Click on the text box
         await clickAt(page2, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(300);
+        await sleep(200);
 
         // Select all text with Ctrl+A then move to select partial
         await page2.keyboard.press('Home');
-        await sleep(300);
+        await sleep(200);
         // Select "Hel" by shift+right 3 times
         for (let i = 0; i < 3; i++) {
             await page2.keyboard.down('Shift');
             await page2.keyboard.press('ArrowRight');
             await page2.keyboard.up('Shift');
-            await sleep(300);
+            await sleep(200);
         }
-        await sleep(300);
+        await sleep(200);
     });
 
     test('Step 7+8: Switch to third page and verify "Hello" with rendering', async () => {
