@@ -12,4 +12,5 @@ export interface GacUISettings {
     fontFamilies?: string[];
     isShortcutReservedForBrowser: (event: KeyboardEvent) => boolean;
     suggestMinSize: (x: number, y: number) => void;
+    idle: () => void;
 }

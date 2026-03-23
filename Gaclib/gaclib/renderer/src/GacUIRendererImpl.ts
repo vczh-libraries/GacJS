@@ -982,6 +982,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
     }
 
+    RequestRendererIdle(): void {
+        this._settings.idle();
+    }
+
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {
         if (requestArgs.updatedElements) {
             for (const elementDesc of requestArgs.updatedElements) {
