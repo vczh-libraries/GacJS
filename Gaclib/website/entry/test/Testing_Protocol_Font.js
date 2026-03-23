@@ -28,6 +28,7 @@ import {
     findNewTexts,
     findIconButtonsInArea,
     groupIntoRows,
+    waitForIdle,
     setupProtocolTest
 } from './Testing_Protocol.js';
 
@@ -142,13 +143,11 @@ describe('Font', () => {
     test('Step 2: Open the Control tab', async () => {
         let positions = await getLeafTextPositions(ctx.page);
         expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
-        await sleep(250);
 
         positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
-            await sleep(250);
         }
     });
 
@@ -157,20 +156,18 @@ describe('Font', () => {
         expect(editorPos).not.toBeNull();
 
         await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-        await sleep(250);
     });
 
     test('Step 4: Type ABCDEFGHIJKLMN', async () => {
         await ctx.page.keyboard.press('Control+a');
-        await sleep(250);
+        await waitForIdle(ctx.page);
         await ctx.page.keyboard.press('Delete');
-        await sleep(250);
+        await waitForIdle(ctx.page);
 
         for (const ch of TYPED_TEXT) {
             await ctx.page.keyboard.press(ch);
-            await sleep(250);
+            await waitForIdle(ctx.page);
         }
-        await sleep(250);
 
         const allChars = await getDocCharStyles(ctx.page);
         const styles = extractTypedStyles(allChars);
@@ -185,16 +182,15 @@ describe('Font', () => {
     test('Step 5: Select C..K and apply bigger font', async () => {
         // Home, Right 2, Shift+Right 9
         await ctx.page.keyboard.press('Home');
-        await sleep(250);
+        await waitForIdle(ctx.page);
         for (let i = 0; i < 2; i++) {
             await ctx.page.keyboard.press('ArrowRight');
-            await sleep(250);
+            await waitForIdle(ctx.page);
         }
         for (let i = 0; i < 9; i++) {
             await ctx.page.keyboard.press('Shift+ArrowRight');
-            await sleep(250);
+            await waitForIdle(ctx.page);
         }
-        await sleep(250);
 
         // Find icon buttons in the "Text" ribbon group
         const positions = await getLeafTextPositions(ctx.page);
@@ -226,7 +222,6 @@ describe('Font', () => {
 
         expect(fontBtnPos, 'Font icon button not found').not.toBeNull();
         await clickAt(ctx.page, fontBtnPos.cx, fontBtnPos.cy);
-        await sleep(250);
 
         const textsAfterFont = await getLeafTextPositions(ctx.page);
         const newFontTexts = findNewTexts(textsBeforeFont, textsAfterFont);
@@ -255,22 +250,19 @@ describe('Font', () => {
             ).toBe(false);
 
             await clickAt(ctx.page, fontNames[0].cx, fontNames[0].cy);
-            await sleep(250);
         }
 
         if (sizeLabel) {
             await clickAt(ctx.page, sizeLabel.cx, sizeLabel.bottom + 10);
-            await sleep(250);
             await ctx.page.keyboard.press('Control+a');
-            await sleep(250);
+            await waitForIdle(ctx.page);
             await ctx.page.keyboard.type(String(BIG_SIZE));
-            await sleep(250);
+            await waitForIdle(ctx.page);
         }
 
         const fontOk = newFontTexts.find(p => p.text === 'OK');
         expect(fontOk, 'OK button not found in font dialog').toBeDefined();
         await clickAt(ctx.page, fontOk.cx, fontOk.cy);
-        await sleep(250);
 
         // Verify dialog closed
         const afterFontOk = await getLeafTextPositions(ctx.page);
@@ -281,27 +273,24 @@ describe('Font', () => {
         const editorPos = await findEditorCenter(ctx.page);
         if (editorPos) {
             await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-            await sleep(250);
         }
 
         // Home, Right 7, Shift+Right 6
         await ctx.page.keyboard.press('Home');
-        await sleep(250);
+        await waitForIdle(ctx.page);
         for (let i = 0; i < 7; i++) {
             await ctx.page.keyboard.press('ArrowRight');
-            await sleep(250);
+            await waitForIdle(ctx.page);
         }
         for (let i = 0; i < 6; i++) {
             await ctx.page.keyboard.press('Shift+ArrowRight');
-            await sleep(250);
+            await waitForIdle(ctx.page);
         }
-        await sleep(250);
 
         const textsBeforeColor = await getLeafTextPositions(ctx.page);
 
         expect(colorBtnPos, 'Text Color icon button not found').not.toBeNull();
         await clickAt(ctx.page, colorBtnPos.cx, colorBtnPos.cy);
-        await sleep(250);
 
         const textsAfterColor = await getLeafTextPositions(ctx.page);
         const newColorTexts = findNewTexts(textsBeforeColor, textsAfterColor);
@@ -311,16 +300,14 @@ describe('Font', () => {
         expect(redLabel, 'Color dialog did not appear').toBeDefined();
 
         await clickAt(ctx.page, redLabel.right + 40, redLabel.cy);
-        await sleep(250);
         await ctx.page.keyboard.press('Control+a');
-        await sleep(250);
+        await waitForIdle(ctx.page);
         await ctx.page.keyboard.type('0');
-        await sleep(250);
+        await waitForIdle(ctx.page);
 
         const colorOk = newColorTexts.find(p => p.text === 'OK');
         expect(colorOk, 'OK button not found in color dialog').toBeDefined();
         await clickAt(ctx.page, colorOk.cx, colorOk.cy);
-        await sleep(250);
 
         // Verify dialog closed
         const afterColorOk = await getLeafTextPositions(ctx.page);
@@ -331,10 +318,9 @@ describe('Font', () => {
         const editorPos = await findEditorCenter(ctx.page);
         if (editorPos) {
             await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-            await sleep(250);
         }
         await ctx.page.keyboard.press('End');
-        await sleep(250);
+        await waitForIdle(ctx.page);
 
         const allChars = await getDocCharStyles(ctx.page);
         const styles = extractTypedStyles(allChars);
@@ -353,10 +339,9 @@ describe('Font', () => {
         const editorPos = await findEditorCenter(ctx.page);
         if (editorPos) {
             await clickAt(ctx.page, editorPos.cx, editorPos.cy);
-            await sleep(250);
         }
         await ctx.page.keyboard.press('Home');
-        await sleep(250);
+        await waitForIdle(ctx.page);
 
         const allChars = await getDocCharStyles(ctx.page);
         const styles = extractTypedStyles(allChars);
@@ -367,7 +352,7 @@ describe('Font', () => {
     test('Step 9: Shift+Right loop (14 presses)', async () => {
         for (let press = 1; press <= 14; press++) {
             await ctx.page.keyboard.press('Shift+ArrowRight');
-            await sleep(250);
+            await waitForIdle(ctx.page);
 
             const allChars = await getDocCharStyles(ctx.page);
             const styles = extractTypedStyles(allChars);

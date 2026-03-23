@@ -25,6 +25,12 @@
     <script lang="javascript">
         let gacuiRenderer;
 
+        // Idle-signal bridge for Playwright tests.
+        // When the server sends RequestRendererIdle (UI is stable),
+        // the counter increments and __gacui_playwright_idle (exposed via
+        // Playwright's page.exposeFunction) is called if it exists.
+        window.__gacui_idle_counter = 0;
+
         document.addEventListener('DOMContentLoaded', async () => {
             const gacuiScreen = document.getElementById('gacui-screen');
             const errorMask = document.getElementById('gacui-error-mask');
@@ -40,6 +46,10 @@
                     gacuiScreen.style.height = `clamp(${y}px, calc(100vh - 80px), 960px)`;
                 },
                 idle: () => {
+                    window.__gacui_idle_counter++;
+                    if (typeof window.__gacui_playwright_idle === 'function') {
+                        window.__gacui_playwright_idle();
+                    }
                 }
             };
 

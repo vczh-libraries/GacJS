@@ -27,6 +27,9 @@ import {
     sleep,
     getLeafTextPositions,
     clickAt,
+    waitForIdle,
+    waitUntilIdle,
+    setupIdleTracking,
     REPO_ROOT,
     GACUI_ROOT,
     SERVER_EXE,
@@ -61,7 +64,7 @@ async function getScreenText(page) {
 
 async function waitForRendering(page, timeoutMs = 30000) {
     await page.waitForSelector('#gacui-screen div div', { timeout: timeoutMs });
-    await sleep(1200);
+    await waitUntilIdle(page, timeoutMs);
 }
 
 // ---------------------------------------------------------------------------
@@ -96,6 +99,7 @@ describe('RendererSwitching', () => {
 
         // Open first page
         page1 = await context.newPage();
+        await setupIdleTracking(page1);
         page1.on('dialog', async dialog => {
             console.error(`  [page1 CRASH] Dialog: ${dialog.message()}`);
             await dialog.dismiss();
@@ -124,7 +128,6 @@ describe('RendererSwitching', () => {
         expect(controlTabPos).toBeDefined();
 
         await clickAt(page1, controlTabPos.cx, controlTabPos.cy);
-        await sleep(250);
 
         const afterControl = await getLeafTexts(page1);
         const hasExpectedContent =
@@ -140,13 +143,11 @@ describe('RendererSwitching', () => {
         expect(searchLabelPos).toBeDefined();
 
         await clickAt(page1, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(250);
 
         for (const ch of 'Hello') {
             await page1.keyboard.press(ch);
-            await sleep(250);
+            await waitForIdle(page1);
         }
-        await sleep(250);
 
         const screenText = await getScreenText(page1);
         expect(screenText).toContain('Hello');
@@ -156,6 +157,7 @@ describe('RendererSwitching', () => {
         // Open second page in the same browser context.
         // The GET /Connect from the new page triggers reconnection in the core.
         page2 = await context.newPage();
+        await setupIdleTracking(page2);
         page2.on('dialog', async dialog => {
             console.error(`  [page2 CRASH] Dialog: ${dialog.message()}`);
             await dialog.dismiss();
@@ -177,24 +179,23 @@ describe('RendererSwitching', () => {
 
         // Click on the text box
         await clickAt(page2, searchLabelPos.right + 30, searchLabelPos.cy);
-        await sleep(250);
 
         // Select all text with Ctrl+A then move to select partial
         await page2.keyboard.press('Home');
-        await sleep(250);
+        await waitForIdle(page2);
         // Select "Hel" by shift+right 3 times
         for (let i = 0; i < 3; i++) {
             await page2.keyboard.down('Shift');
             await page2.keyboard.press('ArrowRight');
             await page2.keyboard.up('Shift');
-            await sleep(250);
+            await waitForIdle(page2);
         }
-        await sleep(250);
     });
 
     test('Step 7+8: Switch to third page and verify "Hello" with rendering', async () => {
         // Open third page — another renderer switch
         page3 = await context.newPage();
+        await setupIdleTracking(page3);
         page3.on('dialog', async dialog => {
             console.error(`  [page3 CRASH] Dialog: ${dialog.message()}`);
             await dialog.dismiss();

@@ -95,6 +95,81 @@ export async function findEditorCenter(page) {
 }
 
 // ---------------------------------------------------------------------------
+// Idle helpers – bridge to RequestRendererIdle via page.exposeFunction
+// ---------------------------------------------------------------------------
+
+/**
+ * Set up idle tracking for a Playwright page. Must be called BEFORE page.goto().
+ * Uses page.exposeFunction to receive idle signals from the browser via CDP
+ * binding callbacks, which avoids page.evaluate (that can hang when the
+ * browser's JS event loop is busy processing protocol messages).
+ */
+export async function setupIdleTracking(page) {
+    const state = { pending: false, resolve: null };
+    await page.exposeFunction('__gacui_playwright_idle', () => {
+        if (state.resolve !== null) {
+            const r = state.resolve;
+            state.resolve = null;
+            r();
+        } else {
+            state.pending = true;
+        }
+    });
+    page.__idleState = state;
+}
+
+/**
+ * Wait for the next RequestRendererIdle signal (UI stable after interaction).
+ * Uses the Node.js-side pending-flag mechanism fed by page.exposeFunction.
+ * If idle already fired before this call, returns immediately.
+ * Falls back to sleep(250) if idle tracking is not set up.
+ */
+export async function waitForIdle(page, timeout = 5000) {
+    const state = page.__idleState;
+    if (state === undefined || state === null) {
+        await sleep(250);
+        return;
+    }
+    if (state.pending) {
+        state.pending = false;
+        return;
+    }
+    return new Promise(resolve => {
+        const timer = setTimeout(() => {
+            state.resolve = null;
+            resolve();
+        }, timeout);
+        state.resolve = () => {
+            clearTimeout(timer);
+            resolve();
+        };
+    });
+}
+
+/**
+ * Wait until at least one idle has ever fired.
+ * Use for initial page load instead of sleep(1200).
+ */
+export async function waitUntilIdle(page, timeout = 30000) {
+    const state = page.__idleState;
+    if (state === undefined || state === null) {
+        await sleep(1200);
+        return;
+    }
+    if (state.pending) {
+        state.pending = false;
+        return;
+    }
+    return new Promise(resolve => {
+        const timer = setTimeout(resolve, timeout);
+        state.resolve = () => {
+            clearTimeout(timer);
+            resolve();
+        };
+    });
+}
+
+// ---------------------------------------------------------------------------
 // Click helpers
 // ---------------------------------------------------------------------------
 
@@ -104,6 +179,13 @@ export async function clickAt(page, x, y) {
     await page.mouse.down();
     await sleep(100);
     await page.mouse.up();
+    await sleep(250);
+    // Drain any idle signals from click processing so they don't
+    // interfere with the next waitForIdle call for keyboard events.
+    const state = page.__idleState;
+    if (state !== undefined && state !== null) {
+        state.pending = false;
+    }
 }
 
 export async function findAndClick(page, textToFind, positions) {
@@ -213,6 +295,7 @@ export function setupProtocolTest() {
 
         browser = await chromium.launch({ headless: true });
         page = await browser.newPage();
+        await setupIdleTracking(page);
 
         page.on('dialog', async dialog => {
             console.error(`  [CRASH] Dialog: ${dialog.message()}`);
@@ -222,7 +305,7 @@ export function setupProtocolTest() {
 
         await page.goto(WEBSITE_URL, { timeout: 30000 });
         await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await sleep(1200);
+        await waitUntilIdle(page);
     });
 
     afterAll(async () => {
