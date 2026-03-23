@@ -606,6 +606,7 @@ export interface IRemoteProtocolRequests {
     RequestRendererRenderElement(requestArgs: ElementRendering): void;
     RequestRendererEndBoundary(): void;
     RequestRendererEndRendering(id: number): void;
+    RequestRendererIdle(): void;
     RequestRendererRenderDom(requestArgs: TYPES.Ptr<RenderingDom>): void;
     RequestRendererRenderDomDiff(requestArgs: RenderingDom_DiffsInOrder): void;
 }

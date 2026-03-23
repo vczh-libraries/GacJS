@@ -180,6 +180,9 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
             case 'RendererEndBoundary':
                 receiver.RequestRendererEndBoundary();
                 break;
+            case 'RendererIdle':
+                receiver.RequestRendererIdle();
+                break;
             case 'RendererRenderDom':
                 if (pi.arguments === undefined) {
                     throw new Error('Missing arguments for request: ' + pi.name);
