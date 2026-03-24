@@ -220,6 +220,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
             layout.caretVisible = !layout.caretVisible;
             setCaretVisible(data.textDiv, layout.caretVisible, layout);
+            this._settings.blink?.();
         }, 500);
     }
 
@@ -983,7 +984,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     RequestRendererIdle(): void {
-        this._settings.idle();
+        this._settings.idle?.();
     }
 
     RequestRendererBeginRendering(requestArgs: SCHEMA.ElementBeginRendering): void {

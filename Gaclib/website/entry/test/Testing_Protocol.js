@@ -99,23 +99,35 @@ export async function findEditorCenter(page) {
 // ---------------------------------------------------------------------------
 
 /**
- * Set up idle tracking for a Playwright page. Must be called BEFORE page.goto().
- * Uses page.exposeFunction to receive idle signals from the browser via CDP
- * binding callbacks, which avoids page.evaluate (that can hang when the
- * browser's JS event loop is busy processing protocol messages).
+ * Set up idle and blink tracking for a Playwright page.
+ * Must be called BEFORE page.goto() so CDP bindings exist when page JS runs.
  */
 export async function setupIdleTracking(page) {
-    const state = { pending: false, resolve: null };
+    const idleState = { pending: false, resolve: null };
+    const blinkState = { pending: false, resolve: null };
+
     await page.exposeFunction('__gacui_playwright_idle', () => {
-        if (state.resolve !== null) {
-            const r = state.resolve;
-            state.resolve = null;
+        if (idleState.resolve !== null) {
+            const r = idleState.resolve;
+            idleState.resolve = null;
             r();
         } else {
-            state.pending = true;
+            idleState.pending = true;
         }
     });
-    page.__idleState = state;
+
+    await page.exposeFunction('__gacui_playwright_blink', () => {
+        if (blinkState.resolve !== null) {
+            const r = blinkState.resolve;
+            blinkState.resolve = null;
+            r();
+        } else {
+            blinkState.pending = true;
+        }
+    });
+
+    page.__idleState = idleState;
+    page.__blinkState = blinkState;
 }
 
 /**
@@ -228,23 +240,57 @@ export async function findCarets(page) {
 }
 
 /**
- * Poll for caret visibility changes.
- * When visible=true (default): polls until at least 1 caret is found, returns carets[].
- * When visible=false: polls until 0 carets are found, returns true/false.
+ * Wait for exactly one blink event (caret visibility toggle).
+ * Returns immediately if a blink fired since the last wait.
+ * Falls back to sleep(500) if blink tracking is not set up.
  */
-export async function waitForCarets(page, { visible = true, timeout } = {}) {
-    if (timeout === undefined) {
-        timeout = visible ? 1200 : 700;
+export async function waitForBlink(page, timeout = 1200) {
+    const state = page.__blinkState;
+    if (state === undefined || state === null) {
+        await sleep(500);
+        return;
     }
-    const interval = visible ? 100 : 50;
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-        const carets = await findCarets(page);
-        if (visible && carets.length >= 1) return carets;
-        if (!visible && carets.length === 0) return true;
-        await sleep(interval);
+    if (state.pending) {
+        state.pending = false;
+        return;
     }
-    return visible ? [] : false;
+    return new Promise(resolve => {
+        const timer = setTimeout(() => {
+            state.resolve = null;
+            resolve();
+        }, timeout);
+        state.resolve = () => {
+            clearTimeout(timer);
+            resolve();
+        };
+    });
+}
+
+/**
+ * Event-driven caret visibility check.
+ * Since each blink toggles visibility, at most one blink event is needed:
+ *   1. Check DOM — if already satisfied, return immediately.
+ *   2. Wait for one blink event (visibility toggled).
+ *   3. Check DOM again and return the result.
+ *
+ * visible=true (default): returns carets[] (may be empty on timeout).
+ * visible=false: returns true if no carets found, false otherwise.
+ */
+export async function waitForCarets(page, { visible = true, timeout = 1200 } = {}) {
+    const blinkState = page.__blinkState;
+    if (blinkState !== undefined && blinkState !== null) {
+        blinkState.pending = false;
+    }
+
+    const carets = await findCarets(page);
+    if (visible && carets.length >= 1) return carets;
+    if (!visible && carets.length === 0) return true;
+
+    await waitForBlink(page, timeout);
+
+    const caretsAfter = await findCarets(page);
+    if (visible) return caretsAfter;
+    return caretsAfter.length === 0;
 }
 
 // ---------------------------------------------------------------------------
