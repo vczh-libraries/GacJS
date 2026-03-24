@@ -13,7 +13,6 @@
 
 import { describe, test, expect } from 'vitest';
 import {
-    sleep,
     getLeafTextPositions,
     clickAt,
     waitForIdle,

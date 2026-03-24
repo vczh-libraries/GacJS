@@ -17,24 +17,12 @@
 //   8. Verify the third tab renders and contains the typed text with selection.
 //   9. Kill the process directly and close all webpages. No elegant exit is needed.
 
-import path from 'path';
-import { execSync, exec } from 'child_process';
-import { existsSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { chromium } from '@playwright/test';
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import {
-    sleep,
     getLeafTextPositions,
     clickAt,
     waitForIdle,
-    waitUntilIdle,
-    setupIdleTracking,
-    REPO_ROOT,
-    GACUI_ROOT,
-    SERVER_EXE,
-    WEBSITE_URL,
-    killServer
+    setupProtocolTest
 } from './Testing_Protocol.js';
 
 // ---------------------------------------------------------------------------
@@ -62,74 +50,28 @@ async function getScreenText(page) {
     });
 }
 
-async function waitForRendering(page, timeoutMs = 30000) {
-    await page.waitForSelector('#gacui-screen div div', { timeout: timeoutMs });
-    await waitUntilIdle(page, timeoutMs);
-}
-
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
 
 describe('RendererSwitching', () => {
-    let browser = null;
-    let context = null;
-    let page1 = null;
+    const ctx = setupProtocolTest();
     let page2 = null;
     let page3 = null;
 
-    beforeAll(async () => {
-        if (!existsSync(SERVER_EXE)) {
-            throw new Error(
-                `Server executable not found: ${SERVER_EXE}\n` +
-                'Build RemotingTest_Core first.'
-            );
-        }
-
-        killServer();
-        await sleep(1000);
-
-        const serverProcess = exec(`"${SERVER_EXE}" /Http`);
-        serverProcess.stdout?.on('data', () => {});
-        serverProcess.stderr?.on('data', () => {});
-        await sleep(1200);
-
-        browser = await chromium.launch({ headless: true });
-        context = await browser.newContext();
-
-        // Open first page
-        page1 = await context.newPage();
-        await setupIdleTracking(page1);
-        page1.on('dialog', async dialog => {
-            console.error(`  [page1 CRASH] Dialog: ${dialog.message()}`);
-            await dialog.dismiss();
-        });
-        page1.on('console', () => {});
-
-        await page1.goto(WEBSITE_URL, { timeout: 30000 });
-        await waitForRendering(page1);
-    });
-
-    afterAll(async () => {
-        if (browser !== null) {
-            await browser.close();
-        }
-        killServer();
-    });
-
     test('Step 1: First page renders', async () => {
-        const initial = await getLeafTexts(page1);
+        const initial = await getLeafTexts(ctx.page);
         expect(initial.length).toBeGreaterThanOrEqual(20);
     });
 
     test('Step 2: Open the Control tab and find Search text box', async () => {
-        const positions = await getLeafTextPositions(page1);
+        const positions = await getLeafTextPositions(ctx.page);
         const controlTabPos = positions.find(p => p.text === 'Control');
         expect(controlTabPos).toBeDefined();
 
-        await clickAt(page1, controlTabPos.cx, controlTabPos.cy);
+        await clickAt(ctx.page, controlTabPos.cx, controlTabPos.cy);
 
-        const afterControl = await getLeafTexts(page1);
+        const afterControl = await getLeafTexts(ctx.page);
         const hasExpectedContent =
             afterControl.some(t => t.startsWith('Search')) ||
             afterControl.includes('Document Editor (Ribbon)') ||
@@ -138,34 +80,25 @@ describe('RendererSwitching', () => {
     });
 
     test('Step 3: Type "Hello" in the Search text box', async () => {
-        const positions = await getLeafTextPositions(page1);
+        const positions = await getLeafTextPositions(ctx.page);
         const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
         expect(searchLabelPos).toBeDefined();
 
-        await clickAt(page1, searchLabelPos.right + 30, searchLabelPos.cy);
+        await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
 
         for (const ch of 'Hello') {
-            await page1.keyboard.press(ch);
-            await waitForIdle(page1);
+            await ctx.page.keyboard.press(ch);
+            await waitForIdle(ctx.page);
         }
 
-        const screenText = await getScreenText(page1);
+        const screenText = await getScreenText(ctx.page);
         expect(screenText).toContain('Hello');
     });
 
     test('Step 4+5: Switch to second page and verify "Hello"', async () => {
         // Open second page in the same browser context.
         // The GET /Connect from the new page triggers reconnection in the core.
-        page2 = await context.newPage();
-        await setupIdleTracking(page2);
-        page2.on('dialog', async dialog => {
-            console.error(`  [page2 CRASH] Dialog: ${dialog.message()}`);
-            await dialog.dismiss();
-        });
-        page2.on('console', () => {});
-
-        await page2.goto(WEBSITE_URL, { timeout: 30000 });
-        await waitForRendering(page2);
+        page2 = await ctx.openPage();
 
         const screenText = await getScreenText(page2);
         expect(screenText).toContain('Hello');
@@ -194,16 +127,7 @@ describe('RendererSwitching', () => {
 
     test('Step 7+8: Switch to third page and verify "Hello" with rendering', async () => {
         // Open third page — another renderer switch
-        page3 = await context.newPage();
-        await setupIdleTracking(page3);
-        page3.on('dialog', async dialog => {
-            console.error(`  [page3 CRASH] Dialog: ${dialog.message()}`);
-            await dialog.dismiss();
-        });
-        page3.on('console', () => {});
-
-        await page3.goto(WEBSITE_URL, { timeout: 30000 });
-        await waitForRendering(page3);
+        page3 = await ctx.openPage();
 
         const screenText = await getScreenText(page3);
         expect(screenText).toContain('Hello');

@@ -175,17 +175,9 @@ export async function waitUntilIdle(page, timeout = 30000) {
 
 export async function clickAt(page, x, y) {
     await page.mouse.move(x, y);
-    await sleep(200);
     await page.mouse.down();
-    await sleep(100);
     await page.mouse.up();
-    await sleep(250);
-    // Drain any idle signals from click processing so they don't
-    // interfere with the next waitForIdle call for keyboard events.
-    const state = page.__idleState;
-    if (state !== undefined && state !== null) {
-        state.pending = false;
-    }
+    await waitForIdle(page);
 }
 
 export async function findAndClick(page, textToFind, positions) {
@@ -193,6 +185,66 @@ export async function findAndClick(page, textToFind, positions) {
     if (!pos) return false;
     await clickAt(page, pos.cx, pos.cy);
     return true;
+}
+
+// ---------------------------------------------------------------------------
+// Caret helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Find all visible caret divs in the screen.
+ * A caret is a narrow (width <= 4px) absolutely positioned div with a
+ * background color and display !== 'none', inside a pre-wrap container.
+ */
+export async function findCarets(page) {
+    return page.evaluate(() => {
+        const screen = document.getElementById('gacui-screen');
+        if (!screen) return [];
+        const carets = [];
+        for (const div of screen.querySelectorAll('div')) {
+            const style = div.style;
+            if (style.position !== 'absolute') continue;
+            if (style.display === 'none') continue;
+            if (!style.backgroundColor || style.backgroundColor === 'transparent') continue;
+            const w = parseFloat(style.width);
+            if (isNaN(w) || w > 4) continue;
+            const h = parseFloat(style.height);
+            if (isNaN(h) || h < 4) continue;
+            const parent = div.parentElement;
+            if (!parent) continue;
+            const parentWs = parent.style.whiteSpace;
+            if (parentWs !== 'pre-wrap' && parentWs !== 'pre') continue;
+            const r = div.getBoundingClientRect();
+            carets.push({
+                x: r.x,
+                y: r.y,
+                width: r.width,
+                height: r.height,
+                backgroundColor: style.backgroundColor
+            });
+        }
+        return carets;
+    });
+}
+
+/**
+ * Poll for caret visibility changes.
+ * When visible=true (default): polls until at least 1 caret is found, returns carets[].
+ * When visible=false: polls until 0 carets are found, returns true/false.
+ */
+export async function waitForCarets(page, { visible = true, timeout } = {}) {
+    if (timeout === undefined) {
+        timeout = visible ? 1200 : 700;
+    }
+    const interval = visible ? 100 : 50;
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+        const carets = await findCarets(page);
+        if (visible && carets.length >= 1) return carets;
+        if (!visible && carets.length === 0) return true;
+        await sleep(interval);
+    }
+    return visible ? [] : false;
 }
 
 // ---------------------------------------------------------------------------
@@ -275,7 +327,22 @@ export function groupIntoRows(icons, tolerance) {
  */
 export function setupProtocolTest() {
     let browser = null;
+    let context = null;
     let page = null;
+
+    async function openPage() {
+        const p = await context.newPage();
+        await setupIdleTracking(p);
+        p.on('dialog', async dialog => {
+            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
+            await dialog.dismiss();
+        });
+        p.on('console', () => {});
+        await p.goto(WEBSITE_URL, { timeout: 30000 });
+        await p.waitForSelector('#gacui-screen div div', { timeout: 30000 });
+        await waitUntilIdle(p);
+        return p;
+    }
 
     beforeAll(async () => {
         if (!existsSync(SERVER_EXE)) {
@@ -294,18 +361,8 @@ export function setupProtocolTest() {
         await sleep(1200);
 
         browser = await chromium.launch({ headless: true });
-        page = await browser.newPage();
-        await setupIdleTracking(page);
-
-        page.on('dialog', async dialog => {
-            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
-            await dialog.dismiss();
-        });
-        page.on('console', () => {});
-
-        await page.goto(WEBSITE_URL, { timeout: 30000 });
-        await page.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await waitUntilIdle(page);
+        context = await browser.newContext();
+        page = await openPage();
     });
 
     afterAll(async () => {
@@ -316,6 +373,7 @@ export function setupProtocolTest() {
     });
 
     return {
-        get page() { return page; }
+        get page() { return page; },
+        openPage
     };
 }

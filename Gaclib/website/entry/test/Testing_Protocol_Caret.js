@@ -33,7 +33,6 @@
 
 import { describe, test, expect } from 'vitest';
 import {
-    sleep,
     getLeafTextPositions,
     findEditorCenter,
     clickAt,
@@ -42,82 +41,13 @@ import {
     findIconButtonsInArea,
     groupIntoRows,
     waitForIdle,
+    findCarets,
+    waitForCarets,
     setupProtocolTest
 } from './Testing_Protocol.js';
 
 const TYPED_TEXT = 'ABCD';
 const BIG_SIZE = 24;
-
-// ---------------------------------------------------------------------------
-// Helpers (unique to this test)
-// ---------------------------------------------------------------------------
-
-/**
- * Find all visible caret divs in the screen.
- * A caret is a narrow (width <= 4px) absolutely positioned div with a
- * background color and display !== 'none', inside a pre-wrap container.
- */
-async function findCarets(page) {
-    return page.evaluate(() => {
-        const screen = document.getElementById('gacui-screen');
-        if (!screen) return [];
-        const carets = [];
-        for (const div of screen.querySelectorAll('div')) {
-            const style = div.style;
-            if (style.position !== 'absolute') continue;
-            if (style.display === 'none') continue;
-            if (!style.backgroundColor || style.backgroundColor === 'transparent') continue;
-            const w = parseFloat(style.width);
-            if (isNaN(w) || w > 4) continue;
-            const h = parseFloat(style.height);
-            if (isNaN(h) || h < 4) continue;
-            const parent = div.parentElement;
-            if (!parent) continue;
-            const parentWs = parent.style.whiteSpace;
-            if (parentWs !== 'pre-wrap' && parentWs !== 'pre') continue;
-            const r = div.getBoundingClientRect();
-            carets.push({
-                x: r.x,
-                y: r.y,
-                width: r.width,
-                height: r.height,
-                backgroundColor: style.backgroundColor
-            });
-        }
-        return carets;
-    });
-}
-
-/**
- * Poll for visible carets over a full blink cycle.
- * The caret blinks every 500ms, so polling for 1200ms at 100ms intervals
- * guarantees catching it during a visible phase.
- * Use this instead of a single findCarets() call when we just need to know
- * whether a caret exists (regardless of blink state).
- */
-async function waitForCaret(page, timeout = 1200) {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-        const carets = await findCarets(page);
-        if (carets.length >= 1) return carets;
-        await sleep(100);
-    }
-    return [];
-}
-
-/**
- * Poll until no caret is visible (blink-off detection).
- * Returns true if the caret disappeared within the timeout.
- */
-async function waitForNoCaret(page, timeout = 700) {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-        const carets = await findCarets(page);
-        if (carets.length === 0) return true;
-        await sleep(50);
-    }
-    return false;
-}
 
 // ---------------------------------------------------------------------------
 // Test suite
@@ -159,19 +89,19 @@ describe('Caret', () => {
 
         await clickAt(ctx.page, editorPos.cx, editorPos.cy);
 
-        const carets = await waitForCaret(ctx.page);
+        const carets = await waitForCarets(ctx.page);
         console.log(`  Carets found after clicking editor: ${carets.length}`);
         expect.soft(carets.length, 'Caret should appear in editor').toBe(1);
     });
 
     test('Step 4: Test caret blinking', async () => {
         // Poll until caret blinks off
-        const blinkOff = await waitForNoCaret(ctx.page);
+        const blinkOff = await waitForCarets(ctx.page, { visible: false });
         console.log(`  Blink off detected: ${blinkOff}`);
         expect.soft(blinkOff, 'Caret should blink off').toBe(true);
 
         // Poll until caret blinks back on
-        const carets = await waitForCaret(ctx.page, 600);
+        const carets = await waitForCarets(ctx.page, { timeout: 600 });
         console.log(`  After blink on: ${carets.length} caret(s) visible`);
         expect.soft(carets.length, 'Caret should blink on again').toBeGreaterThanOrEqual(1);
     });
@@ -277,7 +207,7 @@ describe('Caret', () => {
         await waitForIdle(ctx.page);
 
         // Position 0 (before A)
-        let carets = await waitForCaret(ctx.page);
+        let carets = await waitForCarets(ctx.page);
         rightCaretHeights.push(carets.length >= 1 ? carets[0].height : 0);
         const posNames = ['before A', 'after A', 'after B', 'after C', 'after D'];
         console.log(`  Pos 0 (${posNames[0]}): h=${rightCaretHeights[0].toFixed(1)}`);
@@ -285,7 +215,7 @@ describe('Caret', () => {
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowRight');
             await waitForIdle(ctx.page);
-            carets = await waitForCaret(ctx.page);
+            carets = await waitForCarets(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             rightCaretHeights.push(h);
             console.log(`  Pos ${i} (${posNames[i]}): h=${h.toFixed(1)}`);
@@ -314,7 +244,7 @@ describe('Caret', () => {
         for (let i = 1; i <= 4; i++) {
             await ctx.page.keyboard.press('ArrowLeft');
             await waitForIdle(ctx.page);
-            const carets = await waitForCaret(ctx.page);
+            const carets = await waitForCarets(ctx.page);
             const h = carets.length >= 1 ? carets[0].height : 0;
             leftCaretHeights.push(h);
             console.log(`  Left ${i} (${posNames[i - 1]}): h=${h.toFixed(1)}`);
@@ -343,7 +273,7 @@ describe('Caret', () => {
         await ctx.page.keyboard.press('Home');
         await waitForIdle(ctx.page);
 
-        const carets = await waitForCaret(ctx.page);
+        const carets = await waitForCarets(ctx.page);
         console.log(`  Carets after Ctrl+A + Home: ${carets.length}`);
         expect.soft(carets.length, 'Caret should be visible after Ctrl+A + Home').toBeGreaterThanOrEqual(1);
 
@@ -360,7 +290,7 @@ describe('Caret', () => {
         await ctx.page.keyboard.press('End');
         await waitForIdle(ctx.page);
 
-        const carets = await waitForCaret(ctx.page);
+        const carets = await waitForCarets(ctx.page);
         console.log(`  Carets after End: ${carets.length}`);
         expect.soft(carets.length, 'Caret should be visible after End').toBeGreaterThanOrEqual(1);
 

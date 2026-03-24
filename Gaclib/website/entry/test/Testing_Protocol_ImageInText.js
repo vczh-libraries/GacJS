@@ -21,7 +21,6 @@
 
 import { describe, test, expect } from 'vitest';
 import {
-    sleep,
     getLeafTextPositions,
     findEditorCenter,
     clickAt,
@@ -100,20 +99,11 @@ async function getEditorContent(page) {
 
 async function doubleClickAt(page, x, y) {
     await page.mouse.move(x, y);
-    await sleep(200);
     await page.mouse.down({ clickCount: 1 });
-    await sleep(50);
     await page.mouse.up({ clickCount: 1 });
-    await sleep(50);
     await page.mouse.down({ clickCount: 2 });
-    await sleep(50);
     await page.mouse.up({ clickCount: 2 });
-    await sleep(250);
-    // Drain any idle signals from double-click processing
-    const state = page.__idleState;
-    if (state !== undefined && state !== null) {
-        state.pending = false;
-    }
+    await waitForIdle(page);
 }
 
 // ---------------------------------------------------------------------------
