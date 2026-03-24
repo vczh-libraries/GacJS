@@ -139,8 +139,7 @@ export async function setupIdleTracking(page) {
 export async function waitForIdle(page, timeout = 5000) {
     const state = page.__idleState;
     if (state === undefined || state === null) {
-        await sleep(250);
-        return;
+        throw new Error('waitForIdle: idle tracking not set up — call setupIdleTracking(page) first');
     }
     if (state.pending) {
         state.pending = false;
@@ -165,8 +164,7 @@ export async function waitForIdle(page, timeout = 5000) {
 export async function waitUntilIdle(page, timeout = 30000) {
     const state = page.__idleState;
     if (state === undefined || state === null) {
-        await sleep(1200);
-        return;
+        throw new Error('waitUntilIdle: idle tracking not set up — call setupIdleTracking(page) first');
     }
     if (state.pending) {
         state.pending = false;
@@ -247,8 +245,7 @@ export async function findCarets(page) {
 export async function waitForBlink(page, timeout = 1200) {
     const state = page.__blinkState;
     if (state === undefined || state === null) {
-        await sleep(500);
-        return;
+        throw new Error('waitForBlink: blink tracking not set up — call setupIdleTracking(page) first');
     }
     if (state.pending) {
         state.pending = false;
