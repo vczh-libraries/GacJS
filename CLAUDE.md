@@ -121,15 +121,19 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - `REPO-ROOT\doc\Testing_Protocol.md` describes how the implementation of remote protocol is testing.
 - `REPO-ROOT\Gaclib\website\entry\test` has many E2E test cases that start `RemotingTest_Core` and run `index.html` with playwright.
 - During investigation of a bug that involves many part of the renderer, you are recommended to create a new test case like these to confirm the regression, which is also a good measurement to see if the bug is properly fixed.
-- Wait time standard:
-  - All tests are running against a local HTTP server, the latency is very low.
-  - All numbers below are applicable to most of the cases. When facing a very complex UI causing these numbers to fail, figure out the most smallest reasonable wait time just for that test case, do not affect the standard and others.
-  - Keep the number small with your best effort.
-  - Starting up could take a little bit longer, 1200ms is enough.
-  - 250ms is the minimum stable wait for UI refresh (tab switch, dialog open/close, post-typing settle, click). 200ms causes intermittent failures in dialog operations (1 in 10 runs). 150ms causes consistent failures.
-  - The caret blinks in the focused text box every 500ms.
-  - Before testing caret blink on/off phases, wait 1000ms (2 full blink cycles) so the caret synchronizes to a known phase. Then use 600ms intervals to capture each blink state.
-  - Mouse interactions in `clickAt` use 200ms after move and 100ms after mouse-down; do not reduce these.
+- Synchronization: event-driven, not sleep-based.
+  - Tests use **no** `sleep()` for UI synchronization. The only remaining `sleep()` calls are for server startup/shutdown (OS-level process delays), not for waiting on UI state.
+  - The renderer exposes two optional callbacks in `GacUISettings`: `idle` and `blink`.
+    - `idle` fires after `RequestRendererIdle` — the renderer has finished processing.
+    - `blink` fires after each `setCaretVisible` toggle in the 500ms caret blink timer.
+  - `index.html` bridges these to CDP functions (`__gacui_playwright_idle`, `__gacui_playwright_blink`).
+  - Test code calls `setupIdleTracking(page)` **before** `page.goto()` to register CDP bindings, ensuring no events are missed.
+  - Use `waitForIdle(page)` after interactions (click, keypress) to wait for the renderer to stabilize.
+  - Use `waitUntilIdle(page)` for initial page load (waits for the first-ever idle signal).
+  - Use `waitForBlink(page)` to wait for exactly one caret blink toggle.
+  - Use `waitForCarets(page)` / `waitForCarets(page, { visible: false })` for event-driven caret visibility checks — it checks DOM once, and if not satisfied, waits for one blink then checks again.
+  - All these functions throw if `setupIdleTracking(page)` was not called first.
+  - **Never add `sleep()` for UI synchronization.** If something needs waiting, there should be an event for it.
 
 ## TypeScript/JavaScript coding guidelines
 

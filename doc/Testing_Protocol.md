@@ -212,7 +212,7 @@ npx playwright install chromium
 All protocol tests live under `Gaclib/website/entry/test/`:
 
 - `Testing_Protocol.js` — Shared utilities and vitest lifecycle (`setupProtocolTest`,
-  DOM helpers, click helpers, path constants).
+  DOM helpers, click helpers, idle/blink tracking, caret helpers, path constants).
 - `Testing_Protocol_SimpleTyping.js` — Basic UI rendering and keyboard input test.
 - `Testing_Protocol_Caret.js` — Caret rendering, blinking, and positioning test.
 - `Testing_Protocol_Caret2.js` — Cursor style after tab switch, caret blinking after tab switch,
@@ -231,9 +231,11 @@ manages its own lifecycle because it opens multiple pages in the same browser co
 ```javascript
 import { describe, test, expect } from 'vitest';
 import {
-    sleep,
     getLeafTextPositions,
     clickAt,
+    waitForIdle,
+    waitForCarets,
+    findCarets,
     setupProtocolTest
 } from './Testing_Protocol.js';
 
@@ -246,7 +248,14 @@ describe('MyTest', () => {
     });
 
     test('Step 2: Interact with UI', async () => {
-        // Click, type, verify using ctx.page ...
+        // Click a tab, waitForIdle handles synchronization
+        await clickAt(ctx.page, tabPos.cx, tabPos.cy);
+        // Type a key, then wait for idle
+        await ctx.page.keyboard.press('A');
+        await waitForIdle(ctx.page);
+        // Check caret visibility (event-driven, no sleep)
+        const carets = await waitForCarets(ctx.page);
+        expect(carets.length).toBe(1);
     });
 });
 ```
@@ -262,13 +271,51 @@ This runs all vitest suites across all packages, including the protocol tests.
 Test files run sequentially (`fileParallelism: false`) since they share the
 same stateful HTTP server.
 
+### Synchronization: Event-Driven, Not Sleep-Based
+
+Tests use **no** `sleep()` for UI synchronization. The only remaining `sleep()` calls
+are for server startup/shutdown (OS-level process delays), not for waiting on UI state.
+
+The renderer exposes two optional callbacks in `GacUISettings`: `idle` and `blink`.
+
+- **`idle`** fires after `RequestRendererIdle` — the renderer has finished processing
+  all pending messages.
+- **`blink`** fires after each `setCaretVisible` toggle in the 500ms caret blink timer.
+
+`index.html` bridges these callbacks to CDP (Chrome DevTools Protocol) functions
+(`__gacui_playwright_idle`, `__gacui_playwright_blink`). On the Node.js/Playwright side,
+`setupIdleTracking(page)` exposes these functions **before** `page.goto()` via
+`page.exposeFunction`, ensuring no events are missed.
+
+#### Key synchronization functions
+
+| Function | Purpose | Typical Use |
+|----------|---------|-------------|
+| `setupIdleTracking(page)` | Register CDP bindings for idle + blink | Call **before** `page.goto()` |
+| `waitForIdle(page)` | Wait for next `RequestRendererIdle` | After click, keypress, any interaction |
+| `waitUntilIdle(page)` | Wait for first-ever idle signal | Initial page load |
+| `waitForBlink(page)` | Wait for exactly one caret blink toggle | Caret blink testing |
+| `waitForCarets(page)` | Event-driven caret visibility check | Verify caret shown / hidden |
+| `findCarets(page)` | Immediate DOM query for caret divs | One-time snapshot of caret state |
+
+`waitForCarets` works by checking the DOM once; if not satisfied, it waits for one
+blink event (since each blink toggles caret visibility) and checks again. No loop,
+no polling, no sleep.
+
+`clickAt(page, x, y)` performs mouse move → down → up → `waitForIdle` in sequence.
+All synchronization is handled internally; callers need no additional waits.
+
+All synchronization functions **throw** if `setupIdleTracking(page)` was not called.
+`setupProtocolTest()` handles this automatically for most test files.
+
+**Rule:** Never add `sleep()` for UI synchronization. If something needs waiting,
+there should be a renderer event for it.
+
 ### Important Playwright Notes
 
 - `index.html` expects the C++ server on `localhost:8888` — this is hardcoded.
 - Only one browser connection is active at a time — previous connections lose state.
 - If the C++ server crashes (which happens on unhandled protocol errors), restart it.
-- Use `page.waitForTimeout()` sparingly — prefer `page.waitForSelector()` or
-  `page.waitForFunction()` for reliable synchronization.
 - Take screenshots for visual comparison: `await page.screenshot({ path: 'test.png' })`.
 
 ---
@@ -318,7 +365,7 @@ for the error message.
 
 ### Playwright can't find elements
 
-- GacUI renders dynamically — use longer timeouts for initial load.
+- GacUI renders dynamically — use `waitUntilIdle(page)` for initial page load.
 - The DOM structure is deeply nested `<div>` elements — use broad selectors.
 - Check `page.content()` to see what's actually rendered.
 
