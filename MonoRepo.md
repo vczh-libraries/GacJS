@@ -190,3 +190,70 @@ npx vitest run Testing_Protocol_SimpleTyping.js
 Test files are in `Gaclib/website/entry/test/Testing_Protocol_*.js`. The shared
 lifecycle (`setupProtocolTest()` in `Testing_Protocol.js`) handles server startup,
 browser launch, and teardown.
+
+---
+
+## Git Workflow
+
+After every piece of work, **git commit and git push to the current branch** in both
+repos are required.
+
+### Repository Layout
+
+| Path | Type |
+|------|------|
+| `../GacUI/` | Normal git repository (sibling clone) |
+| `./` (GacJS) | Normal git repository |
+| `GacUI/` | **Git submodule** inside GacJS, pointing at a specific commit of the GacUI repo |
+
+### Working with the Sibling `../GacUI`
+
+This is a normal repository. The standard workflow applies:
+
+```powershell
+cd ../GacUI
+git add -A
+git commit -m "your message"
+git push origin <current-branch-name-for-GacUI>
+```
+
+### Working with the Submodule `GacUI/`
+
+**WARNING**: You should not work on this submodule when `../GacUI` is available.
+
+The submodule `GacUI/` tracks a specific commit. After cloning or pulling GacJS,
+bring it up to date with the latest `master` of the remote GacUI repo:
+
+```powershell
+cd GacJS
+git submodule update --init --remote
+```
+
+- `--init` initializes the submodule if it hasn't been set up yet.
+- `--remote` fetches the latest commit from the remote tracking branch (typically `master`).
+
+**Detached HEAD warning:** After `git submodule update`, the submodule is always in
+**detached HEAD** state — it checks out a specific commit, not a branch. If you need
+to make changes inside the submodule, you must checkout `master` first:
+
+```powershell
+cd GacUI                          # enter the submodule
+git checkout master               # attach to the master branch
+# ... make your changes ...
+git add -A
+git commit -m "your message"
+git push origin master            # push to the remote GacUI repo
+```
+
+Then go back to GacJS and record the updated submodule commit:
+
+```powershell
+cd ..                             # back to GacJS root
+git add GacUI                     # record the new submodule commit
+git commit -m "update GacUI submodule"
+git push origin <current-branch-name-for-GacJS>
+```
+
+**Important:** If you commit while in detached HEAD without checking out a branch
+first, your commits will be orphaned and eventually garbage-collected. Always
+`git checkout master` inside the submodule before committing.
