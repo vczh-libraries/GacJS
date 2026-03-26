@@ -146,20 +146,18 @@ After running `yarn build` in the `Gaclib` directory, the built website files ar
 Gaclib\website\entry\lib\dist\
 ```
 
-The CLAUDE.md says the website is accessible at `localhost:8896` automatically.
-If not, host the files yourself:
+`localhost:8896` is hosted by IIS. After a successful build, the website is immediately
+accessible at `http://localhost:8896` — no manual hosting is needed.
+
+Only if `localhost:8896` is unreachable, you can host the files yourself as a fallback:
 
 ```powershell
-# Option 1: Using npx serve
 cd Gaclib\website\entry\lib\dist
 npx serve -l 8896
-
-# Option 2: Using Python
-cd Gaclib\website\entry\lib\dist
-python -m http.server 8896
-
-# Option 3: VS Code Live Server extension pointed at lib\dist\
 ```
+
+If this fails because port 8896 is already taken, that means IIS is hosting it and
+you should access the website directly instead of trying to serve it.
 
 **IMPORTANT:** The root folder MUST be `lib\dist\` — HTML files reference `/index.js`
 which is in the dist root.
@@ -172,7 +170,7 @@ which is in the dist root.
 
 1. Build the TypeScript code: `cd Gaclib; yarn build`
 2. Start the C++ server: `start RemotingTest_Core.exe /FCT /Http`
-3. Start the static file server (if not already running)
+3. Access the website directly (IIS hosts it automatically after build)
 4. Open `http://localhost:8896/index.html`
 5. The GacUI application UI renders in the browser
 

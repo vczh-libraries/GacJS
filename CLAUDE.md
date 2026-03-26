@@ -42,8 +42,8 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - `yarn test` will always call `vitest`, do not call `npx vitest`.
   - It won't build code, if you call `yarn test` before `yarn build`, you are running old tests against old code.
 - Playwright is installed with this repo.
-  - After a successful build, the website is accessible by `localhost:8896` automatically.
-  - If this host is unreachable, you can also host by yourself, and the root folder should be `(repo-root)/Gaclib/website/entry/lib/dest`, otherwise resources won't resolve correctly.
+  - `localhost:8896` is hosted by IIS. After a successful build, the website is immediately accessible at `http://localhost:8896` — no manual hosting is needed.
+  - If `localhost:8896` is unreachable, you can serve the files yourself from `(repo-root)/Gaclib/website/entry/lib/dist`. If serving on port 8896 fails because the port is already taken, that means IIS is hosting it and you should access it directly.
 
 ## Project Structure
 

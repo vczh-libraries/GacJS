@@ -170,7 +170,10 @@ The corresponding HTTP server is the C++ executable:
 **Path:** `Gaclib/website/entry/`
 
 The website application that integrates the renderer and HTTP client.
-After building, the website is served from `Gaclib/website/entry/lib/dest/`.
+After building, the website is served from `Gaclib/website/entry/lib/dist/` via IIS
+on `localhost:8896`. No manual hosting is needed — access the website directly after build.
+If `localhost:8896` is unreachable, you can serve the files yourself from this folder
+as a fallback.
 
 **HTML pages:**
 
