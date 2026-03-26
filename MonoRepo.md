@@ -159,11 +159,9 @@ yarn build
 This compiles TypeScript, copies assets, and bundles with esbuild. After a successful
 build the website is accessible at `http://localhost:8896`.
 
-If the dev server is not running, host the files manually:
-```powershell
-cd Gaclib\website\entry\lib\dist
-npx serve -l 8896
-```
+**Note:** `localhost:8896` is hosted by IIS, so you do **not** need to run `npx serve`
+or any manual hosting command. Just run `yarn build` and the website is automatically
+available.
 
 ### Connect to RemotingTest_Core
 
