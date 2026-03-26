@@ -82,11 +82,15 @@ Follow the guidelines in `<GacUI>/.github/Guidelines/Running-CLI.md`.
 |----------|-------------|----------|
 | `/Http` | Use HTTP transport (port 8888) | **Yes** — `/Http` is required for GacJS testing |
 | `/Pipe` | Use named-pipe transport | Not used by GacJS |
-| `/FCT` | Run **FullControlTest** (index 0) | Optional (default if neither is specified) |
-| `/RPT` | Run **RemoteProtocolTest** (index 1) | Optional |
+| `/FCT` | Run **FullControlTest** (index 0) — loads `<GacUI>/Test/Resources/App/FullControlTest` | Optional (default if neither is specified) |
+| `/RPT` | Run **RemoteProtocolTest** (index 1) — loads `<GacUI>/Test/Resources/App/RemoteProtocolTest` | Optional |
 
 - `/Http` and `/Pipe` are **exclusive** — exactly one must be specified. For GacJS, always use `/Http`.
 - `/FCT` and `/RPT` are **exclusive** — specify at most one. If neither is given, `/FCT` is assumed.
+
+**Changing XML resources:** If you modify any `.xml` files under `<GacUI>/Test/Resources/App/FullControlTest`
+or `<GacUI>/Test/Resources/App/RemoteProtocolTest`, you must recompile them with **GacUICompiler**
+before rebuilding `RemotingTest_Core`. See [`<GacUI>/Project.md`](../GacUI/Project.md) for details.
 
 ### Starting the Server
 
