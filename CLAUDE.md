@@ -85,7 +85,9 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
   - It requires an HTTP server to run. The server executable is `RemotingTest_Core` from the GacUI repo.
     - If `(repo-root)\..\GacUI` exists (a sibling clone), use that: `(repo-root)\..\GacUI\Test\GacUISrc\RemotingTest_Core`.
     - Otherwise fall back to the submodule: `(repo-root)\GacUI\Test\GacUISrc\RemotingTest_Core`.
-  - Start the server by running `start <GacUI>\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http` (where `<GacUI>` is the resolved path above).
+  - Start the server by running `start <GacUI>\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http` (where `<GacUI>` is the resolved path above).
+    - `/FCT` is for FullControlTest (index 0), `/RPT` is for RemoteProtocolTest (index 1). They are exclusive; if neither is given, `/FCT` is assumed.
+    - `/Pipe` and `/Http` are exclusive transport options, specified in any order.
     - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.
   - You must use `start` as the process will block the powershell forever, until:
     - The "Fatal Error" button is clicked.
@@ -103,7 +105,7 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 
 ## Debugging the RemotingTest_Core HTTP Server
 
-- Always start it with the `/Http` argument.
+- Always start it with the `/FCT /Http` arguments (or just `/Http` — `/FCT` is the default).
 - Always start it async, because `RemotingTest_Core` never ends until you kill the process.
 - You can temporarily enabled remote protocol message logging:
   - The flag is in `<GacUI>\Test\GacUISrc\RemotingTest_Core\CoreChannel.cpp`.

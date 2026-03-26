@@ -398,7 +398,7 @@ export function setupProtocolTest() {
         killServer();
         await sleep(1000);
 
-        const serverProcess = exec(`"${SERVER_EXE}" /Http`);
+        const serverProcess = exec(`"${SERVER_EXE}" /FCT /Http`);
         serverProcess.stdout?.on('data', () => {});
         serverProcess.stderr?.on('data', () => {});
         await sleep(1200);

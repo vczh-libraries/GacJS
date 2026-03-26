@@ -34,7 +34,7 @@ Throughout this document, **REPO-ROOT** refers to the root of the GacUI reposito
 
 | Component | Port | Purpose |
 |-----------|------|---------|
-| `RemotingTest_Core.exe /Http` | 8888 | GacUI remote protocol API server (JSON/HTTP) |
+| `RemotingTest_Core.exe /FCT /Http` | 8888 | GacUI remote protocol API server (JSON/HTTP) |
 | Static file server | 8896 (or any) | Serves `index.html`, `index.js`, CSS, etc. |
 
 The C++ server is **not** a static file server. It only serves three API endpoints:
@@ -91,10 +91,23 @@ REPO-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe
 
 ## Running the C++ Server
 
+The server accepts two categories of command-line arguments (in any order):
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `/FCT` | Run the **FullControlTest** application (index 0) | Yes (if neither `/FCT` nor `/RPT` is specified) |
+| `/RPT` | Run the **RemoteProtocolTest** application (index 1) | No |
+| `/Pipe` | Use named-pipe transport | — |
+| `/Http` | Use HTTP transport | — |
+
+- `/FCT` and `/RPT` are **exclusive** — specify at most one. If neither is given, `/FCT` is assumed.
+- `/Pipe` and `/Http` are **exclusive** — exactly one must be specified.
+- Arguments can appear in any order.
+
 The server **blocks the terminal**, so always launch it with `start`:
 
 ```powershell
-start REPO-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /Http
+start REPO-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http
 ```
 
 The server prints:
@@ -103,6 +116,7 @@ The server prints:
 ```
 
 **Important notes:**
+- The E2E test cases in `Gaclib/website/entry/test` use `/FCT` (FullControlTest).
 - The process blocks until the UI exits or the connection is terminated.
 - Always use `start` so it runs in a separate window.
 - Only one client connection is active at a time. Opening `index.html` again takes over.
@@ -157,7 +171,7 @@ which is in the dist root.
 ### Testing the Remote Protocol (index.html)
 
 1. Build the TypeScript code: `cd Gaclib; yarn build`
-2. Start the C++ server: `start RemotingTest_Core.exe /Http`
+2. Start the C++ server: `start RemotingTest_Core.exe /FCT /Http`
 3. Start the static file server (if not already running)
 4. Open `http://localhost:8896/index.html`
 5. The GacUI application UI renders in the browser

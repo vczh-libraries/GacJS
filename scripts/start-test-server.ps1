@@ -67,6 +67,6 @@ Write-Host "Starting RemotingTest_Core /Http ..." -ForegroundColor Cyan
 Write-Host "Server will listen on http://localhost:8888" -ForegroundColor Cyan
 Write-Host "Use stop-test-server.ps1 or Ctrl+C in the server window to stop." -ForegroundColor Gray
 
-Start-Process -FilePath $ExePath -ArgumentList "/Http"
+Start-Process -FilePath $ExePath -ArgumentList "/FCT /Http"
 
 Write-Host "Server started in a separate window." -ForegroundColor Green
