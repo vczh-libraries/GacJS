@@ -21,34 +21,69 @@
     [19, "ImageFrame"],
     [20, "SolidLabel"],
     [21, "SolidBackground"],
-    [22, "SolidBackground"],
-    [23, "SolidBorder"],
-    [24, "FocusRectangle"],
-    [25, "SolidLabel"],
-    [26, "DocumentParagraph"],
-    [27, "DocumentParagraph"],
-    [28, "ImageFrame"],
-    [29, "DocumentParagraph"],
-    [30, "ImageFrame"],
-    [31, "DocumentParagraph"]
+    [22, "SolidBorder"],
+    [23, "SolidBackground"],
+    [24, "SolidBorder"],
+    [25, "Polygon"],
+    [26, "Polygon"],
+    [27, "SolidBackground"],
+    [28, "SolidBackground"],
+    [29, "SolidBorder"],
+    [30, "Polygon"],
+    [31, "Polygon"],
+    [32, "SolidBackground"],
+    [33, "DocumentParagraph"],
+    [34, "DocumentParagraph"],
+    [35, "DocumentParagraph"],
+    [36, "DocumentParagraph"],
+    [37, "DocumentParagraph"],
+    [38, "DocumentParagraph"],
+    [39, "DocumentParagraph"],
+    [40, "DocumentParagraph"],
+    [41, "DocumentParagraph"],
+    [42, "DocumentParagraph"],
+    [43, "DocumentParagraph"],
+    [44, "DocumentParagraph"],
+    [45, "DocumentParagraph"],
+    [46, "DocumentParagraph"],
+    [47, "DocumentParagraph"],
+    [48, "DocumentParagraph"],
+    [49, "DocumentParagraph"],
+    [50, "DocumentParagraph"],
+    [51, "DocumentParagraph"],
+    [52, "DocumentParagraph"],
+    [53, "DocumentParagraph"],
+    [54, "DocumentParagraph"],
+    [55, "DocumentParagraph"],
+    [56, "DocumentParagraph"],
+    [57, "DocumentParagraph"],
+    [58, "DocumentParagraph"],
+    [59, "DocumentParagraph"],
+    [60, "DocumentParagraph"],
+    [61, "DocumentParagraph"],
+    [62, "DocumentParagraph"],
+    [63, "DocumentParagraph"],
+    [64, "DocumentParagraph"],
+    [65, "DocumentParagraph"],
+    [66, "DocumentParagraph"],
+    [67, "DocumentParagraph"],
+    [68, "DocumentParagraph"],
+    [69, "DocumentParagraph"],
+    [70, "DocumentParagraph"],
+    [71, "DocumentParagraph"],
+    [72, "DocumentParagraph"],
+    [73, "DocumentParagraph"],
+    [74, "DocumentParagraph"],
+    [75, "DocumentParagraph"],
+    [76, "DocumentParagraph"],
+    [77, "DocumentParagraph"],
+    [78, "DocumentParagraph"]
   ],
-  "imageCreations": [
-    {"id": 18, "imageData": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8\/9hAAABiUlEQVR4nKWTv24TQRCHv4uu970BV1qi8OUNlgJIZ1PhzucKRGO\/AUdJZ7\/B0UF37tx500EV04Uq5wKJLrPdppoUe39CjELhkU47utXvm\/nNaiJV5ZSIN5eHhiDh8CAebn\/fvFl+mFT\/JVS21sdRVlbzotTRy1mmqjz1nXWVH4R4yC8yzp+fX2Wv8uypBqJqu9fx6xGXv4IwTRzWWtKhAd8Dpcmvbm5flMvUdoSysn3vXlVEtf4jWn2XI2vFV9HsvdXRu53pLTTkLz9gbR0re2C1la7iX9YEijwjcm6XTSsDELcTmGTtCySIh\/21AAPWm3Bvhg7xQrHaA+Du3A6IYrzg7mC1PSAtzQtpkgCwGNMIBhRTqI2hrmuKMoDiIIBJloBvWvcJ9joIP31ziIT\/0lRou+0AZjo\/8msulsAzPr4d4NyAWhwiCSIgsqd9\/ngxG0eL2fgIMP\/8UwHm60NXuY3JsM\/j41mHEAmzMelDsYRB88jCPwEeTL5p8nZP+n1pLUSnbuPZSWrgHpANDzKdUwRtAAAAAElFTkSuQmCC", "imageDataOmitted": false}
-  ],
-  "imageMetadatas": [
-    {
-      "id": 18,
-      "format": "Png",
-      "frames": [
-        {
-          "size": {"x": 16, "y": 16}
-        }
-      ]
-    }
-  ],
+  "imageCreations": [],
+  "imageMetadatas": [],
   "frames": [
     {
-      "frameId": 9,
+      "frameId": 4,
       "frameName": "Ready",
       "windowSize": {
         "bounds": {
@@ -75,8 +110,35 @@
       "root": null
     },
     {
+      "frameId": 8,
+      "frameName": "Set text",
+      "windowSize": {
+        "bounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "clientBounds": {
+          "x1": {"value": 0},
+          "y1": {"value": 0},
+          "x2": {"value": 0},
+          "y2": {"value": 0}
+        },
+        "sizeState": "Minimized",
+        "customFramePadding": {
+          "left": {"value": 0},
+          "top": {"value": 0},
+          "right": {"value": 0},
+          "bottom": {"value": 0}
+        }
+      },
+      "elements": null,
+      "root": null
+    },
+    {
       "frameId": 11,
-      "frameName": "Clicked",
+      "frameName": "Caret at beginning",
       "windowSize": {
         "bounds": {
           "x1": {"value": 0},
@@ -102,89 +164,8 @@
       "root": null
     },
     {
-      "frameId": 13,
-      "frameName": "Select 2nd char @par1",
-      "windowSize": {
-        "bounds": {
-          "x1": {"value": 0},
-          "y1": {"value": 0},
-          "x2": {"value": 0},
-          "y2": {"value": 0}
-        },
-        "clientBounds": {
-          "x1": {"value": 0},
-          "y1": {"value": 0},
-          "x2": {"value": 0},
-          "y2": {"value": 0}
-        },
-        "sizeState": "Minimized",
-        "customFramePadding": {
-          "left": {"value": 0},
-          "top": {"value": 0},
-          "right": {"value": 0},
-          "bottom": {"value": 0}
-        }
-      },
-      "elements": null,
-      "root": null
-    },
-    {
-      "frameId": 15,
-      "frameName": "Select 2nd char @par2",
-      "windowSize": {
-        "bounds": {
-          "x1": {"value": 0},
-          "y1": {"value": 0},
-          "x2": {"value": 0},
-          "y2": {"value": 0}
-        },
-        "clientBounds": {
-          "x1": {"value": 0},
-          "y1": {"value": 0},
-          "x2": {"value": 0},
-          "y2": {"value": 0}
-        },
-        "sizeState": "Minimized",
-        "customFramePadding": {
-          "left": {"value": 0},
-          "top": {"value": 0},
-          "right": {"value": 0},
-          "bottom": {"value": 0}
-        }
-      },
-      "elements": null,
-      "root": null
-    },
-    {
-      "frameId": 18,
-      "frameName": "[ENTER] at beginning",
-      "windowSize": {
-        "bounds": {
-          "x1": {"value": 0},
-          "y1": {"value": 0},
-          "x2": {"value": 0},
-          "y2": {"value": 0}
-        },
-        "clientBounds": {
-          "x1": {"value": 0},
-          "y1": {"value": 0},
-          "x2": {"value": 0},
-          "y2": {"value": 0}
-        },
-        "sizeState": "Minimized",
-        "customFramePadding": {
-          "left": {"value": 0},
-          "top": {"value": 0},
-          "right": {"value": 0},
-          "bottom": {"value": 0}
-        }
-      },
-      "elements": null,
-      "root": null
-    },
-    {
-      "frameId": 20,
-      "frameName": "Select All",
+      "frameId": 14,
+      "frameName": "Caret at end",
       "windowSize": {
         "bounds": {
           "x1": {"value": 0},
