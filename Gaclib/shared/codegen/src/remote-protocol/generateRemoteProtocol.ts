@@ -6,27 +6,27 @@ import { collectClassNames, fixIndentation, refToString, typeToString } from './
 const __dirname = import.meta.dirname;
 
 function generateEnums(schema: Schema): string {
-    return schema.declarations.filter(decl => decl['$ast'] === 'EnumDecl').map(decl => `
+    return schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'EnumDecl').map(decl => `
         |
         |export enum ${decl.name} {
-        ${decl.members.map(member => `|    ${member.name} = '${member.name}',`).join('\n')}
+        ${decl.members.filter(member => !!member).map(member => `|    ${member.name} = '${member.name}',`).join('\n')}
         |}
     `).join('\n');
 }
 
 function generateUnions(schema: Schema, classNames: string[]): string {
-    return schema.declarations.filter(decl => decl['$ast'] === 'UnionDecl').map(decl => `
+    return schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'UnionDecl').map(decl => `
         |
         |export type ${decl.name} =
-        ${decl.members.map((member) => `|    | ['${member.name}', ${refToString(member.name, classNames)}]`).join('\n')};
+        ${decl.members.filter(member => !!member).map((member) => `|    | ['${member.name}', ${refToString(member.name, classNames)}]`).join('\n')};
     `).join('\n');
 }
 
 function generateStructs(schema: Schema, classNames: string[]): string {
-    return schema.declarations.filter(decl => decl['$ast'] === 'StructDecl').map(decl => `
+    return schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'StructDecl').map(decl => `
         |
         |export interface ${decl.name} {
-        ${decl.members.map(member => `|    ${member.name}: ${typeToString(member.type, classNames)};`).join('\n')}
+        ${decl.members.filter(member => !!member).map(member => `|    ${member.name}: ${typeToString(member.type, classNames)};`).join('\n')}
         |}
     `).join('\n');
 }
@@ -35,7 +35,7 @@ function generateRequests(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolRequests {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         const params: string[] = [];
         if (decl.response) {
             params.push('id: number');
@@ -52,7 +52,7 @@ function generateResponses(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolResponses {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         return !decl.response ? '' : `|    Respond${decl.name}(id: number, responseArgs: ${typeToString(decl.response.type, classNames)}): void;`;
     }).join('\n')}
 |}`;
@@ -62,7 +62,7 @@ function generateEvents(schema: Schema, classNames: string[]): string {
     return `
 |
 |export interface IRemoteProtocolEvents {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
         return `|    On${decl.name}(${!decl.request ? '' : `eventArgs: ${typeToString(decl.request.type, classNames)}`}): void;`;
     }).join('\n')}
 |}`;

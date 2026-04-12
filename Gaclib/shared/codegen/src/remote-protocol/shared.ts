@@ -29,7 +29,7 @@ export function fixIndentation(code: string): string {
 
 export function collectClassNames(schema: Schema): string[] {
     const classNames: string[] = [];
-    schema.declarations.forEach(decl => {
+    schema.declarations.filter(decl => !!decl).forEach(decl => {
         if (decl['$ast'] === 'StructDecl' && decl.type === 'Class') {
             classNames.push(decl.name);
         }
@@ -41,7 +41,10 @@ export function refToString(element: string, classNames: string[], prefix: strin
     return classNames.includes(element) ? `${prefix}TYPES.Ptr<${prefix}${element}>` : `${prefix}${element}`;
 }
 
-export function typeToString(t: Type, classNames: string[], prefix: string = ''): string {
+export function typeToString(t: Type | null, classNames: string[], prefix: string = ''): string {
+    if (t === null) {
+        throw new Error('Unexpected null type');
+    }
     switch (t['$ast']) {
         case 'PrimitiveType':
             return `${prefix}TYPES.${t.type}`;

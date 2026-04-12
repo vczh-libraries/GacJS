@@ -11,7 +11,7 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProtocolRequests): void {
 |    if (pi.semantic === 'Message') {
 |        switch (pi.name) {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         if (decl.request) {
             return decl.response ? '' : `|            case '${decl.name}':
 |                if (pi.arguments === undefined) {
@@ -33,7 +33,7 @@ function generateRequests(schema: Schema, classNames: string[]): string {
 |            throw new Error('Missing id for request: ' + pi.name);
 |        }
 |        switch (pi.name) {
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         if (decl.request) {
             return !decl.response ? '' : `|            case '${decl.name}':
 |                if (pi.arguments === undefined) {
@@ -61,7 +61,7 @@ function generateResponses(schema: Schema, classNames: string[]): string {
 |
 |export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
 |    constructor(private callback: ProtocolInvokingHandler) { }
-    ${schema.declarations.filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'MessageDecl').map(decl => {
         return !decl.response ? '' : `|
             |    Respond${decl.name}(id: number, responseArgs: ${typeToString(decl.response.type, classNames, 'SCHEMA.')}): void {
             |        this.callback({
@@ -80,7 +80,7 @@ function generateEvents(schema: Schema, classNames: string[]): string {
 |
 |export class EventToJson implements SCHEMA.IRemoteProtocolEvents {
 |    constructor(private callback: ProtocolInvokingHandler) { }
-    ${schema.declarations.filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
+    ${schema.declarations.filter(decl => !!decl).filter(decl => decl['$ast'] === 'EventDecl').map(decl => {
         return `|
             |    On${decl.name}(${!decl.request ? '' : `eventArgs: ${typeToString(decl.request.type, classNames, 'SCHEMA.')}`}): void {
             |        this.callback({
