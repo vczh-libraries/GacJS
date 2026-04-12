@@ -24,7 +24,7 @@ export function fixIndentation(code: string): string {
     }
 
     // Join them back to a string
-    return processedLines.join('\r\n');
+    return processedLines.join('\n');
 }
 
 export function collectClassNames(schema: Schema): string[] {

@@ -7,11 +7,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GacUIPath = path.join(__dirname, '../../../../GacUI');
 const GacJSPath = path.join(__dirname, '../../..');
 
-fs.copyFileSync(
+const jsonContent = fs.readFileSync(
     path.join(GacUIPath, 'Source/PlatformProviders/Remote/Protocol/Metadata/Protocols.json'),
-    path.join(GacJSPath, 'Import/Metadata/RemoteProtocol.json')
+    'utf-8'
+).replace(/\r\n/g, '\n');
+fs.writeFileSync(
+    path.join(GacJSPath, 'Import/Metadata/RemoteProtocol.json'),
+    jsonContent
 );
-fs.copyFileSync(
+const astContent = fs.readFileSync(
     path.join(GacUIPath, 'Source/Compiler/RemoteProtocol/Generated/GuiRemoteProtocolAst_Json.d.ts'),
-    path.join(GacJSPath, 'Gaclib/shared/codegen/src/remote-protocol/AST.d.ts')
+    'utf-8'
+).replace(/\r\n/g, '\n');
+fs.writeFileSync(
+    path.join(GacJSPath, 'Gaclib/shared/codegen/src/remote-protocol/AST.d.ts'),
+    astContent
 );
