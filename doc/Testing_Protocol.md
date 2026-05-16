@@ -37,10 +37,10 @@ Throughout this document, **REPO-ROOT** refers to the root of the GacUI reposito
 | `RemotingTest_Core.exe /FCT /Http` | 8888 | GacUI remote protocol API server (JSON/HTTP) |
 | Static file server | 8896 (or any) | Serves `index.html`, `index.js`, CSS, etc. |
 
-The C++ server is **not** a static file server. It only serves three API endpoints:
-- `GET /GacUIRemoting/Connect` — client handshake, returns unique session URLs
-- `POST /GacUIRemoting/Request/{GUID}` — long-poll for core-to-client messages
-- `POST /GacUIRemoting/Response/{GUID}` — client-to-core events/responses
+The C++ server is **not** a static file server. It serves VlppOS HTTP channel endpoints:
+- `GET /GacUIRemoteProtocolHttp/VlppInterProcess/Connect` — client handshake, returns unique session URLs
+- `POST /GacUIRemoteProtocolHttp/VlppInterProcess/Request/{GUID}` — long-poll for core-to-client messages
+- `POST /GacUIRemoteProtocolHttp/VlppInterProcess/Response/{GUID}` — client-to-core events/responses
 
 The JavaScript client (`index.ts`) connects to `http://localhost:8888` (hardcoded).
 
@@ -112,7 +112,7 @@ start REPO-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http
 
 The server prints:
 ```
-> HTTP server created, waiting on: localhost:8888
+> HTTP server created, waiting on: http://localhost:8888/GacUIRemoteProtocolHttp
 ```
 
 **Important notes:**

@@ -10,6 +10,9 @@ import {
     CharacterEncoding
 } from '@gaclib/remote-protocol';
 
+const GACUI_REMOTE_PROTOCOL_CORE_CLIENT_ID = 1;
+const GACUI_REMOTE_PROTOCOL_CHANNEL_NAME = 'GacUIRemoteProtocol';
+
 export interface IRemoteProtocolHttpClient {
     get responses(): IRemoteProtocolResponses;
     get events(): IRemoteProtocolEvents;
@@ -18,16 +21,28 @@ export interface IRemoteProtocolHttpClient {
 }
 
 interface ConnectResponse {
-    request: string;
-    response: string;
+    requestUrl: string;
+    responseUrl: string;
+}
+
+interface NetworkPackage {
+    clientId?: number;
+    channelName: string;
+    messageBody: string;
 }
 
 class HttpClientImpl implements IRemoteProtocolHttpClient {
     public responses: IRemoteProtocolResponses;
     public events: IRemoteProtocolEvents;
     private _stopping = false;
+    private _clientId = -1;
 
-    constructor(private requests: IRemoteProtocolRequests, private host: string, private urls: ConnectResponse) {
+    constructor(
+        private requests: IRemoteProtocolRequests,
+        private host: string,
+        private baseUrl: string,
+        private urls: ConnectResponse
+    ) {
         const callback: ProtocolInvokingHandler = (invoking => {
             this.sendRequest(invoking).catch(error => {
                 if (!this._stopping) {
@@ -39,38 +54,107 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         this.events = new EventToJson(callback);
     }
 
-    async sendRequest(invoking: ProtocolInvoking): Promise<void> {
+    private getUrl(path: string): string {
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        if (path.startsWith(this.baseUrl)) {
+            return `${this.host}${path}`;
+        }
+        return `${this.host}${this.baseUrl}${path}`;
+    }
+
+    private parseNetworkPackage(text: string): NetworkPackage {
+        const first = text.indexOf(';');
+        if (first === -1) {
+            throw new Error(`Invalid network package: ${text}`);
+        }
+
+        const second = text.indexOf(';', first + 1);
+        if (second === -1) {
+            throw new Error(`Invalid network package: ${text}`);
+        }
+
+        const clientIdText = text.substring(0, first);
+        return {
+            clientId: clientIdText === '' ? undefined : Number.parseInt(clientIdText, 10),
+            channelName: text.substring(first + 1, second),
+            messageBody: text.substring(second + 1),
+        };
+    }
+
+    private async postResponse(message: string): Promise<void> {
         if (this._stopping) {
             return;
         }
 
-        const response = await fetch(`${this.host}${this.urls.response}`, {
+        const response = await fetch(this.getUrl(this.urls.responseUrl), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf8' },
-            body: JSON.stringify([JSON.stringify(invoking)])
+            body: message,
         });
 
         if (response.status !== 200) {
-            throw new Error(`[${response.status}: ${response.statusText}]: ${this.host}${this.urls.response}`);
+            throw new Error(`[${response.status}: ${response.statusText}]: ${this.getUrl(this.urls.responseUrl)}`);
         }
     }
 
+    private async readRequest(): Promise<string | undefined> {
+        const response = await fetch(this.getUrl(this.urls.requestUrl), {
+            method: 'POST',
+            headers: { 'Accept': 'application/json; charset=utf8' }
+        });
+
+        if (response.status !== 200) {
+            return undefined;
+        }
+
+        return await response.text();
+    }
+
+    async connectChannel(): Promise<void> {
+        await this.postResponse(`;;${GACUI_REMOTE_PROTOCOL_CHANNEL_NAME}`);
+
+        while (!this._stopping) {
+            const responseText = await this.readRequest();
+            if (responseText === undefined) {
+                continue;
+            }
+
+            const networkPackage = this.parseNetworkPackage(responseText);
+            if (networkPackage.channelName === '!Error') {
+                throw new Error(networkPackage.messageBody);
+            }
+            if (networkPackage.channelName === '') {
+                if (networkPackage.clientId === undefined || networkPackage.clientId <= 0) {
+                    throw new Error(`Invalid channel client id: ${responseText}`);
+                }
+                this._clientId = networkPackage.clientId;
+                return;
+            }
+        }
+    }
+
+    async sendRequest(invoking: ProtocolInvoking): Promise<void> {
+        await this.postResponse(`${GACUI_REMOTE_PROTOCOL_CORE_CLIENT_ID};${GACUI_REMOTE_PROTOCOL_CHANNEL_NAME};${JSON.stringify([invoking])}`);
+    }
+
     async start(): Promise<void> {
+        if (this._clientId === -1) {
+            throw new Error('HTTP channel is not connected.');
+        }
+
         this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16 });
         while (!this._stopping) {
             let responseText: string;
 
             try {
-                const response = await fetch(`${this.host}${this.urls.request}`, {
-                    method: 'POST',
-                    headers: { 'Accept': 'application/json; charset=utf8' }
-                });
-
-                if (response.status !== 200) {
+                const text = await this.readRequest();
+                if (text === undefined) {
                     continue;
                 }
 
-                responseText = await response.text();
+                responseText = text;
                 if (this._stopping) {
                     break;
                 }
@@ -78,13 +162,17 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
                 continue;
             }
 
-            const requests = JSON.parse(responseText) as string[];
+            const networkPackage = this.parseNetworkPackage(responseText);
+            if (networkPackage.channelName === '!Error') {
+                throw new Error(networkPackage.messageBody);
+            }
+            if (networkPackage.channelName !== GACUI_REMOTE_PROTOCOL_CHANNEL_NAME) {
+                continue;
+            }
+
+            const requests = JSON.parse(networkPackage.messageBody) as ProtocolInvoking[];
             for (const request of requests) {
-                if (request.startsWith('!')) {
-                    throw new Error(request.substring(1));
-                }
-                const protocolInvoking = JSON.parse(request) as ProtocolInvoking;
-                jsonToRequest(protocolInvoking, this.requests);
+                jsonToRequest(request, this.requests);
             }
         }
     }
@@ -105,11 +193,20 @@ async function sendConnect(host: string, url: string): Promise<ConnectResponse> 
     }
 
     const responseText = await response.text();
-    return JSON.parse(responseText) as ConnectResponse;
+    const separator = responseText.indexOf(';');
+    if (separator === -1) {
+        throw new Error(`Invalid connect response: ${responseText}`);
+    }
+    return {
+        requestUrl: responseText.substring(0, separator),
+        responseUrl: responseText.substring(separator + 1),
+    };
 }
 
 export async function connectHttpServer(host: string, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolHttpClient> {
-    const urls = await sendConnect(host, '/GacUIRemoting/Connect');
-    const impl = new HttpClientImpl(requests, host, urls);
+    const baseUrl = '/GacUIRemoteProtocolHttp';
+    const urls = await sendConnect(host, `${baseUrl}/VlppInterProcess/Connect`);
+    const impl = new HttpClientImpl(requests, host, baseUrl, urls);
+    await impl.connectChannel();
     return impl;
 }
