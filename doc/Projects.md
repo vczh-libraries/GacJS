@@ -152,6 +152,7 @@ and is not part of the protocol design.
 Wraps `@gaclib/remote-protocol` with an HTTP client that:
 - Sends responses/events via `POST` to the core HTTP server
 - Long-polls for requests from the core via `POST`
+- Processes a server package piggybacked on a `POST` response when the core produces an immediate reply while handling that event/response
 - Negotiates a VlppOS channel connection via `GET /GacUIRemoteProtocolHttp/VlppInterProcess/Connect`
 
 Main export: `connectHttpServer(host, requests): Promise<IRemoteProtocolHttpClient>`

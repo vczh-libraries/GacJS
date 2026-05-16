@@ -31,11 +31,18 @@ interface NetworkPackage {
     messageBody: string;
 }
 
+type ReadResult =
+    | { type: 'message'; responseText: string | undefined }
+    | { type: 'failure'; error: Error };
+
 class HttpClientImpl implements IRemoteProtocolHttpClient {
     public responses: IRemoteProtocolResponses;
     public events: IRemoteProtocolEvents;
     private _stopping = false;
     private _clientId = -1;
+    private _failure: Error | undefined = undefined;
+    private _failureNotification: Promise<void>;
+    private _failureNotifier: (() => void) | undefined = undefined;
 
     constructor(
         private requests: IRemoteProtocolRequests,
@@ -43,10 +50,13 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         private baseUrl: string,
         private urls: ConnectResponse
     ) {
+        this._failureNotification = new Promise(resolve => {
+            this._failureNotifier = resolve;
+        });
         const callback: ProtocolInvokingHandler = (invoking => {
             this.sendRequest(invoking).catch(error => {
                 if (!this._stopping) {
-                    throw error;
+                    this.notifyFailure(this.normalizeError(error));
                 }
             });
         });
@@ -83,9 +93,63 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         };
     }
 
-    private async postResponse(message: string): Promise<void> {
-        if (this._stopping) {
+    private normalizeError(error: unknown): Error {
+        if (error instanceof Error) {
+            return error;
+        }
+        return new Error(String(error));
+    }
+
+    private notifyFailure(error: Error): void {
+        if (this._failure === undefined) {
+            this._failure = error;
+            if (this._failureNotifier !== undefined) {
+                this._failureNotifier();
+            }
+        }
+    }
+
+    private async waitForFailure(): Promise<Error> {
+        await this._failureNotification;
+        if (this._failure !== undefined) {
+            return this._failure;
+        }
+        return new Error('HTTP channel failed without an error.');
+    }
+
+    private handleNetworkPackageText(responseText: string): void {
+        const networkPackage = this.parseNetworkPackage(responseText);
+        if (networkPackage.channelName === '!Error') {
+            throw new Error(networkPackage.messageBody);
+        }
+        if (networkPackage.channelName !== GACUI_REMOTE_PROTOCOL_CHANNEL_NAME) {
             return;
+        }
+
+        const requests = JSON.parse(networkPackage.messageBody) as ProtocolInvoking[];
+        for (const request of requests) {
+            jsonToRequest(request, this.requests);
+        }
+    }
+
+    private tryAcceptClientId(responseText: string): boolean {
+        const networkPackage = this.parseNetworkPackage(responseText);
+        if (networkPackage.channelName === '!Error') {
+            throw new Error(networkPackage.messageBody);
+        }
+        if (networkPackage.channelName !== '') {
+            return false;
+        }
+        if (networkPackage.clientId === undefined || networkPackage.clientId <= 0) {
+            throw new Error(`Invalid channel client id: ${responseText}`);
+        }
+        this._clientId = networkPackage.clientId;
+        return true;
+    }
+
+    private async postResponse(message: string): Promise<string | undefined> {
+        if (this._stopping) {
+            return undefined;
         }
 
         const response = await fetch(this.getUrl(this.urls.responseUrl), {
@@ -97,6 +161,9 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         if (response.status !== 200) {
             throw new Error(`[${response.status}: ${response.statusText}]: ${this.getUrl(this.urls.responseUrl)}`);
         }
+
+        const responseText = await response.text();
+        return responseText === '' ? undefined : responseText;
     }
 
     private async readRequest(): Promise<string | undefined> {
@@ -113,7 +180,13 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     }
 
     async connectChannel(): Promise<void> {
-        await this.postResponse(`;;${GACUI_REMOTE_PROTOCOL_CHANNEL_NAME}`);
+        const responseText = await this.postResponse(`;;${GACUI_REMOTE_PROTOCOL_CHANNEL_NAME}`);
+        if (responseText !== undefined) {
+            if (this.tryAcceptClientId(responseText)) {
+                return;
+            }
+            this.handleNetworkPackageText(responseText);
+        }
 
         while (!this._stopping) {
             const responseText = await this.readRequest();
@@ -121,22 +194,17 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
                 continue;
             }
 
-            const networkPackage = this.parseNetworkPackage(responseText);
-            if (networkPackage.channelName === '!Error') {
-                throw new Error(networkPackage.messageBody);
-            }
-            if (networkPackage.channelName === '') {
-                if (networkPackage.clientId === undefined || networkPackage.clientId <= 0) {
-                    throw new Error(`Invalid channel client id: ${responseText}`);
-                }
-                this._clientId = networkPackage.clientId;
+            if (this.tryAcceptClientId(responseText)) {
                 return;
             }
         }
     }
 
     async sendRequest(invoking: ProtocolInvoking): Promise<void> {
-        await this.postResponse(`${GACUI_REMOTE_PROTOCOL_CORE_CLIENT_ID};${GACUI_REMOTE_PROTOCOL_CHANNEL_NAME};${JSON.stringify([invoking])}`);
+        const responseText = await this.postResponse(`${GACUI_REMOTE_PROTOCOL_CORE_CLIENT_ID};${GACUI_REMOTE_PROTOCOL_CHANNEL_NAME};${JSON.stringify([invoking])}`);
+        if (responseText !== undefined) {
+            this.handleNetworkPackageText(responseText);
+        }
     }
 
     async start(): Promise<void> {
@@ -146,15 +214,21 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
 
         this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16 });
         while (!this._stopping) {
-            let responseText: string;
+            const reading = this.readRequest()
+                .then<ReadResult>(responseText => ({ type: 'message', responseText }))
+                .catch<ReadResult>((error: unknown) => ({ type: 'failure', error: this._failure ?? this.normalizeError(error) }));
+            const result = await Promise.race<ReadResult>([
+                reading,
+                this.waitForFailure().then(error => ({ type: 'failure', error }))
+            ]);
+            if (result.type === 'failure') {
+                throw result.error;
+            }
+            if (result.responseText === undefined) {
+                continue;
+            }
 
             try {
-                const text = await this.readRequest();
-                if (text === undefined) {
-                    continue;
-                }
-
-                responseText = text;
                 if (this._stopping) {
                     break;
                 }
@@ -162,18 +236,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
                 continue;
             }
 
-            const networkPackage = this.parseNetworkPackage(responseText);
-            if (networkPackage.channelName === '!Error') {
-                throw new Error(networkPackage.messageBody);
-            }
-            if (networkPackage.channelName !== GACUI_REMOTE_PROTOCOL_CHANNEL_NAME) {
-                continue;
-            }
-
-            const requests = JSON.parse(networkPackage.messageBody) as ProtocolInvoking[];
-            for (const request of requests) {
-                jsonToRequest(request, this.requests);
-            }
+            this.handleNetworkPackageText(result.responseText);
         }
     }
 
