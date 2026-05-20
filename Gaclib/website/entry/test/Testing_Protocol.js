@@ -368,7 +368,7 @@ export function groupIntoRows(icons, tolerance) {
  * Call this inside a describe() block. Returns an object with a `page`
  * getter that provides the Playwright page once beforeAll completes.
  */
-export function setupProtocolTest() {
+export function setupProtocolTest(serverArgs = '/FCT /Http') {
     let browser = null;
     let context = null;
     let page = null;
@@ -398,7 +398,7 @@ export function setupProtocolTest() {
         killServer();
         await sleep(1000);
 
-        const serverProcess = exec(`"${SERVER_EXE}" /FCT /Http`);
+        const serverProcess = exec(`"${SERVER_EXE}" ${serverArgs}`);
         serverProcess.stdout?.on('data', () => {});
         serverProcess.stderr?.on('data', () => {});
         await sleep(1200);

@@ -18,9 +18,11 @@
 
     <div id="gacui-error-mask" class="gacui-error-mask">
         <div class="gacui-error-cross"></div>
+        <div id="gacui-error-message" class="gacui-mask-message"></div>
     </div>
     <div id="gacui-success-mask" class="gacui-success-mask">
         <div class="gacui-success-tick"></div>
+        <div id="gacui-success-message" class="gacui-mask-message"></div>
     </div>
     <script lang="javascript">
         let gacuiRenderer;
@@ -33,6 +35,15 @@
             const gacuiScreen = document.getElementById('gacui-screen');
             const errorMask = document.getElementById('gacui-error-mask');
             const successMask = document.getElementById('gacui-success-mask');
+            const errorMessage = document.getElementById('gacui-error-message');
+            const successMessage = document.getElementById('gacui-success-message');
+
+            const getMessage = (error) => error instanceof Error ? error.message : String(error);
+            const showMask = (mask, messageElement, message) => {
+                messageElement.textContent = message;
+                gacuiScreen.appendChild(mask);
+                mask.classList.add('visible');
+            };
 
             const settings = {
                 target: gacuiScreen,
@@ -86,14 +97,11 @@
             } catch (error) {
                 client.stop();
                 renderer.stop();
-                alert(error.stack !== undefined ? `${error.message}\n\n${error.stack}` : error.message);
 
                 if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError) {
-                    gacuiScreen.appendChild(successMask);
-                    successMask.classList.add('visible');
+                    showMask(successMask, successMessage, getMessage(error));
                 } else {
-                    gacuiScreen.appendChild(errorMask);
-                    errorMask.classList.add('visible');
+                    showMask(errorMask, errorMessage, getMessage(error));
                     throw error;
                 }
 

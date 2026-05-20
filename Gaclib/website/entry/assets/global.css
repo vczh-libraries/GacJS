@@ -21,7 +21,8 @@ body {
     outline: none;
 }
 
-.gacui-error-mask {
+.gacui-error-mask,
+.gacui-success-mask {
     position: absolute;
     top: 0;
     left: 0;
@@ -31,18 +32,39 @@ body {
     display: none;
     z-index: 9999;
     pointer-events: none;
+    overflow: hidden;
 }
 
-.gacui-error-mask.visible {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.gacui-error-mask.visible,
+.gacui-success-mask.visible {
+    display: block;
+}
+
+.gacui-mask-message {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: 24px;
+    right: 24px;
+    max-height: calc(100% - 48px);
+    color: #202020;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    text-align: center;
+    text-shadow: 0 1px 2px #FFFFFF, 0 -1px 2px #FFFFFF, 1px 0 2px #FFFFFF, -1px 0 2px #FFFFFF;
+    transform: translateY(-50%);
+    white-space: pre-wrap;
 }
 
 .gacui-error-cross {
-    position: relative;
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 80%;
     height: 80%;
+    transform: translate(-50%, -50%);
 }
 
 .gacui-error-cross::before,
@@ -65,28 +87,14 @@ body {
     transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-.gacui-success-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.8);
-    display: none;
-    z-index: 9999;
-    pointer-events: none;
-}
-
-.gacui-success-mask.visible {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .gacui-success-tick {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 200px;
     height: 200px;
     border: 6px solid #00aa00;
     border-radius: 50%;
     background-color: transparent;
+    transform: translate(-50%, -50%);
 }
