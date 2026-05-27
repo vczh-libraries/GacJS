@@ -235,9 +235,10 @@ All protocol tests live under `Gaclib/website/entry/test/`:
 
 Each test file is a vitest suite wrapped by `describeProtocolTest()` from the shared
 module. Protocol suites run only on Windows and only when the sibling `..\GacUI`
-repo exists; otherwise they are reported as skipped. Most suites use
-`setupProtocolTest()`, which builds GacUI with `GACUI-ROOT\.github\Scripts\copilotBuild.ps1`,
-starts/stops the C++ server, and launches/closes the headless Chromium browser.
+repo exists; otherwise they are reported as skipped. Vitest global setup builds
+GacUI once with `GACUI-ROOT\.github\Scripts\copilotBuild.ps1` before the protocol
+test files start. Most suites use `setupProtocolTest()`, which starts/stops the
+C++ server and launches/closes the headless Chromium browser.
 
 ### Example Test Structure
 
@@ -282,7 +283,8 @@ yarn test
 ```
 
 This runs all vitest suites across all packages, including the protocol tests.
-Protocol tests build the sibling GacUI repo before launching `RemotingTest_Core`.
+Protocol tests build the sibling GacUI repo once before launching any
+`RemotingTest_Core` test process.
 Test files run sequentially (`fileParallelism: false`) since they share the
 same stateful HTTP server.
 

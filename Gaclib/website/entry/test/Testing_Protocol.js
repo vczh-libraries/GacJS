@@ -3,85 +3,38 @@
 // Shared utilities and vitest lifecycle for GacUI remote protocol test scripts.
 // Used by Testing_Protocol_*.js test files in this directory.
 
-import path from 'path';
-import { execSync, spawn, execFileSync } from 'child_process';
-import { existsSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { execSync, spawn } from 'child_process';
 import net from 'node:net';
 import { chromium } from '@playwright/test';
 import { beforeAll, afterAll, describe } from 'vitest';
+import {
+    GACUI_SOLUTION_DIR,
+    SERVER_EXE,
+    PROTOCOL_TEST_SKIP_REASON,
+    ensureGacUIBuilt
+} from './Protocol_GacUIBuild.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+export {
+    REPO_ROOT,
+    GACLIB_ROOT,
+    GACUI_ROOT,
+    GACUI_BUILD_SCRIPT,
+    GACUI_SOLUTION_DIR,
+    SERVER_EXE,
+    PROTOCOL_TEST_SKIP_REASON,
+    ensureGacUIBuilt
+} from './Protocol_GacUIBuild.js';
 
 // ---------------------------------------------------------------------------
-// Path constants
+// Protocol constants
 // ---------------------------------------------------------------------------
-
-export const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
-export const GACLIB_ROOT = path.resolve(REPO_ROOT, 'Gaclib');
-
-// GacUI is a sibling repository next to this GacJS checkout.
-export const GACUI_ROOT = path.resolve(REPO_ROOT, '..', 'GacUI');
-
-export const GACUI_BUILD_SCRIPT = path.resolve(GACUI_ROOT, '.github', 'Scripts', 'copilotBuild.ps1');
-export const GACUI_SOLUTION_DIR = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc');
-export const SERVER_EXE = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
 export const WEBSITE_URL = 'http://localhost:8896/index.html';
 export const PROTOCOL_HOST = 'localhost';
 export const PROTOCOL_PORT = 8888;
-export const PROTOCOL_TEST_SKIP_REASON = process.platform !== 'win32'
-    ? `GacUI protocol tests are Windows-only (current platform: ${process.platform}).`
-    : !existsSync(GACUI_ROOT)
-        ? `GacUI protocol tests require the sibling GacUI repo: ${GACUI_ROOT}`
-        : null;
-
-let gacuiBuildPromise = null;
 
 export function describeProtocolTest(name, fn) {
     const suite = PROTOCOL_TEST_SKIP_REASON === null ? describe : describe.skip;
     return suite(name, fn);
-}
-
-export async function ensureGacUIBuilt() {
-    if (PROTOCOL_TEST_SKIP_REASON !== null) {
-        return;
-    }
-
-    if (gacuiBuildPromise === null) {
-        gacuiBuildPromise = (async () => {
-            if (!existsSync(GACUI_BUILD_SCRIPT)) {
-                throw new Error(`GacUI build script not found: ${GACUI_BUILD_SCRIPT}`);
-            }
-            if (!existsSync(GACUI_SOLUTION_DIR)) {
-                throw new Error(`GacUI solution directory not found: ${GACUI_SOLUTION_DIR}`);
-            }
-
-            execFileSync(
-                'powershell.exe',
-                [
-                    '-NoProfile',
-                    '-ExecutionPolicy',
-                    'Bypass',
-                    '-File',
-                    GACUI_BUILD_SCRIPT,
-                    '-Configuration',
-                    'Debug',
-                    '-Platform',
-                    'x64'
-                ],
-                {
-                    cwd: GACUI_SOLUTION_DIR,
-                    stdio: 'inherit'
-                }
-            );
-
-            if (!existsSync(SERVER_EXE)) {
-                throw new Error(`GacUI build completed but server executable was not found: ${SERVER_EXE}`);
-            }
-        })();
-    }
-
-    await gacuiBuildPromise;
 }
 
 // ---------------------------------------------------------------------------
