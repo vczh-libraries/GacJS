@@ -19,11 +19,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 export const GACLIB_ROOT = path.resolve(REPO_ROOT, 'Gaclib');
 
-// Prefer a sibling GacUI clone (always compiled) over the submodule.
-// When REPO-ROOT\..\GacUI exists, use that; otherwise fall back to REPO-ROOT\GacUI.
-export const GACUI_ROOT = existsSync(path.resolve(REPO_ROOT, '..', 'GacUI'))
-    ? path.resolve(REPO_ROOT, '..', 'GacUI')
-    : path.resolve(REPO_ROOT, 'GacUI');
+// GacUI is a sibling repository next to this GacJS checkout.
+export const GACUI_ROOT = path.resolve(REPO_ROOT, '..', 'GacUI');
 
 export const SERVER_EXE = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
 export const WEBSITE_URL = 'http://localhost:8896/index.html';

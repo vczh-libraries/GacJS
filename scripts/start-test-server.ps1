@@ -3,8 +3,8 @@
     Build and start the RemotingTest_Core HTTP server.
 
 .DESCRIPTION
-    Builds the GacUISrc solution (Debug x64) using copilotBuild.ps1 from the GacUI
-    submodule, then starts the RemotingTest_Core HTTP test server on localhost:8888.
+    Builds the GacUISrc solution (Debug x64) using copilotBuild.ps1 from the sibling
+    GacUI repository, then starts the RemotingTest_Core HTTP test server on localhost:8888.
     
     The server blocks the terminal, so it is launched via 'start' in a separate window.
     Use stop-test-server.ps1 to kill it.
@@ -20,7 +20,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot = (Resolve-Path "$PSScriptRoot\..").Path
-$GacUIRoot = Join-Path $RepoRoot "GacUI"
+$GacUIRoot = (Resolve-Path (Join-Path $RepoRoot "..\GacUI")).Path
 $BuildScript = Join-Path $GacUIRoot ".github\Scripts\copilotBuild.ps1"
 $SolutionDir = Join-Path $GacUIRoot "Test\GacUISrc"
 $ExePath = Join-Path $SolutionDir "x64\Debug\RemotingTest_Core.exe"

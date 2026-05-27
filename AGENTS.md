@@ -6,8 +6,7 @@
   - You must use formal PowerShell command names instead of their linux-like aliases.
   - You must use `;` instead of `&&` for executing multiple commands in order.
 - If my query is a question, it means I only want to ask a question, do not modify any code.
-- Before reading any file inside the `GacUI` submodule, always ensure it is initialized first:
-  - `git submodule update --init --remote GacUI`
+- GacUI lives in the sibling repository at `(repo-root)\..\GacUI`; always use that checkout for C++ sources, resources, builds, and debugging.
 - Before implementing any change, read the relevant documentation in `doc/` first (`Protocol.md`, `DOM.md`, `Projects.md`). Understand the design before writing code.
 - Whenever an implementation change affects behavior documented in `doc/`, update the corresponding documentation to stay in sync.
 
@@ -22,8 +21,8 @@ to render its UI in a separate client process. This repo implements the client s
 for web browsers. The protocol is transport-agnostic; the HTTP implementation exists
 for demo/testing only.
 
-The GacUI folder is a submodule containing the C++ core application, unit test utilities,
-and an HTTP test server. DO NOT modify anything in the GacUI folder.
+The sibling `GacUI` repository contains the C++ core application, unit test utilities,
+and the HTTP test server. Treat it as a separate repo and commit/push any GacUI changes there.
 
 See `doc/Protocol.md` for the remote protocol reference.
 See `doc/DOM.md` for how elements are rendered to HTML.
@@ -83,9 +82,8 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - `/elements.html` is a test page for rendering various element types side by side.
 - `/index.html` is an interactive UI for testing the remote protocol:
   - It requires an HTTP server to run. The server executable is `RemotingTest_Core` from the GacUI repo.
-    - If `(repo-root)\..\GacUI` exists (a sibling clone), use that: `(repo-root)\..\GacUI\Test\GacUISrc\RemotingTest_Core`.
-    - Otherwise fall back to the submodule: `(repo-root)\GacUI\Test\GacUISrc\RemotingTest_Core`.
-  - Start the server by running `start <GacUI>\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http` (where `<GacUI>` is the resolved path above).
+    - Use `(repo-root)\..\GacUI\Test\GacUISrc\RemotingTest_Core`.
+  - Start the server by running `start (repo-root)\..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http`.
     - `/FCT` is for FullControlTest (index 0), `/RPT` is for RemoteProtocolTest (index 1). They are exclusive; if neither is given, `/FCT` is assumed.
     - `/Pipe` and `/Http` are exclusive transport options, specified in any order.
     - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.

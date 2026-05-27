@@ -3,8 +3,8 @@
 This document describes how to build, run, and test against the C++ `RemotingTest_Core`
 HTTP server, and how to use Playwright to automate browser-based testing of `index.html`.
 
-Throughout this document, **REPO-ROOT** refers to the root of the GacUI repository
-(the `GacUI` submodule folder).
+Throughout this document, **GACUI-ROOT** refers to the sibling GacUI repository
+at `..\GacUI`, next to this GacJS checkout.
 
 ---
 
@@ -59,24 +59,24 @@ The JavaScript client (`index.ts`) connects to `http://localhost:8888` (hardcode
 
 ## Building the C++ Server
 
-The `RemotingTest_Core` project is part of the `GacUISrc.sln` solution in the GacUI repo.
+The `RemotingTest_Core` project is part of the `GacUISrc.sln` solution in the sibling GacUI repo.
 
 ### Using copilotBuild.ps1
 
-The GacUI repo provides `REPO-ROOT\.github\Scripts\copilotBuild.ps1` for building.
-Follow the guidelines in `REPO-ROOT\.github\Guidelines\Building.md`.
+The GacUI repo provides `GACUI-ROOT\.github\Scripts\copilotBuild.ps1` for building.
+Follow the guidelines in `GACUI-ROOT\.github\Guidelines\Building.md`.
 
 ```powershell
-cd REPO-ROOT\Test\GacUISrc
-& REPO-ROOT\.github\Scripts\copilotBuild.ps1
+cd GACUI-ROOT\Test\GacUISrc
+& GACUI-ROOT\.github\Scripts\copilotBuild.ps1
 ```
 
 This builds in **Debug x64** by default. Pass `-Configuration` and `-Platform` to override.
-The build log is saved to `REPO-ROOT\.github\Scripts\Build.log`.
+The build log is saved to `GACUI-ROOT\.github\Scripts\Build.log`.
 
 ### Using Visual Studio IDE
 
-1. Open `REPO-ROOT\Test\GacUISrc\GacUISrc.sln`
+1. Open `GACUI-ROOT\Test\GacUISrc\GacUISrc.sln`
 2. Set Solution Configuration to **Debug** and Platform to **x64**
 3. Right-click `RemotingTest_Core` → Build
 
@@ -84,7 +84,7 @@ The build log is saved to `REPO-ROOT\.github\Scripts\Build.log`.
 
 The built executable is at:
 ```
-REPO-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe
+GACUI-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe
 ```
 
 ---
@@ -107,7 +107,7 @@ The server accepts two categories of command-line arguments (in any order):
 The server **blocks the terminal**, so always launch it with `start`:
 
 ```powershell
-start REPO-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http
+start GACUI-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http
 ```
 
 The server prints:
@@ -197,7 +197,7 @@ which is in the dist root.
 
 ### The Main Window
 
-The main window is defined in `GacUI/Test/Resources/App/FullControlTest/Resource.xml`.
+The main window is defined in `..\GacUI\Test\Resources\App\FullControlTest\Resource.xml`.
 It contains:
 - **List tab**: TextList, ListView, TreeView, DataGrid
 - **Refresh List tab**: Refreshable variants of list controls

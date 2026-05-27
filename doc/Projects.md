@@ -4,8 +4,8 @@ This monorepo builds a web-based renderer for [GacUI](https://github.com/vczh-li
 remote protocol — an X-window-like protocol that allows a GacUI application to
 render its UI in another process (here, a web browser).
 
-The `GacUI` folder is a git submodule containing the C++ core application.
-**Do not modify anything in the `GacUI` folder.**
+The C++ GacUI repo is expected at `..\GacUI`, next to this GacJS checkout.
+Treat it as a separate repository when building or changing the core application.
 
 ---
 
@@ -33,7 +33,7 @@ External inputs:
 Import/
 └── Metadata/
     └── RemoteProtocol.json   ← protocol schema (consumed by codegen)
-GacUI/                        ← C++ submodule (read-only)
+..\GacUI\                     ← sibling C++ GacUI repository
 ```
 
 ---
@@ -158,7 +158,7 @@ Wraps `@gaclib/remote-protocol` with an HTTP client that:
 Main export: `connectHttpServer(host, requests): Promise<IRemoteProtocolHttpClient>`
 
 The corresponding HTTP server is the C++ executable:
-`GacUI/Test/GacUISrc/RemotingTest_Core` (run with `/Http` flag).
+`..\GacUI\Test\GacUISrc\RemotingTest_Core` (run with `/Http` flag).
 
 | Script | Action |
 |--------|--------|
