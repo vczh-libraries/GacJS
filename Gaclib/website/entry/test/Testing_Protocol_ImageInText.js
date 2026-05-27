@@ -9,8 +9,8 @@
 //      at the bottom).
 //   3. Type ABC into the editor.
 //   4. Click the "Insert" tab in the ribbon, then click "Insert Image ..." button.
-//      In the file dialog, double-click C: on the right list to navigate into the
-//      C: drive. Then click the filename text box, type 5900.png, click OK.
+//      In the file dialog, type the sibling GacUI resources path and press Enter.
+//      Double-click App, then type Gaclib.png and press Enter.
 //      An image is inserted after ABC on the same line.
 //   5. Press Home, then type X.
 //      [VERIFY] The content is XABC followed by an inline image that is visible.
@@ -19,16 +19,15 @@
 //      a visible selection indicator (background overlay).
 //   7. Kill the process directly and close the webpage. No elegant exit is needed.
 
-import { copyFileSync, existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { test, expect, beforeAll, afterAll } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     findEditorCenter,
     clickAt,
-    findAndClick,
     findNewTexts,
     waitForIdle,
+    openControlTab,
     setupProtocolTest,
     describeProtocolTest,
     GACUI_ROOT,
@@ -37,10 +36,8 @@ import {
 } from './Testing_Protocol.js';
 
 const TYPED_TEXT = 'ABC';
-const IMAGE_FILE_NAME = '5900.png';
-const IMAGE_FIXTURE_DIR = 'C:\\Code';
-const IMAGE_DIALOG_PATH = join(IMAGE_FIXTURE_DIR, IMAGE_FILE_NAME);
-const SOURCE_IMAGE_PATH = join(GACUI_ROOT, 'Test', 'Resources', 'App', 'Gaclib.png');
+const IMAGE_DIRECTORY_PATH = join(GACUI_ROOT, 'Test', 'Resources');
+const IMAGE_FILE_NAME = 'Gaclib.png';
 
 // ---------------------------------------------------------------------------
 // Helpers (unique to this test)
@@ -133,26 +130,45 @@ async function waitForPosition(page, predicate, timeout = 5000) {
     return { pos: undefined, positions };
 }
 
+async function focusFileNameTextBox(page, textsBeforeDialog) {
+    const currentTexts = await getLeafTextPositions(page);
+    const dialogTexts = findNewTexts(textsBeforeDialog, currentTexts);
+    const texts = dialogTexts.length > 0 ? dialogTexts : currentTexts;
+    const okBtn = findTextPosition(texts, UI_TEXT.open);
+    const fileNameLabel = findTextPosition(texts, UI_TEXT.fileName);
+
+    if (fileNameLabel !== undefined) {
+        const textBoxX = okBtn !== undefined
+            ? (fileNameLabel.right + okBtn.left) / 2
+            : fileNameLabel.right + 120;
+        await clickAt(page, textBoxX, fileNameLabel.cy);
+        return;
+    }
+
+    const bounds = (() => {
+        if (texts.length === 0) return null;
+        return {
+            minX: Math.min(...texts.map(t => t.left)),
+            maxX: Math.max(...texts.map(t => t.left + t.width)),
+            maxY: Math.max(...texts.map(t => t.top + t.height))
+        };
+    })();
+
+    if (okBtn !== undefined && bounds !== null) {
+        await clickAt(page, (bounds.minX + bounds.maxX) / 2 + 50, okBtn.top - 30);
+    } else if (bounds !== null) {
+        await clickAt(page, (bounds.minX + bounds.maxX) / 2 + 50, bounds.maxY - 50);
+    } else {
+        throw new Error('Could not find filename text box in the file dialog.');
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
 
 describeProtocolTest('ImageInText', () => {
     const ctx = setupProtocolTest();
-    let createdImageFixture = false;
-
-    beforeAll(() => {
-        if (!existsSync(IMAGE_DIALOG_PATH)) {
-            copyFileSync(SOURCE_IMAGE_PATH, IMAGE_DIALOG_PATH);
-            createdImageFixture = true;
-        }
-    });
-
-    afterAll(() => {
-        if (createdImageFixture && existsSync(IMAGE_DIALOG_PATH)) {
-            unlinkSync(IMAGE_DIALOG_PATH);
-        }
-    });
 
     test('Step 1: Page rendering', async () => {
         const positions = await getLeafTextPositions(ctx.page);
@@ -160,10 +176,9 @@ describeProtocolTest('ImageInText', () => {
     });
 
     test('Step 2: Open the Control tab', async () => {
-        let positions = await getLeafTextPositions(ctx.page);
-        expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
 
-        positions = await getLeafTextPositions(ctx.page);
+        const positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
@@ -212,62 +227,28 @@ describeProtocolTest('ImageInText', () => {
         console.log(`  Dialog new texts: ${newDialogTexts.map(t => t.text).join(', ')}`);
         expect(newDialogTexts.length, 'File dialog not detected').toBeGreaterThan(0);
 
-        // Double-click "C:" to navigate into the C: drive
-        const cDriveItem = newDialogTexts.find(p => p.text === 'C:' || p.text.includes('C:'));
-        if (cDriveItem !== undefined) {
-            await doubleClickAt(ctx.page, cDriveItem.cx, cDriveItem.cy);
-        }
+        await focusFileNameTextBox(ctx.page, textsBeforeDialog);
+        await ctx.page.keyboard.press('Control+a');
+        await waitForIdle(ctx.page);
+        await ctx.page.keyboard.type(IMAGE_DIRECTORY_PATH);
+        await waitForIdle(ctx.page);
+        await ctx.page.keyboard.press('Enter');
+        await waitForIdle(ctx.page);
 
-        const { pos: codeFolderItem } = await waitForPosition(
+        const { pos: appFolderItem } = await waitForPosition(
             ctx.page,
-            p => p.text === 'Code'
+            p => p.text === 'App'
         );
-        expect(codeFolderItem, 'Could not find C:\\Code in the file dialog').toBeDefined();
-        await doubleClickAt(ctx.page, codeFolderItem.cx, codeFolderItem.cy);
+        expect(appFolderItem, `Could not find ${IMAGE_DIRECTORY_PATH}\\App in the file dialog`).toBeDefined();
+        await doubleClickAt(ctx.page, appFolderItem.cx, appFolderItem.cy);
 
-        // Find dialog bounds and OK button after navigation
-        const textsAfterNav = await getLeafTextPositions(ctx.page);
-        const newNavTexts = findNewTexts(textsBeforeDialog, textsAfterNav);
-        const okBtn = findTextPosition(newNavTexts, UI_TEXT.open) ||
-            findTextPosition(newDialogTexts, UI_TEXT.open);
-
-        const dialogBounds = (() => {
-            const texts = newNavTexts.length > 0 ? newNavTexts : newDialogTexts;
-            if (texts.length === 0) return null;
-            return {
-                minX: Math.min(...texts.map(t => t.left)),
-                maxX: Math.max(...texts.map(t => t.left + t.width)),
-                minY: Math.min(...texts.map(t => t.top)),
-                maxY: Math.max(...texts.map(t => t.top + t.height))
-            };
-        })();
-
-        const dialogTexts = newNavTexts.length > 0 ? newNavTexts : newDialogTexts;
-        const fileNameLabel = findTextPosition(dialogTexts, UI_TEXT.fileName);
-
-        // Click filename text box area.
-        if (fileNameLabel !== undefined) {
-            const textBoxX = okBtn !== undefined
-                ? (fileNameLabel.right + okBtn.left) / 2
-                : fileNameLabel.right + 120;
-            await clickAt(ctx.page, textBoxX, fileNameLabel.cy);
-        } else if (okBtn && dialogBounds) {
-            const textBoxX = (dialogBounds.minX + dialogBounds.maxX) / 2 + 50;
-            const textBoxY = okBtn.top - 30;
-            await clickAt(ctx.page, textBoxX, textBoxY);
-        } else if (dialogBounds) {
-            const textBoxX = (dialogBounds.minX + dialogBounds.maxX) / 2 + 50;
-            const textBoxY = dialogBounds.maxY - 50;
-            await clickAt(ctx.page, textBoxX, textBoxY);
-        }
-
+        await focusFileNameTextBox(ctx.page, textsBeforeDialog);
         await ctx.page.keyboard.press('Control+a');
         await waitForIdle(ctx.page);
         await ctx.page.keyboard.type(IMAGE_FILE_NAME);
         await waitForIdle(ctx.page);
-
-        expect(okBtn, 'OK/Open button not found').toBeDefined();
-        await clickAt(ctx.page, okBtn.cx, okBtn.cy);
+        await ctx.page.keyboard.press('Enter');
+        await waitForIdle(ctx.page);
 
         // Verify image was inserted
         const content = await getEditorContent(ctx.page);

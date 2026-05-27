@@ -23,6 +23,8 @@ import {
     clickAt,
     waitForIdle,
     sleep,
+    openControlTab,
+    findTextInputPointRightOfLabel,
     setupProtocolTest,
     describeProtocolTest
 } from './Testing_Protocol.js';
@@ -67,18 +69,7 @@ describeProtocolTest('RendererSwitching', () => {
     });
 
     test('Step 2: Open the Control tab and find Search text box', async () => {
-        const positions = await getLeafTextPositions(ctx.page);
-        const controlTabPos = positions.find(p => p.text === 'Control');
-        expect(controlTabPos).toBeDefined();
-
-        await clickAt(ctx.page, controlTabPos.cx, controlTabPos.cy);
-
-        const afterControl = await getLeafTexts(ctx.page);
-        const hasExpectedContent =
-            afterControl.some(t => t.startsWith('Search')) ||
-            afterControl.includes('Document Editor (Ribbon)') ||
-            afterControl.includes('TextBox');
-        expect(hasExpectedContent).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
     });
 
     test('Step 3: Type "Hello" in the Search text box', async () => {
@@ -86,7 +77,8 @@ describeProtocolTest('RendererSwitching', () => {
         const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
         expect(searchLabelPos).toBeDefined();
 
-        await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
+        const searchTextBox = await findTextInputPointRightOfLabel(ctx.page, searchLabelPos);
+        await clickAt(ctx.page, searchTextBox.x, searchTextBox.y);
 
         for (const ch of 'Hello') {
             await ctx.page.keyboard.press(ch);
@@ -113,7 +105,8 @@ describeProtocolTest('RendererSwitching', () => {
         expect(searchLabelPos).toBeDefined();
 
         // Click on the text box
-        await clickAt(page2, searchLabelPos.right + 30, searchLabelPos.cy);
+        const searchTextBox = await findTextInputPointRightOfLabel(page2, searchLabelPos);
+        await clickAt(page2, searchTextBox.x, searchTextBox.y);
 
         // Select all text with Ctrl+A then move to select partial
         await page2.keyboard.press('Home');

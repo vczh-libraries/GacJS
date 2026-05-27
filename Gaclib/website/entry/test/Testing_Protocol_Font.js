@@ -23,11 +23,11 @@ import {
     getLeafTextPositions,
     findEditorCenter,
     clickAt,
-    findAndClick,
     findNewTexts,
     findIconButtonsInArea,
     groupIntoRows,
     waitForIdle,
+    openControlTab,
     setupProtocolTest,
     describeProtocolTest,
     UI_TEXT,
@@ -172,10 +172,9 @@ describeProtocolTest('Font', () => {
     });
 
     test('Step 2: Open the Control tab', async () => {
-        let positions = await getLeafTextPositions(ctx.page);
-        expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
 
-        positions = await getLeafTextPositions(ctx.page);
+        const positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);

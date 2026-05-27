@@ -16,6 +16,8 @@ import {
     getLeafTextPositions,
     clickAt,
     waitForIdle,
+    openControlTab,
+    findTextInputPointRightOfLabel,
     setupProtocolTest,
     describeProtocolTest
 } from './Testing_Protocol.js';
@@ -45,6 +47,7 @@ async function getLeafTexts(page) {
 describeProtocolTest('SimpleTyping', () => {
     const ctx = setupProtocolTest();
     let searchLabelPos;
+    let searchTextBox;
 
     test('Step 1: Page rendering', async () => {
         const initial = await getLeafTexts(ctx.page);
@@ -52,18 +55,7 @@ describeProtocolTest('SimpleTyping', () => {
     });
 
     test('Step 2: Open the Control tab', async () => {
-        const positions = await getLeafTextPositions(ctx.page);
-        const controlTabPos = positions.find(p => p.text === 'Control');
-        expect(controlTabPos).toBeDefined();
-
-        await clickAt(ctx.page, controlTabPos.cx, controlTabPos.cy);
-
-        const afterControl = await getLeafTexts(ctx.page);
-        const hasExpectedContent =
-            afterControl.some(t => t.startsWith('Search')) ||
-            afterControl.includes('Document Editor (Ribbon)') ||
-            afterControl.includes('TextBox');
-        expect(hasExpectedContent).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
     });
 
     test('Step 3: Find and click the text box next to "Search:"', async () => {
@@ -71,12 +63,13 @@ describeProtocolTest('SimpleTyping', () => {
         searchLabelPos = positions.find(p => p.text.startsWith('Search'));
         expect(searchLabelPos).toBeDefined();
 
-        await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
+        searchTextBox = await findTextInputPointRightOfLabel(ctx.page, searchLabelPos);
+        await clickAt(ctx.page, searchTextBox.x, searchTextBox.y);
     });
 
     test('Step 4: Type text', async () => {
         expect(searchLabelPos).toBeDefined();
-        await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
+        await clickAt(ctx.page, searchTextBox.x, searchTextBox.y);
 
         for (const ch of 'Hello') {
             await ctx.page.keyboard.press(ch);

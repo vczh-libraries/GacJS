@@ -476,9 +476,10 @@ yarn test
    bottom).
 3. Type `ABC` into the editor.
 4. Click the "Insert" tab in the ribbon, then click the "Insert Image" button. A file
-   dialog opens with two lists and a text box at the bottom. Double-click `C:` on the
-   right list to navigate into the `C:` drive. Then click the text box, type
-   `5900.png`, then click OK. An image is inserted after `ABC` on the same line.
+   dialog opens with two lists and a text box at the bottom. Type
+   `GACUI-ROOT\Test\Resources` into the filename text box and press Enter, double-click
+   `App`, then type `Gaclib.png` and press Enter. An image is inserted after `ABC` on
+   the same line.
 5. Press Home, then type `X`.
    **[VERIFY]** The content is `XABC` followed by an inline image that is visible.
 6. Press Ctrl+A to select all content.

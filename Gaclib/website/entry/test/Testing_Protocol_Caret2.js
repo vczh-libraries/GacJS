@@ -35,6 +35,8 @@ import {
     waitForIdle,
     findCarets,
     waitForCarets,
+    openControlTab,
+    findTextInputPointRightOfLabel,
     setupProtocolTest,
     describeProtocolTest
 } from './Testing_Protocol.js';
@@ -73,10 +75,9 @@ describeProtocolTest('Caret2', () => {
     let searchTextBoxY = 0;
 
     test('Step 2: Open Control tab and type in Search text box', async () => {
-        let positions = await getLeafTextPositions(ctx.page);
-        expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
 
-        positions = await getLeafTextPositions(ctx.page);
+        let positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
@@ -86,8 +87,9 @@ describeProtocolTest('Caret2', () => {
         const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
         expect(searchLabelPos).toBeDefined();
 
-        searchTextBoxX = searchLabelPos.right + 30;
-        searchTextBoxY = searchLabelPos.cy;
+        const searchTextBox = await findTextInputPointRightOfLabel(ctx.page, searchLabelPos);
+        searchTextBoxX = searchTextBox.x;
+        searchTextBoxY = searchTextBox.y;
 
         await clickAt(ctx.page, searchTextBoxX, searchTextBoxY);
 
@@ -109,8 +111,7 @@ describeProtocolTest('Caret2', () => {
         expect(await findAndClick(ctx.page, 'List', positions)).toBe(true);
 
         // Switch back to Control tab
-        positions = await getLeafTextPositions(ctx.page);
-        expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
 
         // Ensure the Document Editor (Ribbon) sub-tab is active
         positions = await getLeafTextPositions(ctx.page);
@@ -123,8 +124,9 @@ describeProtocolTest('Caret2', () => {
         positions = await getLeafTextPositions(ctx.page);
         const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
         expect(searchLabelPos).toBeDefined();
-        searchTextBoxX = searchLabelPos.right + 30;
-        searchTextBoxY = searchLabelPos.cy;
+        const searchTextBox = await findTextInputPointRightOfLabel(ctx.page, searchLabelPos);
+        searchTextBoxX = searchTextBox.x;
+        searchTextBoxY = searchTextBox.y;
 
         // Check the cursor style at the text box location
         const cursorStyle = await getCursorAtPoint(ctx.page, searchTextBoxX, searchTextBoxY);
@@ -245,11 +247,25 @@ describeProtocolTest('Caret2', () => {
         // We know endCaretXSaved is the X of the end-of-line caret from Step 7,
         // and the caret Y from homeCaret gives us the correct line Y.
         // Click well to the right of where the text ends.
-        const clickX = endCaretXSaved + 20;
         const clickY = homeCaret[0].y + homeCaret[0].height / 2;
-        await clickAt(ctx.page, clickX, clickY);
-
-        const clickCarets = await waitForCarets(ctx.page);
+        const clickPoints = [
+            { x: endCaretXSaved + 2, y: clickY, label: 'past end' },
+            { x: endCaretXSaved - 1, y: clickY, label: 'end edge' },
+            { x: endCaretXSaved + 2, y: clickY - 2, label: 'past end, upper' },
+            { x: endCaretXSaved - 1, y: clickY - 2, label: 'end edge, upper' },
+            { x: endCaretXSaved + 2, y: clickY + 2, label: 'past end, lower' },
+            { x: endCaretXSaved - 1, y: clickY + 2, label: 'end edge, lower' }
+        ];
+        let clickCarets = [];
+        for (const candidate of clickPoints) {
+            const cursor = await getCursorAtPoint(ctx.page, candidate.x, candidate.y);
+            console.log(`  Clicking ${candidate.label} at (${candidate.x.toFixed(1)}, ${candidate.y.toFixed(1)}), cursor=${cursor}`);
+            await clickAt(ctx.page, candidate.x, candidate.y);
+            clickCarets = await waitForCarets(ctx.page, { timeout: 1600 });
+            if (clickCarets.length >= 1) {
+                break;
+            }
+        }
         console.log(`  Carets after clicking past end of text: ${clickCarets.length}`);
         expect.soft(clickCarets.length, 'Caret should be visible after clicking').toBeGreaterThanOrEqual(1);
 

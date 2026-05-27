@@ -4,9 +4,10 @@
 // Used by Testing_Protocol_*.js test files in this directory.
 
 import path from 'path';
-import { execSync, exec, execFileSync } from 'child_process';
+import { execSync, spawn, execFileSync } from 'child_process';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
+import net from 'node:net';
 import { chromium } from '@playwright/test';
 import { beforeAll, afterAll, describe } from 'vitest';
 
@@ -26,6 +27,8 @@ export const GACUI_BUILD_SCRIPT = path.resolve(GACUI_ROOT, '.github', 'Scripts',
 export const GACUI_SOLUTION_DIR = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc');
 export const SERVER_EXE = path.resolve(GACUI_ROOT, 'Test', 'GacUISrc', 'x64', 'Debug', 'RemotingTest_Core.exe');
 export const WEBSITE_URL = 'http://localhost:8896/index.html';
+export const PROTOCOL_HOST = 'localhost';
+export const PROTOCOL_PORT = 8888;
 export const PROTOCOL_TEST_SKIP_REASON = process.platform !== 'win32'
     ? `GacUI protocol tests are Windows-only (current platform: ${process.platform}).`
     : !existsSync(GACUI_ROOT)
@@ -87,7 +90,7 @@ export async function ensureGacUIBuilt() {
 
 export function killServer() {
     try {
-        execSync('taskkill /F /IM RemotingTest_Core.exe', { stdio: 'ignore' });
+        execSync('taskkill /F /T /IM RemotingTest_Core.exe', { stdio: 'ignore' });
     } catch {
         // Process may not exist
     }
@@ -95,6 +98,64 @@ export function killServer() {
 
 export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function isServerRunning() {
+    try {
+        const output = execSync('tasklist /FI "IMAGENAME eq RemotingTest_Core.exe" /NH', {
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore']
+        });
+        return output.includes('RemotingTest_Core.exe');
+    } catch {
+        return false;
+    }
+}
+
+export async function waitForServerExit(timeout = 10000) {
+    const end = Date.now() + timeout;
+
+    while (Date.now() < end) {
+        if (!isServerRunning()) return;
+        await sleep(100);
+    }
+
+    throw new Error('Timed out waiting for RemotingTest_Core.exe to exit');
+}
+
+async function tryConnectTcpPort(port, host, timeout = 1000) {
+    return new Promise(resolve => {
+        const socket = new net.Socket();
+        socket.setTimeout(timeout);
+        socket.once('connect', () => {
+            socket.destroy();
+            resolve({ connected: true, error: null });
+        });
+        socket.once('timeout', () => {
+            socket.destroy();
+            resolve({ connected: false, error: null });
+        });
+        socket.once('error', e => {
+            resolve({ connected: false, error: e });
+        });
+        socket.connect(port, host);
+    });
+}
+
+export async function waitForTcpPort(port, host, timeout = 30000) {
+    const end = Date.now() + timeout;
+    let lastError = null;
+
+    while (Date.now() < end) {
+        const result = await tryConnectTcpPort(port, host);
+        lastError = result.error || lastError;
+
+        if (result.connected) return;
+        await sleep(100);
+    }
+
+    const errorMessage = lastError !== null ? ` (${lastError.message})` : '';
+    throw new Error(`Timed out waiting for ${host}:${port}${errorMessage}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +185,62 @@ export async function getLeafTextPositions(page) {
         }
         return result;
     });
+}
+
+async function getScreenState(page) {
+    return page.evaluate(() => {
+        const screen = document.getElementById('gacui-screen');
+        if (!screen) {
+            return { leafCount: 0, text: '' };
+        }
+
+        let leafCount = 0;
+        for (const d of screen.querySelectorAll('div')) {
+            if (d.childElementCount === 0 && d.textContent.trim() !== '') {
+                leafCount++;
+            }
+        }
+
+        return {
+            leafCount,
+            text: screen.textContent || ''
+        };
+    });
+}
+
+async function waitForApplicationRendered(page, timeout = 60000, getDiagnostics = () => []) {
+    const end = Date.now() + timeout;
+    let lastState = null;
+    let nextStartupReload = Date.now() + 15000;
+
+    while (Date.now() < end) {
+        lastState = await getScreenState(page);
+        const hasAppContent = lastState.leafCount >= 20 ||
+            lastState.text.includes('Remote Protocol Test');
+        const hasFetchError = lastState.text.includes('Failed to fetch');
+        const isStarting = lastState.text.includes('Starting GacUI HTML Renderer');
+
+        if (hasAppContent && !hasFetchError) {
+            await waitForIdle(page, 3000);
+            return;
+        }
+
+        if (hasFetchError || (isStarting && Date.now() >= nextStartupReload)) {
+            await sleep(500);
+            await page.reload({ timeout: 30000, waitUntil: 'domcontentloaded' });
+            await page.waitForSelector('#gacui-screen', { timeout: 30000 });
+            nextStartupReload = Date.now() + 15000;
+        } else {
+            const remaining = end - Date.now();
+            await waitForIdle(page, Math.min(1000, Math.max(100, remaining)));
+        }
+    }
+
+    const text = lastState !== null ? lastState.text.trim().replace(/\s+/g, ' ').slice(0, 200) : '';
+    const leafCount = lastState !== null ? lastState.leafCount : 0;
+    const diagnostics = getDiagnostics();
+    const diagnosticText = diagnostics.length === 0 ? '' : `\nDiagnostics:\n${diagnostics.join('\n')}`;
+    throw new Error(`GacUI page did not render app content: leafCount=${leafCount}, text="${text}"${diagnosticText}`);
 }
 
 /** Find the editor (largest pre-wrap element) center coordinates. */
@@ -237,6 +354,10 @@ export async function waitUntilIdle(page, timeout = 30000) {
 // ---------------------------------------------------------------------------
 
 export async function clickAt(page, x, y) {
+    const state = page.__idleState;
+    if (state !== undefined && state !== null) {
+        state.pending = false;
+    }
     await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.up();
@@ -248,6 +369,78 @@ export async function findAndClick(page, textToFind, positions) {
     if (!pos) return false;
     await clickAt(page, pos.cx, pos.cy);
     return true;
+}
+
+export function hasControlTabContent(positions) {
+    return positions.some(p =>
+        p.text.startsWith('Search') ||
+        p.text === 'Document Editor (Ribbon)' ||
+        p.text === 'TextBox'
+    );
+}
+
+export async function openControlTab(page) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+        let positions = await getLeafTextPositions(page);
+        if (hasControlTabContent(positions)) {
+            return true;
+        }
+
+        const controlTabs = positions
+            .filter(p => p.text === 'Control')
+            .sort((a, b) => a.top - b.top || a.left - b.left);
+        if (controlTabs.length === 0) {
+            return false;
+        }
+
+        for (const controlTab of controlTabs) {
+            await clickAt(page, controlTab.cx, controlTab.cy);
+            positions = await getLeafTextPositions(page);
+            if (hasControlTabContent(positions)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+export async function findTextInputPointRightOfLabel(page, labelPos, { maxDistance = 360 } = {}) {
+    return page.evaluate(({ labelPos, maxDistance }) => {
+        const y = labelPos.cy;
+        const xStart = Math.ceil(labelPos.right + 4);
+        const xEnd = Math.min(window.innerWidth - 4, Math.ceil(labelPos.right + maxDistance));
+        const segments = [];
+        let current = null;
+
+        for (let x = xStart; x <= xEnd; x += 4) {
+            const el = document.elementFromPoint(x, y);
+            const cursor = el ? window.getComputedStyle(el).cursor : '';
+            if (cursor === 'text') {
+                if (current === null) {
+                    current = { start: x, end: x };
+                } else {
+                    current.end = x;
+                }
+            } else if (current !== null) {
+                segments.push(current);
+                current = null;
+            }
+        }
+
+        if (current !== null) {
+            segments.push(current);
+        }
+
+        if (segments.length > 0) {
+            const best = segments.reduce((a, b) =>
+                (b.end - b.start) > (a.end - a.start) ? b : a
+            );
+            return { x: (best.start + best.end) / 2, y };
+        }
+
+        return { x: labelPos.right + 60, y };
+    }, { labelPos, maxDistance });
 }
 
 // ---------------------------------------------------------------------------
@@ -317,30 +510,32 @@ export async function waitForBlink(page, timeout = 1200) {
 }
 
 /**
- * Event-driven caret visibility check.
- * Since each blink toggles visibility, at most one blink event is needed:
- *   1. Check DOM — if already satisfied, return immediately.
- *   2. Wait for one blink event (visibility toggled).
- *   3. Check DOM again and return the result.
+ * Event-driven caret visibility check. The first sample may land during the
+ * invisible half of a blink, so keep checking across a full blink window.
  *
  * visible=true (default): returns carets[] (may be empty on timeout).
- * visible=false: returns true if no carets found, false otherwise.
+ * visible=false: returns true if no carets found before timeout.
  */
-export async function waitForCarets(page, { visible = true, timeout = 1200 } = {}) {
+export async function waitForCarets(page, { visible = true, timeout = 2400 } = {}) {
     const blinkState = page.__blinkState;
     if (blinkState !== undefined && blinkState !== null) {
         blinkState.pending = false;
     }
 
-    const carets = await findCarets(page);
-    if (visible && carets.length >= 1) return carets;
-    if (!visible && carets.length === 0) return true;
+    const end = Date.now() + timeout;
+    let carets = [];
 
-    await waitForBlink(page, timeout);
+    do {
+        carets = await findCarets(page);
+        if (visible && carets.length >= 1) return carets;
+        if (!visible && carets.length === 0) return true;
 
-    const caretsAfter = await findCarets(page);
-    if (visible) return caretsAfter;
-    return caretsAfter.length === 0;
+        const remaining = end - Date.now();
+        if (remaining <= 0) break;
+        await waitForBlink(page, Math.min(600, remaining));
+    } while (Date.now() < end);
+
+    return visible ? carets : false;
 }
 
 // ---------------------------------------------------------------------------
@@ -449,42 +644,137 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
     let browser = null;
     let context = null;
     let page = null;
+    let serverProcess = null;
+    let serverExit = null;
+    const diagnostics = [];
+    const STARTUP_ATTEMPTS = 3;
+
+    function addDiagnostic(message) {
+        diagnostics.push(message);
+        while (diagnostics.length > 80) {
+            diagnostics.shift();
+        }
+    }
 
     async function openPage() {
         const p = await context.newPage();
-        await setupIdleTracking(p);
-        p.on('dialog', async dialog => {
-            console.error(`  [CRASH] Dialog: ${dialog.message()}`);
-            await dialog.dismiss();
+        try {
+            await setupIdleTracking(p);
+            p.on('dialog', async dialog => {
+                console.error(`  [CRASH] Dialog: ${dialog.message()}`);
+                await dialog.dismiss();
+            });
+            p.on('console', msg => {
+                if (msg.type() === 'error' || msg.type() === 'warning') {
+                    addDiagnostic(`console ${msg.type()}: ${msg.text()}`);
+                }
+            });
+            p.on('pageerror', error => {
+                addDiagnostic(`pageerror: ${error.message}`);
+            });
+            p.on('requestfailed', request => {
+                if (request.url().includes(':8888')) {
+                    addDiagnostic(`requestfailed: ${request.method()} ${request.url()} ${request.failure()?.errorText ?? ''}`);
+                }
+            });
+            p.on('response', response => {
+                if (response.url().includes(':8888') && response.status() >= 400) {
+                    addDiagnostic(`response: ${response.status()} ${response.url()}`);
+                }
+            });
+            await p.goto(WEBSITE_URL, { timeout: 30000, waitUntil: 'domcontentloaded' });
+            await p.waitForSelector('#gacui-screen', { timeout: 30000 });
+            await waitForApplicationRendered(p, 60000, () => diagnostics);
+            return p;
+        } catch (e) {
+            await p.close().catch(() => {});
+            throw e;
+        }
+    }
+
+    async function closeBrowser() {
+        if (browser !== null) {
+            await browser.close().catch(() => {});
+        }
+        browser = null;
+        context = null;
+        page = null;
+    }
+
+    async function stopServer() {
+        if (serverProcess !== null && serverProcess.exitCode === null) {
+            serverProcess.kill();
+        }
+        killServer();
+        await waitForServerExit();
+        serverProcess = null;
+        serverExit = null;
+    }
+
+    async function startServer() {
+        serverExit = null;
+        serverProcess = spawn(SERVER_EXE, serverArgs.trim().split(/\s+/).filter(Boolean), {
+            cwd: GACUI_SOLUTION_DIR,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true
         });
-        p.on('console', () => {});
-        await p.goto(WEBSITE_URL, { timeout: 30000 });
-        await p.waitForSelector('#gacui-screen div div', { timeout: 30000 });
-        await waitUntilIdle(p);
-        return p;
+        serverProcess.stdout.on('data', data => {
+            const text = data.toString().trim();
+            if (text !== '') {
+                addDiagnostic(`server stdout: ${text}`);
+            }
+        });
+        serverProcess.stderr.on('data', data => {
+            const text = data.toString().trim();
+            if (text !== '') {
+                addDiagnostic(`server stderr: ${text}`);
+            }
+        });
+        serverProcess.once('exit', (code, signal) => {
+            serverExit = { code, signal };
+            addDiagnostic(`server exit: code=${code}, signal=${signal}`);
+        });
+        await sleep(500);
+        if (serverExit !== null) {
+            throw new Error(`RemotingTest_Core.exe exited early: code=${serverExit.code}, signal=${serverExit.signal}`);
+        }
+        await waitForTcpPort(PROTOCOL_PORT, PROTOCOL_HOST);
     }
 
     beforeAll(async () => {
         await ensureGacUIBuilt();
 
-        killServer();
-        await sleep(1000);
+        let lastError = null;
+        for (let attempt = 1; attempt <= STARTUP_ATTEMPTS; attempt++) {
+            addDiagnostic(`startup attempt ${attempt}`);
+            await closeBrowser();
+            await stopServer();
 
-        const serverProcess = exec(`"${SERVER_EXE}" ${serverArgs}`);
-        serverProcess.stdout?.on('data', () => {});
-        serverProcess.stderr?.on('data', () => {});
-        await sleep(1200);
+            try {
+                await startServer();
+                browser = await chromium.launch({ headless: true });
+                context = await browser.newContext();
+                page = await openPage();
+                return;
+            } catch (e) {
+                lastError = e;
+                addDiagnostic(`startup attempt ${attempt} failed: ${e.message}`);
+                await closeBrowser();
+                await stopServer();
+                if (attempt < STARTUP_ATTEMPTS) {
+                    await sleep(1000);
+                }
+            }
+        }
 
-        browser = await chromium.launch({ headless: true });
-        context = await browser.newContext();
-        page = await openPage();
+        const diagnosticText = diagnostics.length === 0 ? '' : `\nDiagnostics:\n${diagnostics.join('\n')}`;
+        const message = lastError !== null ? lastError.message : 'unknown startup error';
+        throw new Error(`Protocol test startup failed after ${STARTUP_ATTEMPTS} attempts: ${message}${diagnosticText}`);
     });
 
     afterAll(async () => {
-        if (browser !== null) {
-            await browser.close();
-        }
-        killServer();
+        await closeBrowser();
+        await stopServer();
     });
 
     return {

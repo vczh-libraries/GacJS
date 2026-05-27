@@ -36,13 +36,14 @@ import {
     getLeafTextPositions,
     findEditorCenter,
     clickAt,
-    findAndClick,
     findNewTexts,
     findIconButtonsInArea,
     groupIntoRows,
     waitForIdle,
     findCarets,
     waitForCarets,
+    openControlTab,
+    findTextInputPointRightOfLabel,
     setupProtocolTest,
     describeProtocolTest,
     UI_TEXT,
@@ -66,10 +67,9 @@ describeProtocolTest('Caret', () => {
     });
 
     test('Step 2: Open Control tab and click Search text box', async () => {
-        let positions = await getLeafTextPositions(ctx.page);
-        expect(await findAndClick(ctx.page, 'Control', positions)).toBe(true);
+        expect(await openControlTab(ctx.page)).toBe(true);
 
-        positions = await getLeafTextPositions(ctx.page);
+        let positions = await getLeafTextPositions(ctx.page);
         const docEditorTab = positions.find(p => p.text === 'Document Editor (Ribbon)');
         if (docEditorTab) {
             await clickAt(ctx.page, docEditorTab.cx, docEditorTab.cy);
@@ -79,9 +79,10 @@ describeProtocolTest('Caret', () => {
         const searchLabelPos = positions.find(p => p.text.startsWith('Search'));
         expect(searchLabelPos).toBeDefined();
 
-        await clickAt(ctx.page, searchLabelPos.right + 30, searchLabelPos.cy);
+        const searchTextBox = await findTextInputPointRightOfLabel(ctx.page, searchLabelPos);
+        await clickAt(ctx.page, searchTextBox.x, searchTextBox.y);
 
-        const carets = await findCarets(ctx.page);
+        const carets = await waitForCarets(ctx.page);
         console.log(`  Carets found after clicking Search: ${carets.length}`);
         expect.soft(carets.length, 'Caret visible in Search text box').toBeGreaterThanOrEqual(1);
     });
