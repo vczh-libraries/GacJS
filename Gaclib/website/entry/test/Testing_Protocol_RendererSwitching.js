@@ -22,6 +22,7 @@ import {
     getLeafTextPositions,
     clickAt,
     waitForIdle,
+    sleep,
     setupProtocolTest
 } from './Testing_Protocol.js';
 
@@ -118,11 +119,13 @@ describe('RendererSwitching', () => {
         await waitForIdle(page2);
         // Select "Hel" by shift+right 3 times
         for (let i = 0; i < 3; i++) {
-            await page2.keyboard.down('Shift');
-            await page2.keyboard.press('ArrowRight');
-            await page2.keyboard.up('Shift');
+            await page2.keyboard.press('Shift+ArrowRight');
             await waitForIdle(page2);
         }
+
+        const screenText = await getScreenText(page2);
+        expect(screenText).toContain('Hello');
+        await sleep(1000);
     });
 
     test('Step 7+8: Switch to third page and verify "Hello" with rendering', async () => {

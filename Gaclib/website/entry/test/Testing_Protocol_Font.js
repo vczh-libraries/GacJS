@@ -28,7 +28,11 @@ import {
     findIconButtonsInArea,
     groupIntoRows,
     waitForIdle,
-    setupProtocolTest
+    setupProtocolTest,
+    UI_TEXT,
+    textMatchesAny,
+    findTextPosition,
+    hasTextPosition
 } from './Testing_Protocol.js';
 
 const TYPED_TEXT = 'ABCDEFGHIJKLMN';
@@ -122,6 +126,33 @@ function verifyFormatting(styles, selectedEnd, defaultSize, bigSize, label) {
 function dumpStyles(styles) {
     if (!styles) return '(null)';
     return styles.map(s => `${s.char}(${s.fontSize}px,${normalizeColor(s.color)})`).join(' ');
+}
+
+function hasColorFormatting(styles) {
+    if (styles === null) return false;
+    for (let i = 7; i <= 12; i++) {
+        if (normalizeColor(styles[i].color) !== '#00FFFF') {
+            return false;
+        }
+    }
+    return true;
+}
+
+async function waitForColorFormattingAtHome(page, timeout = 10000) {
+    const end = Date.now() + timeout;
+    let styles = null;
+
+    do {
+        styles = extractTypedStyles(await getDocCharStyles(page));
+        if (hasColorFormatting(styles)) {
+            return styles;
+        }
+
+        await page.keyboard.press('Home');
+        await waitForIdle(page, 1000);
+    } while (Date.now() < end);
+
+    return styles;
 }
 
 // ---------------------------------------------------------------------------
@@ -226,18 +257,24 @@ describe('Font', () => {
         const newFontTexts = findNewTexts(textsBeforeFont, textsAfterFont);
         console.log(`  Dialog new texts: ${newFontTexts.map(t => t.text).join(', ')}`);
 
-        const chooseFontTitle = newFontTexts.find(p => p.text === 'Choose Font');
+        const chooseFontTitle = findTextPosition(newFontTexts, UI_TEXT.chooseFont);
         expect(chooseFontTitle, 'Font dialog did not appear').toBeDefined();
 
         const knownLabels = new Set([
-            'Choose Font', 'Font:', 'Size:', 'Preview:', 'ABCxyz', 'OK', 'Cancel'
+            ...UI_TEXT.chooseFont,
+            ...UI_TEXT.font,
+            ...UI_TEXT.size,
+            ...UI_TEXT.preview,
+            ...UI_TEXT.ok,
+            ...UI_TEXT.cancel,
+            'ABCxyz'
         ]);
-        const sizeLabel = newFontTexts.find(p => p.text === 'Size:');
+        const sizeLabel = findTextPosition(newFontTexts, UI_TEXT.size);
 
         const fontNames = newFontTexts.filter(p =>
             !knownLabels.has(p.text) &&
             !/^\d+$/.test(p.text) &&
-            (sizeLabel ? p.cx < sizeLabel.cx : p.cx < chooseFontTitle.cx + 100)
+            (sizeLabel !== undefined ? p.cx < sizeLabel.cx : p.cx < chooseFontTitle.cx + 100)
         );
         console.log(`  Font names: ${fontNames.map(f => f.text).join(', ')}`);
 
@@ -259,13 +296,13 @@ describe('Font', () => {
             await waitForIdle(ctx.page);
         }
 
-        const fontOk = newFontTexts.find(p => p.text === 'OK');
+        const fontOk = findTextPosition(newFontTexts, UI_TEXT.ok);
         expect(fontOk, 'OK button not found in font dialog').toBeDefined();
         await clickAt(ctx.page, fontOk.cx, fontOk.cy);
 
         // Verify dialog closed
         const afterFontOk = await getLeafTextPositions(ctx.page);
-        expect.soft(afterFontOk.some(p => p.text === 'Choose Font'), 'Font dialog still open').toBe(false);
+        expect.soft(hasTextPosition(afterFontOk, UI_TEXT.chooseFont), 'Font dialog still open').toBe(false);
     });
 
     test('Step 6: Select H..M and apply text color', async () => {
@@ -295,7 +332,7 @@ describe('Font', () => {
         const newColorTexts = findNewTexts(textsBeforeColor, textsAfterColor);
         console.log(`  Color dialog new texts: ${newColorTexts.map(t => t.text).join(', ')}`);
 
-        const redLabel = newColorTexts.find(p => p.text === 'Red:');
+        const redLabel = findTextPosition(newColorTexts, UI_TEXT.red);
         expect(redLabel, 'Color dialog did not appear').toBeDefined();
 
         await clickAt(ctx.page, redLabel.right + 40, redLabel.cy);
@@ -304,13 +341,13 @@ describe('Font', () => {
         await ctx.page.keyboard.type('0');
         await waitForIdle(ctx.page);
 
-        const colorOk = newColorTexts.find(p => p.text === 'OK');
+        const colorOk = findTextPosition(newColorTexts, UI_TEXT.ok);
         expect(colorOk, 'OK button not found in color dialog').toBeDefined();
         await clickAt(ctx.page, colorOk.cx, colorOk.cy);
 
         // Verify dialog closed
         const afterColorOk = await getLeafTextPositions(ctx.page);
-        expect.soft(afterColorOk.some(p => p.text === 'Red:'), 'Color dialog still open').toBe(false);
+        expect.soft(afterColorOk.some(p => textMatchesAny(p.text, UI_TEXT.red)), 'Color dialog still open').toBe(false);
     });
 
     test('Step 7: Verify formatting after color applied', async () => {
@@ -318,11 +355,10 @@ describe('Font', () => {
         if (editorPos) {
             await clickAt(ctx.page, editorPos.cx, editorPos.cy);
         }
-        await ctx.page.keyboard.press('End');
+        await ctx.page.keyboard.press('Home');
         await waitForIdle(ctx.page);
 
-        const allChars = await getDocCharStyles(ctx.page);
-        const styles = extractTypedStyles(allChars);
+        const styles = await waitForColorFormattingAtHome(ctx.page);
         console.log(`  Styles: ${dumpStyles(styles)}`);
 
         if (styles) {

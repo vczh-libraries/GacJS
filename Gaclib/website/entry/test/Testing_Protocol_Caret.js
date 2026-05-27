@@ -43,7 +43,9 @@ import {
     waitForIdle,
     findCarets,
     waitForCarets,
-    setupProtocolTest
+    setupProtocolTest,
+    UI_TEXT,
+    findTextPosition
 } from './Testing_Protocol.js';
 
 const TYPED_TEXT = 'ABCD';
@@ -167,18 +169,24 @@ describe('Caret', () => {
         const newFontTexts = findNewTexts(textsBeforeFont, textsAfterFont);
         console.log(`  Dialog new texts: ${newFontTexts.map(t => t.text).join(', ')}`);
 
-        const chooseFontTitle = newFontTexts.find(p => p.text === 'Choose Font');
+        const chooseFontTitle = findTextPosition(newFontTexts, UI_TEXT.chooseFont);
         expect(chooseFontTitle, 'Font dialog did not appear').toBeDefined();
 
         const knownLabels = new Set([
-            'Choose Font', 'Font:', 'Size:', 'Preview:', 'ABCxyz', 'OK', 'Cancel'
+            ...UI_TEXT.chooseFont,
+            ...UI_TEXT.font,
+            ...UI_TEXT.size,
+            ...UI_TEXT.preview,
+            ...UI_TEXT.ok,
+            ...UI_TEXT.cancel,
+            'ABCxyz'
         ]);
-        const sizeLabel = newFontTexts.find(p => p.text === 'Size:');
+        const sizeLabel = findTextPosition(newFontTexts, UI_TEXT.size);
 
         const fontNames = newFontTexts.filter(p =>
             !knownLabels.has(p.text) &&
             !/^\d+$/.test(p.text) &&
-            (sizeLabel ? p.cx < sizeLabel.cx : p.cx < chooseFontTitle.cx + 100)
+            (sizeLabel !== undefined ? p.cx < sizeLabel.cx : p.cx < chooseFontTitle.cx + 100)
         );
 
         if (fontNames.length > 0) {
@@ -193,7 +201,7 @@ describe('Caret', () => {
             await waitForIdle(ctx.page);
         }
 
-        const fontOk = newFontTexts.find(p => p.text === 'OK');
+        const fontOk = findTextPosition(newFontTexts, UI_TEXT.ok);
         expect(fontOk, 'OK button not found in font dialog').toBeDefined();
         await clickAt(ctx.page, fontOk.cx, fontOk.cy);
     });

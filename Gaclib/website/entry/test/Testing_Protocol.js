@@ -308,6 +308,30 @@ export function findNewTexts(before, after) {
     );
 }
 
+export const UI_TEXT = {
+    chooseFont: ['Choose Font', '选择字体'],
+    font: ['Font:', '字体:', '字体：'],
+    size: ['Size:', '尺寸:', '尺寸：'],
+    preview: ['Preview:', '预览:', '预览：'],
+    ok: ['OK', '确定'],
+    cancel: ['Cancel', '取消'],
+    red: ['Red:', 'Red', '红:', '红：', '红色:', '红色：'],
+    fileName: ['File name:', 'File name：', '文件名:', '文件名：'],
+    open: ['OK', 'Open', '打开', '确定']
+};
+
+export function textMatchesAny(text, variants) {
+    return variants.includes(text);
+}
+
+export function findTextPosition(positions, variants) {
+    return positions.find(p => textMatchesAny(p.text, variants));
+}
+
+export function hasTextPosition(positions, variants) {
+    return findTextPosition(positions, variants) !== undefined;
+}
+
 /**
  * Find icon buttons (small elements with background-image) in a bounding box.
  * Returns sorted by (y, x).
