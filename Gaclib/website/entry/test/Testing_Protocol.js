@@ -655,13 +655,19 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
     }
 
     async function stopServer() {
+        killServer();
         if (serverProcess !== null && serverProcess.exitCode === null) {
             serverProcess.kill();
         }
-        killServer();
         await waitForServerExit();
         serverProcess = null;
         serverExit = null;
+    }
+
+    async function cleanupProtocolRuntime() {
+        await stopServer();
+        await closeBrowser();
+        await stopServer();
     }
 
     async function startServer() {
@@ -700,8 +706,7 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
         let lastError = null;
         for (let attempt = 1; attempt <= STARTUP_ATTEMPTS; attempt++) {
             addDiagnostic(`startup attempt ${attempt}`);
-            await closeBrowser();
-            await stopServer();
+            await cleanupProtocolRuntime();
 
             try {
                 await startServer();
@@ -712,8 +717,7 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
             } catch (e) {
                 lastError = e;
                 addDiagnostic(`startup attempt ${attempt} failed: ${e.message}`);
-                await closeBrowser();
-                await stopServer();
+                await cleanupProtocolRuntime();
                 if (attempt < STARTUP_ATTEMPTS) {
                     await sleep(1000);
                 }
@@ -726,8 +730,7 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
     });
 
     afterAll(async () => {
-        await closeBrowser();
-        await stopServer();
+        await cleanupProtocolRuntime();
     });
 
     return {
