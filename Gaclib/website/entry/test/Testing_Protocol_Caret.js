@@ -31,7 +31,7 @@
 //      [VERIFY] A caret is visible at the expected position.
 //   11. Kill the process directly and close the webpage. No elegant exit is needed.
 
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     findEditorCenter,
@@ -44,6 +44,7 @@ import {
     findCarets,
     waitForCarets,
     setupProtocolTest,
+    describeProtocolTest,
     UI_TEXT,
     findTextPosition
 } from './Testing_Protocol.js';
@@ -55,7 +56,7 @@ const BIG_SIZE = 24;
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('Caret', () => {
+describeProtocolTest('Caret', () => {
     const ctx = setupProtocolTest();
     const rightCaretHeights = [];
 

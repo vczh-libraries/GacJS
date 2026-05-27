@@ -120,6 +120,7 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 
 - `REPO-ROOT\doc\Testing_Protocol.md` describes how the implementation of remote protocol is testing.
 - `REPO-ROOT\Gaclib\website\entry\test` has many E2E test cases that start `RemotingTest_Core` and run `index.html` with playwright.
+- These E2E suites run only on Windows with a sibling `(repo-root)\..\GacUI` checkout. They build GacUI through `copilotBuild.ps1` before launching `RemotingTest_Core`.
 - During investigation of a bug that involves many part of the renderer, you are recommended to create a new test case like these to confirm the regression, which is also a good measurement to see if the bug is properly fixed.
 - Synchronization: event-driven, not sleep-based.
   - Tests use **no** `sleep()` for UI synchronization. The only remaining `sleep()` calls are for server startup/shutdown (OS-level process delays), not for waiting on UI state.

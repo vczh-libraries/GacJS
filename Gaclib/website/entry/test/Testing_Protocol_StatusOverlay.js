@@ -2,13 +2,14 @@
 //
 // Verifies that terminal status masks show messages in-page without browser alerts.
 
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
-    setupProtocolTest
+    setupProtocolTest,
+    describeProtocolTest
 } from './Testing_Protocol.js';
 
-describe('StatusOverlay', () => {
+describeProtocolTest('StatusOverlay', () => {
     const dialogMessages = [];
     const ctx = setupProtocolTest('/RPT /Http');
 

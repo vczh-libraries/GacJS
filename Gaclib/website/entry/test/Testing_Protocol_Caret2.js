@@ -26,7 +26,7 @@
 //      not before the last character.
 //   9. Kill the process directly and close the webpage. No elegant exit is needed.
 
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     findEditorCenter,
@@ -35,7 +35,8 @@ import {
     waitForIdle,
     findCarets,
     waitForCarets,
-    setupProtocolTest
+    setupProtocolTest,
+    describeProtocolTest
 } from './Testing_Protocol.js';
 
 // ---------------------------------------------------------------------------
@@ -59,7 +60,7 @@ async function getCursorAtPoint(page, x, y) {
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('Caret2', () => {
+describeProtocolTest('Caret2', () => {
     const ctx = setupProtocolTest();
 
     test('Step 1: Page rendering', async () => {

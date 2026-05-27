@@ -11,12 +11,13 @@
 //   4. Verify that the typed text appears in the text box.
 //   5. Kill the process directly and close the webpage. No elegant exit is needed.
 
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     clickAt,
     waitForIdle,
-    setupProtocolTest
+    setupProtocolTest,
+    describeProtocolTest
 } from './Testing_Protocol.js';
 
 // ---------------------------------------------------------------------------
@@ -41,7 +42,7 @@ async function getLeafTexts(page) {
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('SimpleTyping', () => {
+describeProtocolTest('SimpleTyping', () => {
     const ctx = setupProtocolTest();
     let searchLabelPos;
 

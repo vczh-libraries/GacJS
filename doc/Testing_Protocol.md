@@ -233,25 +233,27 @@ All protocol tests live under `Gaclib/website/entry/test/`:
 - `Testing_Protocol_ImageInText.js` — Inline image insertion and rendering test.
 - `Testing_Protocol_RendererSwitching.js` — Renderer switching (reconnection) test.
 
-Each test file is a vitest suite. Most use `setupProtocolTest()` from the shared
-module, which registers `beforeAll`/`afterAll` hooks to start/stop the C++ server
-and launch/close the headless Chromium browser. `Testing_Protocol_RendererSwitching.js`
-manages its own lifecycle because it opens multiple pages in the same browser context.
+Each test file is a vitest suite wrapped by `describeProtocolTest()` from the shared
+module. Protocol suites run only on Windows and only when the sibling `..\GacUI`
+repo exists; otherwise they are reported as skipped. Most suites use
+`setupProtocolTest()`, which builds GacUI with `GACUI-ROOT\.github\Scripts\copilotBuild.ps1`,
+starts/stops the C++ server, and launches/closes the headless Chromium browser.
 
 ### Example Test Structure
 
 ```javascript
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     clickAt,
     waitForIdle,
     waitForCarets,
     findCarets,
-    setupProtocolTest
+    setupProtocolTest,
+    describeProtocolTest
 } from './Testing_Protocol.js';
 
-describe('MyTest', () => {
+describeProtocolTest('MyTest', () => {
     const ctx = setupProtocolTest();
 
     test('Step 1: Page rendering', async () => {
@@ -280,6 +282,7 @@ yarn test
 ```
 
 This runs all vitest suites across all packages, including the protocol tests.
+Protocol tests build the sibling GacUI repo before launching `RemotingTest_Core`.
 Test files run sequentially (`fileParallelism: false`) since they share the
 same stateful HTTP server.
 
@@ -387,7 +390,7 @@ for the error message.
 
 **Prerequisites:**
 - `yarn build` in `Gaclib/`
-- `RemotingTest_Core.exe` built (via `scripts/start-test-server.ps1` or Visual Studio)
+- Sibling `..\GacUI` repo available on Windows; protocol tests build `RemotingTest_Core.exe` automatically
 - `npx playwright install chromium` (first time only)
 
 **Crash detection:**
@@ -525,8 +528,8 @@ tab opens `index.html`, it connects to the C++ server, taking over the session f
 any previous tab. The new tab should see the same UI state (typed text, selection,
 etc.). Located at `Gaclib/website/entry/test/Testing_Protocol_RendererSwitching.js`.
 
-This test does **not** use `setupProtocolTest()` — it manages its own browser context
-(multiple pages in the same context) and server lifecycle.
+This test uses `setupProtocolTest()` and opens multiple pages through the shared browser
+context to verify renderer switching.
 
 **Run:**
 ```powershell

@@ -21,8 +21,7 @@
 
 import { copyFileSync, existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { test, expect, beforeAll, afterAll } from 'vitest';
 import {
     getLeafTextPositions,
     findEditorCenter,
@@ -31,6 +30,8 @@ import {
     findNewTexts,
     waitForIdle,
     setupProtocolTest,
+    describeProtocolTest,
+    GACUI_ROOT,
     UI_TEXT,
     findTextPosition
 } from './Testing_Protocol.js';
@@ -39,7 +40,7 @@ const TYPED_TEXT = 'ABC';
 const IMAGE_FILE_NAME = '5900.png';
 const IMAGE_FIXTURE_DIR = 'C:\\Code';
 const IMAGE_DIALOG_PATH = join(IMAGE_FIXTURE_DIR, IMAGE_FILE_NAME);
-const SOURCE_IMAGE_PATH = fileURLToPath(new URL('../../../../GacUI/Test/Resources/App/Gaclib.png', import.meta.url));
+const SOURCE_IMAGE_PATH = join(GACUI_ROOT, 'Test', 'Resources', 'App', 'Gaclib.png');
 
 // ---------------------------------------------------------------------------
 // Helpers (unique to this test)
@@ -136,7 +137,7 @@ async function waitForPosition(page, predicate, timeout = 5000) {
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('ImageInText', () => {
+describeProtocolTest('ImageInText', () => {
     const ctx = setupProtocolTest();
     let createdImageFixture = false;
 

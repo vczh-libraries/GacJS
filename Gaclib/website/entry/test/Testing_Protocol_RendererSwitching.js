@@ -17,13 +17,14 @@
 //   8. Verify the third tab renders and contains the typed text with selection.
 //   9. Kill the process directly and close all webpages. No elegant exit is needed.
 
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     clickAt,
     waitForIdle,
     sleep,
-    setupProtocolTest
+    setupProtocolTest,
+    describeProtocolTest
 } from './Testing_Protocol.js';
 
 // ---------------------------------------------------------------------------
@@ -55,7 +56,7 @@ async function getScreenText(page) {
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('RendererSwitching', () => {
+describeProtocolTest('RendererSwitching', () => {
     const ctx = setupProtocolTest();
     let page2 = null;
     let page3 = null;

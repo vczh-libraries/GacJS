@@ -18,7 +18,7 @@
 //      non-selected C..K still bigger, non-selected H..M still #00FFFF.
 //   9. Kill the process directly and close the webpage. No elegant exit is needed.
 
-import { describe, test, expect } from 'vitest';
+import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
     findEditorCenter,
@@ -29,6 +29,7 @@ import {
     groupIntoRows,
     waitForIdle,
     setupProtocolTest,
+    describeProtocolTest,
     UI_TEXT,
     textMatchesAny,
     findTextPosition,
@@ -159,7 +160,7 @@ async function waitForColorFormattingAtHome(page, timeout = 10000) {
 // Test suite
 // ---------------------------------------------------------------------------
 
-describe('Font', () => {
+describeProtocolTest('Font', () => {
     const ctx = setupProtocolTest();
     let defaultSize = 12;
     let effectiveBigSize = BIG_SIZE;
