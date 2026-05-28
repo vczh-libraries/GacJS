@@ -27,6 +27,7 @@ and the HTTP test server. Treat it as a separate repo and commit/push any GacUI 
 See `doc/Protocol.md` for the remote protocol reference.
 See `doc/DOM.md` for how elements are rendered to HTML.
 See `doc/Projects.md` for the full package structure.
+See `doc/Testing_Protocol.md` for how to understand E2D tests.
 See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 
 # Validation after Code Change
