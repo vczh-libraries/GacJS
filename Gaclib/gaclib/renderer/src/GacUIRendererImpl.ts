@@ -462,6 +462,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     // Map from element ID to paragraph tracking data
     private _paragraphElements: Map<number, { htmlElement: HTMLElement; textDiv: HTMLElement }> = new Map();
+    private _paragraphCarets: Map<number, SCHEMA.OpenCaretRequest | null> = new Map();
 
     private _reconcileParagraphElements(): void {
         for (const [elementId, data] of this._paragraphElements) {
@@ -476,10 +477,53 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             const newTextDiv = getExtraBorder(newHtml);
             if (newTextDiv !== undefined) {
                 this._paragraphElements.set(elementId, { htmlElement: newHtml, textDiv: newTextDiv });
-                if (this._caretBlinkElementId === elementId) {
-                    this._startCaretBlink(elementId);
-                }
+                this._applyStoredParagraphCaret(elementId);
             }
+        }
+    }
+
+    private _getStoredParagraphCaret(elementId: number): SCHEMA.OpenCaretRequest | null {
+        if (this._paragraphCarets.has(elementId)) {
+            return this._paragraphCarets.get(elementId) ?? null;
+        }
+
+        const typedDesc = this._renderingRecord.elements.getDesc(elementId);
+        if (typedDesc !== undefined && typedDesc.type === SCHEMA.RendererType.DocumentParagraph) {
+            return typedDesc.desc.caret;
+        }
+        return null;
+    }
+
+    private _setStoredParagraphCaret(elementId: number, caret: SCHEMA.OpenCaretRequest | null): void {
+        this._paragraphCarets.set(elementId, caret);
+
+        const typedDesc = this._renderingRecord.elements.getDesc(elementId);
+        if (typedDesc !== undefined && typedDesc.type === SCHEMA.RendererType.DocumentParagraph) {
+            typedDesc.desc.caret = caret;
+        }
+    }
+
+    private _applyStoredParagraphCaret(elementId: number): void {
+        const caret = this._getStoredParagraphCaret(elementId);
+        if (caret === null && this._caretBlinkElementId === elementId) {
+            this._stopCaretBlink();
+        }
+
+        const data = this._paragraphElements.get(elementId);
+        if (data === undefined) {
+            return;
+        }
+
+        const layout = getParagraphLayout(data.htmlElement);
+        if (layout === undefined) {
+            return;
+        }
+
+        layout.caret = caret;
+        layout.caretVisible = caret !== null;
+        setCaretVisible(data.textDiv, layout.caretVisible, layout);
+        if (caret !== null) {
+            this._startCaretBlink(elementId);
         }
     }
 
@@ -553,7 +597,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             // First call: text is the full document
             fullDesc = {
                 paragraph: requestArgs,
-                caret: null
+                caret: this._getStoredParagraphCaret(elementId)
             };
         } else {
             // Subsequent call: merge with existing desc
@@ -572,9 +616,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                     text: existingDesc.paragraph.text, // text never changes incrementally
                     runsDiff: mergedRunsDiff
                 },
-                caret: existingDesc.caret
+                caret: this._getStoredParagraphCaret(elementId)
             };
         }
+        this._paragraphCarets.set(elementId, fullDesc.caret);
 
         // Update via _updateElement which triggers applyTypedStyle → initializeParagraph
         const typedDesc: TypedElementDesc = { type: SCHEMA.RendererType.DocumentParagraph, desc: fullDesc };
@@ -598,6 +643,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             const layout = getParagraphLayout(htmlElement);
             if (layout !== undefined) {
                 const documentSize = this._measureParagraphDocumentSize(htmlElement, textDiv, layout);
+                this._applyStoredParagraphCaret(elementId);
                 this._responses.RespondRendererUpdateElement_DocumentParagraph(id, { documentSize });
                 return;
             }
@@ -903,43 +949,13 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     RequestDocumentParagraph_OpenCaret(requestArgs: SCHEMA.OpenCaretRequest): void {
-        const data = this._paragraphElements.get(requestArgs.id);
-        if (data === undefined) return;
-
-        const layout = getParagraphLayout(data.htmlElement);
-        if (layout === undefined) return;
-
-        layout.caret = requestArgs;
-        layout.caretVisible = true;
-        setCaretVisible(data.textDiv, true, layout);
-        this._startCaretBlink(requestArgs.id);
-
-        // Also update the stored desc
-        const typedDesc = this._renderingRecord.elements.getDesc(requestArgs.id);
-        if (typedDesc !== undefined && typedDesc.type === SCHEMA.RendererType.DocumentParagraph) {
-            typedDesc.desc.caret = requestArgs;
-        }
+        this._setStoredParagraphCaret(requestArgs.id, requestArgs);
+        this._applyStoredParagraphCaret(requestArgs.id);
     }
 
     RequestDocumentParagraph_CloseCaret(requestArgs: SCHEMA.TYPES.Integer): void {
-        const data = this._paragraphElements.get(requestArgs);
-        if (data === undefined) return;
-
-        const layout = getParagraphLayout(data.htmlElement);
-        if (layout === undefined) return;
-
-        layout.caret = null;
-        layout.caretVisible = false;
-        setCaretVisible(data.textDiv, false, layout);
-        if (this._caretBlinkElementId === requestArgs) {
-            this._stopCaretBlink();
-        }
-
-        // Also update the stored desc
-        const typedDesc = this._renderingRecord.elements.getDesc(requestArgs);
-        if (typedDesc !== undefined && typedDesc.type === SCHEMA.RendererType.DocumentParagraph) {
-            typedDesc.desc.caret = null;
-        }
+        this._setStoredParagraphCaret(requestArgs, null);
+        this._applyStoredParagraphCaret(requestArgs);
     }
 
     /****************************************************************************************
@@ -979,6 +995,11 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
 
         for (const id of requestArgs) {
+            if (this._caretBlinkElementId === id) {
+                this._stopCaretBlink();
+            }
+            this._paragraphElements.delete(id);
+            this._paragraphCarets.delete(id);
             this._renderingRecord.elements.destroy(id);
         }
     }

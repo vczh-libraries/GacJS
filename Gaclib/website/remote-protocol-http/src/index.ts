@@ -43,6 +43,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
     private _failure: Error | undefined = undefined;
     private _failureNotification: Promise<void>;
     private _failureNotifier: (() => void) | undefined = undefined;
+    private _sending: Promise<void> = Promise.resolve();
 
     constructor(
         private requests: IRemoteProtocolRequests,
@@ -54,11 +55,7 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
             this._failureNotifier = resolve;
         });
         const callback: ProtocolInvokingHandler = (invoking => {
-            this.sendRequest(invoking).catch(error => {
-                if (!this._stopping) {
-                    this.notifyFailure(this.normalizeError(error));
-                }
-            });
+            this.enqueueRequest(invoking);
         });
         this.responses = new ResponseToJson(callback);
         this.events = new EventToJson(callback);
@@ -205,6 +202,18 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         if (responseText !== undefined) {
             this.handleNetworkPackageText(responseText);
         }
+    }
+
+    private enqueueRequest(invoking: ProtocolInvoking): void {
+        const sending = this._sending
+            .catch(() => {})
+            .then(() => this.sendRequest(invoking));
+        this._sending = sending;
+        sending.catch(error => {
+            if (!this._stopping) {
+                this.notifyFailure(this.normalizeError(error));
+            }
+        });
     }
 
     async start(): Promise<void> {
