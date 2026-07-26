@@ -234,11 +234,12 @@ All protocol tests live under `Gaclib/website/entry/test/`:
 - `Testing_Protocol_RendererSwitching.js` — Renderer switching (reconnection) test.
 
 Each test file is a vitest suite wrapped by `describeProtocolTest()` from the shared
-module. Protocol suites run only on Windows and only when the sibling `..\GacUI`
-repo exists; otherwise they are reported as skipped. Vitest global setup builds
-GacUI once with `GACUI-ROOT\.github\Scripts\copilotBuild.ps1` before the protocol
-test files start. Most suites use `setupProtocolTest()`, which starts/stops the
-C++ server and launches/closes the headless Chromium browser.
+module. The checked-in harness is Windows-specific: it builds GacUI with
+`GACUI-ROOT\.github\Scripts\copilotBuild.ps1`, launches the Windows core
+executable with `/Http`, and uses headless Chromium. The website entry package
+does not start Vitest on non-Windows platforms, so the root test command can
+continue running the portable package tests without loading this E2E harness.
+The internal suite guard remains as a fallback for a missing sibling GacUI repo.
 
 ### Example Test Structure
 
@@ -282,9 +283,12 @@ cd Gaclib
 yarn test
 ```
 
-This runs all vitest suites across all packages, including the protocol tests.
-Protocol tests build the sibling GacUI repo once before launching any
-`RemotingTest_Core` test process.
+On Windows, this runs all vitest suites across all packages, including the
+protocol tests. Protocol tests build the sibling GacUI repo once before launching
+any `RemotingTest_Core` test process. On Linux and macOS, the portable suites run
+but the website entry package prints `Skipping Windows-only protocol E2E tests.`
+and exits successfully. That skip does not verify a live MiniHTTP core or browser;
+perform cross-platform browser verification separately.
 Test files run sequentially (`fileParallelism: false`) since they share the
 same stateful HTTP server.
 

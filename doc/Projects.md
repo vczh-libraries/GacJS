@@ -157,8 +157,12 @@ Wraps `@gaclib/remote-protocol` with an HTTP client that:
 
 Main export: `connectHttpServer(host, requests): Promise<IRemoteProtocolHttpClient>`
 
-The corresponding HTTP server is the C++ executable:
-`..\GacUI\Test\GacUISrc\RemotingTest_Core` (run with `/Http` flag).
+The corresponding C++ source project is
+`..\GacUI\Test\GacUISrc\RemotingTest_Core`. The Windows Debug executable is
+`..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe` and accepts `/Http` or
+`/MiniHttp`. The Linux/macOS output is
+`..\GacUI\Test\Linux\RemotingTest_Core\Bin\RemotingTest_Core` and uses
+`/MiniHttp`.
 
 | Script | Action |
 |--------|--------|
@@ -171,10 +175,12 @@ The corresponding HTTP server is the C++ executable:
 **Path:** `Gaclib/website/entry/`
 
 The website application that integrates the renderer and HTTP client.
-After building, the website is served from `Gaclib/website/entry/lib/dist/` via IIS
-on `localhost:8896`. No manual hosting is needed — access the website directly after build.
-If `localhost:8896` is unreachable, you can serve the files yourself from this folder
-as a fallback.
+After building, the website is generated in
+`Gaclib/website/entry/lib/dist/`. On Windows, IIS normally serves this directory
+on `localhost:8896`; if IIS is unavailable, use a local static-file server. On
+Linux and macOS, building does not start a server, so serve this directory
+explicitly. It must be the document root because the HTML pages use absolute
+paths such as `/index.js`.
 
 **HTML pages:**
 
@@ -217,9 +223,11 @@ All commands run from `Gaclib/`:
 |---------|-------------|
 | `yarn codegen` | Regenerate `@gaclib/remote-protocol` from `RemoteProtocol.json` |
 | `yarn build` | Build all packages (includes ESLint) |
-| `yarn test` | Run all vitest tests |
+| `yarn test` | Run portable vitest tests and, on Windows, protocol E2E tests |
 
 Package build order is handled automatically by Lerna streaming.
 
 **Important:** `yarn build` must complete before `yarn test` — tests run against
-compiled output, not source.
+compiled output, not source. On non-Windows platforms, the website entry package
+prints a skip message without starting Vitest because its checked-in protocol E2E
+harness is Windows-specific. This skip is not live-browser verification.
