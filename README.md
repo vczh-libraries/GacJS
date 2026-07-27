@@ -11,13 +11,23 @@ Running GacUI in Browsers!
 The root of test projects is in the `Gaclib` folder,
 `yarn build` and you will get all files created to `Gaclib\website\entry\lib\dist`.
 
-Start a website from there and you can enjoy the demo!
+Start the website on port `8896`:
+
+```text
+cd Gaclib\website\entry
+npm run start
+```
+
+Open `http://localhost:8896` and press ENTER in the server terminal when you
+want to stop it.
 
 ## localhost/
 
 This is an interactive GacUI renderer.
 
-Run [RemotingTest_Core.vcxproj](https://github.com/vczh-libraries/GacUI/tree/master/Test/GacUISrc/RemotingTest_Core) with `/Http` and open this page.
+Run [RemotingTest_Core.vcxproj](https://github.com/vczh-libraries/GacUI/tree/master/Test/GacUISrc/RemotingTest_Core)
+with `/Http` on Windows or `/MiniHttp` on Windows, Linux, or macOS, and open
+this page.
 
 You can start a local `RemotingTest_Win32_Renderer` with `/Http`, do something to the UI, and start the website, you can see the website take over the running UI on the fly.
 

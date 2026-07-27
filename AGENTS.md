@@ -42,13 +42,13 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - `yarn test` will always call `vitest`, do not call `npx vitest`.
   - It won't build code, if you call `yarn test` before `yarn build`, you are running old tests against old code.
 - Playwright is installed with this repo.
-  - `localhost:8896` is hosted by IIS. After a successful build, the website is immediately accessible at `http://localhost:8896` — no manual hosting is needed.
-  - If `localhost:8896` is unreachable, you can serve the files yourself from `(repo-root)/Gaclib/website/entry/lib/dist`. If serving on port 8896 fails because the port is already taken, that means IIS is hosting it and you should access it directly.
+  - After a successful build, run `npm run start` from `(repo-root)/Gaclib/website/entry` to serve `(repo-root)/Gaclib/website/entry/lib/dist` at `http://localhost:8896`. Press ENTER to stop it.
+  - On Windows, IIS may already host `localhost:8896`. If the port is occupied, `npm run start` prints that IIS may already be serving the website; check the URL directly.
 
 ## Project Structure
 
 - Source code of the website is in `(repo-root)/Gaclib/website/entry/assets`.
-- After compiled everything will be generated and copied to `(repo-root)/Gaclib/website/entry/lib/dest`, the website starts here.
+- After compilation everything will be generated and copied to `(repo-root)/Gaclib/website/entry/lib/dist`; the website starts here.
 - `/index.js` is referenced in multiple HTML files:
   - It injects a `GacUIHtmlRenderer` global variable.
   - All members in `GacUIHtmlRenderer` are exported objects from `(repo-root)/Gaclib/website/remote-protocol-http/src/index.ts`.

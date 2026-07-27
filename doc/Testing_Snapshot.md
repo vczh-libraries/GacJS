@@ -62,11 +62,14 @@ Each snapshot has:
 
 ## Navigating the Snapshot Viewer
 
-1. Open `http://localhost:8896/snapshots.html` in a browser.
-2. The left panel shows a **Files Tree View** — expand folders to find the snapshot JSON file.
-3. Click a `.json` file. The middle panel (**Frame List**) populates with frames named as `{frameId}: {frameName}`.
-4. Click a frame entry. The right panel (**GacUI Rendering**) renders the frame into the `#gacuiScreen` div.
-5. Splitters between panels are draggable.
+1. Run `yarn build` from `Gaclib`.
+2. Run `npm run start` from `Gaclib/website/entry`; it serves the website until
+   ENTER is pressed.
+3. Open `http://localhost:8896/snapshots.html` in a browser.
+4. The left panel shows a **Files Tree View** — expand folders to find the snapshot JSON file.
+5. Click a `.json` file. The middle panel (**Frame List**) populates with frames named as `{frameId}: {frameName}`.
+6. Click a frame entry. The right panel (**GacUI Rendering**) renders the frame into the `#gacuiScreen` div.
+7. Splitters between panels are draggable.
 
 ## Inspecting Rendered Elements
 

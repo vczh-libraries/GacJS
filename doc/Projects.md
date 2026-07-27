@@ -176,11 +176,13 @@ The corresponding C++ source project is
 
 The website application that integrates the renderer and HTTP client.
 After building, the website is generated in
-`Gaclib/website/entry/lib/dist/`. On Windows, IIS normally serves this directory
-on `localhost:8896`; if IIS is unavailable, use a local static-file server. On
-Linux and macOS, building does not start a server, so serve this directory
-explicitly. It must be the document root because the HTML pages use absolute
-paths such as `/index.js`.
+`Gaclib/website/entry/lib/dist/`. Run `npm run start` from
+`Gaclib/website/entry/` to serve that directory at `http://localhost:8896`;
+press ENTER to stop it. The command is portable across Windows, Linux, and
+macOS. On Windows, IIS may already own port `8896`; in that case the command
+reports that IIS may already be serving the site. The generated directory must
+be the document root because the HTML pages use absolute paths such as
+`/index.js`.
 
 **HTML pages:**
 
@@ -212,6 +214,7 @@ containing all exports from `src/index.ts`:
 |--------|--------|
 | `yarn build` | Compile → copy assets → esbuild (dev mode) |
 | `yarn build-ship` | Compile → copy assets → esbuild (minified, no sourcemaps) |
+| `npm run start` | Serve `lib/dist` on port 8896 until ENTER is pressed |
 
 ---
 
@@ -231,3 +234,6 @@ Package build order is handled automatically by Lerna streaming.
 compiled output, not source. On non-Windows platforms, the website entry package
 prints a skip message without starting Vitest because its checked-in protocol E2E
 harness is Windows-specific. This skip is not live-browser verification.
+
+Run `npm run start` from `Gaclib/website/entry/` after the build when a browser
+needs the website.

@@ -146,18 +146,18 @@ After running `yarn build` in the `Gaclib` directory, the built website files ar
 Gaclib\website\entry\lib\dist\
 ```
 
-`localhost:8896` is hosted by IIS. After a successful build, the website is immediately
-accessible at `http://localhost:8896` — no manual hosting is needed.
+Start the checked-in static server:
 
-Only if `localhost:8896` is unreachable, you can host the files yourself as a fallback:
-
-```powershell
-cd Gaclib\website\entry\lib\dist
-npx serve -l 8896
+```text
+cd Gaclib\website\entry
+npm run start
 ```
 
-If this fails because port 8896 is already taken, that means IIS is hosting it and
-you should access the website directly instead of trying to serve it.
+It serves `lib\dist` at `http://localhost:8896` and waits for ENTER to stop.
+The command works on Windows, Linux, and macOS. If port `8896` is already in
+use on Windows, it reports that IIS may already be hosting the website; check
+the URL directly. Other startup failures are reported as errors and exit with a
+nonzero status.
 
 **IMPORTANT:** The root folder MUST be `lib\dist\` — HTML files reference `/index.js`
 which is in the dist root.
@@ -170,7 +170,7 @@ which is in the dist root.
 
 1. Build the TypeScript code: `cd Gaclib; yarn build`
 2. Start the C++ server: `start RemotingTest_Core.exe /FCT /Http`
-3. Access the website directly (IIS hosts it automatically after build)
+3. In another terminal, run `cd Gaclib\website\entry; npm run start`
 4. Open `http://localhost:8896/index.html`
 5. The GacUI application UI renders in the browser
 

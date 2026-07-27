@@ -606,8 +606,8 @@ export function setCaretVisible(textDiv: HTMLElement, visible: boolean, layout: 
 
 /*
 * TEST-NODE:
-* After yarn build the website will be automatically hosted
-* Open access snapshots.html
+* After yarn build, run npm run start from Gaclib/website/entry.
+* Open snapshots.html.
 * navigates to some random snapshots under the editor folder (a tree view node in that page)
 * open some random frames
 * and initializeParagraph should be called, make sure no runtime exception happens.
