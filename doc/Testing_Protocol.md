@@ -385,6 +385,13 @@ netsh http add urlacl url=http://localhost:8888/ user=Everyone
 The server encountered an unhandled protocol error. Check the C++ server console
 for the error message.
 
+On Firefox, stopping the MiniHTTP core while a long-poll request is outstanding can
+also add a CORS or `NS_ERROR_CONNECTION_REFUSED` message to the browser console. The
+HTTP client catches that terminal transport failure, stops issuing requests, and
+shows the success mask `HTTP remote protocol disconnected.` It is a failure only if
+the page shows the error mask, reports an uncaught page error or dialog, or continues
+requesting the stopped endpoint.
+
 ### Connection drops / No response
 
 - Ensure only one `index.html` tab is open.

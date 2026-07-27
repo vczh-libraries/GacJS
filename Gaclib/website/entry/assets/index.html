@@ -98,7 +98,8 @@
                 client.stop();
                 renderer.stop();
 
-                if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError) {
+                if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError ||
+                    error instanceof GacUIHtmlRenderer.RemoteProtocolHttpDisconnectError) {
                     showMask(successMask, successMessage, getMessage(error));
                 } else {
                     showMask(errorMask, errorMessage, getMessage(error));

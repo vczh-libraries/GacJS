@@ -13,6 +13,12 @@ import {
 const GACUI_REMOTE_PROTOCOL_CORE_CLIENT_ID = 1;
 const GACUI_REMOTE_PROTOCOL_CHANNEL_NAME = 'GacUIRemoteProtocol';
 
+export class RemoteProtocolHttpDisconnectError extends Error {
+    constructor() {
+        super('HTTP remote protocol disconnected.');
+    }
+}
+
 export interface IRemoteProtocolHttpClient {
     get responses(): IRemoteProtocolResponses;
     get events(): IRemoteProtocolEvents;
@@ -144,36 +150,48 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         return true;
     }
 
+    private disconnect(): RemoteProtocolHttpDisconnectError {
+        const error = new RemoteProtocolHttpDisconnectError();
+        this._stopping = true;
+        this.notifyFailure(error);
+        return error;
+    }
+
+    private async fetchChannelText(url: string, init: RequestInit): Promise<string> {
+        try {
+            const response = await fetch(url, init);
+            if (response.status !== 200) {
+                throw this.disconnect();
+            }
+            return await response.text();
+        }
+        catch (error) {
+            if (error instanceof RemoteProtocolHttpDisconnectError) {
+                throw error;
+            }
+            throw this.disconnect();
+        }
+    }
+
     private async postResponse(message: string): Promise<string | undefined> {
         if (this._stopping) {
             return undefined;
         }
 
-        const response = await fetch(this.getUrl(this.urls.responseUrl), {
+        const responseText = await this.fetchChannelText(this.getUrl(this.urls.responseUrl), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf8' },
             body: message,
         });
 
-        if (response.status !== 200) {
-            throw new Error(`[${response.status}: ${response.statusText}]: ${this.getUrl(this.urls.responseUrl)}`);
-        }
-
-        const responseText = await response.text();
         return responseText === '' ? undefined : responseText;
     }
 
     private async readRequest(): Promise<string | undefined> {
-        const response = await fetch(this.getUrl(this.urls.requestUrl), {
+        return await this.fetchChannelText(this.getUrl(this.urls.requestUrl), {
             method: 'POST',
             headers: { 'Accept': 'application/json; charset=utf8' }
         });
-
-        if (response.status !== 200) {
-            return undefined;
-        }
-
-        return await response.text();
     }
 
     async connectChannel(): Promise<void> {
@@ -222,7 +240,14 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
         }
 
         this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16 });
-        while (!this._stopping) {
+        while (true) {
+            if (this._failure !== undefined) {
+                throw this._failure;
+            }
+            if (this._stopping) {
+                break;
+            }
+
             const reading = this.readRequest()
                 .then<ReadResult>(responseText => ({ type: 'message', responseText }))
                 .catch<ReadResult>((error: unknown) => ({ type: 'failure', error: this._failure ?? this.normalizeError(error) }));
@@ -246,6 +271,11 @@ class HttpClientImpl implements IRemoteProtocolHttpClient {
             }
 
             this.handleNetworkPackageText(result.responseText);
+        }
+
+        const failure = this._failure;
+        if (failure !== undefined) {
+            throw this.normalizeError(failure);
         }
     }
 

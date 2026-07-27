@@ -1,4 +1,7 @@
-import { connectHttpServer, IRemoteProtocolHttpClient } from '@gaclib-website/remote-protocol-http';
+import {
+    connectHttpServer,
+    IRemoteProtocolHttpClient
+} from '@gaclib-website/remote-protocol-http';
 import { createHtmlRenderer, IGacUIRenderer, GacUISettings } from '@gaclib/renderer'
 
 /**
@@ -85,6 +88,7 @@ export async function runGacUI(settings: GacUISettings): Promise<[IGacUIRenderer
 
 // for elements.html
 export { GacUIHtmlRendererExitError, applyBounds, applyTypedStyle, applyFeatureGates } from '@gaclib/renderer';
+export { RemoteProtocolHttpDisconnectError } from '@gaclib-website/remote-protocol-http';
 
 // for snapshots.html
 export { Snapshot } from './snapshotIndex';

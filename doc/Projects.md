@@ -154,6 +154,8 @@ Wraps `@gaclib/remote-protocol` with an HTTP client that:
 - Long-polls for requests from the core via `POST`
 - Processes a server package piggybacked on a `POST` response when the core produces an immediate reply while handling that event/response
 - Negotiates a VlppOS channel connection via `GET /GacUIRemoteProtocolHttp/VlppInterProcess/Connect`
+- Treats an HTTP failure after connection as a terminal disconnect, stops issuing
+  requests, and reports `RemoteProtocolHttpDisconnectError`
 
 Main export: `connectHttpServer(host, requests): Promise<IRemoteProtocolHttpClient>`
 
@@ -167,6 +169,7 @@ The corresponding C++ source project is
 | Script | Action |
 |--------|--------|
 | `yarn build` | Clean → lint → compile (tsc) |
+| `yarn test` | Run vitest tests |
 
 ---
 
@@ -201,6 +204,7 @@ containing all exports from `src/index.ts`:
 | `runGacUI(settings)` | Initialize renderer + HTTP client and start the session |
 | `isShortcutReservedForBrowser(event)` | Filter keyboard events that should pass through to the browser |
 | `GacUIHtmlRendererExitError` | Error class thrown on graceful exit |
+| `RemoteProtocolHttpDisconnectError` | Error class reported when the HTTP core disconnects |
 | `applyBounds(element, rect)` | Apply positioning CSS to an HTML element |
 | `applyTypedStyle(element, desc)` | Apply element-type-specific CSS |
 | `applyFeatureGates(gates)` | Set runtime feature flags |
