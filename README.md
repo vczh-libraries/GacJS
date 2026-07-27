@@ -34,7 +34,7 @@ Open `http://localhost:8896` and press ENTER in the server terminal when you wan
 
 ### Switching between Renderers
 
-You can start a local `RemotingTest_Win32_Renderer` with `/Http` or `/Pipe`, do something to the UI, and start the website, you can see the website take over the running UI on the fly.
+You can start a local `RemotingTest_Win32_Renderer` with `/Http`, do something to the UI, and start the website, you can see the website take over the running UI on the fly.
 
 ![GacUIHtml2](GacUIHtml2.gif)
 
