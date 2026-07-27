@@ -213,11 +213,25 @@ It contains:
 
 ### Setup
 
-Playwright is installed with this repo. Install browsers if needed:
+Playwright is installed with this repo. The checked-in Windows E2E harness uses
+Chromium:
 
 ```powershell
 npx playwright install chromium
 ```
+
+Portable live MiniHTTP verification uses one platform-specific browser:
+
+| Platform | Required Playwright browser |
+|---|---|
+| Linux | Firefox |
+| macOS | WebKit, Playwright's Safari-family target |
+
+Use `npx playwright install firefox` on Linux and
+`npx playwright install webkit` on macOS. Do not substitute another Playwright
+engine in either platform's remote-protocol verification matrix. Playwright
+WebKit is not the installed Safari application; actual Safari is a separate
+manual compatibility check.
 
 ### Test File Structure
 
