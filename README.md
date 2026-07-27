@@ -26,6 +26,7 @@ npm run start
 Open `http://localhost:8896` and press ENTER in the server terminal when you want to stop it. This is an interactive GacUI renderer.
 
 ![RPT_Windows](RPT_Windows.png)
+![RPT_Ubuntu](RPT_Ubuntu.png)
 ![RPT_macOS](RPT_macOS.png)
 
 ### Interacting with GacUI Core
