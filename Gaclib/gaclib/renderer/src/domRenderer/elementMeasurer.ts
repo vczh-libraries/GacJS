@@ -11,7 +11,6 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
     private _measuredFontHeights: Map<string, SCHEMA.ElementMeasuring_FontHeight> = new Map();
     private _measuredTotalSizes: Map<SCHEMA.TYPES.Integer, SCHEMA.ElementMeasuring_ElementMinSize> = new Map();
 
-    private _imageElementForTesting: HTMLImageElement = document.createElement('img');
     private _measuringImageTasks: [SCHEMA.TYPES.Integer | undefined, SCHEMA.ImageCreation][] = [];
     private _measuringImageTasksExecuted = 0;
     private _measuringImageTasksExecuting = false;
@@ -176,31 +175,31 @@ export class ElementHTMLMeasurer implements IElementMeasurer {
             const contentType = getImageContentType(formatType);
             const imageUrl = getImageDataUrl(contentType, imageCreation.imageData);
 
-            // Set the source and wait for the image to load
-            this._imageElementForTesting.src = imageUrl;
+            const imageElement = document.createElement('img');
+            const imageLoaded = new Promise<boolean>(resolve => {
+                imageElement.onload = () => resolve(true);
+                imageElement.onerror = () => resolve(false);
+            });
+            imageElement.src = imageUrl;
+
             let imageMetadata: SCHEMA.ImageMetadata;
-            try {
-                await this._imageElementForTesting.decode();
+            if (await imageLoaded) {
                 imageMetadata = {
                     id: imageCreation.id,
                     format: formatType,
                     frames: [{
                         size: {
-                            x: this._imageElementForTesting.naturalWidth,
-                            y: this._imageElementForTesting.naturalHeight
+                            x: imageElement.naturalWidth,
+                            y: imageElement.naturalHeight
                         }
                     }]
                 };
-            } catch (error) {
-                if (error instanceof DOMException) {
-                    imageMetadata = {
-                        id: imageCreation.id,
-                        format: SCHEMA.ImageFormatType.Unknown,
-                        frames: [{ size: { x: 1, y: 1 } }]
-                    };
-                } else {
-                    throw error;
-                }
+            } else {
+                imageMetadata = {
+                    id: imageCreation.id,
+                    format: SCHEMA.ImageFormatType.Unknown,
+                    frames: [{ size: { x: 1, y: 1 } }]
+                };
             }
 
             // Submit metadata

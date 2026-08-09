@@ -495,8 +495,10 @@ Measures the pixel dimensions of a SolidLabel's text:
 When `ImageCreated` is received:
 
 1. Convert binary data to a `data:` URL
-2. Create an `HTMLImageElement`, set `src`, call `decode()`
-3. Read `naturalWidth` × `naturalHeight`
+2. Create an `HTMLImageElement` and register `load` and `error` handlers before
+   setting `src`
+3. After `load`, read `naturalWidth` × `naturalHeight`; after `error`, report the
+   unsupported-image fallback
 4. Auto-detect format from byte signature
 5. Return `ImageMetadata` to the core
 
