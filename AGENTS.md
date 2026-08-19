@@ -36,8 +36,15 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - The root of the workspace is defined in `(repo-root)/Gaclib/package.json`.
 - After changing the code you must:
   - `cd` to `(repo-root)/Gaclib`
+  - `yarn run import`
+  - `yarn codegen`
   - `yarn build`
   - `yarn test`
+- The root commands represent separate phases and must keep these responsibilities:
+  - `import` refreshes files copied from upstream repositories and compiles packages that are code-generation tools. With Yarn 1, invoke this script as `yarn run import` because `yarn import` is a built-in Yarn command.
+  - `codegen` runs the already-compiled code-generation tools and updates generated source files.
+  - `build` compiles all non-codegen projects. Codegen-tool packages must not define a `build` script; future codegen tools belong in the `import` and `codegen` phases instead.
+  - `test` runs tests against the output from the earlier phases.
 - `yarn build` will always call `eslint`, do not call `npx eslint`.
 - `yarn test` will always call `vitest`, do not call `npx vitest`.
   - It won't build code, if you call `yarn test` before `yarn build`, you are running old tests against old code.
@@ -53,14 +60,13 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
   - It injects a `GacUIHtmlRenderer` global variable.
   - All members in `GacUIHtmlRenderer` are exported objects from `(repo-root)/Gaclib/website/remote-protocol-http/src/index.ts`.
 - Files you absolutely cannot modify whatever happens:
-  - `(repo-root)/Import/Metadata/RemoteProtocol.json`
   - `(repo-root)/Gaclib/gaclib/remote-protocol`: all files in this folder.
   - `(repo-root)/Gaclib/website/entry/assets/snapshots`: all files in this folder.
 - Packages:
   - `(repo-root)/Gaclib/gaclib/remote-protocol` is completely generated:
     - DO NOT modify anything in this package.
-    - If you find anything wrong, update `(repo-root)/Gaclib/shared/codegen/src/**/*.ts` and run `yarn codegen`.
-    - It consumes `(repo-root)/Import/Metadata/RemoteProtocol.json` to generate remote protocol schema and parsing code.
+    - If you find anything wrong, update `(repo-root)/Gaclib/gaclib/codegen-remote-protocol/src/**/*.ts`, then run `yarn run import` and `yarn codegen`.
+    - It is generated from `(repo-root)/Gaclib/gaclib/codegen-remote-protocol/src/Import/Protocols.json`.
     - This package serves everything around remote protocol definition and parsing.
   - `(repo-root)/Gaclib/gaclib/renderer`:
     - This package serves HTML rendering by manipulating DOM dynamically.
@@ -69,9 +75,12 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
   - `(repo-root)/Gaclib/website/remote-protocol-http`:
     - HTTP transport layer for the remote protocol (demo/testing only).
     - Wraps `@gaclib/remote-protocol` with fetch-based HTTP client.
+  - `(repo-root)/Gaclib/gaclib/codegen-remote-protocol`:
+    - `@gaclib/codegen-remote-protocol` imports the protocol metadata and AST declarations from the sibling GacUI checkout and generates `@gaclib/remote-protocol`.
+    - Its `import` script prepares and compiles the generator; it intentionally has no `build` or `codegen` script because the shared codegen package invokes it.
   - `(repo-root)/Gaclib/shared/codegen`:
-    - Code generator that reads `(repo-root)/Import/Metadata/RemoteProtocol.json` and produces `@gaclib/remote-protocol`.
-    - Run `yarn codegen` to regenerate.
+    - Snapshot code generator and the entry point for the root `codegen` phase.
+    - Its `import` script compiles the shared generator, and its `codegen` script invokes `@gaclib/codegen-remote-protocol` before generating snapshot data.
   - `(repo-root)/Gaclib/shared/eslint-shared`:
     - Shared ESLint configuration used by all packages.
 

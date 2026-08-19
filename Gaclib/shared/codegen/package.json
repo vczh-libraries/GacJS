@@ -3,14 +3,16 @@
     "version": "0.0.1",
     "description": "GacUI Codegen for TypeScript",
     "type": "module",
-    "main": "./lib/src/index.js",
+    "main": "./lib/index.js",
     "scripts": {
-        "codegen": "rimraf ./lib && node ./prepare.js && eslint --fix && tsc && node ./lib/index.js",
-        "build": "rimraf ./lib && eslint --fix"
+        "import": "rimraf ./lib && eslint --fix && tsc",
+        "codegen": "node ./lib/index.js"
     },
     "license": "Apache-2.0",
     "devDependencies": {
         "@gaclib-shared/eslint-shared": "^0.0.1"
     },
-    "dependencies": {}
+    "dependencies": {
+        "@gaclib/codegen-remote-protocol": "^0.0.1"
+    }
 }

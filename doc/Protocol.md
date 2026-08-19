@@ -33,7 +33,7 @@ Communication direction:
 | Web renderer | `Gaclib/gaclib/renderer/src/` | This repo's HTML/CSS renderer for web browsers |
 
 **TypeScript generated code:**
-- `Gaclib/gaclib/remote-protocol/` — generated from `Import/Metadata/RemoteProtocol.json` by `@gaclib-shared/codegen`
+- `Gaclib/gaclib/remote-protocol/` — generated from `Gaclib/gaclib/codegen-remote-protocol/src/Import/Protocols.json` by `@gaclib/codegen-remote-protocol`; run it through the root `yarn codegen` command
 
 ---
 

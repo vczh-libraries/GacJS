@@ -20,6 +20,7 @@ Gaclib/
 │   ├── codegen/            ← @gaclib-shared/codegen
 │   └── eslint-shared/      ← @gaclib-shared/eslint-shared
 ├── gaclib/
+│   ├── codegen-remote-protocol/ ← @gaclib/codegen-remote-protocol
 │   ├── remote-protocol/    ← @gaclib/remote-protocol
 │   └── renderer/           ← @gaclib/renderer
 └── website/
@@ -27,25 +28,39 @@ Gaclib/
     └── entry/              ← @gaclib-website/entry
 ```
 
-External inputs:
+Remote-protocol import inputs:
 
 ```
-Import/
-└── Metadata/
-    └── RemoteProtocol.json   ← protocol schema (consumed by codegen)
-..\GacUI\                     ← sibling C++ GacUI repository
+..\GacUI\Source\PlatformProviders\Remote\Protocol\Metadata\Protocols.json
+..\GacUI\Source\Compiler\RemoteProtocol\Generated\GuiRemoteProtocolAst_Json.d.ts
+        │
+        └── yarn run import
+              └── Gaclib/gaclib/codegen-remote-protocol/src/Import/
+                    ├── Protocols.json
+                    └── GuiRemoteProtocolAst_Json.d.ts
 ```
+
+The imported files retain their upstream names and are committed with the
+generator package.
 
 ---
 
 ## Dependency Graph
 
 ```
-@gaclib-shared/codegen ─── reads ──→ Import/Metadata/RemoteProtocol.json
-        │
-        │ generates
-        ▼
-@gaclib/remote-protocol            (no runtime dependencies)
+@gaclib-shared/codegen ─── invokes ──→ @gaclib/codegen-remote-protocol
+        │                                      │
+        │ generates snapshot data              │ reads its src/Import files
+        │                                      │ and generates
+        │                                      ▼
+        │                           @gaclib/remote-protocol
+        │                           (no runtime dependencies)
+        └──────────────────────────────────────┐
+                                               │
+                                               ▼
+                                  @gaclib-website/entry snapshots
+
+@gaclib/remote-protocol
         │
         ├──────────────────────────────────────┐
         ▼                                      ▼
@@ -66,19 +81,40 @@ Import/
 
 **Path:** `Gaclib/shared/codegen/`
 
-Code generator that reads `Import/Metadata/RemoteProtocol.json` and produces
-the TypeScript files for `@gaclib/remote-protocol`. Also generates snapshot
-index data for the entry website.
+Snapshot generator and root codegen orchestration package. Its codegen entry
+point first invokes `@gaclib/codegen-remote-protocol`, then refreshes the entry
+website snapshots and their index.
 
 | Script | Action |
 |--------|--------|
-| `yarn codegen` | Clean → lint → compile → **run generator** |
-| `yarn build` | Clean → lint (no execution) |
+| `yarn run import` | Clean → lint → compile the snapshot generator |
+| `yarn codegen` | Run remote-protocol codegen → copy snapshots → generate snapshot index |
 
 Key files:
-- `src/remote-protocol/generateRemoteProtocol.ts` — generates type definitions and enums
-- `src/remote-protocol/generateRemoteProtocolInvoking.ts` — generates protocol invocation/parsing code
+- `src/index.ts` — invokes remote-protocol codegen and snapshot generation
 - `src/snapshots.ts` — generates snapshot file index
+
+---
+
+### @gaclib/codegen-remote-protocol
+
+**Path:** `Gaclib/gaclib/codegen-remote-protocol/`
+
+Code generator that owns the imported protocol metadata and produces the
+TypeScript schema and invocation/parsing files for `@gaclib/remote-protocol`.
+The package is compiled during the import phase and is executed by
+`@gaclib-shared/codegen` during the codegen phase.
+
+| Script | Action |
+|--------|--------|
+| `yarn run import` | Run `prepare.js` → clean → lint → compile the generator |
+
+The package deliberately has no `build` or `codegen` script. Key files:
+
+- `prepare.js` — refreshes `src/Import/Protocols.json` and `src/Import/GuiRemoteProtocolAst_Json.d.ts` from GacUI
+- `src/generateRemoteProtocol.ts` — generates type definitions and enums
+- `src/generateRemoteProtocolInvoking.ts` — generates protocol invocation/parsing code
+- `src/index.ts` — resolves the generated package output directory and runs both generators
 
 ---
 
@@ -228,11 +264,15 @@ All commands run from `Gaclib/`:
 
 | Command | Description |
 |---------|-------------|
-| `yarn codegen` | Regenerate `@gaclib/remote-protocol` from `RemoteProtocol.json` |
-| `yarn build` | Build all packages (includes ESLint) |
+| `yarn run import` | Refresh upstream imports and compile codegen-tool packages |
+| `yarn codegen` | Run compiled codegen tools and refresh generated sources |
+| `yarn build` | Build all non-codegen packages (includes ESLint) |
 | `yarn test` | Run portable vitest tests and, on Windows, protocol E2E tests |
 
-Package build order is handled automatically by Lerna streaming.
+Run the phases in table order after changing codegen or imported inputs. Yarn 1
+reserves `yarn import` for lockfile conversion, so the repository script requires
+the explicit `yarn run import` form. Package order is handled automatically by
+Lerna streaming.
 
 **Important:** `yarn build` must complete before `yarn test` — tests run against
 compiled output, not source. On non-Windows platforms, the website entry package

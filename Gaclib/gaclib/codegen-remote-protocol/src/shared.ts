@@ -1,4 +1,4 @@
-import { Schema, Type } from './AST';
+import { Schema, Type } from './Import/GuiRemoteProtocolAst_Json';
 
 export function fixIndentation(code: string): string {
     // Break code into lines

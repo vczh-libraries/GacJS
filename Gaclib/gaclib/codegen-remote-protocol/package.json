@@ -1,0 +1,15 @@
+{
+    "name": "@gaclib/codegen-remote-protocol",
+    "version": "0.0.1",
+    "description": "GacUI Remote Protocol Codegen for TypeScript",
+    "type": "module",
+    "main": "./lib/index.js",
+    "scripts": {
+        "import": "node ./prepare.js && rimraf ./lib && eslint --fix && tsc"
+    },
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "@gaclib-shared/eslint-shared": "^0.0.1"
+    },
+    "dependencies": {}
+}

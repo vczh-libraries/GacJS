@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Schema } from './AST';
+import { Schema } from './Import/GuiRemoteProtocolAst_Json';
 import { collectClassNames, fixIndentation, refToString, typeToString } from './shared.js';
 
 const __dirname = import.meta.dirname;
@@ -83,9 +83,9 @@ ${generateEvents(schema, classNames)}
 `);
 }
 
-export function generateRemoteProtocol() {
-    const inputJson = path.resolve(__dirname, '../../../../../Import/Metadata/RemoteProtocol.json');
-    const outputTs = path.resolve(__dirname, '../../../../gaclib/remote-protocol/src/remoteProtocolDefinition.ts');
+export function generateRemoteProtocol(outputPath: string): void {
+    const inputJson = path.resolve(__dirname, '../src/Import/Protocols.json');
+    const outputTs = path.resolve(outputPath, 'remoteProtocolDefinition.ts');
 
     if (!fs.existsSync(inputJson)) {
         throw new Error(`Input file not found: ${inputJson}`);
