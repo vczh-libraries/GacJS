@@ -36,10 +36,11 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - The root of the workspace is defined in `(repo-root)/Gaclib/package.json`.
 - After changing the code you must:
   - `cd` to `(repo-root)/Gaclib`
-  - `yarn run import`
-  - `yarn codegen`
   - `yarn build`
   - `yarn test`
+- When the sibling GacUI repository has been updated, run these additional synchronization commands before `yarn build` and `yarn test`:
+  - `yarn run import`
+  - `yarn codegen`
 - The root commands represent separate phases and must keep these responsibilities:
   - `import` refreshes files copied from upstream repositories and compiles packages that are code-generation tools. With Yarn 1, invoke this script as `yarn run import` because `yarn import` is a built-in Yarn command.
   - `codegen` runs the already-compiled code-generation tools and updates generated source files.
@@ -65,7 +66,7 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 - Packages:
   - `(repo-root)/Gaclib/gaclib/remote-protocol` is completely generated:
     - DO NOT modify anything in this package.
-    - If you find anything wrong, update `(repo-root)/Gaclib/gaclib/codegen-remote-protocol/src/**/*.ts`, then run `yarn run import` and `yarn codegen`.
+    - If you find anything wrong, update `(repo-root)/Gaclib/gaclib/codegen-remote-protocol/src/**/*.ts` instead of editing generated files.
     - It is generated from `(repo-root)/Gaclib/gaclib/codegen-remote-protocol/src/Import/Protocols.json`.
     - This package serves everything around remote protocol definition and parsing.
   - `(repo-root)/Gaclib/gaclib/renderer`:
@@ -76,11 +77,11 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
     - HTTP transport layer for the remote protocol (demo/testing only).
     - Wraps `@gaclib/remote-protocol` with fetch-based HTTP client.
   - `(repo-root)/Gaclib/gaclib/codegen-remote-protocol`:
-    - `@gaclib/codegen-remote-protocol` imports the protocol metadata and AST declarations from the sibling GacUI checkout and generates `@gaclib/remote-protocol`.
+    - `@gaclib/codegen-remote-protocol` imports the protocol metadata and AST declarations from the sibling GacUI checkout and exports the functions that generate `@gaclib/remote-protocol`; it does not choose the output location.
     - Its `import` script prepares and compiles the generator; it intentionally has no `build` or `codegen` script because the shared codegen package invokes it.
   - `(repo-root)/Gaclib/shared/codegen`:
     - Snapshot code generator and the entry point for the root `codegen` phase.
-    - Its `import` script compiles the shared generator, and its `codegen` script invokes `@gaclib/codegen-remote-protocol` before generating snapshot data.
+    - Its `import` script compiles the shared generator. Its `codegen` entry point resolves the `@gaclib/remote-protocol` source directory, invokes the exported remote-protocol generators, and then generates snapshot data.
   - `(repo-root)/Gaclib/shared/eslint-shared`:
     - Shared ESLint configuration used by all packages.
 

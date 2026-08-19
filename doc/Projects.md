@@ -91,7 +91,7 @@ website snapshots and their index.
 | `yarn codegen` | Run remote-protocol codegen → copy snapshots → generate snapshot index |
 
 Key files:
-- `src/index.ts` — invokes remote-protocol codegen and snapshot generation
+- `src/index.ts` — resolves the `@gaclib/remote-protocol` source directory, invokes both remote-protocol generators, and then runs snapshot generation
 - `src/snapshots.ts` — generates snapshot file index
 
 ---
@@ -114,7 +114,7 @@ The package deliberately has no `build` or `codegen` script. Key files:
 - `prepare.js` — refreshes `src/Import/Protocols.json` and `src/Import/GuiRemoteProtocolAst_Json.d.ts` from GacUI
 - `src/generateRemoteProtocol.ts` — generates type definitions and enums
 - `src/generateRemoteProtocolInvoking.ts` — generates protocol invocation/parsing code
-- `src/index.ts` — resolves the generated package output directory and runs both generators
+- `src/index.ts` — exports both generator functions without selecting an output directory or running them
 
 ---
 
@@ -269,7 +269,9 @@ All commands run from `Gaclib/`:
 | `yarn build` | Build all non-codegen packages (includes ESLint) |
 | `yarn test` | Run portable vitest tests and, on Windows, protocol E2E tests |
 
-Run the phases in table order after changing codegen or imported inputs. Yarn 1
+For ordinary GacJS changes, run `yarn build` and `yarn test`. When the sibling
+GacUI repository has been updated, run `yarn run import` and `yarn codegen`
+before those commands to synchronize imported and generated files. Yarn 1
 reserves `yarn import` for lockfile conversion, so the repository script requires
 the explicit `yarn run import` form. Package order is handled automatically by
 Lerna streaming.
