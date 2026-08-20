@@ -16,7 +16,10 @@ dispatch tables, proxy factories, property/event glue, and registration.
 
 This is not a plan for generating a coordinator or broker. A TypeScript endpoint
 can own and declare services while remaining a transport client of an existing
-RPC broker.
+RPC broker. The same generated endpoint can consume other services and export
+callbacks or ordinary objects at the same time; code generation must not split
+object capabilities into physically defined “client-owned” and “server-owned”
+classes.
 
 ## Inputs and Sources of Truth
 
@@ -324,6 +327,14 @@ Inputs can likewise differ when generated convenience types or disposable
 proxies are involved. Keep wire-shape types separate from ergonomic application
 types.
 
+RPC interface values need an endpoint-facing representation that can denote
+either a local implementation or a remote proxy. A service can receive its own
+local object back, receive a callback owned by the caller, or receive a proxy
+owned by a third endpoint. Likewise, a proxy call can return an object owned by
+the caller itself, in which case decoding produces the exact local
+implementation rather than another proxy. Generated parameter and result types,
+or their runtime adapters, must express this local-or-proxy result honestly.
+
 Generated registration requires an explicit descriptor/token:
 
 ~~~ts
@@ -341,6 +352,33 @@ export function registerCalculator(
 The runtime descriptor binds structural TypeScript values to a type ID, callee
 table, proxy factory, and codec set. Do not use `instanceof` against an interface
 or infer the ID from matching property names.
+
+### Interface values and peer pass-through
+
+Reference conversion is symmetric at every interface-valued occurrence,
+including nested struct/collection fields, method arguments/results, properties,
+and event arguments:
+
+- A tracked local implementation exports a stable reference owned by the local
+  endpoint.
+- A runtime-branded proxy exports its unchanged original reference, even when
+  its owner is neither the current invocation's source nor target.
+- On input, `ref.clientId === localClientId` resolves the tracked local object;
+  every other valid owner resolves through the interned proxy/lease path.
+
+The generated codec must never turn a proxy into a newly local-owned object or
+rewrite its `clientId` to the forwarding endpoint. It must also reject a proxy
+brand belonging to another lifecycle/session. TypeScript structural typing is
+not enough to make this distinction; reference conversion must use a
+runtime-owned private brand/record.
+
+Caller operations derive their destination from the target proxy's original
+`ref.clientId`. Holds use the same owner and the current endpoint's own client ID
+as the interested peer. Do not hard-code a service host, coordinator, or
+transport-server client ID. A containing envelope from B to C may legally carry
+an A-owned reference; general payload validation must not require reference
+ownership to match `sourceClientId`. The service-declaration reference is the
+important exception and must belong to the declaring source.
 
 ### Container-facing APIs
 
@@ -427,6 +465,13 @@ owner/proxy adapters. The output must identify:
 - Replay-suppression key and `finally` cleanup.
 - Exception conversion for consolidated broadcast responses.
 
+Workflow events are raisable on both local implementations and proxies. The
+generated surface must therefore support typed emission/raising as well as
+subscription. A proxy-originated event keeps the object's original reference,
+while the emitting endpoint—and then the broker during redirected fan-out—has a
+different source ID. Receive-side suppression prevents replay from being emitted
+again.
+
 The runtime should provide generic subscription and suppression primitives.
 Generated code supplies the typed calls and event-specific accessors.
 
@@ -458,6 +503,13 @@ Emit:
 - Recursive enum, struct, nullable, list, observable-list, and map codecs.
 - Reference conversion calls for interface values.
 - Transfer-aware calls into by-value copy and by-reference collection adapters.
+
+For every interface value, encoding first asks the runtime whether the value is
+a tracked local implementation or a proxy. The former uses/reuses a local
+reference; the latter emits the original reference unchanged. Decoding makes the
+inverse owner comparison against the current endpoint. No codec may infer the
+reference owner from the operation source, target, service role, or process
+location.
 
 Do not choose a collection wire shape from its TypeScript surface type alone:
 
@@ -554,7 +606,8 @@ For each method, emit a typed caller that:
 1. Checks that the proxy and lifecycle are active.
 2. Awaits the proxy's required remote hold.
 3. Serializes arguments.
-4. Sends `InvokeMethod` with the exact target reference and method ID.
+4. Sends `InvokeMethod` to the exact target reference's `clientId`, with its
+   unchanged reference and method ID.
 5. Validates the correlated response.
 6. Detects and reconstructs a tagged `RpcException` before result decoding.
 7. Deserializes the declared result.
@@ -602,6 +655,8 @@ The reusable runtime should provide:
 - Direct/broadcast/broadcast-and-drop routing.
 - Incoming request scheduling and nested-call reentrancy.
 - Local-object tables and remote-proxy lease management.
+- Session-scoped local/proxy reference conversion and unchanged third-peer proxy
+  pass-through.
 - Hold/unhold, service declaration/discovery, and finalization.
 - By-value slot allocation/release.
 - Event suppression and exception aggregation primitives.
@@ -757,6 +812,8 @@ Round-trip:
   positions, including arbitrary non-string dictionary keys.
 - Known and unknown tagged values.
 - Remote object references and RPC exceptions.
+- Interface values owned by the sender, receiver, and a third endpoint, proving
+  that proxy encoding preserves the original triple.
 - Null collections, repeated nested aliases, and recursive collection cycle
   rejection without leaked partial state.
 - Exact by-reference null-sentinel encoding and rejection of malformed partial
@@ -775,6 +832,8 @@ Use an in-memory transport to verify generated code:
 - Correlates concurrent calls and accepts nested callbacks.
 - Converts user exceptions but preserves protocol errors.
 - Interns and explicitly disposes proxies.
+- Lets one endpoint simultaneously own objects/services and consume remote
+  objects, without role-specific runtime state.
 - Handles stale-finalizer races deterministically.
 - Recursively isolates mutations to by-value input/output containers while
   preserving interface-element object identity.
@@ -788,6 +847,8 @@ Use an in-memory transport to verify generated code:
 - Establishes nested interface proxy holds before releasing a by-value return
   slot, and releases the slot on success and decode/materialization failure.
 - Attaches/detaches events, suppresses replay, and invalidates cached properties.
+- Raises an event from a proxy and delivers it to the object's owner and other
+  peers without rewriting the object reference.
 
 ### Cross-language conformance
 
@@ -796,6 +857,14 @@ Test at least:
 - A TypeScript service called by the reference implementation.
 - A TypeScript proxy calling a reference service.
 - By-reference callbacks in both directions.
+- A three-or-more-endpoint relay: A owns an object, B receives and passes it to
+  C, C holds/invokes A directly, B can dispose without breaking C, and returning
+  the reference to A recovers the exact original object. Assert that B receives
+  no forwarded invocation and creates no local export for A's proxy.
+- The same relay with nested interface values and a proxy-originated event.
+- A service-owning ordinary endpoint co-located with the broker process and a
+  network-hosted endpoint, proving that process placement does not affect
+  ownership or generated behavior.
 - All four by-value/by-reference container input/output combinations, including
   nested containers and interface elements created by both endpoints.
 - Observable-list mutation/event propagation by reference and isolation by
@@ -822,6 +891,8 @@ reference triples, arguments, response shape, and cleanup operations.
 - The IR represents all supported interfaces, values, properties, and events.
 - TypeScript names are deterministic, legal, and collision checked.
 - Service implementation and proxy APIs express different async behavior.
+- Interface-value APIs and codecs represent local objects or proxies from any
+  peer, preserve proxy ownership during relay, and route through `ref.clientId`.
 - By-value local containers and by-reference asynchronous container
   capabilities have distinct, transfer-aware APIs.
 - Generated dispatch, proxy, codec, event, property, and registration code is

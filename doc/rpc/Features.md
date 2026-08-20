@@ -32,6 +32,15 @@ be a channel client connected to a broker hosted by another process. Use
 `endpoint`, `service provider`, and `service consumer` for RPC roles; reserve
 `client` and `server` for the underlying transport when that distinction matters.
 
+Every lifecycle endpoint is a peer in the object model. During setup it can
+register constructor services; during normal operation the same endpoint can
+export ordinary objects and containers, consume services, and call objects owned
+by other endpoints. Its physical location does not change these capabilities.
+In particular, a process hosting the channel server normally gives a
+service-owning local channel client its own `clientId` and lifecycle; the
+broker's separate local client is a routing/control-plane participant, not
+automatically the owner of that service.
+
 A remote object reference is the triple:
 
 ~~~ts
@@ -51,6 +60,35 @@ service. Its initial service reference uses its interface ID as both `objectId`
 and `typeId`. The broker distributes service declarations to consumers. Other
 remote objects are discovered through arguments, return values, properties, and
 events.
+
+### Single ownership and transitive references
+
+Within one RPC session, every exported object has exactly one owning lifecycle.
+The reference triple is session-wide routing identity, not identity local to a
+connection or process. Local and remote are therefore relative terms: the same
+reference is local at its owner and remote at every other endpoint.
+
+References are transitively passable without changing ownership. If endpoint A
+owns object X, B can receive X and then pass it to C:
+
+1. B's proxy serializes back to X's unchanged A-owned reference.
+2. C resolves that reference to a C-side proxy and establishes C's own hold at A.
+3. C invokes X by targeting A's `clientId`; B is neither an ownership hop nor an
+   invocation forwarder.
+4. If C later passes the reference back to A, A resolves the exact original X.
+
+The rule applies to interface values in arguments, results, properties, and
+events; interface leaves in by-value graphs; and by-reference containers and
+their helper objects. A proxy must never be wrapped as a newly B-owned export.
+Transitive passing is confined to the lifecycle/session that created the proxy;
+passing a proxy into an unrelated session is an error even if numeric IDs happen
+to collide.
+
+A service declaration is only a named discovery root. Once resolved, the
+service is an ordinary passable object reference. Any endpoint may register an
+eligible constructor service under the normal setup rules, but this does not
+create multi-provider lookup: each lifecycle's remote-service map follows the
+protocol's declaration/replacement order for a type ID.
 
 ### Five implementation layers
 
@@ -140,15 +178,37 @@ RPC request and response messages contain:
 - `rpcMethod`: a discriminant such as
   `Request:IObjectOps_InvokeMethod`.
 - `rpcRequestId`: correlation ID assigned by the requesting endpoint.
-- `sourceClientId`: logical originating RPC endpoint.
+- `sourceClientId`: the sender identity defined for the current RPC route or
+  broker hop.
 - `targetClientId` for direct traffic.
 
 Direct responses use the same request ID and reverse source and target. The
 dispatcher must correlate by both the expected operation and request ID, and it
-must validate routing fields for the route being processed. At coordinator
-ingress, the claimed source must match the connected sender. A broker-forwarded
-broadcast or service declaration can retain its logical origin even though the
-immediate transport sender is the broker.
+must validate routing fields for the route being processed. Source meaning is
+route-specific:
+
+| Route | `sourceClientId` | Destination |
+| --- | --- | --- |
+| Direct request | Calling endpoint | `targetClientId`, normally the target reference's owner |
+| Direct response | Callee endpoint | Original caller |
+| Event request arriving at the broker | Event-emitting endpoint | Broker local client |
+| Event request redirected by the broker | Broker local client, with a broker request ID | Every connected endpoint except the emitter |
+| Event response to the broker | Responding endpoint | Broker local client, with the broker request ID |
+| Consolidated event response | Broker local client | Original emitter, with its original request ID |
+| Service declaration | Declaring owner, preserved during broker forwarding/replay | Other endpoints |
+
+At coordinator ingress, the original event/declaration source must match the
+connected sender. For event fan-out the broker remembers the original emitter
+out of band, excludes it, and rewrites the forwarded envelope's source and
+request ID. A service declaration instead retains its owner's source even though
+the immediate transport sender of a replay or fan-out is the broker.
+
+An object reference inside a payload is not an assertion that the envelope
+source owns that object. B can call C while carrying a reference owned by A.
+Never require arbitrary references in arguments, results, properties, events,
+or collection elements to match the message source. Route-specific constraints
+still apply: a direct target-object operation goes to the target reference's
+owner, and a service declaration's reference belongs to its declaring source.
 
 ### Direct operations
 
@@ -185,6 +245,12 @@ the originating endpoint when required, waits for participating endpoints, and
 returns a `Broadcast_Response`. The response can contain an exception map keyed
 by endpoint. A caller must not assume that broadcast success is represented by a
 normal method response.
+
+Events are peer-originated, not owner-to-consumer-only notifications. An
+endpoint can raise an event on a local object or on a proxy. If B raises an event
+on a proxy for an A-owned object, A can be one of the receivers while B is
+excluded. The event's object reference continues to name A even though the
+emitter—and, during fan-out, the broker—is the envelope source.
 
 Generated event adapters maintain suppression state so that applying a remote
 event locally does not immediately echo the same event back into the broker.
@@ -554,12 +620,15 @@ Even on a local connection, validate:
 
 - Message discriminants and required fields.
 - Safe integer request, client, object, type, method, event, and slot IDs.
-- That direct messages target this endpoint.
+- That direct messages target this endpoint and target-object invocation/hold
+  references belong to that endpoint.
 - At coordinator ingress, that the connected sender matches `sourceClientId`;
-  at endpoints, that the claimed source is valid for the direct or
-  broker-forwarded route.
+  at endpoints, that the claimed source is valid for the specific direct,
+  redirected-broadcast, consolidated-response, or declaration route.
 - That object references in service declarations belong to the declaration's
   logical source.
+- That ordinary payload references are valid triples without requiring their
+  owner to equal the envelope source or target.
 - That a requested local object exists and supports the requested interface.
 - That the operation ID belongs to that interface.
 - Argument count and serialized shapes.
@@ -598,6 +667,9 @@ An implementation is not complete until it demonstrates:
 - Direct method request/response correlation with concurrent nested calls.
 - User-exception round trips and distinct protocol failures.
 - Reference conversion, proxy interning, and per-client hold/unhold.
+- Symmetric endpoint ownership and a three-endpoint reference relay that
+  preserves the original owner, routes calls/holds directly to it, and survives
+  disposal of the intermediate proxy.
 - Local service owner holds.
 - Default and explicit transfer modes for ordinary, observable, nested, and
   RPC-interface-containing collections.
@@ -605,7 +677,8 @@ An implementation is not complete until it demonstrates:
   identity, and by-value recursive snapshot behavior.
 - By-value return slot cleanup in success and failure paths.
 - Interface inheritance and runtime type recognition.
-- Event broadcast, echo suppression, exception aggregation, and detachment.
+- Events raised from both owners and proxies, broker source/request rewriting,
+  echo suppression, exception aggregation, and detachment.
 - Cached-property invalidation and dynamic-property behavior.
 - Transport failure rejecting all pending operations.
 - Explicit endpoint finalization and proxy disposal.

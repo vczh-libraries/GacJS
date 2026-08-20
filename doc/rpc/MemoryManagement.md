@@ -89,6 +89,33 @@ Generated wrappers should carry a private runtime record or brand stored in a
 runtime-owned `WeakMap`. Do not trust a public property that application code
 can forge.
 
+### Transitive handoff between peers
+
+Object ownership does not follow the path by which a reference travels. For an
+A-owned object relayed from B to C:
+
+1. `objectToRef` on B's branded proxy returns the unchanged A-owned reference.
+   It creates no B-owned local entry and no forwarding record.
+2. `refToObject` at C creates or interns a C-side proxy and sends C's hold
+   directly to A.
+3. A records B and C as independent members of `interestedClients` while both
+   endpoints have live claims.
+4. Disposing B's proxy removes only B. C remains able to invoke A.
+5. Passing the reference back to A resolves A's exact local object without a
+   proxy or remote hold.
+
+A reference transfer is not a transfer or delegation of B's existing interest.
+The receiver establishes its own interest at the original owner; B remains a
+separate holder until B releases its own proxy. By-value return slots provide an
+explicit acknowledgement lifetime for interface leaves in copied graphs.
+
+This rule is session-scoped. A proxy record includes its originating lifecycle;
+serializing it through a different lifecycle must fail instead of treating it as
+a local implementation. Multiple endpoints in one process still have separate
+local-object, proxy, service, request, and lease tables. Process co-location is
+not permission to bypass dispatcher routing, and one language object must not be
+simultaneously claimed as local by two active lifecycles.
+
 ## Runtime State
 
 A lifecycle can use the following conceptual state:
@@ -494,6 +521,11 @@ interface proxies inside the caller's reconstructed local containers are owned
 by normal caller reachability and remote lease claims; the slot has no further
 role in their lifetime.
 
+An interface element can itself be a proxy owned by a third endpoint. Retaining
+the copied graph also retains that forwarding endpoint's claim until the caller
+has established its own hold directly at the original owner; the slot never
+changes the reference's owner to the callee.
+
 `byValueSlots` strongly owns its values. Slot IDs are lifecycle-local, unique
 while active, and validated as safe integers. The reference generated
 `EndInvokeMethod` ignores removal of an unknown or already released slot, so
@@ -568,6 +600,12 @@ Cover:
 
 - Repeated `refToObject` returns the same live proxy.
 - `objectToRef` returns a proxy's original reference.
+- A three-endpoint A-to-B-to-C relay preserves A's reference, creates C's hold
+  directly at A, and allocates no forwarding object at B.
+- A independently tracks B and C; after B disposes, C can still invoke A, and a
+  reference returned to A resolves to A's exact object.
+- A proxy from another lifecycle/session is rejected rather than re-exported.
+- Co-located endpoints retain separate ownership and lease tables.
 - A local object keeps one stable ID while tracked.
 - Holds from the same client are idempotent.
 - Different clients create distinct owner interests.
@@ -621,6 +659,8 @@ counters or hooks instead of changing production ownership to make tests easier.
 - Remote proxies are weakly interned by their complete references.
 - All typed views of one remote owner/object share one logical hold lease.
 - Proxies convert back to their original references.
+- Relaying a proxy preserves its original owner and gives each receiving peer an
+  independent direct owner interest.
 - The null reference sentinel creates no object or lease state.
 - Service registration establishes an owner interest.
 - Every proxy has explicit asynchronous disposal.
