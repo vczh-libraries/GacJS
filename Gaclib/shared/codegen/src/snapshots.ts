@@ -88,6 +88,30 @@ export function generateSnapshotIndex(): void {
     // Build the snapshot tree
     const snapshotContent = buildSnapshotTree(DestPath);
 
+    const quote = (value: string): string => {
+        let content = '';
+        for (const character of value) {
+            if (character === '\\') content += '\\\\';
+            else if (character === "'") content += "\\'";
+            else if (character === '\n') content += '\\n';
+            else if (character === '\r') content += '\\r';
+            else if (character === '\t') content += '\\t';
+            else content += character;
+        }
+        return `'${content}'`;
+    };
+    const serialize = (value: unknown, depth = 0): string => {
+        if (typeof value === 'string') return quote(value);
+        if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+            throw new Error('Snapshot index serialization accepts string-keyed objects and strings only.');
+        }
+        const entries = Object.entries(value);
+        if (entries.length === 0) return '{}';
+        const indentation = ' '.repeat(depth * 4);
+        const childIndentation = ' '.repeat((depth + 1) * 4);
+        return `{\n${entries.map(([key, item]) => `${childIndentation}${quote(key)}: ${serialize(item, depth + 1)}`).join(',\n')}\n${indentation}}`;
+    };
+
     // Generate the TypeScript file content
     const tsContent = `export interface SnapshotFolder {
     type: 'Folder';
@@ -96,10 +120,10 @@ export function generateSnapshotIndex(): void {
 
 export type SnapshotEntry = SnapshotFolder | 'File';
 
-export const Snapshot: SnapshotEntry = ${JSON.stringify({
+export const Snapshot: SnapshotEntry = ${serialize({
         type: 'Folder',
         content: snapshotContent
-    }, null, 4)};
+    })};
 `;
 
     // Ensure the directory exists
