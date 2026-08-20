@@ -148,6 +148,16 @@ Object IDs must not be reused during a lifecycle. After an entry is removed, a
 later export of the same still-live language object can receive a new ID because
 the old distributed identity no longer exists.
 
+For a supported by-reference strongly typed collection, step 2 selects the most
+specific predefined negative collection type ID rather than an application
+interface ID. Enumerable, read-only list, list, array, observable-list, and
+mutable dictionary objects otherwise enter the same local tables and ownership
+protocol as generated application objects. Runtime-created enumerators do the
+same under their own predefined type ID. Only an observable list needs an
+owner-side item-change listener. The current protocol/reference runtime has no
+safe type ID or proxy for a genuinely read-only dictionary; generation must
+reject that by-reference case until its capability is defined.
+
 ### Holds
 
 For an incoming hold request:
@@ -404,9 +414,66 @@ Event-suppression counters must be decremented in `finally` even if a handler
 throws. A leaked suppression entry is a semantic leak: it can keep state alive
 and permanently suppress future events.
 
-Generated wrappers for predefined list, observable-list, and map interfaces use
-the same proxy lease machinery as application interfaces. Do not implement a
-second ownership algorithm for collections.
+Generated wrappers for predefined enumerable, enumerator, read-only list, list,
+array, observable-list, and dictionary interfaces use the same proxy lease
+machinery as application interfaces. Do not implement a second ownership
+algorithm for collections.
+
+## Container Ownership
+
+### By-reference containers
+
+A by-reference container is a normal distributed object with a predefined
+negative `typeId`. Its proxy's count, element access, search, mutation,
+enumeration, and dictionary operations are RPC calls. The use site's transfer
+mode applies recursively: a nested collection obtained from an element, key, or
+value is exported as another reference rather than copied.
+
+The null reference sentinel has the inner triple
+`{clientId: -1, objectId: -1, typeId: -100}`. At an unknown-value boundary it is
+wrapped with `$: "system::RpcObjectReference"`. It resolves to null and creates
+no local entry, proxy view, hold, finalizer token, or lease.
+
+Those helper objects have real lifetimes. In particular:
+
+- A nested collection proxy has its own reference, proxy view, and lease claim.
+- Creating a remote enumerator returns a separate enumerator reference and
+  establishes another claim.
+- Dictionary key and value views are separate remote read-only-list objects.
+- An observable-list proxy uses the same object lease and additionally owns
+  local subscription state for `ItemChanged`.
+
+Transient access can therefore allocate remotely held objects. Async iteration
+must dispose its enumerator in `finally`, including early `break`, exceptions,
+and cancellation at the local API layer. Dictionary key/value views and nested
+collection proxies need the same explicit disposal and generation-safe
+finalizer fallback as any application proxy. Endpoint finalization invalidates
+and clears all of them without trying to walk the network sending unholds.
+
+When a by-reference result comes back to the endpoint that owns the reference,
+`refToObject` returns the original local container. It must not allocate a local
+proxy or a second hold. This is what lets a service return a by-reference input
+and preserve identity at the caller.
+
+### By-value containers
+
+A by-value transfer creates no distributed identity or lease for its collection
+shells. Boxing and unboxing recursively create local outer and nested
+containers. Mutating either side, including raising an observable-list event,
+does not affect the copy on the other side.
+
+RPC interface objects found inside that copied graph are different: they remain
+object references and reconstruct as local objects or ordinary held proxies.
+Those caller-side proxies follow the normal lease/disposal rules after
+reconstruction. A container retaining such a proxy keeps that proxy reachable,
+but the by-value return slot described below does not become its long-term
+owner.
+
+The reference by-value copy/box/unbox runtime rejects cycles in a recursively
+transferred collection graph. Shared subcontainer aliasing is not a by-value
+identity guarantee; an implementation may materialize repeated occurrences as
+separate copies. Cycle detection must use temporary traversal state and must not
+leave a failed partial copy or slot reachable.
 
 ## By-Value Return Slots
 
@@ -420,17 +487,33 @@ By-value collection returns have a separate, deterministic lifetime:
 6. The caller sends `EndInvokeMethod(slot)` in a `finally` block.
 7. The callee removes the slot and releases its retained copy.
 
+The retained value is the callee-side recursive unboxed copy, not merely the
+JSON node. This keeps actual RPC interface elements alive until the caller has
+converted their references and established holds. After `EndInvokeMethod`, any
+interface proxies inside the caller's reconstructed local containers are owned
+by normal caller reachability and remote lease claims; the slot has no further
+role in their lifetime.
+
 `byValueSlots` strongly owns its values. Slot IDs are lifecycle-local, unique
-while active, and validated as safe integers. Unknown, duplicate, or already
-released slot IDs are protocol errors.
+while active, and validated as safe integers. The reference generated
+`EndInvokeMethod` ignores removal of an unknown or already released slot, so
+repeated cleanup is an idempotent no-op there. A TypeScript implementation may
+diagnose this more strictly only as an intentional, documented validation
+policy; prefer the reference no-op behavior for wire compatibility and keep any
+strict duplicate diagnostic local. Code must not depend on remote rejection for
+reference interoperability.
 
-The caller must send `EndInvokeMethod` even if value deserialization or user
-conversion fails. The callee must release all remaining slots during lifecycle
-finalization because a disconnected caller cannot send cleanup.
+The caller must send `EndInvokeMethod` even if value deserialization, proxy
+creation, or user conversion fails. The callee must release all remaining slots
+during lifecycle finalization because a disconnected caller cannot send
+cleanup. By-value arguments do not allocate return slots; their collection
+shells are snapshotted before sending and the accepted call retains whatever is
+needed until the invocation completes.
 
-Cycles in a recursively copied value require the exact behavior defined by the
-Workflow serializer. If the schema rejects cycles, detect and report them rather
-than recurse indefinitely.
+This `finally` cleanup is deliberately stronger than the current generated C++
+caller, which ends an invocation only after successful unboxing. It preserves
+the same wire protocol while preventing a failed TypeScript decode from keeping
+the slot until endpoint finalization.
 
 ## Lifecycle Finalization
 
@@ -498,6 +581,15 @@ Cover:
 - Pending calls and service waits reject during finalization.
 - Event caches/listeners and suppression state are cleared.
 - `EndInvokeMethod` releases slots on success and deserialization failure.
+- Nested by-reference collections acquire and release independent proxy claims.
+- Early termination of remote enumeration disposes the enumerator.
+- Dictionary key/value views are explicitly disposed.
+- A by-value nested collection is mutation-isolated from its source, including
+  observable-list events.
+- Interface references inside a by-value result remain usable after its return
+  slot is released and then follow ordinary proxy disposal.
+- Cyclic by-value collection graphs fail without leaking slots or partial
+  proxies.
 
 The critical stale-finalizer test should explicitly schedule:
 
@@ -529,6 +621,7 @@ counters or hooks instead of changing production ownership to make tests easier.
 - Remote proxies are weakly interned by their complete references.
 - All typed views of one remote owner/object share one logical hold lease.
 - Proxies convert back to their original references.
+- The null reference sentinel creates no object or lease state.
 - Service registration establishes an owner interest.
 - Every proxy has explicit asynchronous disposal.
 - `FinalizationRegistry` is only a best-effort fallback.
@@ -537,6 +630,10 @@ counters or hooks instead of changing production ownership to make tests easier.
 - Hold transitions are serialized and calls await the required hold.
 - Accepted calls are protected from concurrent disposal.
 - Event/listener/property-cache cleanup is deterministic.
+- Nested collection, enumerator, and dictionary-view proxies use ordinary
+  generation-safe leases and deterministic disposal.
+- By-value collection shells have no remote identity; interface leaves retain
+  their normal object-reference lifetime.
 - By-value slots are strongly held until `EndInvokeMethod`.
 - Lifecycle finalization invalidates everything without relying on network
   cleanup or garbage collection.

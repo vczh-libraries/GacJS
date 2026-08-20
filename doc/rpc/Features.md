@@ -77,7 +77,8 @@ The normalized Workflow RPC metadata is authoritative for:
 - Constructor/service interfaces.
 - Method signatures.
 - Events and property accessors.
-- `Byval` versus `Byref` decisions.
+- Resolved `Byval` versus `Byref` decisions for method returns, parameters, and
+  generated property accessors.
 - `Cached` versus `Dynamic` property decisions.
 - Stable string and numeric IDs.
 
@@ -90,6 +91,11 @@ Generated numeric IDs must be consumed verbatim. They must not be recalculated
 from declaration order, names, hashes, or the target language's overload rules.
 User-defined IDs are separate from reserved negative IDs used by the generic RPC
 runtime for built-in collection types and protocol operations.
+
+Event parameters are the one transfer-mode exception. Workflow has no syntax
+for attributes on individual event parameters, and normalized metadata does not
+add such attributes. Their collection transfer mode is therefore the fixed
+default described below, calculated from the normalized parameter type.
 
 ## Channel and Package Model
 
@@ -278,7 +284,8 @@ The Workflow JSON schema supports:
 - Enums.
 - Structs with generated field schemas.
 - Nullable values.
-- Lists, observable lists, and maps.
+- Strongly typed enumerable, list, array, observable-list, and dictionary
+  containers whose element/key/value types are serializable.
 - RPC interface references.
 - Tagged unknown values.
 
@@ -307,28 +314,158 @@ substituting `bigint` is not wire compatible with JSON.
 The same validation principle applies to integer range, finite floating-point
 values, enum membership where required, and map key encodings.
 
-## By-Value and By-Reference Semantics
+## By-Value and By-Reference Container Semantics
 
-`@rpc:Byval` recursively serializes the logical value. The receiver obtains an
-independent copy. A collection returned by value can contain references needed
-while reconstruction is in progress; the owner therefore returns a
-`RpcByvalReturnValue<T>` containing both `value` and a `slot`. The caller sends
-`EndInvokeMethod` in a `finally` path after deserialization succeeds or fails.
-The callee keeps slot storage strongly reachable until then.
+### Eligible use sites and defaults
 
-`@rpc:Byref` sends an object reference. The receiver obtains an interned proxy,
-and hold/unhold controls the owner's strong reachability. Observable collections
-and values containing RPC interfaces normally require by-reference behavior.
-Plain serializable values normally use by-value behavior. The normalized
-metadata resolves the final decision; target implementations must not repeat
-the inference heuristics.
+`@rpc:Byval` and `@rpc:Byref` are collection-transfer attributes. They may be
+applied only inside an RPC interface to a strongly typed collection property,
+a method whose return type is a strongly typed collection, or a strongly typed
+collection parameter. They do not select how an ordinary struct or RPC
+interface value is transferred, and the two attributes are mutually exclusive.
 
-For a reference parameter, conversion is bidirectional:
+Strongly typed collection syntax includes Workflow forms such as `T{}`, `T[]`,
+`const T[]`, `observe T[]`, `V[K]`, and `const V[K]`. At runtime these cover
+enumerable, read-only list, mutable list, array, observable-list, and dictionary
+families; by-reference enumeration additionally creates enumerator helper
+objects. Weakly typed interfaces such as a bare `system::Enumerable` are not
+made serializable merely by being collection-like.
 
-- A local object is assigned or reuses a stable local reference.
-- A remote proxy is converted back to its original remote reference.
-- A reference owned by the current endpoint resolves directly to the local
-  object, not to a proxy that calls back into itself.
+The return and each input parameter have independent modes. An explicit
+annotation can select either mode, including by-value observable lists and
+by-reference ordinary lists. When no annotation is written, Workflow chooses:
+
+- By reference when the use site's outer collection is an observable list.
+- By reference when the collection element or dictionary value recursively
+  contains an RPC interface value through nested strongly typed collections.
+- By value for every other strongly typed collection.
+
+For a property, the selected mode is propagated to the getter result and setter
+value parameter in normalized metadata. Method parameters, method results, and
+generated property accessors have explicit resolved attributes there, so a
+target generator consumes those attributes instead of recomputing them. Event
+arguments cannot be annotated and use the same default rule directly.
+
+For an echo-style method that mutates and returns its input, the independent
+input/output choices produce four observably different cases:
+
+| Input | Output | Service observes | Caller observes |
+| --- | --- | --- | --- |
+| By value | By value | A local copy of the caller container | A second local snapshot; the original stays isolated |
+| By value | By reference | A local copy that becomes service-owned when exported | A proxy to that service-side copy; the original stays isolated |
+| By reference | By value | A proxy to and mutations of the caller's original | The mutated original plus an independent returned snapshot |
+| By reference | By reference | A proxy to and mutations of the caller's original | The returned reference resolves to the exact original container |
+
+### By-value transfer
+
+By-value transfer recursively snapshots every collection shell. The receiver
+gets local containers independent of the sender's containers; later mutations
+and observable-list events do not cross the endpoint boundary. The one mode on
+the outer use site also controls all nested collection shells.
+
+By value does not clone RPC interface objects stored in the collection. Those
+leaves are still converted to `RpcObjectReference` values. They resolve to the
+original object at its owning endpoint and to held proxies elsewhere. Thus a
+by-value `IObject^[]` copies the list structure while preserving distributed
+identity for each element.
+
+The recursive copy does not support collection cycles. Reject a cycle with a
+clear serialization error instead of recursing indefinitely. Collection alias
+preservation is not part of the by-value contract: two positions that pointed
+to one nested container may reconstruct as two copied containers. Code must not
+use by-value transfer when container identity or live shared mutation matters.
+
+A by-value enumerable must be materialized to produce this snapshot; laziness
+does not cross the RPC boundary. The current reference analyzer accepts the
+strongly typed `T{}` form, but the reference recursive copier has no dedicated
+bare-enumerable branch or conformance fixture. Treat that as an explicit
+cross-language compatibility gap: validate the materialized behavior against
+the reference implementation or reject the construct with an unsupported
+feature diagnostic, never silently transfer it by reference.
+
+The generic RPC operation boundary boxes by-value collections as dynamically
+typed values. Their wire form is therefore the tagged `list`, `oblist`, or
+`map` schema, with a map carrying an array of key/value pairs. This preserves
+arbitrary non-string keys. The JSON schema also has untagged arrays and pair
+arrays for statically known collection fields; a codec must use the form
+required at its actual call site rather than treating the two forms as
+interchangeable. These are value schemas, not remote-operation messages.
+
+A by-value argument is snapshotted and boxed before the invocation is sent. A
+by-value return additionally needs an acknowledgement lifetime because its copy
+can contain interface objects needed while the caller establishes proxies. The
+callee returns `RpcByvalReturnValue<T>` with `value` and `slot`, retains the
+recursive unboxed copy under that slot, and releases it only after
+`EndInvokeMethod`. The caller must send `EndInvokeMethod` in a `finally` path
+after result reconstruction succeeds or fails.
+
+That `finally` rule is intentional TypeScript hardening. The current generated
+C++ caller sends `EndInvokeMethod` only after successful unboxing, so a decode
+failure leaves the slot until lifecycle finalization. Compatibility does not
+require reproducing that leak window.
+
+### By-reference transfer
+
+By-reference transfer converts the collection to `RpcObjectReference`. The
+receiver obtains an interned proxy, and hold/unhold controls the owner's strong
+reachability. The outer collection and every nested collection are live remote
+objects; accessing a nested collection returns another reference rather than a
+snapshot.
+
+A null by-reference collection is still encoded in the reference structure.
+Its inner reference triple is `{clientId: -1, objectId: -1, typeId: -100}`; at
+an unknown-value boundary the complete JSON object is
+`{"$":"system::RpcObjectReference","clientId":-1,"objectId":-1,"typeId":-100}`.
+Do not encode it as JSON `null`, allocate a proxy/hold for it, or confuse
+`typeId: -100` with a predefined collection type.
+
+Collection proxies dispatch through predefined negative type and operation IDs,
+not contract-specific generated method IDs. The generic operations cover
+enumerator creation/advance/current value, count/get/search, list and array
+mutation, dictionary lookup/mutation/key and value views, and observable-list
+change notification. Element, key, and value traffic uses the unknown-value
+serializer so nested collections and RPC interface values can become references
+as required.
+
+Preserve the capability boundary of each predefined type:
+
+| Predefined type | Type ID | Remote capabilities |
+| --- | ---: | --- |
+| Enumerable | -1 | Create an enumerator |
+| Enumerator | -2 | Advance and get current; the proxy tracks its index locally |
+| Array | -3 | Enumerate, count/get/search, set, and resize; not list clear/remove/insert |
+| List | -4 | Read-only-list operations plus set/add/insert/remove-at/clear |
+| Observable list | -5 | List operations plus the `ItemChanged` event |
+| Dictionary | -6 | Count/get/contains-key/key and value views plus set/remove/clear |
+| Read-only list | -7 | Enumerate, count/get/contains/index-of |
+
+The convenience operation `Remove(value)` on a list can be implemented as
+`IndexOf` followed by `RemoveAt`; it has no separate predefined wire ID.
+Dictionary key/value views are live remote read-only lists, and those views and
+enumerators are themselves referenced objects with their own holds. Do not
+accept a list-only operation as an array shortcut or vice versa.
+
+A read-only dictionary is intentionally absent from the predefined type table.
+The analyzer accepts `const V[K]`, and by-value copying supports it, but the
+current reference lifecycle has only mutable dictionary type ID `-6` and its
+mutable proxy. A mutable dictionary viewed through a read-only type may appear
+to work, while a genuinely read-only implementation cannot be identified and
+the `-6` capability would expose mutation operations. Treat by-reference
+read-only dictionaries as another explicit compatibility gap: reject them until
+a protocol/reference decision and cross-language test define the behavior.
+
+Reference conversion is bidirectional:
+
+- A local container is assigned or reuses a stable local reference.
+- A remote collection proxy is converted back to its original remote reference.
+- A reference returned to its owning endpoint resolves to the original local
+  container, not a proxy that calls back into itself.
+
+This round trip preserves container identity and makes mutations visible at the
+owner. It also means a TypeScript by-reference collection cannot honestly be a
+plain `T[]` or `Map<K, V>`: index access, iteration, reads, and mutations can all
+require RPC. The runtime should expose explicitly asynchronous typed collection
+interfaces and separate local-container adapters.
 
 ## Interfaces, Inheritance, and Overloads
 
@@ -356,6 +493,8 @@ RPC properties are compiled to method and event operations.
 - A dynamic property's getter always performs a remote call.
 - A cached property performs the first getter remotely, stores the result in the
   proxy, and invalidates it when the associated change event arrives.
+- A cached by-value collection is a cached snapshot; a cached by-reference
+  collection is a cached proxy to the live remote container.
 - Setters dispatch remotely in both modes, and a setter and its change event
   must cooperate with event-suppression logic.
 - Finalization detaches any generated event handlers and clears cached values.
@@ -375,10 +514,11 @@ Generated bindings need:
 - Echo suppression for remotely applied events.
 - Aggregation and propagation of event-handler exceptions.
 
-Observable collection operations use predefined RPC interface and operation IDs.
-They are runtime features, not newly generated application methods. Generated
-serializers still need to recognize the collection's element/key/value types and
-its by-reference semantics.
+All by-reference collection families use predefined RPC interface and operation
+IDs. They are runtime features, not newly generated application methods.
+Observable lists additionally broadcast the predefined `ItemChanged` event.
+Generated serializers still need to recognize element/key/value values and
+apply the enclosing use site's transfer mode recursively.
 
 Subscriptions can keep application state reachable. They must be released by
 explicit proxy disposal and lifecycle finalization, not only by garbage
@@ -459,6 +599,10 @@ An implementation is not complete until it demonstrates:
 - User-exception round trips and distinct protocol failures.
 - Reference conversion, proxy interning, and per-client hold/unhold.
 - Local service owner holds.
+- Default and explicit transfer modes for ordinary, observable, nested, and
+  RPC-interface-containing collections.
+- Independent input/output modes, by-reference collection operations and
+  identity, and by-value recursive snapshot behavior.
 - By-value return slot cleanup in success and failure paths.
 - Interface inheritance and runtime type recognition.
 - Event broadcast, echo suppression, exception aggregation, and detachment.

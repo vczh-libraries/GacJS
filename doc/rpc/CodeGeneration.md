@@ -24,7 +24,7 @@ Generation has three logical inputs:
 
 | Input | Authoritative content | Content it does not provide |
 | --- | --- | --- |
-| Normalized `RpcMetadata.txt` | Interfaces, bases, constructor services, signatures, properties, events, transfer/cache modes, string IDs, numeric IDs | TypeScript JSON value declarations and generic envelopes |
+| Normalized `RpcMetadata.txt` | Interfaces, bases, constructor services, signatures, properties, events, resolved method/property transfer modes, cache modes, string IDs, numeric IDs | TypeScript JSON value declarations, generic envelopes, and explicit transfer annotations for event parameters |
 | Generated `RpcMetadata.d.ts` | Contract-specific known/unknown JSON value shapes | Interfaces, operations, inheritance, numeric IDs, routing, lifetime |
 | Generic runtime protocol declarations | Common envelopes, predefined negative IDs, object reference/exception/by-value/event structures | Contract-specific types and operations |
 
@@ -40,7 +40,8 @@ The Workflow compiler has already performed semantic work before producing
 `RpcMetadata.txt`:
 
 - It has collected recursively referenced RPC interfaces, enums, and structs.
-- It has resolved `@rpc:Byval` versus `@rpc:Byref` defaults.
+- It has resolved `@rpc:Byval` versus `@rpc:Byref` defaults on method returns,
+  method parameters, and generated property accessors.
 - It has resolved `@rpc:Cached` versus `@rpc:Dynamic` defaults.
 - It has linked properties with getter, setter, and change-event operations.
 - It has normalized inheritance and overloaded operation identities.
@@ -49,6 +50,16 @@ The Workflow compiler has already performed semantic work before producing
 The TypeScript generator consumes those decisions. It must not reimplement the
 Workflow analyzer or infer new IDs from declaration order. In particular,
 numeric IDs are not target-language enum ordinals.
+
+Event parameters are a narrow exception. Workflow has no syntax for annotating
+an individual event parameter, and normalized metadata leaves those parameters
+without `Byval`/`Byref`. The generator must apply Workflow's event default: an
+outer observable list and collections whose element or dictionary value
+recursively contains an RPC interface use by reference; other strongly typed
+collections use by value. A nested observable list alone does not force the
+outer collection to be by reference. This rule is event-only. Missing transfer
+attributes on a strongly typed method result, method parameter, or generated
+property accessor are an input error, not permission to infer a mode.
 
 The parser must accept UTF-8 with or without BOM and CRLF or LF line endings.
 Diagnostics must retain source file, line, and column information.
@@ -88,6 +99,12 @@ The runtime owns:
 Generated code should import these definitions and runtime operations through a
 small stable public API. It should not reach into runtime-private maps.
 
+Predefined collection support is the complete family: enumerable, enumerator,
+read-only list, list, array, observable list, and dictionary, plus the
+observable-list `ItemChanged` event. Do not reduce this input to a list/map JSON
+codec; by-reference containers also require the predefined negative operation
+IDs.
+
 ## Generator Architecture
 
 Use a staged pipeline:
@@ -119,7 +136,8 @@ Parse the normalized subset needed for RPC metadata, including:
 - Enums and structs needed by serialization.
 - Interfaces and base lists.
 - Functions, events, and properties.
-- Workflow type expressions, nullable types, and strong collection types.
+- Workflow type expressions, nullable types, and strong collection forms such
+  as `T{}`, `T[]`, `const T[]`, `observe T[]`, `V[K]`, and `const V[K]`.
 - Attribute lists and literal arguments.
 - Escaped Workflow identifiers and fully qualified names.
 
@@ -141,12 +159,20 @@ Also consume:
 
 - `@rpc:Interface`.
 - `@rpc:Ctor`.
-- Resolved `@rpc:Byval` or `@rpc:Byref`.
+- Resolved `@rpc:Byval` or `@rpc:Byref` on strongly typed method results,
+  parameters, and property-generated accessor use sites.
 - Resolved `@rpc:Cached` or `@rpc:Dynamic`.
 - The normalized property/member-link annotations produced by the compiler.
 
 Do not accept a missing ID by assigning one locally. Do not honor a second,
 conflicting attribute by “last one wins.”
+
+Transfer mode is attached to a collection use site, not to the collection type
+itself. The same `int[]` can be a by-value input and a by-reference output.
+Validate that `Byval`/`Byref` occurs only on a strongly typed collection
+property, method result, or parameter inside an RPC interface, and never both.
+For event parameters, record that the mode came from the event-only default
+rule rather than from an attribute.
 
 ### Workflow names versus TypeScript names
 
@@ -197,30 +223,43 @@ interface MethodIr {
     readonly idNumber: number;
     readonly parameters: readonly ParameterIr[];
     readonly result: TypeRefIr;
+    readonly resultTransfer: TransferMode;
 }
+
+type TransferMode = "byValue" | "byReference" | "direct";
 
 interface ParameterIr {
     readonly workflowName: string;
     readonly tsName: string;
     readonly type: TypeRefIr;
-    readonly transfer: "byValue" | "byReference" | "direct";
+    readonly transfer: TransferMode;
+    readonly transferSource: "metadata" | "eventDefault" | "notApplicable";
+}
+
+interface EventIr {
+    readonly workflowName: string;
+    readonly idString: string;
+    readonly idNumber: number;
+    readonly parameters: readonly ParameterIr[];
 }
 ~~~
 
 The actual IR also needs:
 
 - Enum/flags and struct field information.
-- Nullable and nested collection type nodes.
-- Event argument and return/exception behavior.
+- Nullable and nested collection type nodes, preserving enumerable/read-only,
+  list, array, observable-list, and dictionary kind.
+- Event argument transfer/default source and return/exception behavior.
 - Property getter/setter/change-event links and cache mode.
 - Interface inheritance closure.
 - Schema symbol and generated codec names.
 - Source spans for diagnostics.
 - Generated-name ownership/collision information.
 
-Keep type structure rather than reducing a type to a display string. The emitter
-needs to decide recursively between value codec calls and object-reference
-conversion.
+Keep type structure rather than reducing a type to a display string. Transfer
+stays on each method/property/event use site, because it recursively governs all
+collection nodes below that site. The emitter needs both pieces to decide
+between value copying and object-reference conversion.
 
 ## Validation Before Emission
 
@@ -233,10 +272,18 @@ Generation should stop with aggregated, actionable diagnostics for:
 - Unresolved/cyclic-invalid base interfaces.
 - An interface used as a service without `@rpc:Ctor`, or malformed constructor
   service metadata.
-- Missing transfer/cache decisions in normalized input.
-- A by-value type that cannot be serialized.
+- Missing or conflicting transfer/cache decisions in normalized input.
+- `Byval`/`Byref` on a non-collection use site, outside an RPC interface, or on
+  both sides of one use site.
+- A strongly typed method/property collection use site without exactly one
+  resolved transfer mode; event parameters are checked using their separate
+  fixed-default rule.
+- A collection whose element, key, or value is not serializable, or a by-value
+  type that cannot be represented by the JSON schema.
 - A user signature containing reserved transport-only structures.
 - Property accessors or change events that do not match their linked property.
+- A property getter result and setter value parameter whose transfer modes do
+  not agree with the property's selected mode.
 - Ambiguous overloads under the selected TypeScript API policy.
 - TypeScript identifier/flattened schema-name collisions.
 - A metadata value type without the expected schema declaration.
@@ -294,6 +341,46 @@ export function registerCalculator(
 The runtime descriptor binds structural TypeScript values to a type ID, callee
 table, proxy factory, and codec set. Do not use `instanceof` against an interface
 or infer the ID from matching property names.
+
+### Container-facing APIs
+
+Transfer mode changes the honest TypeScript API even when the Workflow type is
+spelled the same way.
+
+- A by-value collection is local data. It can use generated local
+  array/read-only-array, observable-list, and `Map`-like types, provided the
+  codec preserves collection kind and arbitrary dictionary keys.
+- A by-reference collection is a disposable remote capability. Count, get,
+  mutation, enumeration, dictionary access, and nested-container access may all
+  await RPC and must be exposed through explicitly asynchronous interfaces.
+- A by-reference parameter received by a service can resolve to either an
+  original local container or a remote proxy, depending on reference ownership.
+  Normalize both behind the same async collection interface/local adapter; do
+  not type the implementation parameter as “remote proxy only.”
+- A local service returning by reference can export a local container adapter or
+  pass through an existing remote collection proxy. Passing through must retain
+  its original reference instead of re-exporting the proxy as a local object.
+
+For example, a generated/runtime interface may resemble:
+
+~~~ts
+interface RpcReadonlyList<T> extends RpcDisposable {
+    count(): Promise<number>;
+    get(index: number): Promise<T>;
+    values(): AsyncIterable<T>;
+}
+
+interface RpcList<T> extends RpcReadonlyList<T> {
+    set(index: number, value: T): Promise<void>;
+    add(value: T): Promise<number>;
+}
+~~~
+
+Names and exact adapter layering are target decisions, but a by-reference list
+must not masquerade as native `T[]`, and a remote dictionary must not masquerade
+as a synchronously accessed JavaScript `Map`. Generate role- and transfer-aware
+method signatures so all four combinations of by-value/by-reference input and
+output remain distinct.
 
 ### Overloads
 
@@ -370,7 +457,51 @@ Emit:
 - Unknown-value integration tables.
 - Recursive enum, struct, nullable, list, observable-list, and map codecs.
 - Reference conversion calls for interface values.
-- By-value/by-reference collection adapters.
+- Transfer-aware calls into by-value copy and by-reference collection adapters.
+
+Do not choose a collection wire shape from its TypeScript surface type alone:
+
+- At the generic invocation boundary, a by-value collection is a boxed unknown
+  value: `{ "$": "list" | "oblist", values: [...] }` or
+  `{ "$": "map", values: [[key, value], ...] }`.
+- A by-reference argument or result is the tagged unknown
+  `system::RpcObjectReference` shape with the appropriate predefined negative
+  collection type ID; it is not serialized as collection contents. Null uses
+  the tagged sentinel
+  `{"$":"system::RpcObjectReference","clientId":-1,"objectId":-1,"typeId":-100}`,
+  not JSON `null`, and creates no proxy or hold.
+- Values crossing predefined collection operations are unknown values. A
+  nested container or RPC interface element/key/value is converted to a
+  reference before unknown-value serialization.
+- Statically known collection fields elsewhere in a value schema can use the
+  schema's untagged arrays or pair arrays. These encodings are not
+  interchangeable merely because both represent a collection.
+
+Dictionary codecs must preserve arbitrary serializable keys by using pair
+arrays or a real `Map`-like application representation. Encoding keys as
+JavaScript object property names is incompatible for numbers, structs,
+interfaces, and other non-string key values.
+
+The by-value copier recursively materializes every nested collection shell,
+converts interface leaves to references during boxing, rejects cycles, and does
+not promise preservation of shared-subcontainer aliases. The by-reference
+adapter instead exports the outer shell, then boxes nested shells as references
+when generic collection operations expose them.
+
+By-value `T{}` requires eager materialization even though its source is an
+enumerable. The current reference analyzer accepts that form while the
+reference recursive copier lacks a bare-enumerable branch and dedicated test.
+Keep this as a named compatibility case: add a cross-language fixture before
+claiming support, or fail generation with an actionable unsupported-feature
+diagnostic. Never fall through to reference boxing, which would silently change
+the requested by-value semantics.
+
+By-reference `const V[K]` is a second reference gap. The analyzer and by-value
+copier accept read-only dictionaries, but the generic protocol/runtime defines
+only mutable dictionary type ID `-6` and a mutable proxy. A genuinely read-only
+object cannot be identified, while reusing `-6` would advertise mutation. Reject
+this transfer mode until a protocol/reference decision and cross-language
+fixture define it; do not silently widen the capability.
 
 A declaration file supplied as generator input may be ambient and TypeScript
 compilation does not necessarily copy it beside emitted output. Either generate
@@ -395,6 +526,23 @@ entry:
 7. Allocates by-value return storage when required.
 8. Converts a user-thrown value to `RpcException`.
 
+Argument decoding branches by the recorded use-site mode. By-value input
+reconstructs a new local container graph; by-reference input converts the
+reference to the original local container or an acknowledged remote proxy. The
+mode applies recursively to nested collection shells, while RPC interface
+leaves always use normal reference conversion.
+
+Result encoding also branches independently:
+
+- Direct values use their normal generated codec.
+- A by-reference collection is converted to its original or newly allocated
+  reference and serialized as a tagged `RpcObjectReference`.
+- For a by-value collection, first recursively copy the implementation's return
+  graph. Store that actual unboxed copy strongly in a new slot, box/serialize
+  the copy into the tagged unknown collection schema, and return
+  `{value, slot}`. Retaining only the JSON node is insufficient when the graph
+  contains RPC interface objects.
+
 Unknown IDs and malformed messages are protocol errors. Only exceptions from
 the accepted user implementation call become normal RPC exception responses.
 Do not catch a generator/runtime bug and mislabel it as an application failure.
@@ -411,6 +559,18 @@ For each method, emit a typed caller that:
 6. Detects and reconstructs a tagged `RpcException` before result decoding.
 7. Deserializes the declared result.
 8. Sends `EndInvokeMethod` in `finally` for a by-value return slot.
+
+For a by-value response, validate the `{value, slot}` wrapper, reconstruct all
+local collection shells, and await required holds for every nested interface
+reference before ending the invocation. Once a valid slot-bearing response has
+been accepted, send exactly one `EndInvokeMethod` after reconstruction succeeds
+or fails. The reference generated C++ calls it only after successful unboxing;
+using `finally` in TypeScript is a deliberate stronger cleanup guarantee that
+prevents a decode error from stranding the slot until lifecycle finalization.
+
+For a by-reference response, perform ordinary reference conversion and lease
+reconciliation; do not send `EndInvokeMethod`. Likewise, by-value arguments and
+non-collection results never allocate a return slot.
 
 Proxy factories create generated proxy objects, register them with the runtime's
 weak interning/lifetime facilities, and initialize property/event glue. Memory
@@ -445,7 +605,11 @@ The reusable runtime should provide:
 - Hold/unhold, service declaration/discovery, and finalization.
 - By-value slot allocation/release.
 - Event suppression and exception aggregation primitives.
-- Unknown-value and predefined collection support.
+- Recursive by-value collection copy/box/unbox with cycle detection.
+- Unknown-value codecs and predefined enumerable/enumerator, read-only-list,
+  list, array, observable-list, and dictionary dispatch/proxy support.
+- Async iteration and deterministic disposal for enumerators, nested collection
+  proxies, and dictionary key/value views.
 - Protocol validation and error classes.
 
 Generated code should provide:
@@ -457,6 +621,7 @@ Generated code should provide:
 - Method/event/property tables.
 - Callee invocation adapters.
 - Proxy caller methods and factories.
+- Transfer-aware typed collection use sites and local-container adapters.
 - Registration helpers.
 
 This boundary allows multiple generated contracts to share one runtime without
@@ -478,8 +643,8 @@ Generated code must not:
 - Drop callbacks received while waiting for an outer response.
 
 Every resource acquired before an `await`—pending entry, suppression counter,
-temporary reference claim, or by-value slot—needs a `try`/`finally` cleanup
-path.
+temporary reference claim, remote enumerator/view, or by-value slot—needs a
+`try`/`finally` cleanup path.
 
 ## Deterministic Emission
 
@@ -539,9 +704,17 @@ Cover:
 - CRLF and LF.
 - Namespaces and escaped identifiers.
 - Primitives, enums/flags, structs, nullable, and nested collections.
+- Enumerable, read-only-list, list/array, observable-list, and
+  read-only/mutable-dictionary type forms.
 - Interfaces, multiple inheritance, constructor services, and callbacks.
 - Methods, overloads, events, and properties.
-- Every resolved transfer/cache mode.
+- Every explicit/default transfer and cache mode, including property
+  getter/setter propagation.
+- Event collection arguments whose modes are computed by the event-only
+  default rule, with an ordinary list resolving by value and an observable list
+  resolving by reference.
+- Rejection of transfer attributes on non-collections, conflicting attributes,
+  and missing normalized method/property modes.
 - Missing/duplicate IDs and unresolved symbols.
 - Schema-name and TypeScript-name collisions.
 - Source locations in diagnostics.
@@ -561,7 +734,15 @@ For each representative contract:
 - Confirm numeric and string IDs exactly match metadata.
 
 Include inheritance and overload fixtures; a minimal single-method service alone
-does not exercise the generator.
+does not exercise the generator. For containers, include ordinary list,
+observable list, and dictionary fixtures across:
+
+- By-value input/by-value output.
+- By-value input/by-reference output.
+- By-reference input/by-value output.
+- By-reference input/by-reference output.
+- Default and explicit modes, properties, nested containers, and containers
+  with RPC interface elements or values.
 
 ### Codec tests
 
@@ -571,9 +752,15 @@ Round-trip:
 - Unsafe 64-bit integer rejection.
 - Enums and flags.
 - Structs and nullable values.
-- Nested lists, observable lists, and maps.
+- Nested enumerable/list/array, observable-list, and dictionary values.
+- Tagged by-value `list`, `oblist`, and `map` shapes at generic RPC operation
+  positions, including arbitrary non-string dictionary keys.
 - Known and unknown tagged values.
 - Remote object references and RPC exceptions.
+- Null collections, repeated nested aliases, and recursive collection cycle
+  rejection without leaked partial state.
+- Exact by-reference null-sentinel encoding and rejection of malformed partial
+  sentinels.
 - Malformed and near-miss JSON shapes.
 
 ### Runtime-binding tests
@@ -589,7 +776,17 @@ Use an in-memory transport to verify generated code:
 - Converts user exceptions but preserves protocol errors.
 - Interns and explicitly disposes proxies.
 - Handles stale-finalizer races deterministically.
-- Releases by-value slots on success and error.
+- Recursively isolates mutations to by-value input/output containers while
+  preserving interface-element object identity.
+- Preserves live by-reference mutations and returns an exact local container
+  when its reference comes back to its owner.
+- Applies the outer transfer mode to nested collection shells.
+- Dispatches every predefined collection operation and observable-list
+  `ItemChanged` event, including remote operation exceptions.
+- Disposes remote enumerators on completed, failed, and early-terminated async
+  iteration and disposes dictionary key/value views.
+- Establishes nested interface proxy holds before releasing a by-value return
+  slot, and releases the slot on success and decode/materialization failure.
 - Attaches/detaches events, suppresses replay, and invalidates cached properties.
 
 ### Cross-language conformance
@@ -599,6 +796,14 @@ Test at least:
 - A TypeScript service called by the reference implementation.
 - A TypeScript proxy calling a reference service.
 - By-reference callbacks in both directions.
+- All four by-value/by-reference container input/output combinations, including
+  nested containers and interface elements created by both endpoints.
+- Observable-list mutation/event propagation by reference and isolation by
+  value.
+- A dedicated by-value `T{}` enumerable compatibility fixture, or an assertion
+  that the generator rejects it until reference behavior is defined and tested.
+- A dedicated by-reference `const V[K]` compatibility fixture after the generic
+  protocol defines it, or an assertion that generation rejects it.
 - Service discovery before and after declaration.
 - Event broadcast with multiple endpoints and exception aggregation.
 - Disconnect/finalize behavior.
@@ -611,13 +816,18 @@ reference triples, arguments, response shape, and cleanup operations.
 
 - Both metadata inputs are parsed with source locations.
 - Generic protocol definitions come from the runtime.
-- Stable IDs and resolved Workflow semantics are never recomputed.
+- Stable IDs and normalized method/property modes are consumed verbatim; only
+  unannotated event collection arguments use the specified event-default rule.
 - Cross-input type/schema agreement is validated.
 - The IR represents all supported interfaces, values, properties, and events.
 - TypeScript names are deterministic, legal, and collision checked.
 - Service implementation and proxy APIs express different async behavior.
+- By-value local containers and by-reference asynchronous container
+  capabilities have distinct, transfer-aware APIs.
 - Generated dispatch, proxy, codec, event, property, and registration code is
   complete.
+- Recursive by-value copying, slot ordering, predefined by-reference collection
+  operations, and transient helper-proxy cleanup are covered.
 - Runtime and generated responsibilities are cleanly separated.
 - Output is self-contained after normal TypeScript compilation.
 - Generation is deterministic and removes only manifest-owned stale files.
