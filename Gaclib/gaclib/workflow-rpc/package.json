@@ -1,0 +1,15 @@
+{
+    "name": "@gaclib/workflow-rpc",
+    "version": "0.0.1",
+    "description": "Browser and Node neutral Workflow RPC runtime",
+    "type": "module",
+    "main": "./lib/src/index.js",
+    "scripts": {
+        "build": "rimraf ./lib && eslint --fix && tsc",
+        "test": "vitest run"
+    },
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "@gaclib-shared/eslint-shared": "^0.0.1"
+    }
+}

@@ -71,17 +71,31 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
     - This package serves everything around remote protocol definition and parsing.
   - `(repo-root)/Gaclib/gaclib/renderer`:
     - This package serves HTML rendering by manipulating DOM dynamically.
+  - `(repo-root)/Gaclib/gaclib/workflow-rpc`:
+    - Browser/Node-neutral Workflow RPC endpoint, codecs, events, proxy lifecycle, and predefined collection adapters.
+    - It has `build` and `test` phases only; generic wire IDs and ownership logic belong here rather than generated bindings.
+  - `(repo-root)/Gaclib/gaclib/codegen-workflow-rpc`:
+    - Location-aware generator for normalized Workflow RPC metadata plus its TypeScript serialization schema.
+    - Its `import` phase compiles the generator and its tests cover richer copied fixtures. It intentionally has no `build` or `codegen` script.
+    - Never handwrite contract IDs in consumers or edit its committed generated output directly.
+  - `(repo-root)/Gaclib/website/rvm`:
+    - Generated RemoteViewModelTest binding owned by `@gaclib/codegen-workflow-rpc` and exported through a stable handwritten package entry.
+    - Commit `src/generated/generated.ts` and its manifest; regenerate them through the root `codegen` phase.
+  - `(repo-root)/Gaclib/website/rvmhost`:
+    - Browser-safe RVM host composition plus the Node network CLI, strict stdio `/Cli` adapter, and platform-native SEA launcher.
+    - It has `build` and `test` phases only. Node-only files must stay outside the public browser-safe `.` dependency graph.
+    - The normal Node CLI is `lib/src/cli.js`; Core `/Cli:<path>` requires the exact native `lib/bin/gacjs-rvmhost(.exe)` path, never the JavaScript file or npm bin shim.
   - `(repo-root)/Gaclib/website/entry`:
     - The website for testing.
   - `(repo-root)/Gaclib/website/remote-protocol-http`:
     - HTTP transport layer for the remote protocol (demo/testing only).
-    - Wraps `@gaclib/remote-protocol` with fetch-based HTTP client.
+    - Use `./channel` for the dependency-free channel contract/codec and `./http-channel` for the renderer-free multi-channel HTTP client. The root also exports the renderer adapter; generic transport code must not import that root.
   - `(repo-root)/Gaclib/gaclib/codegen-remote-protocol`:
     - `@gaclib/codegen-remote-protocol` imports the protocol metadata and AST declarations from the sibling GacUI checkout and exports the functions that generate `@gaclib/remote-protocol`; it does not choose the output location.
     - Its `import` script prepares and compiles the generator; it intentionally has no `build` or `codegen` script because the shared codegen package invokes it.
   - `(repo-root)/Gaclib/shared/codegen`:
-    - Snapshot code generator and the entry point for the root `codegen` phase.
-    - Its `import` script compiles the shared generator. Its `codegen` entry point resolves the `@gaclib/remote-protocol` source directory, invokes the exported remote-protocol generators, and then generates snapshot data.
+    - Snapshot/RPC code generator and the entry point for the root `codegen` phase.
+    - Its `import` script compiles the shared generator. Its `codegen` entry point generates the remote protocol, generates `website/rvm` from GacUI's x86 `RpcMetadata.txt` and `RpcMetadata.d.ts`, and then refreshes snapshot data.
   - `(repo-root)/Gaclib/shared/eslint-shared`:
     - Shared ESLint configuration used by all packages.
 
@@ -95,7 +109,7 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
   - It requires an HTTP server to run. The server executable is `RemotingTest_Core` from the GacUI repo.
     - Use `(repo-root)\..\GacUI\Test\GacUISrc\RemotingTest_Core`.
   - Start the server by running `start (repo-root)\..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http`.
-    - `/FCT` is for FullControlTest (index 0), `/RPT` is for RemoteProtocolTest (index 1). They are exclusive; if neither is given, `/FCT` is assumed.
+    - `/FCT` is for FullControlTest (index 0), `/RPT` is for RemoteProtocolTest (index 1), and `/RVMT` is for RemoteViewModelTest (index 2). They are exclusive; if none is given, `/FCT` is assumed.
     - `/Pipe` and `/Http` are exclusive transport options, specified in any order.
     - If anything is not right, close `/index.html`, kill the process and start it again, reopen `/index.html`.
   - You must use `start` as the process will block the powershell forever, until:
@@ -105,6 +119,7 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
   - When the server is running, you can open `/index.html` multiple times:
     - All previous unclosed `/index.htm.` will lose connection.
     - UI state is supposed to transfer to the new `/index.htm.`.
+  - `/index.html?rvmhost` immediately records a stoppable query session, then starts the generated TypeScript view-model host before connecting a separate renderer client. It requires Core `/RVMT /Http` or `/RVMT /MiniHttp` without a separately started host.
 
 ## Debugging with Playwright and index.html
 

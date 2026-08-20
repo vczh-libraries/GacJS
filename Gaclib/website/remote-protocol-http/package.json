@@ -4,6 +4,20 @@
     "description": "GacUI Remote Protocol with HTTP",
     "type": "module",
     "main": "./lib/src/index.js",
+    "exports": {
+        ".": {
+            "types": "./lib/src/index.d.ts",
+            "default": "./lib/src/index.js"
+        },
+        "./channel": {
+            "types": "./lib/src/channel.d.ts",
+            "default": "./lib/src/channel.js"
+        },
+        "./http-channel": {
+            "types": "./lib/src/httpChannel.d.ts",
+            "default": "./lib/src/httpChannel.js"
+        }
+    },
     "scripts": {
         "build": "rimraf ./lib && eslint --fix && tsc",
         "test": "vitest run"

@@ -14,6 +14,9 @@
     "url": "git@github.com:vczh/GacJS.git"
   },
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.20.0 <23 || >=24.0.0 <25"
+  },
   "workspaces": {
     "packages": [
       "shared/*",

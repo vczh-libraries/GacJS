@@ -3617,6 +3617,13 @@ export const Snapshot: SnapshotEntry = {
                         'Regressions': {
                             'type': 'Folder',
                             'content': {
+                                'ScrollableTextBoxCursor': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File'
+                                    }
+                                },
+                                'ScrollableTextBoxCursor.json': 'File',
                                 'UnexpectedlySharedFonts': {
                                     'type': 'Folder',
                                     'content': {

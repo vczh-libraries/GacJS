@@ -246,14 +246,36 @@ All protocol tests live under `Gaclib/website/entry/test/`:
 - `Testing_Protocol_Font.js` — Font/color formatting and incremental selection test.
 - `Testing_Protocol_ImageInText.js` — Inline image insertion and rendering test.
 - `Testing_Protocol_RendererSwitching.js` — Renderer switching (reconnection) test.
+- `Testing_Protocol_RemoteViewModel.js` — Browser host over `/Http` and `/MiniHttp`, second-host rejection, renderer replacement, and accepted-host loss.
+- `Testing_Protocol_RemoteViewModel_Node.js` — Independently started Node network host over `/Http` and `/MiniHttp` with fatal host loss.
+- `Testing_Protocol_RemoteViewModel_Cli.js` — Core-launched native SEA over both renderer transports, quoted paths with spaces, parent/child PID and TCP-isolation checks, graceful reap, and fatal child loss with nonzero Core exit.
+- `Testing_Protocol_RemoteViewModel_Cpp.js` — Direct `CppTest_Rvm` compatibility over `/Http`, `/MiniHttp`, and Core-launched stdio modes.
+- `RvmQuerySession.test.ts` — Portable fake-client composition for bootstrap cancellation, renderer replacement, independent host/renderer failures, and idempotent teardown.
 
 Each test file is a vitest suite wrapped by `describeProtocolTest()` from the shared
-module. The checked-in harness is Windows-specific: it builds GacUI with
+module. The live C++/browser harness is Windows-specific: it builds GacUI with
 `GACUI-ROOT\.github\Scripts\copilotBuild.ps1`, launches the Windows core
-executable with `/Http`, and uses headless Chromium. The website entry package
-does not start Vitest on non-Windows platforms, so the root test command can
-continue running the portable package tests without loading this E2E harness.
+executable with `/Http` or `/MiniHttp`, and uses headless Chromium. The website
+entry package runs the fake-client unit suite on every platform and skips only
+the live harness on non-Windows platforms.
 The internal suite guard remains as a fallback for a missing sibling GacUI repo.
+
+`setupProtocolTest(options)` accepts an exact `serverArguments` array, a
+`websiteUrl` (including query parameters), an optional `startupReadiness`
+callback, page setup, optional child cleanup, and opt-in graceful Core teardown.
+The optional `serverEnvironment` is merged into Core's environment for isolated
+black-box hooks such as the native host PID file. `openPage(url, false)` skips
+the application-rendered barrier when a test intentionally expects startup
+rejection.
+Use an argument array for `/Cli:<absolute path>` so a path containing spaces
+remains one argument. `waitForRemoteViewModelReady()` validates the Core
+automation JSON until it contains exact `Remote View Model Test`; a listening
+port alone is not sufficient for Core-launched RVM startup.
+
+`gracefullyStopCore()` posts body exact `!Exit` with the automation endpoint's
+required content type and waits for normal process exit. Tests that validate
+stdio child shutdown use this path. Process-tree force-kill remains bounded
+failure cleanup and does not count as graceful-shutdown coverage.
 
 ### Example Test Structure
 

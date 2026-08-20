@@ -1,0 +1,88 @@
+module RpcMetadata;
+
+namespace sample
+{
+    enum State { Off = 0, On = 1, }
+    flag enum Options { None = 0, First = 1, Second = 2, }
+    struct Item { name : ::system::String; state : ::sample::State; }
+    struct Envelope { note : ::system::String?; nested : ::sample::Item[][::system::String]; }
+    struct NumericBoundaries { u8 : ::system::UInt8; i64 : ::system::Int64; single : ::system::Single; }
+
+    @rpc:Interface
+    @rpc:IdString("sample::ICallback")
+    @rpc:IdNumber(20)
+    interface ICallback
+    {
+        @rpc:IdString("sample::ICallback.Accept")
+        @rpc:IdNumber(21)
+        func Accept(value : ::sample::Envelope) : (::system::String);
+    }
+
+    @rpc:Interface
+    @rpc:IdString("sample::IBase")
+    @rpc:IdNumber(10)
+    interface IBase
+    {
+        @rpc:Dynamic
+        prop Name : ::system::String{GetName}
+
+        @rpc:IdString("sample::IBase.GetName")
+        @rpc:IdNumber(11)
+        func GetName() : (::system::String);
+    }
+
+    @rpc:Interface
+    @rpc:Ctor
+    @rpc:IdString("sample::IService")
+    @rpc:IdNumber(0)
+    interface IService : ::sample::IBase, ::sample::ICallback
+    {
+        @rpc:Cached
+        prop Items : observe ::sample::Item[]{GetItems, SetItems : ItemsChanged}
+
+        @rpc:IdString("sample::IService.ItemsChanged")
+        @rpc:IdNumber(5)
+        event ItemsChanged(::system::Int32, observe ::sample::Item[]);
+
+        @rpc:IdString("sample::IService.Convert(value).1")
+        @rpc:IdNumber(1)
+        func Convert(value : ::system::String) : (::system::String);
+
+        @rpc:IdString("sample::IService.Convert(value).2")
+        @rpc:IdNumber(2)
+        func Convert(value : ::system::Int32) : (::system::String);
+
+        @rpc:Byref
+        @rpc:IdString("sample::IService.GetItems")
+        @rpc:IdNumber(3)
+        func GetItems() : (observe ::sample::Item[]);
+
+        @rpc:IdString("sample::IService.SetItems")
+        @rpc:IdNumber(4)
+        func SetItems(@rpc:Byref <value> : observe ::sample::Item[]) : (::system::Void);
+
+        @rpc:Byval
+        @rpc:IdString("sample::IService.Snapshot")
+        @rpc:IdNumber(6)
+        func Snapshot(@rpc:Byref values : ::sample::Item[]) : (::sample::Item[]);
+
+        @rpc:Byval
+        @rpc:IdString("sample::IService.RoundValueValue")
+        @rpc:IdNumber(7)
+        func RoundValueValue(@rpc:Byval values : ::sample::Item[]) : (::sample::Item[]);
+
+        @rpc:Byref
+        @rpc:IdString("sample::IService.RoundValueReference")
+        @rpc:IdNumber(8)
+        func RoundValueReference(@rpc:Byval values : ::sample::Item[]) : (::sample::Item[]);
+
+        @rpc:Byval
+        @rpc:IdString("sample::IService.RoundReferenceValue")
+        @rpc:IdNumber(9)
+        func RoundReferenceValue(@rpc:Byref values : ::sample::Item[]) : (::sample::Item[]);
+
+        @rpc:IdString("sample::IService.UseCallback")
+        @rpc:IdNumber(12)
+        func UseCallback(callback : ::sample::ICallback^) : (::system::String);
+    }
+}

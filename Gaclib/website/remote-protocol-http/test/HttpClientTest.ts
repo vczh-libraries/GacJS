@@ -111,3 +111,14 @@ test('a failed response POST interrupts an outstanding long poll', async () => {
     expect(requestCount()).toBe(1);
     expect(responseCount()).toBe(2);
 });
+
+test('a Core ErrorChannel payload is preserved instead of becoming a transport disconnect', async () => {
+    const { client } = await connectWithRequest(
+        () => Promise.resolve(createResponse(200, '1;!Error;RemotingTest_RvmHost disconnected.'))
+    );
+
+    const failure = await client.start().catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(Error);
+    expect(failure).not.toBeInstanceOf(RemoteProtocolHttpDisconnectError);
+    expect((failure as Error).message).toBe('RemotingTest_RvmHost disconnected.');
+});

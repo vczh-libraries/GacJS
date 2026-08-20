@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "./lib",
+        "rootDir": ".",
     },
     "extends": "../../shared/tsconfig-base.json",
     "include": [

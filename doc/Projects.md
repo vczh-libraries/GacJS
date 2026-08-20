@@ -21,10 +21,14 @@ Gaclib/
 │   └── eslint-shared/      ← @gaclib-shared/eslint-shared
 ├── gaclib/
 │   ├── codegen-remote-protocol/ ← @gaclib/codegen-remote-protocol
+│   ├── codegen-workflow-rpc/ ← @gaclib/codegen-workflow-rpc
 │   ├── remote-protocol/    ← @gaclib/remote-protocol
-│   └── renderer/           ← @gaclib/renderer
+│   ├── renderer/           ← @gaclib/renderer
+│   └── workflow-rpc/       ← @gaclib/workflow-rpc
 └── website/
     ├── remote-protocol-http/ ← @gaclib-website/remote-protocol-http
+    ├── rvm/                ← @gaclib-website/rvm
+    ├── rvmhost/            ← @gaclib-website/rvmhost
     └── entry/              ← @gaclib-website/entry
 ```
 
@@ -48,17 +52,12 @@ generator package.
 ## Dependency Graph
 
 ```
-@gaclib-shared/codegen ─── invokes ──→ @gaclib/codegen-remote-protocol
-        │                                      │
-        │ generates snapshot data              │ reads its src/Import files
-        │                                      │ and generates
-        │                                      ▼
-        │                           @gaclib/remote-protocol
-        │                           (no runtime dependencies)
-        └──────────────────────────────────────┐
-                                               │
-                                               ▼
-                                  @gaclib-website/entry snapshots
+@gaclib-shared/codegen
+        ├── invokes @gaclib/codegen-remote-protocol
+        │       └── generates @gaclib/remote-protocol
+        ├── invokes @gaclib/codegen-workflow-rpc
+        │       └── generates @gaclib-website/rvm
+        └── generates @gaclib-website/entry snapshots
 
 @gaclib/remote-protocol
         │
@@ -69,6 +68,14 @@ generator package.
         └──────────┬───────────────────────────┘
                    ▼
         @gaclib-website/entry
+
+@gaclib/workflow-rpc ────────→ @gaclib-website/rvm
+        │                              │
+        └──────────┬───────────────────┘
+                   ▼
+        @gaclib-website/rvmhost ──────→ @gaclib-website/remote-protocol-http
+                   │
+                   └──────────────────→ @gaclib-website/entry
 ```
 
 `@gaclib-shared/eslint-shared` is a dev dependency of every other package.
@@ -82,8 +89,8 @@ generator package.
 **Path:** `Gaclib/shared/codegen/`
 
 Snapshot generator and root codegen orchestration package. Its codegen entry
-point first invokes `@gaclib/codegen-remote-protocol`, then refreshes the entry
-website snapshots and their index.
+point invokes both contract generators, then refreshes the entry website
+snapshots and their index.
 
 | Script | Action |
 |--------|--------|
@@ -115,6 +122,28 @@ The package deliberately has no `build` or `codegen` script. Key files:
 - `src/generateRemoteProtocol.ts` — generates type definitions and enums
 - `src/generateRemoteProtocolInvoking.ts` — generates protocol invocation/parsing code
 - `src/index.ts` — exports both generator functions without selecting an output directory or running them
+
+---
+
+### @gaclib/codegen-workflow-rpc
+
+**Path:** `Gaclib/gaclib/codegen-workflow-rpc/`
+
+Parses normalized Workflow `RpcMetadata.txt`, cross-checks the corresponding
+serialization `.d.ts`, validates IDs, inheritance, properties, events, transfer
+modes, and schema shapes, and emits deterministic TypeScript bindings. The
+generator is contract-independent. Its copied fixtures and generated-runtime
+tests cover primitives, values, inheritance, overloads, callbacks, properties,
+events, and value/reference collections; unsupported by-value `T{}` and
+by-reference read-only dictionaries fail with source-located diagnostics.
+
+| Script | Action |
+|--------|--------|
+| `yarn run import` | Clean → lint → compile the generator |
+| `yarn test` | Run copied-fixture parser, validation, emission, and type-check tests |
+
+It deliberately has no `build` or `codegen` script. The shared codegen package
+invokes its compiled API and owns the output location.
 
 ---
 
@@ -178,6 +207,23 @@ Main export: `createHtmlRenderer(settings: GacUISettings): IGacUIRenderer`
 
 ---
 
+### @gaclib/workflow-rpc
+
+**Path:** `Gaclib/gaclib/workflow-rpc/`
+
+Browser/Node-neutral Workflow RPC runtime. It owns strict JSON codecs, endpoint
+initialization and routing, concurrent request correlation, exceptions, service
+declarations, object holds, proxy interning/disposal/finalization, events,
+by-value slots, and asynchronous adapters for all predefined collection types.
+Contract-specific IDs and call surfaces remain generated.
+
+| Script | Action |
+|--------|--------|
+| `yarn build` | Clean → lint → compile |
+| `yarn test` | Run in-memory routing, callback, event, collection, and lifecycle tests |
+
+---
+
 ### @gaclib-website/remote-protocol-http
 
 **Path:** `Gaclib/website/remote-protocol-http/`
@@ -193,6 +239,13 @@ Wraps `@gaclib/remote-protocol` with an HTTP client that:
 - Treats an HTTP failure after connection as a terminal disconnect, stops issuing
   requests, and reports `RemoteProtocolHttpDisconnectError`
 
+The `./channel` export contains only the browser/Node-neutral channel contract
+and package codec; `./http-channel` adds the reusable `HttpChannelClient`
+without importing renderer bindings. Both are renderer-neutral,
+support multiple advertised channel names and complete direct/broadcast framing,
+and can be used independently by the RVM host. The renderer adapter composes the
+channel client rather than inheriting from it.
+
 Main export: `connectHttpServer(host, requests): Promise<IRemoteProtocolHttpClient>`
 
 The corresponding C++ source project is
@@ -206,6 +259,45 @@ The corresponding C++ source project is
 |--------|--------|
 | `yarn build` | Clean → lint → compile (tsc) |
 | `yarn test` | Run vitest tests |
+
+---
+
+### @gaclib-website/rvm
+
+**Path:** `Gaclib/website/rvm/`
+
+Stable package boundary for the generated RemoteViewModelTest contract. Its
+manifest-owned `src/generated/` subtree is produced from the sibling GacUI x86
+RPC metadata and exports local/proxy interfaces, exact IDs, codecs, descriptors,
+and service registration/request helpers.
+
+| Script | Action |
+|--------|--------|
+| `yarn build` | Clean → lint → compile |
+| `yarn test` | Verify the generated service through an in-memory RPC broker |
+
+---
+
+### @gaclib-website/rvmhost
+
+**Path:** `Gaclib/website/rvmhost/`
+
+Implements `rvmt::IViewModel.Translate` as `Hello, <name>!`. The public `.`
+export is browser-safe and accepts a generic channel client. The Node-only CLI
+supports independently started HTTP/MiniHTTP network mode and exact `/Cli`
+stdio mode. Its build also creates a stable platform-native Node SEA launcher:
+`lib/bin/gacjs-rvmhost.exe` on Windows or `lib/bin/gacjs-rvmhost` on Linux/macOS.
+
+| Script | Action |
+|--------|--------|
+| `yarn build` | Clean → lint → compile → bundle CLI → build/inject native SEA |
+| `yarn test` | Verify fake-channel/session ordering, network cancellation, strict/fatal stdio behavior, Core transcript, toolchain capability checks, and the native launcher |
+
+Run `node lib/src/cli.js` for an independently started network host. The package
+bin points to that normal Node CLI. It is not a Core launcher. For
+`RemotingTest_Core /RVMT <renderer-transport> /Cli:<path>`, pass the absolute SEA
+path as the single executable value; Core appends exact ` /Cli`, and stdout is
+reserved for protocol frames.
 
 ---
 
@@ -228,6 +320,7 @@ be the document root because the HTML pages use absolute paths such as
 | Page | Purpose |
 |------|---------|
 | `/index.html` | Interactive UI — connects to the C++ HTTP server for live rendering |
+| `/index.html?rvmhost` | Starts the generated TypeScript RVM host and a separate renderer client in the page |
 | `/snapshots.html` | Snapshot viewer — renders saved rendering traces from `assets/snapshots/` |
 | `/solidLabel.html` | Standalone test page for SolidLabel element rendering configurations |
 | `/elements.html` | Standalone test page for various element type rendering |
@@ -238,6 +331,7 @@ containing all exports from `src/index.ts`:
 | Export | Description |
 |--------|-------------|
 | `runGacUI(settings)` | Initialize renderer + HTTP client and start the session |
+| `runRvmGacUI(settings)` | Return a stoppable session immediately while a browser RVM host acquires its service and connects a separate renderer |
 | `isShortcutReservedForBrowser(event)` | Filter keyboard events that should pass through to the browser |
 | `GacUIHtmlRendererExitError` | Error class thrown on graceful exit |
 | `RemoteProtocolHttpDisconnectError` | Error class reported when the HTTP core disconnects |

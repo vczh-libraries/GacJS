@@ -13,6 +13,7 @@
         "@gaclib-shared/eslint-shared": "^0.0.1"
     },
     "dependencies": {
-        "@gaclib/codegen-remote-protocol": "^0.0.1"
+        "@gaclib/codegen-remote-protocol": "^0.0.1",
+        "@gaclib/codegen-workflow-rpc": "^0.0.1"
     }
 }

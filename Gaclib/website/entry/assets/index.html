@@ -88,15 +88,38 @@
                 }
             });
 
-            const [renderer, client] = await GacUIHtmlRenderer.runGacUI(settings);
-            gacuiRenderer = renderer;
-
+            let renderer;
+            let client;
+            let session;
+            window.addEventListener('pagehide', () => {
+                if (session) {
+                    session.stop();
+                }
+                delete window.__gacui_rvmhost_session;
+            }, { once: true });
             try {
+                const rvmhost = new URLSearchParams(location.search).has('rvmhost');
+                if (rvmhost) {
+                    session = GacUIHtmlRenderer.runRvmGacUI(settings);
+                    window.__gacui_rvmhost_session = session;
+                    await session.startup;
+                    renderer = session.renderer;
+                    client = session.rendererClient;
+                } else {
+                    [renderer, client] = await GacUIHtmlRenderer.runGacUI(settings);
+                }
+                gacuiRenderer = renderer;
                 settings.suggestMinSize(0, 0);
-                await client.start();
+                if (session) {
+                    await session.completion;
+                } else {
+                    await client.start();
+                }
             } catch (error) {
-                client.stop();
-                renderer.stop();
+                if (!session) {
+                    if (client) client.stop();
+                    if (renderer) renderer.stop();
+                }
 
                 if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError ||
                     error instanceof GacUIHtmlRenderer.RemoteProtocolHttpDisconnectError) {

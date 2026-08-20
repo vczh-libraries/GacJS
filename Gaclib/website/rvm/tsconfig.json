@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "outDir": "./lib",
+        "rootDir": "."
+    },
+    "extends": "../../shared/tsconfig-base.json",
+    "include": [
+        "src/**/*.ts",
+        "test/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "lib"
+    ]
+}

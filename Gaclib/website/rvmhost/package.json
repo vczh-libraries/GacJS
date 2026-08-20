@@ -1,0 +1,38 @@
+{
+    "name": "@gaclib-website/rvmhost",
+    "version": "0.0.1",
+    "description": "Browser and Node host for the generated RemoteViewModelTest service",
+    "type": "module",
+    "main": "./lib/src/index.js",
+    "exports": {
+        ".": {
+            "types": "./lib/src/index.d.ts",
+            "default": "./lib/src/index.js"
+        },
+        "./cli": {
+            "types": "./lib/src/cli.d.ts",
+            "default": "./lib/src/cli.js"
+        }
+    },
+    "bin": {
+        "gacjs-rvmhost": "./lib/src/cli.js"
+    },
+    "engines": {
+        "node": ">=22.20.0 <23 || >=24.0.0 <25"
+    },
+    "scripts": {
+        "build": "rimraf ./lib && eslint --fix && tsc && node ./build-sea.mjs",
+        "test": "vitest run"
+    },
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "@gaclib-shared/eslint-shared": "^0.0.1",
+        "esbuild": "0.28.2",
+        "postject": "1.0.0-alpha.6"
+    },
+    "dependencies": {
+        "@gaclib-website/remote-protocol-http": "^0.0.1",
+        "@gaclib-website/rvm": "^0.0.1",
+        "@gaclib/workflow-rpc": "^0.0.1"
+    }
+}

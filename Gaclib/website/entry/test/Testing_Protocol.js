@@ -31,6 +31,8 @@ export {
 export const WEBSITE_URL = 'http://localhost:8896/index.html';
 export const PROTOCOL_HOST = 'localhost';
 export const PROTOCOL_PORT = 8888;
+export const CORE_AUTOMATION_CONTROLS_URL = 'http://localhost:8888/Automation/RemotingTest_Core/Controls';
+export const CORE_AUTOMATION_IO_URL = 'http://localhost:8888/Automation/RemotingTest_Core/IO';
 
 export function describeProtocolTest(name, fn) {
     const suite = PROTOCOL_TEST_SKIP_REASON === null ? describe : describe.skip;
@@ -111,6 +113,126 @@ export async function waitForTcpPort(port, host, timeout = 30000) {
     throw new Error(`Timed out waiting for ${host}:${port}${errorMessage}`);
 }
 
+function containsExactJsonString(value, expected) {
+    if (value === expected) return true;
+    if (Array.isArray(value)) return value.some(item => containsExactJsonString(item, expected));
+    if (value !== null && typeof value === 'object') {
+        return Object.values(value).some(item => containsExactJsonString(item, expected));
+    }
+    return false;
+}
+
+export async function waitForAutomationControl(url, expected, timeout = 60000) {
+    const end = Date.now() + timeout;
+    let lastError = null;
+    while (Date.now() < end) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const text = await response.text();
+            const controls = JSON.parse(text);
+            if (containsExactJsonString(controls, expected)) {
+                return controls;
+            }
+            lastError = new Error(`The automation response did not contain exact control text ${JSON.stringify(expected)}.`);
+        } catch (error) {
+            lastError = error;
+        }
+        await sleep(100);
+    }
+    const suffix = lastError instanceof Error ? `: ${lastError.message}` : '';
+    throw new Error(`Timed out waiting for automation control ${JSON.stringify(expected)} at ${url}${suffix}`);
+}
+
+export function waitForCoreAutomationControl(expected, timeout = 60000) {
+    return waitForAutomationControl(CORE_AUTOMATION_CONTROLS_URL, expected, timeout);
+}
+
+export function waitForRemoteViewModelReady(timeout = 60000) {
+    return waitForCoreAutomationControl('Remote View Model Test', timeout);
+}
+
+export async function waitForChildProcessExit(child, timeout = 10000) {
+    if (child === null || child.exitCode !== null || child.signalCode !== null) return;
+    await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            child.off('exit', onExit);
+            reject(new Error(`Timed out waiting for child process ${String(child.pid)} to exit.`));
+        }, timeout);
+        const onExit = () => {
+            clearTimeout(timer);
+            resolve();
+        };
+        child.once('exit', onExit);
+    });
+}
+
+export function isProcessLive(pid) {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export async function waitForProcessExit(pid, timeout = 10000) {
+    const end = Date.now() + timeout;
+    while (Date.now() < end) {
+        if (!isProcessLive(pid)) return;
+        await sleep(100);
+    }
+    throw new Error(`Timed out waiting for process ${String(pid)} to exit.`);
+}
+
+export async function waitForChildOutputLine(child, expected, timeout = 60000) {
+    return await new Promise((resolve, reject) => {
+        let buffered = '';
+        const timer = setTimeout(() => finish(new Error(`Timed out waiting for child output line ${JSON.stringify(expected)}.`)), timeout);
+        const onData = chunk => {
+            buffered += String(chunk);
+            while (true) {
+                const newline = buffered.indexOf('\n');
+                if (newline < 0) return;
+                const line = buffered.substring(0, newline).replace(/\r$/u, '');
+                buffered = buffered.substring(newline + 1);
+                if (line === expected) {
+                    finish();
+                    return;
+                }
+            }
+        };
+        const onExit = (code, signal) => finish(new Error(`Child exited before ${JSON.stringify(expected)}: code=${code}, signal=${signal}.`));
+        const finish = error => {
+            clearTimeout(timer);
+            child.stdout.off('data', onData);
+            child.off('exit', onExit);
+            if (error === undefined) resolve();
+            else reject(error);
+        };
+        child.stdout.on('data', onData);
+        child.once('exit', onExit);
+    });
+}
+
+export async function gracefullyStopCore(child, timeout = 10000) {
+    const response = await fetch(CORE_AUTOMATION_IO_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=utf8' },
+        body: '!Exit',
+        signal: AbortSignal.timeout(timeout),
+    });
+    if (!response.ok) {
+        throw new Error(`Core automation shutdown failed with HTTP ${response.status}.`);
+    }
+    await waitForChildProcessExit(child, timeout);
+    if (child.exitCode !== 0 || child.signalCode !== null) {
+        throw new Error(`Core automation shutdown was not graceful: code=${child.exitCode}, signal=${child.signalCode}.`);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // DOM query helpers
 // ---------------------------------------------------------------------------
@@ -169,7 +291,9 @@ async function waitForApplicationRendered(page, timeout = 60000, getDiagnostics 
     while (Date.now() < end) {
         lastState = await getScreenState(page);
         const hasAppContent = lastState.leafCount >= 20 ||
-            lastState.text.includes('Remote Protocol Test');
+            lastState.text.includes('Remote Protocol Test') ||
+            lastState.text.includes('Remote View Model Test') ||
+            lastState.text.includes('Hello, !');
         const hasFetchError = lastState.text.includes('Failed to fetch');
         const isStarting = lastState.text.includes('Starting GacUI HTML Renderer');
 
@@ -593,7 +717,19 @@ export function groupIntoRows(icons, tolerance) {
  * Call this inside a describe() block. Returns an object with a `page`
  * getter that provides the Playwright page once beforeAll completes.
  */
-export function setupProtocolTest(serverArgs = '/FCT /Http') {
+export function setupProtocolTest(options = {}) {
+    const {
+        serverArguments = ['/FCT', '/Http'],
+        websiteUrl = WEBSITE_URL,
+        startupReadiness = null,
+        setupPage = null,
+        cleanupChildProcesses = null,
+        gracefulTeardown = false,
+        serverEnvironment = {},
+    } = options;
+    if (!Array.isArray(serverArguments) || serverArguments.some(value => typeof value !== 'string' || value.length === 0)) {
+        throw new Error('setupProtocolTest serverArguments must be an array of nonempty strings.');
+    }
     let browser = null;
     let context = null;
     let page = null;
@@ -609,10 +745,13 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
         }
     }
 
-    async function openPage() {
+    async function openPage(url = websiteUrl, waitForRender = true) {
         const p = await context.newPage();
         try {
             await setupIdleTracking(p);
+            if (setupPage !== null) {
+                await setupPage(p);
+            }
             p.on('dialog', async dialog => {
                 console.error(`  [CRASH] Dialog: ${dialog.message()}`);
                 await dialog.dismiss();
@@ -635,9 +774,11 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
                     addDiagnostic(`response: ${response.status()} ${response.url()}`);
                 }
             });
-            await p.goto(WEBSITE_URL, { timeout: 30000, waitUntil: 'domcontentloaded' });
+            await p.goto(url, { timeout: 30000, waitUntil: 'domcontentloaded' });
             await p.waitForSelector('#gacui-screen', { timeout: 30000 });
-            await waitForApplicationRendered(p, 60000, () => diagnostics);
+            if (waitForRender) {
+                await waitForApplicationRendered(p, 60000, () => diagnostics);
+            }
             return p;
         } catch (e) {
             await p.close().catch(() => {});
@@ -655,6 +796,15 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
     }
 
     async function stopServer() {
+        let gracefulError = null;
+        if (serverProcess !== null && serverProcess.exitCode === null && gracefulTeardown) {
+            try {
+                await gracefullyStopCore(serverProcess);
+            } catch (error) {
+                addDiagnostic(`graceful teardown failed: ${error.message}`);
+                gracefulError = error;
+            }
+        }
         killServer();
         if (serverProcess !== null && serverProcess.exitCode === null) {
             serverProcess.kill();
@@ -662,18 +812,37 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
         await waitForServerExit();
         serverProcess = null;
         serverExit = null;
+        if (gracefulError !== null) throw gracefulError;
     }
 
     async function cleanupProtocolRuntime() {
-        await stopServer();
-        await closeBrowser();
-        await stopServer();
+        let firstError = null;
+        try {
+            await stopServer();
+        } catch (error) {
+            firstError = error;
+        }
+        try {
+            if (cleanupChildProcesses !== null) {
+                await cleanupChildProcesses();
+            }
+        } catch (error) {
+            firstError ??= error;
+        }
+        try {
+            await closeBrowser();
+            await stopServer();
+        } catch (error) {
+            firstError ??= error;
+        }
+        if (firstError !== null) throw firstError;
     }
 
     async function startServer() {
         serverExit = null;
-        serverProcess = spawn(SERVER_EXE, serverArgs.trim().split(/\s+/).filter(Boolean), {
+        serverProcess = spawn(SERVER_EXE, serverArguments, {
             cwd: GACUI_SOLUTION_DIR,
+            env: { ...process.env, ...serverEnvironment },
             stdio: ['ignore', 'pipe', 'pipe'],
             windowsHide: true
         });
@@ -698,6 +867,9 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
             throw new Error(`RemotingTest_Core.exe exited early: code=${serverExit.code}, signal=${serverExit.signal}`);
         }
         await waitForTcpPort(PROTOCOL_PORT, PROTOCOL_HOST);
+        if (startupReadiness !== null) {
+            await startupReadiness({ serverProcess, diagnostics });
+        }
     }
 
     beforeAll(async () => {
@@ -735,6 +907,8 @@ export function setupProtocolTest(serverArgs = '/FCT /Http') {
 
     return {
         get page() { return page; },
+        get serverProcess() { return serverProcess; },
+        get serverExit() { return serverExit; },
         openPage
     };
 }
