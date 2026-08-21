@@ -1,292 +1,109 @@
-# Testing with the C++ Test Server and Playwright
+# Testing the Remote Protocol with Playwright
 
-This document describes how to build, run, and test against the C++ `RemotingTest_Core`
-HTTP server, and how to use Playwright to automate browser-based testing of `index.html`.
+This document describes the checked-in GacJS test harness: how to run it, how
+tests manage `RemotingTest_Core`, how browser actions are synchronized, and what
+each end-to-end suite verifies.
 
-Throughout this document, **GACUI-ROOT** refers to the sibling GacUI repository
-at `..\GacUI`, next to this GacJS checkout.
+For building and operating the Core, serving GacJS, choosing `/Http`,
+`/MiniHttp`, `/RVMT`, or `/Cli`, and performing manual browser debugging, see
+[Operating GacUI Through GacJS](../../GacUI/DebugRemoteProtocolWithGacJS.md).
+For the transport, channel-admission, Remote Protocol, and Workflow RPC wire
+handshakes, see [NetworkProtocol.md](NetworkProtocol.md).
 
----
+## Running the Tests
 
-## Table of Contents
-
-- [Architecture Overview](#architecture-overview)
-- [Prerequisites](#prerequisites)
-- [Building the C++ Server](#building-the-c-server)
-- [Running the C++ Server](#running-the-c-server)
-- [Hosting the Website](#hosting-the-website)
-- [Manual Testing](#manual-testing)
-- [Automated Testing with Playwright](#automated-testing-with-playwright)
-- [PowerShell Scripts](#powershell-scripts)
-- [Troubleshooting](#troubleshooting)
-
----
-
-## Architecture Overview
-
-```
-┌─────────────────────────┐     HTTP (port 8888)     ┌──────────────────────────┐
-│  Browser (index.html)   │ ◄──────────────────────► │  RemotingTest_Core.exe   │
-│  served on port 8896    │   Remote Protocol JSON    │  C++ GacUI application   │
-│  (static file server)   │                           │  /Http mode              │
-└─────────────────────────┘                           └──────────────────────────┘
-```
-
-| Component | Port | Purpose |
-|-----------|------|---------|
-| `RemotingTest_Core.exe /FCT /Http` | 8888 | GacUI remote protocol API server (JSON/HTTP) |
-| Static file server | 8896 (or any) | Serves `index.html`, `index.js`, CSS, etc. |
-
-The C++ server is **not** a static file server. It serves VlppOS HTTP channel endpoints:
-- `GET /GacUIRemoteProtocolHttp/VlppInterProcess/Connect` — client handshake, returns unique session URLs
-- `POST /GacUIRemoteProtocolHttp/VlppInterProcess/Request/{GUID}` — long-poll for core-to-client messages
-- `POST /GacUIRemoteProtocolHttp/VlppInterProcess/Response/{GUID}` — client-to-core events/responses
-
-The JavaScript client (`index.ts`) connects to `http://localhost:8888` (hardcoded).
-
----
-
-## Prerequisites
-
-1. **Visual Studio 2022** (or later) with C++ desktop development workload.
-   - The project uses platform toolset `v145` and C++20.
-   - The `VLPP_VSDEVCMD_PATH` environment variable must point to `VsDevCmd.bat`,
-     e.g. `C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat`.
-2. **Node.js + Yarn** for building the TypeScript/website code.
-3. **Playwright** (installed with this repo via `@playwright/test`).
-
----
-
-## Building the C++ Server
-
-The `RemotingTest_Core` project is part of the `GacUISrc.sln` solution in the sibling GacUI repo.
-
-### Using copilotBuild.ps1
-
-The GacUI repo provides `GACUI-ROOT\.github\Scripts\copilotBuild.ps1` for building.
-Follow the guidelines in `GACUI-ROOT\.github\Guidelines\Building.md`.
+Install the Playwright Chromium build once:
 
 ```powershell
-cd GACUI-ROOT\Test\GacUISrc
-& GACUI-ROOT\.github\Scripts\copilotBuild.ps1
-```
-
-This builds in **Debug x64** by default. Pass `-Configuration` and `-Platform` to override.
-The build log is saved to `GACUI-ROOT\.github\Scripts\Build.log`.
-
-### Using Visual Studio IDE
-
-1. Open `GACUI-ROOT\Test\GacUISrc\GacUISrc.sln`
-2. Set Solution Configuration to **Debug** and Platform to **x64**
-3. Right-click `RemotingTest_Core` → Build
-
-### Output Location
-
-The built executable is at:
-```
-GACUI-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe
-```
-
----
-
-## Running the C++ Server
-
-The server accepts two categories of command-line arguments (in any order):
-
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `/FCT` | Run the **FullControlTest** application (index 0) | Yes (if neither `/FCT` nor `/RPT` is specified) |
-| `/RPT` | Run the **RemoteProtocolTest** application (index 1) | No |
-| `/Pipe` | Use named-pipe transport | — |
-| `/Http` | Use HTTP transport | — |
-
-- `/FCT` and `/RPT` are **exclusive** — specify at most one. If neither is given, `/FCT` is assumed.
-- `/Pipe` and `/Http` are **exclusive** — exactly one must be specified.
-- Arguments can appear in any order.
-
-The server **blocks the terminal**, so always launch it with `start`:
-
-```powershell
-start GACUI-ROOT\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe /FCT /Http
-```
-
-The server prints:
-```
-> HTTP server created, waiting on: http://localhost:8888/GacUIRemoteProtocolHttp
-```
-
-**Important notes:**
-- The E2E test cases in `Gaclib/website/entry/test` use `/FCT` (FullControlTest).
-- The process blocks until the UI exits or the connection is terminated.
-- Always use `start` so it runs in a separate window.
-- Only one client connection is active at a time. Opening `index.html` again takes over.
-- The server uses Windows HTTP Server API (`http.sys`), which may require admin privileges
-  on first run to register the URL reservation.
-
-### Stopping the Server
-
-Kill the process:
-```powershell
-Stop-Process -Name "RemotingTest_Core" -Force -ErrorAction SilentlyContinue
-```
-
-Or from the browser:
-- Click the **Exit** button on `index.html`
-- Click the **Force Exit** button (immediate shutdown)
-- Navigate to the Exit tab in the GacUI UI and click a close button
-
----
-
-## Hosting the Website
-
-### After `yarn build`
-
-After running `yarn build` in the `Gaclib` directory, the built website files are at:
-```
-Gaclib\website\entry\lib\dist\
-```
-
-Start the checked-in static server:
-
-```text
-cd Gaclib\website\entry
-npm run start
-```
-
-It serves `lib\dist` at `http://localhost:8896` and waits for ENTER to stop.
-The command works on Windows, Linux, and macOS. If port `8896` is already in
-use on Windows, it reports that IIS may already be hosting the website; check
-the URL directly. Other startup failures are reported as errors and exit with a
-nonzero status.
-
-**IMPORTANT:** The root folder MUST be `lib\dist\` — HTML files reference `/index.js`
-which is in the dist root.
-
----
-
-## Manual Testing
-
-### Testing the Remote Protocol (index.html)
-
-1. Build the TypeScript code: `cd Gaclib; yarn build`
-2. Start the C++ server: `start RemotingTest_Core.exe /FCT /Http`
-3. In another terminal, run `cd Gaclib\website\entry; npm run start`
-4. Open `http://localhost:8896/index.html`
-5. The GacUI application UI renders in the browser
-
-**What to test:**
-- Window renders with the FullControlTest UI (tabs: List, Control, Misc, etc.)
-- Click interactions work (tab switching, button clicks)
-- Keyboard input works
-- Navigate to **Control > Document Editor Ribbon** tab for rich text
-- Type, select, format text
-- Verify caret movement with arrow keys
-
-### Testing DocumentParagraph Specifically
-
-1. Navigate to **Control > Document Editor Ribbon** or **Document Editor Toolstrip** tab.
-2. The document editor contains rich text with:
-   - Styled text (bold, italic, colored)
-   - Inline objects (embedded elements)
-   - Multiple paragraphs
-3. Test operations:
-   - Click to place caret → `OpenCaret` → `GetCaretBounds`
-   - Drag to select → rapid `UpdateElement_DocumentParagraph` with style changes
-   - Arrow keys → `GetCaret` with various `CaretRelativePosition` values
-   - Ctrl+A → `GetCaret(CaretFirst)` + `GetCaret(CaretLast)` for full selection
-
-### The Main Window
-
-The main window is defined in `..\GacUI\Test\Resources\App\FullControlTest\Resource.xml`.
-It contains:
-- **List tab**: TextList, ListView, TreeView, DataGrid
-- **Refresh List tab**: Refreshable variants of list controls
-- **Layout tab**: Repeat, Responsive layouts
-- **Control tab**: Document Editor (Ribbon), Document Editor (Toolstrip), TextBox
-- **Misc tab**: Elements, Animation, Localization, Date Picker
-- **Window Manager tab**: Sub-window management
-- **Exit tab**: Various exit methods
-
----
-
-## Automated Testing with Playwright
-
-### Setup
-
-Playwright is installed with this repo. The checked-in Windows E2E harness uses
-Chromium:
-
-```powershell
+Set-Location Gaclib
 npx playwright install chromium
 ```
 
-Portable live MiniHTTP verification uses one platform-specific browser:
+Build GacJS and run all Vitest suites:
 
-| Platform | Required Playwright browser |
+```powershell
+Set-Location Gaclib
+yarn build
+yarn test
+```
+
+On Windows, the website entry tests build the sibling GacUI repository once,
+start the required `RemotingTest_Core` processes, and drive headless Chromium.
+
+On Linux and macOS, the portable fake-client suites still run, while the live
+C++/browser harness prints `Skipping Windows-only protocol E2E tests.` and
+exits successfully. That skip is not a live MiniHTTP or browser compatibility
+test; use the platform commands in the operating guide for those checks.
+
+Protocol test files execute sequentially (`fileParallelism: false`) because
+they share a stateful server and fixed ports.
+
+## Test Harness
+
+All harness files live in `Gaclib/website/entry/test/`.
+
+| File | Responsibility |
 |---|---|
-| Linux | Firefox |
-| macOS | WebKit, Playwright's Safari-family target |
+| `Protocol_GacUIBuild.js` | Builds the sibling GacUI test projects once for the live suites. |
+| `Protocol_GlobalSetup.js` | Performs package-level setup shared by protocol suites. |
+| `Testing_Protocol.js` | Provides the Vitest lifecycle, process control, DOM helpers, click helpers, idle/blink tracking, caret helpers, and path constants. |
+| `Testing_Protocol_SimpleTyping.js` | Verifies basic rendering and keyboard input. |
+| `Testing_Protocol_Caret.js` | Verifies caret rendering, blinking, positioning, and size. |
+| `Testing_Protocol_Caret2.js` | Verifies cursor restoration after a tab switch and end-of-line caret placement. |
+| `Testing_Protocol_Font.js` | Verifies font/color formatting and incremental selection. |
+| `Testing_Protocol_ImageInText.js` | Verifies inline image insertion and selection rendering. |
+| `Testing_Protocol_RendererSwitching.js` | Verifies renderer replacement while preserving Core UI state. |
+| `Testing_Protocol_RemoteViewModel.js` | Covers a browser RVM host over `/Http` and `/MiniHttp`, second-host rejection, renderer replacement, and accepted-host loss. |
+| `Testing_Protocol_RemoteViewModel_Node.js` | Covers an independently started Node network host and fatal host loss. |
+| `Testing_Protocol_RemoteViewModel_Cli.js` | Covers a Core-launched native SEA host over stdio, quoted paths, PID/TCP isolation, graceful reap, and fatal child loss. |
+| `Testing_Protocol_RemoteViewModel_Cpp.js` | Checks `CppTest_Rvm` compatibility over HTTP, MiniHTTP, and Core-launched stdio. |
+| `RvmQuerySession.test.ts` | Uses fake clients to cover bootstrap cancellation, renderer replacement, independent failures, and idempotent teardown on every platform. |
 
-Use `npx playwright install firefox` on Linux and
-`npx playwright install webkit` on macOS. Do not substitute another Playwright
-engine in either platform's remote-protocol verification matrix. Playwright
-WebKit is not the installed Safari application; actual Safari is a separate
-manual compatibility check.
+Each live suite is wrapped by `describeProtocolTest()` and normally creates its
+lifecycle with `setupProtocolTest(options)`.
 
-### Test File Structure
+### Lifecycle and configuration
 
-All protocol tests live under `Gaclib/website/entry/test/`:
+`setupProtocolTest(options)` accepts:
 
-- `Testing_Protocol.js` — Shared utilities and vitest lifecycle (`setupProtocolTest`,
-  DOM helpers, click helpers, idle/blink tracking, caret helpers, path constants).
-- `Testing_Protocol_SimpleTyping.js` — Basic UI rendering and keyboard input test.
-- `Testing_Protocol_Caret.js` — Caret rendering, blinking, and positioning test.
-- `Testing_Protocol_Caret2.js` — Cursor style after tab switch, caret blinking after tab switch,
-  and end-of-line caret positioning test.
-- `Testing_Protocol_Font.js` — Font/color formatting and incremental selection test.
-- `Testing_Protocol_ImageInText.js` — Inline image insertion and rendering test.
-- `Testing_Protocol_RendererSwitching.js` — Renderer switching (reconnection) test.
-- `Testing_Protocol_RemoteViewModel.js` — Browser host over `/Http` and `/MiniHttp`, second-host rejection, renderer replacement, and accepted-host loss.
-- `Testing_Protocol_RemoteViewModel_Node.js` — Independently started Node network host over `/Http` and `/MiniHttp` with fatal host loss.
-- `Testing_Protocol_RemoteViewModel_Cli.js` — Core-launched native SEA over both renderer transports, quoted paths with spaces, parent/child PID and TCP-isolation checks, graceful reap, and fatal child loss with nonzero Core exit.
-- `Testing_Protocol_RemoteViewModel_Cpp.js` — Direct `CppTest_Rvm` compatibility over `/Http`, `/MiniHttp`, and Core-launched stdio modes.
-- `RvmQuerySession.test.ts` — Portable fake-client composition for bootstrap cancellation, renderer replacement, independent host/renderer failures, and idempotent teardown.
+- An exact `serverArguments` array.
+- A `websiteUrl`, including query parameters such as `?rvmhost`.
+- An optional `startupReadiness` callback.
+- Page setup and optional child-process cleanup callbacks.
+- Opt-in graceful Core teardown.
+- A `serverEnvironment` merged into the Core environment for isolated
+  black-box hooks such as the native host PID file.
 
-Each test file is a vitest suite wrapped by `describeProtocolTest()` from the shared
-module. The live C++/browser harness is Windows-specific: it builds GacUI with
-`GACUI-ROOT\.github\Scripts\copilotBuild.ps1`, launches the Windows core
-executable with `/Http` or `/MiniHttp`, and uses headless Chromium. The website
-entry package runs the fake-client unit suite on every platform and skips only
-the live harness on non-Windows platforms.
-The internal suite guard remains as a fallback for a missing sibling GacUI repo.
+Keep `/Cli:<absolute path>` as one array element so paths containing spaces are
+passed as one argument. Use `openPage(url, false)` when a test intentionally
+expects application startup to be rejected and therefore must skip the normal
+rendered-page barrier.
 
-`setupProtocolTest(options)` accepts an exact `serverArguments` array, a
-`websiteUrl` (including query parameters), an optional `startupReadiness`
-callback, page setup, optional child cleanup, and opt-in graceful Core teardown.
-The optional `serverEnvironment` is merged into Core's environment for isolated
-black-box hooks such as the native host PID file. `openPage(url, false)` skips
-the application-rendered barrier when a test intentionally expects startup
-rejection.
-Use an argument array for `/Cli:<absolute path>` so a path containing spaces
-remains one argument. `waitForRemoteViewModelReady()` validates the Core
-automation JSON until it contains exact `Remote View Model Test`; a listening
-port alone is not sufficient for Core-launched RVM startup.
+For RVM startup, `waitForRemoteViewModelReady()` waits until the Core automation
+JSON contains the exact text `Remote View Model Test`. A listening port alone
+does not prove that the RVM host completed its Workflow RPC handshake.
 
-`gracefullyStopCore()` posts body exact `!Exit` with the automation endpoint's
-required content type and waits for normal process exit. Tests that validate
-stdio child shutdown use this path. Process-tree force-kill remains bounded
-failure cleanup and does not count as graceful-shutdown coverage.
+`gracefullyStopCore()` posts the exact body `!Exit` with the automation
+endpoint's required content type and waits for normal process exit. Tests that
+verify stdio-child shutdown use this route. For a test intended to prove
+graceful shutdown, a fallback process-tree force kill is cleanup and does not
+count as graceful-shutdown coverage.
 
-### Example Test Structure
+The optional `scripts/start-test-server.ps1` and
+`scripts/stop-test-server.ps1` helpers are convenient for focused local
+debugging. The operating guide remains authoritative for supported launch
+topologies and platform-specific commands.
+
+## Writing a Test
 
 ```javascript
 import { test, expect } from 'vitest';
 import {
     getLeafTextPositions,
+    findTextInputPointRightOfLabel,
     clickAt,
     waitForIdle,
     waitForCarets,
-    findCarets,
     setupProtocolTest,
     describeProtocolTest
 } from './Testing_Protocol.js';
@@ -294,355 +111,197 @@ import {
 describeProtocolTest('MyTest', () => {
     const ctx = setupProtocolTest();
 
-    test('Step 1: Page rendering', async () => {
+    test('the page renders', async () => {
         const positions = await getLeafTextPositions(ctx.page);
         expect(positions.length).toBeGreaterThanOrEqual(20);
     });
 
-    test('Step 2: Interact with UI', async () => {
-        // Click a tab, waitForIdle handles synchronization
-        await clickAt(ctx.page, tabPos.cx, tabPos.cy);
-        // Type a key, then wait for idle
-        await ctx.page.keyboard.press('A');
-        await waitForIdle(ctx.page);
-        // Check caret visibility (event-driven, no sleep)
+    test('an interaction updates the UI', async () => {
+        const positions = await getLeafTextPositions(ctx.page);
+        const controlTab = positions.find(({ text }) => text === 'Control');
+        expect(controlTab).toBeDefined();
+
+        await clickAt(ctx.page, controlTab.cx, controlTab.cy);
+
+        const controlPositions = await getLeafTextPositions(ctx.page);
+        const searchLabel = controlPositions.find(({ text }) =>
+            text.startsWith('Search:')
+        );
+        expect(searchLabel).toBeDefined();
+        const inputPoint = await findTextInputPointRightOfLabel(
+            ctx.page,
+            searchLabel
+        );
+        expect(inputPoint).toBeTruthy();
+
+        await clickAt(ctx.page, inputPoint.x, inputPoint.y);
         const carets = await waitForCarets(ctx.page);
         expect(carets.length).toBe(1);
+
+        await ctx.page.keyboard.type('SAMPLE_INPUT');
+        await waitForIdle(ctx.page);
+        const screenText = await ctx.page.locator('#gacui-screen').innerText();
+        expect(screenText).toContain('SAMPLE_INPUT');
     });
 });
 ```
 
-### Running Tests
-
-```powershell
-cd Gaclib
-yarn test
-```
-
-On Windows, this runs all vitest suites across all packages, including the
-protocol tests. Protocol tests build the sibling GacUI repo once before launching
-any `RemotingTest_Core` test process. On Linux and macOS, the portable suites run
-but the website entry package prints `Skipping Windows-only protocol E2E tests.`
-and exits successfully. That skip does not verify a live MiniHTTP core or browser;
-perform cross-platform browser verification separately.
-Test files run sequentially (`fileParallelism: false`) since they share the
-same stateful HTTP server.
-
-### Synchronization: Event-Driven, Not Sleep-Based
-
-Tests use **no** `sleep()` for UI synchronization. The only remaining `sleep()` calls
-are for server startup/shutdown (OS-level process delays), not for waiting on UI state.
-
-The renderer exposes two optional callbacks in `GacUISettings`: `idle` and `blink`.
-
-- **`idle`** fires after `RequestRendererIdle` — the renderer has finished processing
-  all pending messages.
-- **`blink`** fires after each `setCaretVisible` toggle in the 500ms caret blink timer.
-
-`index.html` bridges these callbacks to CDP (Chrome DevTools Protocol) functions
-(`__gacui_playwright_idle`, `__gacui_playwright_blink`). On the Node.js/Playwright side,
-`setupIdleTracking(page)` exposes these functions **before** `page.goto()` via
-`page.exposeFunction`, ensuring no events are missed.
-
-#### Key synchronization functions
-
-| Function | Purpose | Typical Use |
-|----------|---------|-------------|
-| `setupIdleTracking(page)` | Register CDP bindings for idle + blink | Call **before** `page.goto()` |
-| `waitForIdle(page)` | Wait for next `RequestRendererIdle` | After click, keypress, any interaction |
-| `waitUntilIdle(page)` | Wait for first-ever idle signal | Initial page load |
-| `waitForBlink(page)` | Wait for exactly one caret blink toggle | Caret blink testing |
-| `waitForCarets(page)` | Event-driven caret visibility check | Verify caret shown / hidden |
-| `findCarets(page)` | Immediate DOM query for caret divs | One-time snapshot of caret state |
-
-`waitForCarets` works by checking the DOM once; if not satisfied, it waits for one
-blink event (since each blink toggles caret visibility) and checks again. No loop,
-no polling, no sleep.
-
-`clickAt(page, x, y)` performs mouse move → down → up → `waitForIdle` in sequence.
-All synchronization is handled internally; callers need no additional waits.
-
-All synchronization functions **throw** if `setupIdleTracking(page)` was not called.
-`setupProtocolTest()` handles this automatically for most test files.
-
-**Rule:** Never add `sleep()` for UI synchronization. If something needs waiting,
-there should be a renderer event for it.
-
-### Important Playwright Notes
-
-- `index.html` expects the C++ server on `localhost:8888` — this is hardcoded.
-- Only one browser connection is active at a time — previous connections lose state.
-- If the C++ server crashes (which happens on unhandled protocol errors), restart it.
-- Take screenshots for visual comparison: `await page.screenshot({ path: 'test.png' })`.
-
----
-
-## PowerShell Scripts
-
-Two PowerShell scripts are provided for convenience:
-
-### `scripts/start-test-server.ps1`
-
-Builds (if needed) and starts the C++ HTTP test server.
-
-### `scripts/stop-test-server.ps1`
-
-Kills the `RemotingTest_Core.exe` process.
-
-See the scripts in the `scripts/` directory for details.
-
----
-
-## Troubleshooting
-
-### Server won't start / Access denied
-
-The Windows HTTP Server API requires URL reservation. Run once as Administrator:
-```powershell
-netsh http add urlacl url=http://localhost:8888/ user=Everyone
-```
-
-### "Fatal Error" on index.html
-
-The server encountered an unhandled protocol error. Check the C++ server console
-for the error message.
-
-On Firefox, stopping the MiniHTTP core while a long-poll request is outstanding can
-also add a CORS or `NS_ERROR_CONNECTION_REFUSED` message to the browser console. The
-HTTP client catches that terminal transport failure, stops issuing requests, and
-shows the success mask `HTTP remote protocol disconnected.` It is a failure only if
-the page shows the error mask, reports an uncaught page error or dialog, or continues
-requesting the stopped endpoint.
-
-### Connection drops / No response
-
-- Ensure only one `index.html` tab is open.
-- Close all tabs, kill the server, restart, reopen `index.html`.
-- Check that port 8888 is not in use by another process:
-  `netstat -ano | findstr :8888`
-
-### Website doesn't load
-
-- Verify `yarn build` completed successfully.
-- Check that the static file server is running on the expected port.
-- Verify `lib/dist/index.js` exists after build.
-
-### Playwright can't find elements
-
-- GacUI renders dynamically — use `waitUntilIdle(page)` for initial page load.
-- The DOM structure is deeply nested `<div>` elements — use broad selectors.
-- Check `page.content()` to see what's actually rendered.
-
----
-
-## Test Scripts
-
-**Prerequisites:**
-- `yarn build` in `Gaclib/`
-- Sibling `..\GacUI` repo available on Windows; protocol tests build `RemotingTest_Core.exe` automatically
-- `npx playwright install chromium` (first time only)
-
-**Crash detection:**
-`index.html` calls `alert(error.message)` when any exception occurs during the
-remote protocol session. In Playwright, this triggers a `dialog` event. The test
-script listens for this event via `page.on('dialog', ...)` and logs the dialog
-message as `[CRASH]`. If a dialog appears, it means a JavaScript error was thrown
-and the test will report a failure. When debugging manually, you can also inject
-`throw new Error('UNIQUE_WORD')` in the TypeScript source to locate where an error
-occurs — the browser will show an alert with the error message, and Playwright will
-capture it via the dialog event.
-
-### Testing_Protocol_SimpleTyping.js
-
-A vitest suite that verifies basic UI rendering and interaction with the GacUI
-remote protocol. Located at `Gaclib/website/entry/test/Testing_Protocol_SimpleTyping.js`.
-
-**Run:**
-```powershell
-cd Gaclib
-yarn test
-```
-
-**The goal of the test plan cannot be changed.** The test must:
-
-1. Launch the application (start the C++ server, open `index.html` in Playwright).
-2. Open the "Control" tab, find the text box next to the "Search:" label.
-3. Type text into the text box. Typing is implemented by sending IOChar messages.
-   The client sends IOChar events and the core side judges which text box is active.
-4. Verify that the typed text appears in the text box.
-5. Kill the process directly and close the webpage. No elegant exit is needed.
-
-### Testing_Protocol_Font.js
-
-A vitest suite that verifies font/color formatting and incremental selection
-rendering in the GacUI rich-text document editor. Located at
-`Gaclib/website/entry/test/Testing_Protocol_Font.js`.
-
-**Run:**
-```powershell
-cd Gaclib
-yarn test
-```
-
-**The goal of the test plan cannot be changed.** The test must:
-
-1. Launch the application (start the C++ server, open `index.html` in Playwright).
-2. Open the "Control" tab, click the rich-text document editor (the large area at the
-   bottom).
-3. Type `ABCDEFGHIJKLMN` into the editor.
-4. Select the range `C..K` (characters C through K). Open the font dialog from the
-   toolbar. **[VERIFY]** The first font name in the font list is not quoted (no `"`
-   around it). Select the only available font, pick a bigger text size so the OK button
-   becomes enabled, then click OK.
-5. Select the range `H..M`. Open the text-color dialog from the toolbar (not the
-   background-color button), change the first of the three text boxes to `0`, then
-   click OK.
-6. **[VERIFY]** Confirm that `C..K` renders at a bigger font size and `H..M` renders
-   with color `#00FFFF`.
-7. Click the rich editor again and press Home so the cursor jumps to position 0.
-   **[VERIFY]** Same size/color checks as step 6.
-8. Press Shift+Right 14 times. After each keypress:
-   **[VERIFY]** The selected text turns white; in the non-selected region, `C..K` still
-   has a bigger size and `H..M` still has color `#00FFFF`.
-9. Kill the process directly and close the webpage. No elegant exit is needed.
-
-### Testing_Protocol_ImageInText.js
-
-A vitest suite that verifies inline image insertion and rendering in the GacUI
-rich-text document editor. Located at
-`Gaclib/website/entry/test/Testing_Protocol_ImageInText.js`.
-
-**Run:**
-```powershell
-cd Gaclib
-yarn test
-```
-
-**The goal of the test plan cannot be changed.** The test must:
-
-1. Launch the application (start the C++ server, open `index.html` in Playwright).
-2. Open the "Control" tab, click the rich-text document editor (the large area at the
-   bottom).
-3. Type `ABC` into the editor.
-4. Click the "Insert" tab in the ribbon, then click the "Insert Image" button. A file
-   dialog opens with two lists and a text box at the bottom. Type
-   `GACUI-ROOT\Test\Resources` into the filename text box and press Enter, double-click
-   `App`, then type `Gaclib.png` and press Enter. An image is inserted after `ABC` on
-   the same line.
-5. Press Home, then type `X`.
-   **[VERIFY]** The content is `XABC` followed by an inline image that is visible.
-6. Press Ctrl+A to select all content.
-   **[VERIFY]** The content is `XABC` followed by an inline image, and the image has a
-   visible selection indicator (background overlay).
-7. Kill the process directly and close the webpage. No elegant exit is needed.
-
-### Testing_Protocol_Caret2.js
-
-A vitest suite that verifies cursor style preservation after tab switching, caret
-blinking after tab switching, and end-of-line caret positioning. Located at
-`Gaclib/website/entry/test/Testing_Protocol_Caret2.js`.
-
-**Run:**
-```powershell
-cd Gaclib
-yarn test
-```
-
-**The goal of the test plan cannot be changed.** The test must:
-
-1. Launch the application (start the C++ server, open `index.html` in Playwright).
-2. Open the "Control" tab. Click the text box next to "Search:" so the caret
-   becomes active. Type "Hello" into the text box.
-3. Switch to the "List" tab, wait, then switch back to the "Control" tab.
-   **[VERIFY]** The cursor CSS on the text box area is `text` (IBeam), not `default`.
-4. Click the text box again.
-   **[VERIFY]** A caret is visible. Wait 0.6 seconds.
-   **[VERIFY]** The caret blinks off. Wait 0.6 seconds.
-   **[VERIFY]** The caret blinks on again.
-5. Click the rich-text document editor. Type `ABCDEF`.
-6. Press Home to move the caret to position 0.
-   **[VERIFY]** The caret is at the leftmost position of the text.
-7. Press End to move the caret to the end of the line.
-   **[VERIFY]** The caret is at the rightmost position (after the last character),
-   not before the last character. The End-key caret position matches the position
-   reached by pressing Right arrow 6 times from Home.
-8. Press Home, then click with the mouse to the right of the last character.
-   **[VERIFY]** The caret jumps to the end of the line (same position as End key),
-   not before the last character.
-9. Kill the process directly and close the webpage. No elegant exit is needed.
-
-### Testing_Protocol_RendererSwitching.js
-
-A vitest suite that verifies renderer switching (reconnection). When a new browser
-tab opens `index.html`, it connects to the C++ server, taking over the session from
-any previous tab. The new tab should see the same UI state (typed text, selection,
-etc.). Located at `Gaclib/website/entry/test/Testing_Protocol_RendererSwitching.js`.
-
-This test uses `setupProtocolTest()` and opens multiple pages through the shared browser
-context to verify renderer switching.
-
-**Run:**
-```powershell
-cd Gaclib
-yarn test
-```
-
-**The goal of the test plan cannot be changed.** The test must:
-
-1. Launch the application (start the C++ server, open `index.html` in Playwright).
-2. Open the "Control" tab, find the text box next to the "Search:" label.
-3. Type "Hello" into the text box.
-4. Open a second browser tab with `index.html` (renderer switching).
-   The second tab should take over and display the same UI state.
-5. Verify the second tab renders and contains the typed text "Hello".
-6. Select part of the text in the text box.
-7. Open a third browser tab with `index.html` (another renderer switch).
-8. Verify the third tab renders and contains the typed text with selection.
-9. Kill the process directly and close all webpages. No elegant exit is needed.
-
-### Testing_Protocol_Caret.js
-
-A vitest suite that verifies caret rendering, blinking, positioning, and size
-in the GacUI rich-text document editor and text boxes. Located at
-`Gaclib/website/entry/test/Testing_Protocol_Caret.js`.
-
-**Run:**
-```powershell
-cd Gaclib
-yarn test
-```
-
-**The goal of the test plan cannot be changed.** The test must:
-
-1. Launch the application (start the C++ server, open `index.html` in Playwright).
-2. Open the "Control" tab. Click the text box next to the "Search:" label so the
-   text box caret becomes active.
-   **[VERIFY]** A caret is visible in the Search text box.
-3. Click the rich-text document editor (the large area at the bottom).
-   **[VERIFY]** The caret in the Search text box disappears, and a caret appears
-   in the rich-text editor.
-4. Test caret blinking: after the caret is shown in the rich-text editor, wait 0.6
-   seconds.
-   **[VERIFY]** The caret is now invisible (blinked off). Wait another 0.6 seconds.
-   **[VERIFY]** The caret is now visible again (blinked on).
-5. Type `ABCD` into the editor.
-6. Select `BC` (press Home, Right 1, Shift+Right 2). Open the font dialog from the
-   toolbar, select the only available font, pick a bigger text size (24), then click
-   OK.
-7. Press Home so the caret is at position 0 (before `A`). Then press Right 4 times
-   to reach the end. After each Right press (5 caret positions total: before A,
-   after A, after B, after C, after D):
-   **[VERIFY]** The caret is visible (OpenCaret resets blink). The 3rd position
-   (after B) and 4th position (after C) have a taller caret matching the bigger
-   font size. The 1st, 2nd, and 5th positions have a shorter (default-size) caret.
-8. Press Left 4 times back to position 0. After each Left press (4 positions:
-   before D, before C, before B, before A):
-   **[VERIFY]** The caret is visible. The 2nd position (before C) and 3rd position
-   (before B) have a taller caret. The 1st and 4th positions have a shorter caret.
-9. Press Ctrl+A to select all, then press Home.
-   **[VERIFY]** A caret is visible at the expected position (matching the
-   position-0 caret from step 7).
-10. Press End.
-    **[VERIFY]** A caret is visible at the expected position (matching the
-    position-4 caret from step 7).
-11. Kill the process directly and close the webpage. No elegant exit is needed.
+Suites share one Core lifetime across their ordered test cases. Express a
+scenario as small, named steps when later assertions depend on earlier UI state.
+
+## Event-Driven Synchronization
+
+UI synchronization is intended to be event-driven. Do not add a `sleep()` to
+wait for UI state; use the renderer's idle or blink signal.
+
+The renderer exposes two optional `GacUISettings` callbacks:
+
+- `idle` fires after `RequestRendererIdle`, when pending renderer work has
+  completed.
+- `blink` fires after every `setCaretVisible` toggle from the caret timer.
+
+`index.html` forwards these callbacks to the Playwright bindings
+`__gacui_playwright_idle` and `__gacui_playwright_blink`.
+`setupIdleTracking(page)` exposes the bindings before `page.goto()`, so the
+initial events cannot be missed. `setupProtocolTest()` performs this setup for
+normal pages.
+
+| Function | Contract |
+|---|---|
+| `setupIdleTracking(page)` | Register the idle and blink bindings before navigation. |
+| `waitUntilIdle(page)` | Wait for the first idle signal during initial page load. |
+| `waitForIdle(page)` | Wait for the next idle signal after an interaction. |
+| `waitForBlink(page)` | Wait for one caret visibility toggle. |
+| `waitForCarets(page)` | Check immediately, then recheck after blink signals until the requested visibility is observed or the timeout expires. |
+| `findCarets(page)` | Take an immediate snapshot of the caret elements. |
+| `clickAt(page, x, y)` | Move, press, release, and wait for idle. |
+
+`waitForIdle()`, `waitUntilIdle()`, and `waitForBlink()` throw when tracking has
+not been installed; `clickAt()` requires it through `waitForIdle()`.
+`findCarets()` is an immediate DOM query. `waitForCarets()` can return from its
+initial query, but requires blink tracking when it needs to wait. If a state
+transition cannot be observed with an existing signal, add an explicit
+renderer signal instead of polling or delaying the test.
+
+## Diagnosing a Playwright Failure
+
+- GacUI renders a dynamic tree of nested `div` elements. Wait for an idle
+  signal, use broad selectors, and inspect `page.content()` when a selector no
+  longer matches.
+- `index.html` shows `#gacui-error-mask` and rethrows an unhandled session
+  exception. The harness records the resulting Playwright `pageerror` with its
+  other diagnostics. An unexpected dialog is logged as `[CRASH]` and dismissed.
+- Capture a visual snapshot when geometry matters:
+  `await page.screenshot({ path: 'test.png' })`.
+- Core launch, endpoint, port, browser, and manual-operation problems belong to
+  the [operating guide](../../GacUI/DebugRemoteProtocolWithGacJS.md).
+
+## Test Suite Intent
+
+The goals below are the compatibility contract for the existing suites. Change
+their implementation when necessary, but do not weaken or silently change the
+stated goal. Each of the six renderer-interaction suites below begins by
+verifying that the rendered page has at least 20 leaf-text positions.
+
+### Simple typing
+
+`Testing_Protocol_SimpleTyping.js` must:
+
+1. Launch the Core and open `index.html`.
+2. Open the **Control** tab and locate the text box beside **Search:**.
+3. Type through `IOChar` messages, allowing the Core to decide which control is
+   active.
+4. Verify that the typed text appears.
+5. Terminate the process directly and close the page; graceful exit is not part
+   of this suite.
+
+### Font and color formatting
+
+`Testing_Protocol_Font.js` must:
+
+1. Open the rich-text editor on the **Control** tab and type
+   `ABCDEFGHIJKLMN`.
+2. Select `C..K`, open the font dialog, verify that the first font name is not
+   quoted, choose the available font and a larger size, and accept the dialog.
+3. Select `H..M`, open the foreground text-color dialog, set the first component
+   to `0`, and accept the dialog.
+4. Verify that `C..K` is larger and `H..M` is `#00FFFF`.
+5. Move to position zero and verify that formatting is unchanged.
+6. Extend the selection with Shift+Right fourteen times. At every step, verify
+   that selected text is white and unselected text retains both formatting
+   ranges.
+7. Terminate the process directly and close the page.
+
+### Inline image in text
+
+`Testing_Protocol_ImageInText.js` must:
+
+1. Type `ABC` in the rich-text editor.
+2. Use **Insert Image** and the remote file dialog to choose
+   `GACUI-ROOT\Test\Resources\App\Gaclib.png`.
+3. Move Home and type `X`.
+4. Verify `XABC` followed by a visible inline image.
+5. Select all and verify that the image has a visible selection overlay.
+6. Terminate the process directly and close the page.
+
+### Cursor restoration and end-of-line placement
+
+`Testing_Protocol_Caret2.js` must:
+
+1. Activate the Search text box and type `Hello`.
+2. Switch to the **List** tab and back to **Control**.
+3. Verify that the text-box area has the CSS cursor `text`, not `default`.
+4. Reactivate the box and use successive blink signals to verify the caret
+   visible, hidden, and visible states.
+5. Type `ABCDEF` in the rich-text editor.
+6. Verify the Home position, then verify that End places the caret after the
+   final character at the same position reached by six Right presses.
+7. From Home, click to the right of the last character and verify the same
+   end-of-line position.
+8. Terminate the process directly and close the page.
+
+### Renderer switching
+
+`Testing_Protocol_RendererSwitching.js` must:
+
+1. Type `Hello` in the Search box in the first renderer page.
+2. Open a second `index.html` page and verify that it takes over the renderer
+   connection while preserving the text.
+3. Select part of the text.
+4. Open a third page and verify that both the text and selection are preserved.
+5. Terminate the process directly and close all pages.
+
+### Caret geometry and blinking
+
+`Testing_Protocol_Caret.js` must:
+
+1. Verify a visible caret in the Search box.
+2. Focus the rich-text editor and verify that the Search caret disappears and
+   the editor caret appears.
+3. Use successive blink signals to verify visible, hidden, and visible states.
+4. Type `ABCD`, format `BC` at size 24, and return to position zero.
+5. Move Right through all five caret positions. Verify that every movement
+   reopens the caret and that the positions beside the larger `BC` glyphs have
+   the taller caret.
+6. Move Left through the four preceding positions and verify the corresponding
+   tall and default-height carets.
+7. Select all, press Home, and verify the position-zero caret.
+8. Press End and verify the position-four caret.
+9. Terminate the process directly and close the page.
+
+### Remote view model topologies
+
+The four `Testing_Protocol_RemoteViewModel*.js` suites together must preserve
+coverage for:
+
+- Browser and independent Node hosts over both `/Http` and `/MiniHttp`.
+- Rejection of a second RVM host and replacement of a renderer.
+- Fatal loss of the accepted network host.
+- A Core-launched `/Cli` host over both renderer transports, including a host
+  path containing spaces.
+- Parent/child PID ownership, absence of an unintended host TCP connection,
+  graceful child reap, and fatal child loss with nonzero Core exit.
+- Native `CppTest_Rvm` interoperability across HTTP, MiniHTTP, and stdio.
+
+`RvmQuerySession.test.ts` supplies the platform-independent failure and teardown
+coverage; it does not replace the live Windows topology checks.
