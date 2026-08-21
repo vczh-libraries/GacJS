@@ -6,6 +6,21 @@
 
 Running GacUI in Browsers!
 
+## Documentation
+
+| Area | Document |
+|---|---|
+| Architecture | [Project Structure](doc/Projects.md) |
+| Network transport and handshakes | [GacJS Network Protocol](doc/NetworkProtocol.md) |
+| Remote Protocol | [GacUI Remote Protocol Reference](doc/Protocol.md) |
+| Rendering | [GacUI HTML DOM Rendering](doc/DOM.md) |
+| Rich text | [DocumentParagraph Implementation](doc/DocumentParagraph.md) |
+| E2E testing | [Testing the Remote Protocol with Playwright](doc/Testing_Protocol.md) |
+| Snapshot testing | [Testing with Snapshots](doc/Testing_Snapshot.md) |
+| Workflow RPC | [Workflow Interface-Based RPC](doc/rpc/Features.md) |
+| Workflow RPC lifetime | [Memory Management for Workflow RPC in TypeScript](doc/rpc/MemoryManagement.md) |
+| Workflow RPC bindings | [Generating TypeScript Bindings for Workflow RPC](doc/rpc/CodeGeneration.md) |
+
 ## Building this Project
 
 The root of test projects is in the `Gaclib` folder,
@@ -18,8 +33,8 @@ with `/Http` on Windows or `/MiniHttp` on Windows, Linux, or macOS.
 
 Start the website on port `8896`:
 
-```bash
-cd Gaclib\website\entry
+```powershell
+Set-Location Gaclib\website\entry
 npm run start
 ```
 

@@ -1,12 +1,15 @@
 # Testing the Remote Protocol with Playwright
 
 This document describes the checked-in GacJS test harness: how to run it, how
-tests manage `RemotingTest_Core`, how browser actions are synchronized, and what
-each end-to-end suite verifies.
+tests manage `RemotingTest_Core`, how browser actions are synchronized, and how
+the test files are organized.
 
 For building and operating the Core, serving GacJS, choosing `/Http`,
 `/MiniHttp`, `/RVMT`, or `/Cli`, and performing manual browser debugging, see
 [Operating GacUI Through GacJS](../../GacUI/DebugRemoteProtocolWithGacJS.md).
+For the authoritative feature operations, error injections, and observable
+pass/fail results—the definition of what to test—see
+[GacUI End-to-End UI Operation SOP](../../GacUI/DebugRemoteProtocolSop.md).
 For the transport, channel-admission, Remote Protocol, and Workflow RPC wire
 handshakes, see [NetworkProtocol.md](NetworkProtocol.md).
 
@@ -40,24 +43,31 @@ they share a stateful server and fixed ports.
 
 ## Test Harness
 
-All harness files live in `Gaclib/website/entry/test/`.
+All harness and test files live in `Gaclib/website/entry/test/`. These support
+files define the shared harness:
 
-| File | Responsibility |
+| File | Harness role |
 |---|---|
 | `Protocol_GacUIBuild.js` | Builds the sibling GacUI test projects once for the live suites. |
 | `Protocol_GlobalSetup.js` | Performs package-level setup shared by protocol suites. |
 | `Testing_Protocol.js` | Provides the Vitest lifecycle, process control, DOM helpers, click helpers, idle/blink tracking, caret helpers, and path constants. |
-| `Testing_Protocol_SimpleTyping.js` | Verifies basic rendering and keyboard input. |
-| `Testing_Protocol_Caret.js` | Verifies caret rendering, blinking, positioning, and size. |
-| `Testing_Protocol_Caret2.js` | Verifies cursor restoration after a tab switch and end-of-line caret placement. |
-| `Testing_Protocol_Font.js` | Verifies font/color formatting and incremental selection. |
-| `Testing_Protocol_ImageInText.js` | Verifies inline image insertion and selection rendering. |
-| `Testing_Protocol_RendererSwitching.js` | Verifies renderer replacement while preserving Core UI state. |
-| `Testing_Protocol_RemoteViewModel.js` | Covers a browser RVM host over `/Http` and `/MiniHttp`, second-host rejection, renderer replacement, and accepted-host loss. |
-| `Testing_Protocol_RemoteViewModel_Node.js` | Covers an independently started Node network host and fatal host loss. |
-| `Testing_Protocol_RemoteViewModel_Cli.js` | Covers a Core-launched native SEA host over stdio, quoted paths, PID/TCP isolation, graceful reap, and fatal child loss. |
-| `Testing_Protocol_RemoteViewModel_Cpp.js` | Checks `CppTest_Rvm` compatibility over HTTP, MiniHTTP, and Core-launched stdio. |
-| `RvmQuerySession.test.ts` | Uses fake clients to cover bootstrap cancellation, renderer replacement, independent failures, and idempotent teardown on every platform. |
+
+The live Playwright suite files are:
+
+- `Testing_Protocol_SimpleTyping.js`
+- `Testing_Protocol_Caret.js`
+- `Testing_Protocol_Caret2.js`
+- `Testing_Protocol_Font.js`
+- `Testing_Protocol_ImageInText.js`
+- `Testing_Protocol_RendererSwitching.js`
+- `Testing_Protocol_RemoteViewModel.js`
+- `Testing_Protocol_RemoteViewModel_Node.js`
+- `Testing_Protocol_RemoteViewModel_Cli.js`
+- `Testing_Protocol_RemoteViewModel_Cpp.js`
+
+The portable fake-client unit suite is `RvmQuerySession.test.ts`. This inventory
+does not define suite operations or expected results; those belong to the
+GacUI SOP linked above.
 
 Each live suite is wrapped by `describeProtocolTest()` and normally creates its
 lifecycle with `setupProtocolTest(options)`.
@@ -195,113 +205,3 @@ renderer signal instead of polling or delaying the test.
   `await page.screenshot({ path: 'test.png' })`.
 - Core launch, endpoint, port, browser, and manual-operation problems belong to
   the [operating guide](../../GacUI/DebugRemoteProtocolWithGacJS.md).
-
-## Test Suite Intent
-
-The goals below are the compatibility contract for the existing suites. Change
-their implementation when necessary, but do not weaken or silently change the
-stated goal. Each of the six renderer-interaction suites below begins by
-verifying that the rendered page has at least 20 leaf-text positions.
-
-### Simple typing
-
-`Testing_Protocol_SimpleTyping.js` must:
-
-1. Launch the Core and open `index.html`.
-2. Open the **Control** tab and locate the text box beside **Search:**.
-3. Type through `IOChar` messages, allowing the Core to decide which control is
-   active.
-4. Verify that the typed text appears.
-5. Terminate the process directly and close the page; graceful exit is not part
-   of this suite.
-
-### Font and color formatting
-
-`Testing_Protocol_Font.js` must:
-
-1. Open the rich-text editor on the **Control** tab and type
-   `ABCDEFGHIJKLMN`.
-2. Select `C..K`, open the font dialog, verify that the first font name is not
-   quoted, choose the available font and a larger size, and accept the dialog.
-3. Select `H..M`, open the foreground text-color dialog, set the first component
-   to `0`, and accept the dialog.
-4. Verify that `C..K` is larger and `H..M` is `#00FFFF`.
-5. Move to position zero and verify that formatting is unchanged.
-6. Extend the selection with Shift+Right fourteen times. At every step, verify
-   that selected text is white and unselected text retains both formatting
-   ranges.
-7. Terminate the process directly and close the page.
-
-### Inline image in text
-
-`Testing_Protocol_ImageInText.js` must:
-
-1. Type `ABC` in the rich-text editor.
-2. Use **Insert Image** and the remote file dialog to choose
-   `GACUI-ROOT\Test\Resources\App\Gaclib.png`.
-3. Move Home and type `X`.
-4. Verify `XABC` followed by a visible inline image.
-5. Select all and verify that the image has a visible selection overlay.
-6. Terminate the process directly and close the page.
-
-### Cursor restoration and end-of-line placement
-
-`Testing_Protocol_Caret2.js` must:
-
-1. Activate the Search text box and type `Hello`.
-2. Switch to the **List** tab and back to **Control**.
-3. Verify that the text-box area has the CSS cursor `text`, not `default`.
-4. Reactivate the box and use successive blink signals to verify the caret
-   visible, hidden, and visible states.
-5. Type `ABCDEF` in the rich-text editor.
-6. Verify the Home position, then verify that End places the caret after the
-   final character at the same position reached by six Right presses.
-7. From Home, click to the right of the last character and verify the same
-   end-of-line position.
-8. Terminate the process directly and close the page.
-
-### Renderer switching
-
-`Testing_Protocol_RendererSwitching.js` must:
-
-1. Type `Hello` in the Search box in the first renderer page.
-2. Open a second `index.html` page and verify that it takes over the renderer
-   connection while preserving the text.
-3. Select part of the text.
-4. Open a third page and verify that both the text and selection are preserved.
-5. Terminate the process directly and close all pages.
-
-### Caret geometry and blinking
-
-`Testing_Protocol_Caret.js` must:
-
-1. Verify a visible caret in the Search box.
-2. Focus the rich-text editor and verify that the Search caret disappears and
-   the editor caret appears.
-3. Use successive blink signals to verify visible, hidden, and visible states.
-4. Type `ABCD`, format `BC` at size 24, and return to position zero.
-5. Move Right through all five caret positions. Verify that every movement
-   reopens the caret and that the positions beside the larger `BC` glyphs have
-   the taller caret.
-6. Move Left through the four preceding positions and verify the corresponding
-   tall and default-height carets.
-7. Select all, press Home, and verify the position-zero caret.
-8. Press End and verify the position-four caret.
-9. Terminate the process directly and close the page.
-
-### Remote view model topologies
-
-The four `Testing_Protocol_RemoteViewModel*.js` suites together must preserve
-coverage for:
-
-- Browser and independent Node hosts over both `/Http` and `/MiniHttp`.
-- Rejection of a second RVM host and replacement of a renderer.
-- Fatal loss of the accepted network host.
-- A Core-launched `/Cli` host over both renderer transports, including a host
-  path containing spaces.
-- Parent/child PID ownership, absence of an unintended host TCP connection,
-  graceful child reap, and fatal child loss with nonzero Core exit.
-- Native `CppTest_Rvm` interoperability across HTTP, MiniHTTP, and stdio.
-
-`RvmQuerySession.test.ts` supplies the platform-independent failure and teardown
-coverage; it does not replace the live Windows topology checks.

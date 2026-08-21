@@ -7,7 +7,7 @@
   - You must use `;` instead of `&&` for executing multiple commands in order.
 - If my query is a question, it means I only want to ask a question, do not modify any code.
 - GacUI lives in the sibling repository at `(repo-root)\..\GacUI`; always use that checkout for C++ sources, resources, builds, and debugging.
-- Before implementing any change, read the relevant documentation in `doc/` first (`Protocol.md`, `DOM.md`, `Projects.md`). Understand the design before writing code.
+- Before implementing any change, read the relevant documents from the documentation reference below. Understand the design before writing code.
 - Whenever an implementation change affects behavior documented in `doc/`, update the corresponding documentation to stay in sync.
 
 ## About this repo
@@ -24,18 +24,28 @@ for demo/testing only.
 The sibling `GacUI` repository contains the C++ core application, unit test utilities,
 and the HTTP test server. Treat it as a separate repo and commit/push any GacUI changes there.
 
-See `doc/Protocol.md` for the remote protocol reference.
-See `doc/DOM.md` for how elements are rendered to HTML.
-See `doc/Projects.md` for the full package structure.
-See `doc/Testing_Protocol.md` for how to understand E2D tests.
-See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
+## Documentation Reference
+
+Read the relevant documents before implementing a change, and update them
+whenever documented behavior changes.
+
+- [Project structure](doc/Projects.md): monorepo architecture, packages, dependencies, and build phases.
+- [Network protocol](doc/NetworkProtocol.md): HTTP/stdio transport, channel admission, and connection handshakes.
+- [Remote Protocol](doc/Protocol.md): GacUI Remote Protocol messages, types, and directionality.
+- [DOM rendering](doc/DOM.md): mapping Remote Protocol elements and updates to browser HTML.
+- [DocumentParagraph](doc/DocumentParagraph.md): paragraph DOM construction, measurement, caret behavior, and hit-testing.
+- [Remote Protocol testing](doc/Testing_Protocol.md): Playwright E2E harness, lifecycle, synchronization, and diagnostics.
+- [Snapshot testing](doc/Testing_Snapshot.md): snapshot viewer navigation and rendered-state inspection.
+- [Workflow RPC features](doc/rpc/Features.md): transport-independent Workflow RPC behavior and conformance rules.
+- [Workflow RPC memory management](doc/rpc/MemoryManagement.md): object identity, holds, proxy lifetime, and disposal.
+- [Workflow RPC code generation](doc/rpc/CodeGeneration.md): metadata inputs and TypeScript binding generation.
 
 # Validation after Code Change
 
 - This repo uses `yarn` and `npm` to build.
 - The root of the workspace is defined in `(repo-root)/Gaclib/package.json`.
 - After changing the code you must:
-  - `cd` to `(repo-root)/Gaclib`
+  - `Set-Location` to `(repo-root)\Gaclib`
   - `yarn build`
   - `yarn test`
 - When the sibling GacUI repository has been updated, run these additional synchronization commands before `yarn build` and `yarn test`:
@@ -124,8 +134,8 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 ## Debugging with Playwright and index.html
 
 - When running Playwright tests against `index.html`, you can inject `throw new Error('UNIQUE_WORD')` into the TypeScript source to locate where an error occurs.
-- When the injected error is thrown, the browser will show a dialog box (from the unhandled error), and Playwright will see it. This tells you exactly where the error happens.
-- Use a unique word in the error message so you can search for it and confirm which code path triggered.
+- When the injected error is thrown, `index.html` shows `#gacui-error-mask` and rethrows it. The Playwright harness records the resulting `pageerror` in its diagnostics.
+- Use a unique word in the error message so you can find the matching error mask and diagnostic and confirm which code path triggered.
 
 ## Debugging the RemotingTest_Core HTTP Server
 
@@ -144,23 +154,12 @@ See `doc/Testing_Snapshot.md` for how to navigate and inspect snapshots.
 
 ## E2E Testing
 
-- `REPO-ROOT\doc\Testing_Protocol.md` describes how the implementation of remote protocol is testing.
-- `REPO-ROOT\Gaclib\website\entry\test` has many E2E test cases that start `RemotingTest_Core` and run `index.html` with playwright.
+- [Remote Protocol testing guide](doc/Testing_Protocol.md) owns the Playwright harness, process lifecycle, synchronization, and diagnostics.
+- [GacUI end-to-end operation SOP](../GacUI/DebugRemoteProtocolSop.md) owns feature operations, error injections, and observable pass/fail criteria. Do not duplicate those test definitions in GacJS.
+- `REPO-ROOT\Gaclib\website\entry\test` has E2E test cases that start `RemotingTest_Core` and run `index.html` with Playwright.
 - These E2E suites run only on Windows with a sibling `(repo-root)\..\GacUI` checkout. They build GacUI through `copilotBuild.ps1` before launching `RemotingTest_Core`.
-- During investigation of a bug that involves many part of the renderer, you are recommended to create a new test case like these to confirm the regression, which is also a good measurement to see if the bug is properly fixed.
-- Synchronization: event-driven, not sleep-based.
-  - Tests use **no** `sleep()` for UI synchronization. The only remaining `sleep()` calls are for server startup/shutdown (OS-level process delays), not for waiting on UI state.
-  - The renderer exposes two optional callbacks in `GacUISettings`: `idle` and `blink`.
-    - `idle` fires after `RequestRendererIdle` — the renderer has finished processing.
-    - `blink` fires after each `setCaretVisible` toggle in the 500ms caret blink timer.
-  - `index.html` bridges these to CDP functions (`__gacui_playwright_idle`, `__gacui_playwright_blink`).
-  - Test code calls `setupIdleTracking(page)` **before** `page.goto()` to register CDP bindings, ensuring no events are missed.
-  - Use `waitForIdle(page)` after interactions (click, keypress) to wait for the renderer to stabilize.
-  - Use `waitUntilIdle(page)` for initial page load (waits for the first-ever idle signal).
-  - Use `waitForBlink(page)` to wait for exactly one caret blink toggle.
-  - Use `waitForCarets(page)` / `waitForCarets(page, { visible: false })` for event-driven caret visibility checks — it checks DOM once, and if not satisfied, waits for one blink then checks again.
-  - All these functions throw if `setupIdleTracking(page)` was not called first.
-  - **Never add `sleep()` for UI synchronization.** If something needs waiting, there should be an event for it.
+- When investigating a renderer regression, add or update an E2E case and keep its operation/pass-fail definition synchronized with the GacUI SOP.
+- UI synchronization is event-driven. Follow the helper contracts in the [Remote Protocol testing guide](doc/Testing_Protocol.md); do not add delays in place of renderer signals.
 
 ## TypeScript/JavaScript coding guidelines
 
