@@ -19,13 +19,20 @@ platform item is specifically about the GacJS Node/browser/SEA integration.
 
 ## GacUI items outside the requested GacJS-only change scope
 
-- [ ] Gate renderer admission in the split Core `/Cli` path on RVM requester
-  readiness, as required by `TODO_RPC.md:720-723`. In
-  `GacUI/Test/GacUISrc/RemotingTest_Core/GuiMain.cpp:246-265`, the split renderer
-  uses a plain `RemotingChannelServer` with immediate admission, while only the
-  combined non-CLI `RemoteViewModelChannelServer` consults `CanAdmitRenderer()`.
-  Add the same `Running` gate and a regression that attempts renderer assignment
-  before service acquisition.
+- [ ] Enforce the same `/RVMT` renderer-admission invariant regardless of whether
+  the RVM host connects over the network or is Core-launched through `/Cli`
+  stdio: until the requester has acquired the required `IViewModel` service and
+  entered its `Running` phase, reject renderer admission immediately rather
+  than waiting or queuing the early renderer. After `Running`, admit the first
+  renderer and preserve normal renderer replacement. The combined non-CLI
+  `RemoteViewModelChannelServer` already applies this `CanAdmitRenderer()` gate.
+  In `GacUI/Test/GacUISrc/RemotingTest_Core/GuiMain.cpp:246-265`, however, the
+  split `/Cli` path gives the renderer a plain `RemotingChannelServer` with
+  immediate admission, bypassing the RVM requester state. Add the equivalent
+  `Running` gate to that split renderer path, as required by
+  `TODO_RPC.md:720-723`, and regression coverage proving that early admission is
+  rejected, then the first post-acquisition renderer and a replacement renderer
+  are accepted.
 
 - [ ] Synchronize the owning GacUI launch documentation required by
   `TODO_RPC.md:763-766,1159-1171`: correct the `/RVMT` table in
