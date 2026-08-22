@@ -16,27 +16,3 @@ platform item is specifically about the GacJS Node/browser/SEA integration.
   and Core-launched stdio-host runs with Firefox/WebKit, and the IIS-hosted
   static-output `?rvmhost` check. The permitted manual commands/results may be
   used where the native live application is not automated.
-
-## GacUI items outside the requested GacJS-only change scope
-
-- [ ] Enforce the same `/RVMT` renderer-admission invariant regardless of whether
-  the RVM host connects over the network or is Core-launched through `/Cli`
-  stdio: until the requester has acquired the required `IViewModel` service and
-  entered its `Running` phase, reject renderer admission immediately rather
-  than waiting or queuing the early renderer. After `Running`, admit the first
-  renderer and preserve normal renderer replacement. The combined non-CLI
-  `RemoteViewModelChannelServer` already applies this `CanAdmitRenderer()` gate.
-  In `GacUI/Test/GacUISrc/RemotingTest_Core/GuiMain.cpp:246-265`, however, the
-  split `/Cli` path gives the renderer a plain `RemotingChannelServer` with
-  immediate admission, bypassing the RVM requester state. Add the equivalent
-  `Running` gate to that split renderer path, as required by
-  `TODO_RPC.md:720-723`, and regression coverage proving that early admission is
-  rejected, then the first post-acquisition renderer and a replacement renderer
-  are accepted.
-
-- [ ] Synchronize the owning GacUI launch documentation required by
-  `TODO_RPC.md:763-766,1159-1171`: correct the `/RVMT` table in
-  `DebugRemoteProtocolWithGacJS.md`, which still says
-  `RemotingTest_RvmHost` is required despite the browser/Node host modes, and
-  document that the inherited POSIX `/bin/sh -c` launcher handles ordinary
-  spaces but not every shell-special filename robustly.
