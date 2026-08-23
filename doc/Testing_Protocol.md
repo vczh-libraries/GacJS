@@ -6,10 +6,10 @@ the test files are organized.
 
 For building and operating the Core, serving GacJS, choosing `/Http`,
 `/MiniHttp`, `/RVMT`, or `/Cli`, and performing manual browser debugging, see
-[Operating GacUI Through GacJS](../../GacUI/DebugRemoteProtocolWithGacJS.md).
+[Operating GacUI Through GacJS](../../GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md).
 For the authoritative feature operations, error injections, and observable
 pass/fail results—the definition of what to test—see
-[GacUI End-to-End UI Operation SOP](../../GacUI/DebugRemoteProtocolSop.md).
+[GacUI End-to-End UI Operation SOP](../../GacUI/.github/Jobs/DebugRemoteProtocolSop.md).
 For the transport, channel-admission, Remote Protocol, and Workflow RPC wire
 handshakes, see [NetworkProtocol.md](NetworkProtocol.md).
 
@@ -204,4 +204,4 @@ renderer signal instead of polling or delaying the test.
 - Capture a visual snapshot when geometry matters:
   `await page.screenshot({ path: 'test.png' })`.
 - Core launch, endpoint, port, browser, and manual-operation problems belong to
-  the [operating guide](../../GacUI/DebugRemoteProtocolWithGacJS.md).
+  the [operating guide](../../GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md).

@@ -1122,8 +1122,8 @@ Also cover the portable `/MiniHttp` path where supported.
 - Run `/RVMT` browser-host, independently started Node network-host, and
   Core-launched Node stdio-host scenarios on Windows HTTP.
 - Run the portable MiniHTTP equivalents on Windows, Linux, and macOS according
-  to `GacUI/DebugRemoteProtocolWithGacJS.md` and
-  `GacUI/DebugRemoteProtocolSop.md`.
+  to `GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md` and
+  `GacUI/.github/Jobs/DebugRemoteProtocolSop.md`.
 - Verify IIS-hosted static output for `?rvmhost`; no server-side query handling
   should be required.
 
@@ -1157,7 +1157,7 @@ When implementation lands:
 - Add all new packages and their phase rules to `GacJS/AGENTS.md`.
 - Update `GacJS/doc/Projects.md` with the dependency/pipeline structure.
 - Update the owning GacUI document
-  `GacUI/DebugRemoteProtocolWithGacJS.md` with Node and browser-host launch
+  `GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md` with Node and browser-host launch
   instructions and the Windows/portable verification matrix.
 - Document both Node commands: manually start `lib/src/cli.js` for network
   mode, or pass the absolute platform SEA path to
@@ -1166,8 +1166,8 @@ When implementation lands:
   `/MiniHttp`, paths containing spaces, and the rule that the npm bin is not a
   Core launcher.
 - Keep the owning GacUI `/Cli` descriptions in `GacUI/Project.md`,
-  `GacUI/DebugRemoteProtocolWithGacJS.md`, and
-  `GacUI/DebugRemoteProtocolSop.md` synchronized if implementation details or
+  `GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md`, and
+  `GacUI/.github/Jobs/DebugRemoteProtocolSop.md` synchronized if implementation details or
   the verification matrix change; do not redefine that protocol only in GacJS.
 - Keep general RPC/codegen/memory details in `GacJS/doc/rpc` and keep
   GacJS-specific paths, package names, and launch modes in this file.

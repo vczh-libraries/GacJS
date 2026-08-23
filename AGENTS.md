@@ -155,7 +155,7 @@ whenever documented behavior changes.
 ## E2E Testing
 
 - [Remote Protocol testing guide](doc/Testing_Protocol.md) owns the Playwright harness, process lifecycle, synchronization, and diagnostics.
-- [GacUI end-to-end operation SOP](../GacUI/DebugRemoteProtocolSop.md) owns feature operations, error injections, and observable pass/fail criteria. Do not duplicate those test definitions in GacJS.
+- [GacUI end-to-end operation SOP](../GacUI/.github/Jobs/DebugRemoteProtocolSop.md) owns feature operations, error injections, and observable pass/fail criteria. Do not duplicate those test definitions in GacJS.
 - `REPO-ROOT\Gaclib\website\entry\test` has E2E test cases that start `RemotingTest_Core` and run `index.html` with Playwright.
 - These E2E suites run only on Windows with a sibling `(repo-root)\..\GacUI` checkout. They build GacUI through `copilotBuild.ps1` before launching `RemotingTest_Core`.
 - When investigating a renderer regression, add or update an E2E case and keep its operation/pass-fail definition synchronized with the GacUI SOP.

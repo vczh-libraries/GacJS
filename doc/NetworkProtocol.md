@@ -11,7 +11,7 @@ the protocols used by:
 
 It does not cover building or starting `RemotingTest_Core`, hosting the website,
 or operating the sample UI. See
-[Operating GacUI Through GacJS](../../GacUI/DebugRemoteProtocolWithGacJS.md)
+[Operating GacUI Through GacJS](../../GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md)
 for those tasks. See [Protocol.md](Protocol.md) for the GacUI Remote Protocol
 message catalog after the connection handshake succeeds.
 
