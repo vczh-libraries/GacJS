@@ -33,7 +33,7 @@ test('real RVM fixture produces exact IDs and a self-contained public surface de
     expect(first.files).toEqual(second.files);
     expect(first.files).toEqual([{
         path: 'generated.ts',
-        content: fs.readFileSync(path.join(fixtures, 'goldens', 'RvmMetadata.generated.ts'), 'utf8'),
+        content: fs.readFileSync(path.join(fixtures, 'goldens', 'RvmMetadata.generated.ts'), 'utf8').replaceAll('\r\n', '\n'),
     }]);
     expect(first.contract.interfaces[0].idNumber).toBe(0);
     expect(first.contract.interfaces[0].methods[0].idNumber).toBe(1);

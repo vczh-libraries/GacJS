@@ -5,12 +5,13 @@
     "type": "module",
     "main": "./lib/src/index.js",
     "scripts": {
-        "import": "rimraf ./lib && eslint --fix && tsc",
-        "test": "vitest run"
+        "import": "rimraf ./lib && eslint --fix src && tsc",
+        "test": "eslint --fix test/GeneratedRuntime.test.ts test/GeneratorTest.ts && vitest run"
     },
     "license": "Apache-2.0",
     "devDependencies": {
-        "@gaclib-shared/eslint-shared": "^0.0.1"
+        "@gaclib-shared/eslint-shared": "^0.0.1",
+        "@gaclib/workflow-rpc": "^0.0.1"
     },
     "dependencies": {
         "typescript": "^5.7.3"

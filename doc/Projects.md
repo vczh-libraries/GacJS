@@ -139,8 +139,8 @@ by-reference read-only dictionaries fail with source-located diagnostics.
 
 | Script | Action |
 |--------|--------|
-| `yarn run import` | Clean → lint → compile the generator |
-| `yarn test` | Run copied-fixture parser, validation, emission, and type-check tests |
+| `yarn run import` | Clean → lint → compile the generator source |
+| `yarn test` | Lint and run copied-fixture parser, validation, emission, generated-runtime, and type-check tests after the Workflow RPC runtime build |
 
 It deliberately has no `build` or `codegen` script. The shared codegen package
 invokes its compiled API and owns the output location.

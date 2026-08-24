@@ -6,7 +6,12 @@ export default tseslint.config(
     {
         languageOptions: {
             parserOptions: {
-                projectService: true,
+                projectService: {
+                    allowDefaultProject: [
+                        'test/GeneratedRuntime.test.ts',
+                        'test/GeneratorTest.ts',
+                    ],
+                },
                 tsconfigRootDir: import.meta.dirname,
             },
         },
