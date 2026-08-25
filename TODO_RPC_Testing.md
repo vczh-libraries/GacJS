@@ -1,0 +1,15 @@
+- Follow `doc/rpc/README.md` to create test facitily.
+- Run the test with `RpcStdioTest_Service` in `Workflow` to make sure `Gaclib/gaclib/(codegen-)?workflow-rpc` is doing good.
+- Add `doc/rpc/README.md` to `Project.md` and `AGENTS.md` as part of indexed documents.
+- Fix `doc/rpc/README.md` according to comments in it.
+- Existing documents in `doc/rpc` describes general implementation details, you need to add `VerifyRpcWithWorkflow` to describe the details of how the test part is done.
+  - Just like other sibling documents, they will be offered as a guidance to implement view model in other languages.
+  - You can talk TypeScript related things.
+  - No need to talk too much about GacJS details.
+- Try your best to make all test case run, if anything cannot be done purely in `GacJS`, add these cases to `Workflow/Test/StartRpcStdio_DtorSkipList.txt`.
+  - Keep this file as a skip list of reasonable test cases to skip.
+  - It should only contain test cases that, the target programming language (TypeScript in this task) coulnd't satisfy.
+  - e.g. order of calling destructors, which is listed in this file already.
+- `npm run test `in `rpc-test-cli` should starts `RpcStdioTest_Driver`, assuming `Workflow` is cloned as a sibling folder to `GacJS`.
+  - Just like how `E2E` tests in `Gaclib/website/entry` launches `GacUI` test apps.
+- commit and push all local changes once finishing.
