@@ -450,9 +450,9 @@ harness is Windows-specific. This skip is not live-browser verification.
 Run `npm run start` from `Gaclib/website/entry/` after the build when a browser
 needs the website.
 
-On Windows, `Gaclib/StartRpcStdio.ps1` is the turnkey Workflow RPC conformance
-launcher. It builds Workflow Debug x64 and GacJS, then invokes
-`RpcStdioTest_Driver.exe` in the current console with the TypeScript provider and
-approved destructor skip list. Because the driver is invoked directly, its
-stdout and stderr remain visible. Run the separate import and codegen phases
-first when their inputs have changed.
+`Gaclib/StartRpcStdio.ps1` on Windows and `Gaclib/StartRpcStdio.sh` on Linux and
+macOS are the turnkey Workflow RPC conformance launchers. They build the required
+Workflow Debug x64 driver and GacJS, then invoke the driver in the current
+console with the TypeScript provider and approved destructor skip list. Because
+the driver is invoked directly, its stdout and stderr remain visible. Run the
+separate import and codegen phases first when their inputs have changed.

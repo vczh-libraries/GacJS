@@ -11,6 +11,13 @@ interface ChildResult {
     readonly stderr: string;
 }
 
+interface WorkflowDriverBuild {
+    readonly executable: string;
+    readonly arguments_: readonly string[];
+    readonly cwd: string;
+    readonly driver: string;
+}
+
 const temporaryDirectories: string[] = [];
 
 function runChild(executable: string, arguments_: readonly string[], cwd: string, timeout = 600_000): Promise<ChildResult> {
@@ -54,6 +61,31 @@ export function quoteWindowsCommandArgument(argument: string): string {
     return `${result}${'\\'.repeat(backslashes * 2)}"`;
 }
 
+export function quotePosixShellCommandArgument(argument: string): string {
+    if (/^[A-Za-z0-9_@%+=:,./-]+$/u.test(argument)) return argument;
+    return `'${argument.replaceAll("'", "'\\''")}'`;
+}
+
+function getWorkflowDriverBuild(workflowRoot: string, workflowTestRoot: string): WorkflowDriverBuild {
+    if (process.platform === 'win32') {
+        const buildScript = path.join(workflowRoot, '.github/Scripts/copilotBuild.ps1');
+        return {
+            executable: 'powershell.exe',
+            arguments_: ['-NoProfile', '-Command', `& '${buildScript.replaceAll("'", "''")}'`],
+            cwd: path.join(workflowTestRoot, 'UnitTest'),
+            driver: path.join(workflowTestRoot, 'UnitTest/x64/Debug/RpcStdioTest_Driver.exe'),
+        };
+    }
+
+    const driverRoot = path.join(workflowTestRoot, 'Linux/RpcStdioTest_Driver');
+    return {
+        executable: path.join(workflowRoot, '.github/Ubuntu/build.sh'),
+        arguments_: [],
+        cwd: driverRoot,
+        driver: path.join(driverRoot, 'Bin/RpcStdioTest_Driver'),
+    };
+}
+
 function readNames(filePath: string, index: boolean): string[] {
     return fs.readFileSync(filePath, 'utf8')
         .split(/\r?\n/u)
@@ -71,15 +103,11 @@ describe('Workflow RpcStdioTest_Driver integration', () => {
         const gacjsRoot = path.resolve(packageRoot, '../../..');
         const workflowRoot = path.resolve(gacjsRoot, '../Workflow');
         const workflowTestRoot = path.join(workflowRoot, 'Test');
-        const buildScript = path.join(workflowRoot, '.github/Scripts/copilotBuild.ps1');
-        const build = await runChild(
-            'powershell.exe',
-            ['-NoProfile', '-Command', `& '${buildScript.replaceAll("'", "''")}'`],
-            path.join(workflowTestRoot, 'UnitTest'),
-        );
+        const workflowBuild = getWorkflowDriverBuild(workflowRoot, workflowTestRoot);
+        const build = await runChild(workflowBuild.executable, workflowBuild.arguments_, workflowBuild.cwd);
         expect(build.exitCode, `${build.stdout}\n${build.stderr}`).toBe(0);
 
-        const driver = path.join(workflowTestRoot, 'UnitTest/x64/Debug/RpcStdioTest_Driver.exe');
+        const driver = workflowBuild.driver;
         const skipList = path.join(workflowTestRoot, 'StartRpcStdio_DtorSkipList.txt');
         const cliEntry = path.join(packageRoot, 'lib/src/cli.js');
         for (const required of [driver, skipList, cliEntry]) expect(fs.existsSync(required), required).toBe(true);
@@ -88,7 +116,10 @@ describe('Workflow RpcStdioTest_Driver integration', () => {
         temporaryDirectories.push(temporaryDirectory);
         const wrapper = path.join(temporaryDirectory, 'service wrapper.mjs');
         fs.writeFileSync(wrapper, `import ${JSON.stringify(pathToFileURL(cliEntry).href)};\n`, 'utf8');
-        const serviceCommand = `${quoteWindowsCommandArgument(process.execPath)} ${quoteWindowsCommandArgument(wrapper)}`;
+        const quoteCommandArgument = process.platform === 'win32'
+            ? quoteWindowsCommandArgument
+            : quotePosixShellCommandArgument;
+        const serviceCommand = `${quoteCommandArgument(process.execPath)} ${quoteCommandArgument(wrapper)}`;
         expect(serviceCommand).toContain('service wrapper.mjs');
 
         const result = await runChild(driver, [serviceCommand, skipList], workflowTestRoot);
@@ -113,5 +144,11 @@ describe('Workflow RpcStdioTest_Driver integration', () => {
         expect(quoteWindowsCommandArgument('C:\\Program Files\\node.exe')).toBe('"C:\\Program Files\\node.exe"');
         expect(quoteWindowsCommandArgument('C:\\path with spaces\\')).toBe('"C:\\path with spaces\\\\"');
         expect(quoteWindowsCommandArgument('plain')).toBe('plain');
+    });
+
+    it('quotes POSIX shell command arguments without losing spaces or apostrophes', () => {
+        expect(quotePosixShellCommandArgument('/path with spaces/node')).toBe("'/path with spaces/node'");
+        expect(quotePosixShellCommandArgument("it's")).toBe("'it'\\''s'");
+        expect(quotePosixShellCommandArgument('plain')).toBe('plain');
     });
 });
