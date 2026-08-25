@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { quoteTypeScriptString } from './typeScript.js';
 
 const __dirname = import.meta.dirname;
 const SourcePath = path.join(__dirname, '../../../../../GacUI/Test/Resources/UnitTestSnapshots');
@@ -88,20 +89,8 @@ export function generateSnapshotIndex(): void {
     // Build the snapshot tree
     const snapshotContent = buildSnapshotTree(DestPath);
 
-    const quote = (value: string): string => {
-        let content = '';
-        for (const character of value) {
-            if (character === '\\') content += '\\\\';
-            else if (character === "'") content += "\\'";
-            else if (character === '\n') content += '\\n';
-            else if (character === '\r') content += '\\r';
-            else if (character === '\t') content += '\\t';
-            else content += character;
-        }
-        return `'${content}'`;
-    };
     const serialize = (value: unknown, depth = 0): string => {
-        if (typeof value === 'string') return quote(value);
+        if (typeof value === 'string') return quoteTypeScriptString(value);
         if (value === null || typeof value !== 'object' || Array.isArray(value)) {
             throw new Error('Snapshot index serialization accepts string-keyed objects and strings only.');
         }
@@ -109,7 +98,7 @@ export function generateSnapshotIndex(): void {
         if (entries.length === 0) return '{}';
         const indentation = ' '.repeat(depth * 4);
         const childIndentation = ' '.repeat((depth + 1) * 4);
-        return `{\n${entries.map(([key, item]) => `${childIndentation}${quote(key)}: ${serialize(item, depth + 1)}`).join(',\n')}\n${indentation}}`;
+        return `{\n${entries.map(([key, item]) => `${childIndentation}${quoteTypeScriptString(key)}: ${serialize(item, depth + 1)}`).join(',\n')}\n${indentation}}`;
     };
 
     // Generate the TypeScript file content

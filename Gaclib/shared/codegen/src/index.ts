@@ -3,6 +3,7 @@ import * as path from 'path';
 import { generateRemoteProtocol, generateRemoteProtocolInvoking } from '@gaclib/codegen-remote-protocol';
 import { GeneratedFile, generateWorkflowRpcFromFiles, writeWorkflowRpcGeneratedFiles } from '@gaclib/codegen-workflow-rpc';
 import { generateSnapshotIndex, prepareSnapshots } from './snapshots.js';
+import { quoteTypeScriptString } from './typeScript.js';
 
 const __dirname = import.meta.dirname;
 
@@ -108,7 +109,7 @@ function emitRpcTestRegistry(entries: readonly RpcTestIndexEntry[]): GeneratedFi
         'export const RpcTestCases: Readonly<Record<RpcTestCaseName, RpcTestCaseDefinition>> = {',
     );
     for (const entry of entries) {
-        lines.push(`    '${entry.name}': defineRpcTestCase('${entry.name}', ${JSON.stringify(entry.expected)}, Case_${entry.name}),`);
+        lines.push(`    '${entry.name}': defineRpcTestCase('${entry.name}', ${quoteTypeScriptString(entry.expected)}, Case_${entry.name}),`);
     }
     lines.push(
         '};',

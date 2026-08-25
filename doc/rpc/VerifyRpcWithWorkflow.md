@@ -104,6 +104,13 @@ manifest changes. Build the runtime and provider before testing. Launch the driv
 with a correctly quoted provider command and the approved destructor skip list;
 include a provider path containing spaces so command construction is exercised.
 
+For the GacJS TypeScript provider on Windows, run `Gaclib/StartRpcStdio.ps1` from
+the repository root or from `Gaclib`. The script builds Workflow Debug x64,
+builds GacJS, and then invokes `RpcStdioTest_Driver.exe` directly with the
+TypeScript CLI and Workflow's approved destructor skip list. Run the import and
+codegen phases separately first when their inputs have changed. The direct
+invocation keeps all driver output attached to the calling console.
+
 A conforming run exits zero, reports the exact dynamic pass/skip partition, keeps
 provider stdout frame-only, and rejects missing, extra, or unknown direct provider
 arguments with a nonzero exit and stderr diagnostic.

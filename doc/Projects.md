@@ -52,7 +52,9 @@ Remote-protocol import inputs:
 ```
 
 The imported files retain their upstream names and are committed with the
-generator package.
+generator package. They are copied inputs, so ESLint excludes `src/Import/`
+instead of restyling upstream content. TypeScript still consumes the declaration
+file while compiling the generator.
 
 ---
 
@@ -106,12 +108,14 @@ generator package.
 Snapshot generator and root codegen orchestration package. Its codegen entry
 point invokes both contract generators, generates every indexed Workflow RPC
 conformance binding and its exact registry, then refreshes the entry website
-snapshots and their index.
+snapshots and their index. Copied GacUI snapshot JSON stays under `assets/` and
+outside ESLint's TypeScript inputs; the GacJS-generated `snapshotIndex.ts` is
+linted with the other generated TypeScript artifacts.
 
 | Script | Action |
 |--------|--------|
 | `yarn run import` | Clean → lint → compile the snapshot generator |
-| `yarn codegen` | Run remote-protocol/RPC codegen → copy snapshots → generate snapshot index |
+| `yarn codegen` | Run remote-protocol/RPC codegen → copy snapshots → generate snapshot index → lint generated TypeScript without fixes |
 
 Key files:
 - `src/index.ts` — resolves the `@gaclib/remote-protocol` source directory, invokes both remote-protocol generators, and then runs snapshot generation
@@ -426,7 +430,7 @@ All commands run from `Gaclib/`:
 | Command | Description |
 |---------|-------------|
 | `yarn run import` | Refresh upstream imports and compile codegen-tool packages |
-| `yarn codegen` | Run compiled codegen tools, including Workflow RPC conformance bindings, and refresh generated sources |
+| `yarn codegen` | Run compiled codegen tools, refresh generated sources, and require generated TypeScript to pass ESLint without fixes |
 | `yarn build` | Build all non-codegen packages (includes ESLint) |
 | `yarn test` | Run portable vitest tests and, on Windows, protocol E2E tests |
 
@@ -445,3 +449,10 @@ harness is Windows-specific. This skip is not live-browser verification.
 
 Run `npm run start` from `Gaclib/website/entry/` after the build when a browser
 needs the website.
+
+On Windows, `Gaclib/StartRpcStdio.ps1` is the turnkey Workflow RPC conformance
+launcher. It builds Workflow Debug x64 and GacJS, then invokes
+`RpcStdioTest_Driver.exe` in the current console with the TypeScript provider and
+approved destructor skip list. Because the driver is invoked directly, its
+stdout and stderr remain visible. Run the separate import and codegen phases
+first when their inputs have changed.

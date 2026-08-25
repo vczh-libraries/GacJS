@@ -1,6 +1,6 @@
-export type PrimitiveTypes = 'Boolean' | 'Integer' | 'Float' | 'Double' | 'String' | 'Char' | 'Key' | 'Color' | 'Binary';
+export type PrimitiveTypes = "Boolean" | "Integer" | "Float" | "Double" | "String" | "Char" | "Key" | "Color" | "Binary";
 
-export type StructType = 'Struct' | 'Class';
+export type StructType = "Struct" | "Class";
 
 export type Type = PrimitiveType | ReferenceType | OptionalType | ArrayType | ArrayMapType | MapType;
 
@@ -12,103 +12,103 @@ export interface Declaration_Common {
 }
 
 export interface PrimitiveType {
-    $ast: 'PrimitiveType';
+    $ast: "PrimitiveType";
     type: PrimitiveTypes;
 }
 
 export interface ReferenceType {
-    $ast: 'ReferenceType';
+    $ast: "ReferenceType";
     name: string;
 }
 
 export interface OptionalType {
-    $ast: 'OptionalType';
+    $ast: "OptionalType";
     element: Type | null;
 }
 
 export interface ArrayType {
-    $ast: 'ArrayType';
+    $ast: "ArrayType";
     element: Type | null;
 }
 
 export interface ArrayMapType {
-    $ast: 'ArrayMapType';
+    $ast: "ArrayMapType";
     element: string;
     keyField: string;
 }
 
 export interface MapType {
-    $ast: 'MapType';
+    $ast: "MapType";
     element: Type | null;
     keyType: Type | null;
 }
 
 export interface Attribute {
-    $ast: 'Attribute';
+    $ast: "Attribute";
     name: string;
     cppType: string;
 }
 
 export interface EnumMember {
-    $ast: 'EnumMember';
+    $ast: "EnumMember";
     name: string;
 }
 
 export interface EnumDecl extends Declaration_Common {
-    $ast: 'EnumDecl';
+    $ast: "EnumDecl";
     members: (EnumMember | null)[];
 }
 
 export interface UnionMember {
-    $ast: 'UnionMember';
+    $ast: "UnionMember";
     name: string;
 }
 
 export interface UnionDecl extends Declaration_Common {
-    $ast: 'UnionDecl';
+    $ast: "UnionDecl";
     members: (UnionMember | null)[];
 }
 
 export interface StructMember {
-    $ast: 'StructMember';
+    $ast: "StructMember";
     name: string;
     type: Type | null;
 }
 
 export interface StructDecl extends Declaration_Common {
-    $ast: 'StructDecl';
+    $ast: "StructDecl";
     type: StructType;
     members: (StructMember | null)[];
 }
 
 export interface MessageRequest {
-    $ast: 'MessageRequest';
+    $ast: "MessageRequest";
     type: Type | null;
 }
 
 export interface MessageResponse {
-    $ast: 'MessageResponse';
+    $ast: "MessageResponse";
     type: Type | null;
 }
 
 export interface MessageDecl extends Declaration_Common {
-    $ast: 'MessageDecl';
+    $ast: "MessageDecl";
     request: MessageRequest | null;
     response: MessageResponse | null;
 }
 
 export interface EventRequest {
-    $ast: 'EventRequest';
+    $ast: "EventRequest";
     type: Type | null;
 }
 
 export interface EventDecl extends Declaration_Common {
-    $ast: 'EventDecl';
+    $ast: "EventDecl";
     request: EventRequest | null;
 }
 
 export interface Schema {
-    $ast: 'Schema';
+    $ast: "Schema";
     declarations: (Declaration | null)[];
 }
 

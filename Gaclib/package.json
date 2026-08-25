@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "import": "lerna run import --stream",
-    "codegen": "lerna run codegen --stream",
+    "codegen": "lerna run codegen --stream && yarn lint-generated",
+    "lint-generated": "eslint --config gaclib/remote-protocol/eslint.config.mjs gaclib/remote-protocol/src && eslint --config rpc-test/rpc-test-cases/eslint.config.mjs rpc-test/rpc-test-cases/src/generated && eslint --config website/rvm/eslint.config.mjs website/rvm/src/generated && eslint --config website/entry/eslint.config.mjs website/entry/src/snapshotIndex.ts",
     "build": "lerna run build --stream",
     "test": "lerna run test --stream"
   },

@@ -3,7 +3,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
     {
-        ignores: ['prepare.js'],
+        ignores: ['prepare.js', 'src/Import/**'],
     },
     ...eslintShared,
     {
