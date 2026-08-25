@@ -10,6 +10,7 @@
   - Keep this file as a skip list of reasonable test cases to skip.
   - It should only contain test cases that, the target programming language (TypeScript in this task) coulnd't satisfy.
   - e.g. order of calling destructors, which is listed in this file already.
+- You must limit all changes in `GacJS`, except `Workflow/Test/StartRpcStdio_DtorSkipList.txt`, or fixing `RpcStdioTest_Driver` if the current code can't start `rpc-test-cli` properly.
 - `npm run test `in `rpc-test-cli` should starts `RpcStdioTest_Driver`, assuming `Workflow` is cloned as a sibling folder to `GacJS`.
   - Just like how `E2E` tests in `Gaclib/website/entry` launches `GacUI` test apps.
 - commit and push all local changes once finishing.
