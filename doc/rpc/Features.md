@@ -380,6 +380,11 @@ substituting `bigint` is not wire compatible with JSON.
 The same validation principle applies to integer range, finite floating-point
 values, enum membership where required, and map key encodings.
 
+Predefined collection operations use Workflow's architecture-dependent `vint`
+schema for indexes and counts. Configure the endpoint with the codec matching
+the peer ABI before initialization: `Int32` for x86 metadata and `Int64` for x64
+metadata.
+
 ## By-Value and By-Reference Container Semantics
 
 ### Eligible use sites and defaults
@@ -478,12 +483,10 @@ reachability. The outer collection and every nested collection are live remote
 objects; accessing a nested collection returns another reference rather than a
 snapshot.
 
-A null by-reference collection is still encoded in the reference structure.
-Its inner reference triple is `{clientId: -1, objectId: -1, typeId: -100}`; at
-an unknown-value boundary the complete JSON object is
-`{"$":"system::RpcObjectReference","clientId":-1,"objectId":-1,"typeId":-100}`.
-Do not encode it as JSON `null`, allocate a proxy/hold for it, or confuse
-`typeId: -100` with a predefined collection type.
+A null by-reference collection is JSON `null` at an unknown-value boundary and
+creates no proxy or hold. A statically known reference schema can still use the
+inner null-reference triple `{clientId: -1, objectId: -1, typeId: -100}`. Do not
+confuse `typeId: -100` with a predefined collection type.
 
 Collection proxies dispatch through predefined negative type and operation IDs,
 not contract-specific generated method IDs. The generic operations cover

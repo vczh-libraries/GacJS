@@ -35,7 +35,7 @@ export class RpcEndpointClosedError extends Error {
 
 export class RpcEventBroadcastError extends RpcException {
     constructor(public readonly exceptions: Exclude<RpcEventExceptionMap, null>) {
-        super(exceptions.map(([clientId, exception]) => `[${String(clientId)}] ${exception.message}`).join('\n'));
+        super(exceptions.map(([clientId, exception]) => `${String(clientId)}:${exception.message};`).join(''));
     }
 }
 

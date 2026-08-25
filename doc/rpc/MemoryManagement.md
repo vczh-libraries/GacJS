@@ -456,10 +456,10 @@ enumeration, and dictionary operations are RPC calls. The use site's transfer
 mode applies recursively: a nested collection obtained from an element, key, or
 value is exported as another reference rather than copied.
 
-The null reference sentinel has the inner triple
-`{clientId: -1, objectId: -1, typeId: -100}`. At an unknown-value boundary it is
-wrapped with `$: "system::RpcObjectReference"`. It resolves to null and creates
-no local entry, proxy view, hold, finalizer token, or lease.
+At an unknown-value boundary a null interface or collection reference is JSON
+`null`. A statically known reference schema can use the inner triple
+`{clientId: -1, objectId: -1, typeId: -100}`. Either form resolves to null and
+creates no local entry, proxy view, hold, finalizer token, or lease.
 
 Those helper objects have real lifetimes. In particular:
 

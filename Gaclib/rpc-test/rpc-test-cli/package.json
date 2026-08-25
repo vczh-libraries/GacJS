@@ -1,0 +1,26 @@
+{
+  "name": "@gaclib-rpc-test/rpc-test-cli",
+  "version": "0.0.1",
+  "description": "Node stdio provider and Workflow driver integration for RPC conformance",
+  "type": "module",
+  "main": "./lib/src/index.js",
+  "bin": {
+    "gacjs-rpc-test": "./lib/src/cli.js"
+  },
+  "engines": {
+    "node": ">=22.20.0 <23 || >=24.0.0 <25"
+  },
+  "scripts": {
+    "build": "rimraf ./lib && eslint --fix && tsc",
+    "test": "vitest run"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@gaclib-shared/eslint-shared": "^0.0.1"
+  },
+  "dependencies": {
+    "@gaclib-rpc-test/rpc-test-cases": "^0.0.1",
+    "@gaclib-website/remote-protocol-http": "^0.0.1",
+    "@gaclib/workflow-rpc": "^0.0.1"
+  }
+}

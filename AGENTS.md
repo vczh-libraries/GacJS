@@ -39,6 +39,8 @@ whenever documented behavior changes.
 - [Workflow RPC features](doc/rpc/Features.md): transport-independent Workflow RPC behavior and conformance rules.
 - [Workflow RPC memory management](doc/rpc/MemoryManagement.md): object identity, holds, proxy lifetime, and disposal.
 - [Workflow RPC code generation](doc/rpc/CodeGeneration.md): metadata inputs and TypeScript binding generation.
+- [Workflow RPC overview](doc/rpc/README.md): document index and cross-language implementation guidance.
+- [Workflow RPC verification](doc/rpc/VerifyRpcWithWorkflow.md): Workflow driver/provider conformance procedure and skip policy.
 
 # Validation after Code Change
 
@@ -88,6 +90,12 @@ whenever documented behavior changes.
     - Location-aware generator for normalized Workflow RPC metadata plus its TypeScript serialization schema.
     - Its `import` phase compiles the generator and its tests cover richer copied fixtures. It intentionally has no `build` or `codegen` script.
     - Never handwrite contract IDs in consumers or edit its committed generated output directly.
+  - `(repo-root)/Gaclib/rpc-test/rpc-test-cases`:
+    - Generated x64 binding and handwritten service behavior for every indexed Workflow RPC case.
+    - Its generated registry is owned by the root `codegen` phase; it has `build` and `test` phases only.
+  - `(repo-root)/Gaclib/rpc-test/rpc-test-cli`:
+    - Node-only strict stdio provider and Workflow driver integration harness.
+    - Its test phase builds Workflow Debug x64 and runs the data-driven conformance suite.
   - `(repo-root)/Gaclib/website/rvm`:
     - Generated RemoteViewModelTest binding owned by `@gaclib/codegen-workflow-rpc` and exported through a stable handwritten package entry.
     - Commit `src/generated/generated.ts` and its manifest; regenerate them through the root `codegen` phase.

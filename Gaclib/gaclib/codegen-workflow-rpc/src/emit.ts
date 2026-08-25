@@ -156,6 +156,21 @@ function codecExpression(ir: ContractIr, type: TypeAst, transfer: TransferMode):
     return `RPC.createListCodec(${item}, ${quote(type.collectionKind === 'observableList' ? 'oblist' : 'list')})`;
 }
 
+function requiresUnknownEncoding(type: TypeAst): boolean {
+    if (type.kind === 'named') {
+        return type.interfaceReference;
+    }
+    if (type.kind === 'nullable') {
+        return requiresUnknownEncoding(type.item);
+    }
+    return true;
+}
+
+function valueUseExpression(ir: ContractIr, type: TypeAst, transfer: TransferMode): string {
+    const unknown = requiresUnknownEncoding(type) ? ', unknown: true' : '';
+    return `{ codec: ${codecExpression(ir, type, transfer)}, transfer: ${quote(transfer)}${unknown} }`;
+}
+
 function operationConstant(owner: InterfaceIr, operation: MethodIr | InterfaceIr['events'][number]): string {
     return `${owner.tsName}_${sanitizeIdentifier(operation.name)}_${String(operation.idNumber)}Id`;
 }
@@ -416,10 +431,10 @@ function emitDescriptors(ir: ContractIr): string {
             lines.push(`            implementationKey: ${quote(method.implementationKey)},`);
             lines.push('            parameters: [');
             for (const parameter of method.parameters) {
-                lines.push(`                { codec: ${codecExpression(ir, parameter.type, parameter.transfer)}, transfer: ${quote(parameter.transfer)} },`);
+                lines.push(`                ${valueUseExpression(ir, parameter.type, parameter.transfer)},`);
             }
             lines.push('            ],');
-            lines.push(`            result: { codec: ${codecExpression(ir, method.result.type, method.result.transfer)}, transfer: ${quote(method.result.transfer)} },`);
+            lines.push(`            result: ${valueUseExpression(ir, method.result.type, method.result.transfer)},`);
             lines.push('        },');
         }
         lines.push('    ],', '    events: [');
@@ -431,7 +446,7 @@ function emitDescriptors(ir: ContractIr): string {
             lines.push(`            propertyKey: ${quote(event.propertyKey)},`);
             lines.push('            parameters: [');
             for (const parameter of event.parameters) {
-                lines.push(`                { codec: ${codecExpression(ir, parameter.type, parameter.transfer)}, transfer: ${quote(parameter.transfer)} },`);
+                lines.push(`                ${valueUseExpression(ir, parameter.type, parameter.transfer)},`);
             }
             lines.push('            ],', '        },');
         }

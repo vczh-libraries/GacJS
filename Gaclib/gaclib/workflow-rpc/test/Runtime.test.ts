@@ -272,6 +272,11 @@ test('strict codecs enforce numeric, enum, nullable, struct, list, and map shape
     expect(() => enumCodec.decodeUnknown(endpoint, ['State', 2])).toThrow(/unknown enum/u);
     const nullable = createNullableCodec(rpcStringCodec);
     await expect(Promise.resolve(nullable.decodeUnknown(endpoint, null))).resolves.toBeNull();
+    await expect(Promise.resolve(callbackCodec.encodeUnknown(endpoint, null))).resolves.toBeNull();
+    await expect(Promise.resolve(callbackCodec.decodeUnknown(endpoint, null))).resolves.toBeNull();
+    await expect(Promise.resolve(byReferenceListCodec.encodeUnknown(endpoint, null))).resolves.toBeNull();
+    await expect(Promise.resolve(byReferenceListCodec.decodeUnknown(endpoint, null))).resolves.toBeNull();
+    expect(() => endpoint.objectToReference({}, -4)).toThrow('predefined local object');
     const pointCodec = createStructCodec<{ x: number; y: number }>('Point', [
         { key: 'x', codec: rpcInt32Codec }, { key: 'y', codec: rpcInt32Codec },
     ]);
@@ -502,6 +507,7 @@ test('event broadcasts aggregate receiver errors and suppress reflected outgoing
         [4, { message: 'first failed' }],
         [5, { message: 'second failed' }],
     ]);
+    expect((error as Error).message).toBe('4:first failed;5:second failed;');
     expect(firstCaller.getDebugState().suppressionEntries).toBe(0);
     expect(secondCaller.getDebugState().suppressionEntries).toBe(0);
     await first.dispose();

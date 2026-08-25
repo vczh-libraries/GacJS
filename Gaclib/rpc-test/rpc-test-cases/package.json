@@ -1,0 +1,18 @@
+{
+  "name": "@gaclib-rpc-test/rpc-test-cases",
+  "version": "0.0.1",
+  "description": "Generated Workflow RPC conformance contracts and TypeScript service translations",
+  "type": "module",
+  "main": "./lib/src/index.js",
+  "scripts": {
+    "build": "rimraf ./lib && eslint --fix && tsc",
+    "test": "vitest run"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@gaclib-shared/eslint-shared": "^0.0.1"
+  },
+  "dependencies": {
+    "@gaclib/workflow-rpc": "^0.0.1"
+  }
+}

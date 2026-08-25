@@ -21,6 +21,7 @@
     "packages": [
       "shared/*",
       "gaclib/*",
+      "rpc-test/*",
       "website/*"
     ]
   },

@@ -198,6 +198,7 @@ export interface RpcReferenceFactory<T extends object> {
 }
 
 export interface RpcEndpointServices {
+    readonly vintCodec: RpcCodec<number>;
     objectToReference<T extends object>(value: T, typeId: number): RpcObjectReference;
     referenceToObject<T extends object>(ref: RpcObjectReference, factory?: RpcReferenceFactory<T>): Promise<T | null>;
 }
@@ -205,6 +206,7 @@ export interface RpcEndpointServices {
 export interface RpcValueUse<T = unknown> {
     codec: RpcCodec<T>;
     transfer?: RpcTransferMode;
+    unknown?: boolean;
 }
 
 export interface RpcMethodDescriptor {
@@ -251,7 +253,7 @@ export interface RpcProxyContext {
     readonly reference: RpcObjectReference;
 }
 
-export interface RpcProxyEndpoint {
+export interface RpcProxyEndpoint extends RpcEndpointServices {
     invokeProxy(proxy: object, methodId: number, arguments_: readonly unknown[]): Promise<unknown>;
     raiseProxyEvent(proxy: object, eventId: number, arguments_: readonly unknown[]): Promise<void>;
     disposeProxy(proxy: object): Promise<void>;

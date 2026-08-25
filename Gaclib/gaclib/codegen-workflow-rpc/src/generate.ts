@@ -76,7 +76,7 @@ export function generateWorkflowRpcFromFiles(metadataPath: string, schemaPath: s
     for (const inputPath of [metadataPath, schemaPath]) {
         if (!fs.existsSync(inputPath)) {
             throw new WorkflowRpcDiagnostic(
-                'The GacUI generated RemoteViewModelTest resources must be produced before GacJS code generation.',
+                `Required Workflow RPC generator input is missing: ${inputPath}. Generate the matching normalized metadata and serialization schema before running GacJS code generation.`,
                 { path: inputPath, offset: 0, line: 1, column: 1 },
             );
         }

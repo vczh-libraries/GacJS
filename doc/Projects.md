@@ -7,6 +7,10 @@ render its UI in another process (here, a web browser).
 The C++ GacUI repo is expected at `..\GacUI`, next to this GacJS checkout.
 Treat it as a separate repository when building or changing the core application.
 
+Workflow RPC documentation starts with [the RPC overview](rpc/README.md). See
+[Verifying an RPC Implementation with Workflow](rpc/VerifyRpcWithWorkflow.md)
+for the cross-language conformance procedure.
+
 ---
 
 ## Monorepo Layout
@@ -15,7 +19,7 @@ The monorepo root is `Gaclib/` and uses **Lerna** with **Yarn workspaces**.
 
 ```
 Gaclib/
-├── package.json            ← monorepo root (workspace: shared/*, gaclib/*, website/*)
+├── package.json            ← monorepo root (workspace: shared/*, gaclib/*, rpc-test/*, website/*)
 ├── shared/
 │   ├── codegen/            ← @gaclib-shared/codegen
 │   └── eslint-shared/      ← @gaclib-shared/eslint-shared
@@ -25,6 +29,9 @@ Gaclib/
 │   ├── remote-protocol/    ← @gaclib/remote-protocol
 │   ├── renderer/           ← @gaclib/renderer
 │   └── workflow-rpc/       ← @gaclib/workflow-rpc
+├── rpc-test/
+│   ├── rpc-test-cases/     ← @gaclib-rpc-test/rpc-test-cases
+│   └── rpc-test-cli/       ← @gaclib-rpc-test/rpc-test-cli
 └── website/
     ├── remote-protocol-http/ ← @gaclib-website/remote-protocol-http
     ├── rvm/                ← @gaclib-website/rvm
@@ -56,7 +63,8 @@ generator package.
         ├── invokes @gaclib/codegen-remote-protocol
         │       └── generates @gaclib/remote-protocol
         ├── invokes @gaclib/codegen-workflow-rpc
-        │       └── generates @gaclib-website/rvm
+        │       ├── generates @gaclib-website/rvm
+        │       └── generates @gaclib-rpc-test/rpc-test-cases bindings/registry
         └── generates @gaclib-website/entry snapshots
 
 @gaclib/remote-protocol
@@ -76,6 +84,13 @@ generator package.
         @gaclib-website/rvmhost ──────→ @gaclib-website/remote-protocol-http
                    │
                    └──────────────────→ @gaclib-website/entry
+
+@gaclib/workflow-rpc ────────→ @gaclib-rpc-test/rpc-test-cases
+                                          │
+                                          ▼
+                               @gaclib-rpc-test/rpc-test-cli
+                                          ▲
+@gaclib-website/remote-protocol-http ─────┘
 ```
 
 `@gaclib-shared/eslint-shared` is a dev dependency of every other package.
@@ -89,13 +104,14 @@ generator package.
 **Path:** `Gaclib/shared/codegen/`
 
 Snapshot generator and root codegen orchestration package. Its codegen entry
-point invokes both contract generators, then refreshes the entry website
+point invokes both contract generators, generates every indexed Workflow RPC
+conformance binding and its exact registry, then refreshes the entry website
 snapshots and their index.
 
 | Script | Action |
 |--------|--------|
 | `yarn run import` | Clean → lint → compile the snapshot generator |
-| `yarn codegen` | Run remote-protocol codegen → copy snapshots → generate snapshot index |
+| `yarn codegen` | Run remote-protocol/RPC codegen → copy snapshots → generate snapshot index |
 
 Key files:
 - `src/index.ts` — resolves the `@gaclib/remote-protocol` source directory, invokes both remote-protocol generators, and then runs snapshot generation
@@ -221,6 +237,52 @@ Contract-specific IDs and call surfaces remain generated.
 |--------|--------|
 | `yarn build` | Clean → lint → compile |
 | `yarn test` | Run in-memory routing, callback, event, collection, and lifecycle tests |
+
+See [Workflow RPC features](rpc/Features.md), [memory management](rpc/MemoryManagement.md),
+and [code generation](rpc/CodeGeneration.md) for the runtime and binding contracts.
+
+---
+
+### @gaclib-rpc-test/rpc-test-cases
+
+**Path:** `Gaclib/rpc-test/rpc-test-cases/`
+
+Workflow RPC conformance contracts and service behavior. The root codegen phase
+reads the authoritative Workflow x64 index, normalized metadata, and serialization
+schemas and generates an isolated binding for every case plus an exact ordered
+registry. Handwritten factories translate the shared/service Workflow behavior;
+the collection families share parameterized helpers while special cases keep
+dedicated implementations.
+
+| Script | Action |
+|--------|--------|
+| `yarn build` | Clean → lint → compile generated bindings and handwritten services |
+| `yarn test` | Verify exact index/selector coverage and setup ordering |
+
+The package has no `import` or `codegen` script: generator compilation belongs to
+the root import phase, and `@gaclib-shared/codegen` owns its generated output.
+
+---
+
+### @gaclib-rpc-test/rpc-test-cli
+
+**Path:** `Gaclib/rpc-test/rpc-test-cli/`
+
+Node-only Workflow RPC conformance provider. Its CLI accepts one generated case
+name and implements strict stdio admission for the `WorkflowRpcStdioTest` channel.
+The integration harness builds Workflow's Debug x64 test solution, exercises a
+quoted service path containing spaces, launches `RpcStdioTest_Driver`, and checks
+the dynamic pass/skip partition against the Workflow index and approved destructor
+skip list.
+
+| Script | Action |
+|--------|--------|
+| `yarn build` | Clean → lint → compile the provider and integration harness |
+| `yarn test` / `npm run test` | Run framing/unit tests and the Workflow driver conformance suite |
+
+This package depends on `rpc-test-cases`, the browser-neutral channel codec from
+`remote-protocol-http`, and `workflow-rpc`. Node APIs remain outside those reusable
+packages. See [Verifying RPC with Workflow](rpc/VerifyRpcWithWorkflow.md).
 
 ---
 
@@ -364,13 +426,14 @@ All commands run from `Gaclib/`:
 | Command | Description |
 |---------|-------------|
 | `yarn run import` | Refresh upstream imports and compile codegen-tool packages |
-| `yarn codegen` | Run compiled codegen tools and refresh generated sources |
+| `yarn codegen` | Run compiled codegen tools, including Workflow RPC conformance bindings, and refresh generated sources |
 | `yarn build` | Build all non-codegen packages (includes ESLint) |
 | `yarn test` | Run portable vitest tests and, on Windows, protocol E2E tests |
 
-For ordinary GacJS changes, run `yarn build` and `yarn test`. When the sibling
-GacUI repository has been updated, run `yarn run import` and `yarn codegen`
-before those commands to synchronize imported and generated files. Yarn 1
+For ordinary GacJS changes, run `yarn build` and `yarn test`. Run `yarn run import`
+and `yarn codegen` before those commands whenever generator inputs or generated
+outputs need synchronization, including Workflow RPC conformance work and sibling
+GacUI updates. Yarn 1
 reserves `yarn import` for lockfile conversion, so the repository script requires
 the explicit `yarn run import` form. Package order is handled automatically by
 Lerna streaming.

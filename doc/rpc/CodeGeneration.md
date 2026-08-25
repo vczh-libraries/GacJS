@@ -518,10 +518,9 @@ Do not choose a collection wire shape from its TypeScript surface type alone:
   `{ "$": "map", values: [[key, value], ...] }`.
 - A by-reference argument or result is the tagged unknown
   `system::RpcObjectReference` shape with the appropriate predefined negative
-  collection type ID; it is not serialized as collection contents. Null uses
-  the tagged sentinel
-  `{"$":"system::RpcObjectReference","clientId":-1,"objectId":-1,"typeId":-100}`,
-  not JSON `null`, and creates no proxy or hold.
+  collection type ID; it is not serialized as collection contents. Null is
+  JSON `null` at this unknown boundary and creates no proxy or hold. A known
+  reference schema may use the untagged null-reference triple instead.
 - Values crossing predefined collection operations are unknown values. A
   nested container or RPC interface element/key/value is converted to a
   reference before unknown-value serialization.
@@ -598,6 +597,10 @@ Result encoding also branches independently:
 Unknown IDs and malformed messages are protocol errors. Only exceptions from
 the accepted user implementation call become normal RPC exception responses.
 Do not catch a generator/runtime bug and mislabel it as an application failure.
+
+The endpoint's predefined collection index/count codec must match the metadata
+ABI before initialization (`Int32` for x86 and `Int64` for x64). This setting is
+runtime configuration, not a contract-specific wire ID.
 
 ### Caller and proxy operations
 

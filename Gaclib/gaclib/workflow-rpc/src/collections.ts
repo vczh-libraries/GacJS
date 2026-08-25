@@ -1,7 +1,6 @@
 import {
     createRpcCodec,
     rpcBooleanCodec,
-    rpcInt32Codec,
     rpcVoidCodec,
     validateReferenceOrNull,
 } from './codecs.js';
@@ -48,7 +47,7 @@ import {
     RpcTypeId_IValueReadonlyList,
     RpcValueUse,
 } from './types.js';
-import { expectSafeInteger, readReference } from './validation.js';
+import { readReference } from './validation.js';
 
 const predefinedLocalBrand = Symbol('RpcPredefinedLocalObject');
 const predefinedProxyBrand = Symbol('RpcPredefinedProxy');
@@ -57,7 +56,7 @@ interface RpcPredefinedLocalObject {
     readonly [predefinedLocalBrand]: true;
     readonly typeId: number;
     invoke(endpoint: RpcEndpointServices, methodId: number, arguments_: readonly RpcJsonValue[]): Promise<RpcJsonValue>;
-    invokeEvent?(eventId: number, arguments_: readonly RpcJsonValue[]): Promise<void>;
+    invokeEvent?(endpoint: RpcEndpointServices, eventId: number, arguments_: readonly RpcJsonValue[]): Promise<void>;
     detach?(): void;
 }
 
@@ -89,13 +88,14 @@ export function invokePredefinedLocal(
 
 export function invokePredefinedLocalEvent(
     value: object,
+    endpoint: RpcEndpointServices,
     eventId: number,
     arguments_: readonly RpcJsonValue[],
 ): Promise<void> {
     if (!isPredefinedLocalObject(value) || value.invokeEvent === undefined) {
         return Promise.reject(new RpcProtocolError('The target does not support predefined RPC events.'));
     }
-    return value.invokeEvent(eventId, arguments_);
+    return value.invokeEvent(endpoint, eventId, arguments_);
 }
 
 export function detachPredefinedLocal(value: object): void {
@@ -106,27 +106,20 @@ export function detachPredefinedLocal(value: object): void {
 
 export function attachPredefinedLocal(
     value: object,
+    endpoint: RpcEndpointServices,
     broadcaster: (eventId: number, arguments_: RpcJsonValue[]) => Promise<void>,
 ): (() => void) | undefined {
     if (!(value instanceof RpcLocalObservableList)) {
         return undefined;
     }
-    value.itemChanged.setOutgoing((index, oldCount, newCount) => broadcaster(
-        RpcEventId_IValueObservableList_ItemChanged,
-        [
-            ['Int32', index],
-            ['Int32', oldCount],
-            ['Int32', newCount],
-        ],
-    ));
+    value.itemChanged.setOutgoing(async (index, oldCount, newCount) => {
+        await broadcaster(RpcEventId_IValueObservableList_ItemChanged, [
+            await endpoint.vintCodec.encodeUnknown(endpoint, index),
+            await endpoint.vintCodec.encodeUnknown(endpoint, oldCount),
+            await endpoint.vintCodec.encodeUnknown(endpoint, newCount),
+        ]);
+    });
     return () => value.itemChanged.setOutgoing(undefined);
-}
-
-function readUnknownInt32(value: RpcJsonValue, description: string): number {
-    if (!Array.isArray(value) || value.length !== 2 || value[0] !== 'Int32') {
-        throw new RpcProtocolError(`${description} must be an unknown Int32.`);
-    }
-    return expectSafeInteger(value[1], description);
 }
 
 export function getPredefinedProxyMethod(value: object, methodId: number): RpcMethodDescriptor | undefined {
@@ -144,7 +137,7 @@ export function invokePredefinedProxyEvent(value: object, eventId: number, argum
 }
 
 function unknownUse<T>(codec: RpcCodec<T>): RpcValueUse<T> {
-    return { codec };
+    return { codec, unknown: true };
 }
 
 function method(id: number, parameters: readonly RpcValueUse[], result: RpcValueUse): RpcMethodDescriptor {
@@ -261,11 +254,12 @@ function createReferenceCodec<T extends object>(typeId: number, factory: RpcRefe
             validateReferenceOrNull(ref);
             return await endpoint.referenceToObject(ref, factory);
         },
-        encodeUnknown: (value, endpoint) => ({
+        encodeUnknown: (value, endpoint) => value === null ? null : ({
             '$': 'system::RpcObjectReference',
-            ...(value === null ? NULL_RPC_REFERENCE : endpoint.objectToReference(value, typeId)),
+            ...endpoint.objectToReference(value, typeId),
         }),
         decodeUnknown: async (value, endpoint) => {
+            if (value === null) return null;
             if (typeof value !== 'object' || value === null || Array.isArray(value) || value.$ !== 'system::RpcObjectReference') {
                 throw new RpcProtocolError('A tagged RPC object reference is required.');
             }
@@ -308,7 +302,7 @@ class EnumerableProxy<T> extends PredefinedProxy implements RpcEnumerable<T> {
 class ReadonlyListProxy<T> extends EnumerableProxy<T> implements RpcReadonlyList<T> {
     constructor(context: RpcProxyContext, itemCodec: RpcCodec<T>) {
         super(context, itemCodec);
-        const integerUse = unknownUse(rpcInt32Codec);
+        const integerUse = unknownUse(context.endpoint.vintCodec);
         this.methods.set(RpcMethodId_IValueReadonlyList_GetCount, method(RpcMethodId_IValueReadonlyList_GetCount, [], integerUse));
         this.methods.set(RpcMethodId_IValueReadonlyList_Get, method(RpcMethodId_IValueReadonlyList_Get, [integerUse], unknownUse(itemCodec)));
         this.methods.set(RpcMethodId_IValueReadonlyList_Contains, method(RpcMethodId_IValueReadonlyList_Contains, [unknownUse(itemCodec)], unknownUse(rpcBooleanCodec)));
@@ -335,7 +329,7 @@ class ReadonlyListProxy<T> extends EnumerableProxy<T> implements RpcReadonlyList
 class ListProxy<T> extends ReadonlyListProxy<T> implements RpcList<T> {
     constructor(context: RpcProxyContext, itemCodec: RpcCodec<T>) {
         super(context, itemCodec);
-        const integerUse = unknownUse(rpcInt32Codec);
+        const integerUse = unknownUse(context.endpoint.vintCodec);
         const itemUse = unknownUse(itemCodec);
         this.methods.set(RpcMethodId_IValueList_Set, method(RpcMethodId_IValueList_Set, [integerUse, itemUse], unknownUse(rpcVoidCodec)));
         this.methods.set(RpcMethodId_IValueList_Add, method(RpcMethodId_IValueList_Add, [itemUse], integerUse));
@@ -373,7 +367,7 @@ class ListProxy<T> extends ReadonlyListProxy<T> implements RpcList<T> {
 class ArrayProxy<T> extends ReadonlyListProxy<T> implements RpcArray<T> {
     constructor(context: RpcProxyContext, itemCodec: RpcCodec<T>) {
         super(context, itemCodec);
-        const integerUse = unknownUse(rpcInt32Codec);
+        const integerUse = unknownUse(context.endpoint.vintCodec);
         this.methods.set(RpcMethodId_IValueList_Set, method(RpcMethodId_IValueList_Set, [integerUse, unknownUse(itemCodec)], unknownUse(rpcVoidCodec)));
         this.methods.set(RpcMethodId_IValueArray_Resize, method(RpcMethodId_IValueArray_Resize, [integerUse], unknownUse(rpcVoidCodec)));
     }
@@ -389,9 +383,11 @@ class ArrayProxy<T> extends ReadonlyListProxy<T> implements RpcArray<T> {
 
 class ObservableListProxy<T> extends ListProxy<T> implements RpcObservableList<T> {
     readonly itemChanged = new RpcEvent<readonly [number, number, number]>();
+    private readonly vintCodec: RpcCodec<number>;
 
     constructor(context: RpcProxyContext, itemCodec: RpcCodec<T>) {
         super(context, itemCodec);
+        this.vintCodec = context.endpoint.vintCodec;
         this.itemChanged.setOutgoing((index, oldCount, newCount) => this.raiseEvent(
             RpcEventId_IValueObservableList_ItemChanged,
             [index, oldCount, newCount],
@@ -403,9 +399,9 @@ class ObservableListProxy<T> extends ListProxy<T> implements RpcObservableList<T
             throw new RpcProtocolError(`Unknown observable-list event id: ${String(eventId)}`);
         }
         await this.itemChanged.dispatchRemote(
-            readUnknownInt32(arguments_[0], 'ItemChanged.index'),
-            readUnknownInt32(arguments_[1], 'ItemChanged.oldCount'),
-            readUnknownInt32(arguments_[2], 'ItemChanged.newCount'),
+            await this.vintCodec.decodeUnknown(this.endpoint, arguments_[0]),
+            await this.vintCodec.decodeUnknown(this.endpoint, arguments_[1]),
+            await this.vintCodec.decodeUnknown(this.endpoint, arguments_[2]),
         );
     }
 
@@ -424,7 +420,7 @@ class DictionaryProxy<K, V> extends PredefinedProxy implements RpcDictionary<K, 
         this.keysFactory = createReadonlyListFactory(keyCodec);
         this.valuesFactory = createReadonlyListFactory(valueCodec);
         const keyUse = unknownUse(keyCodec);
-        this.methods.set(RpcMethodId_IValueReadonlyDictionary_GetCount, method(RpcMethodId_IValueReadonlyDictionary_GetCount, [], unknownUse(rpcInt32Codec)));
+        this.methods.set(RpcMethodId_IValueReadonlyDictionary_GetCount, method(RpcMethodId_IValueReadonlyDictionary_GetCount, [], unknownUse(context.endpoint.vintCodec)));
         this.methods.set(RpcMethodId_IValueReadonlyDictionary_Get, method(RpcMethodId_IValueReadonlyDictionary_Get, [keyUse], unknownUse(valueCodec)));
         this.methods.set(RpcMethodId_IValueDictionary_Set, method(RpcMethodId_IValueDictionary_Set, [keyUse, unknownUse(valueCodec)], unknownUse(rpcVoidCodec)));
         this.methods.set(RpcMethodId_IValueDictionary_Remove, method(RpcMethodId_IValueDictionary_Remove, [keyUse], unknownUse(rpcBooleanCodec)));
@@ -632,16 +628,16 @@ export class RpcLocalReadonlyList<T> extends LocalEnumerableBase<T> implements R
             return enumerable;
         }
         if (methodId === RpcMethodId_IValueReadonlyList_GetCount && arguments_.length === 0) {
-            return await rpcInt32Codec.encodeUnknown(endpoint, await this.count());
+            return await endpoint.vintCodec.encodeUnknown(endpoint, await this.count());
         }
         if (methodId === RpcMethodId_IValueReadonlyList_Get && arguments_.length === 1) {
-            return await this.itemCodec.encodeUnknown(endpoint, await this.get(await rpcInt32Codec.decodeUnknown(endpoint, arguments_[0])));
+            return await this.itemCodec.encodeUnknown(endpoint, await this.get(await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0])));
         }
         if (methodId === RpcMethodId_IValueReadonlyList_Contains && arguments_.length === 1) {
             return await rpcBooleanCodec.encodeUnknown(endpoint, await this.contains(await this.itemCodec.decodeUnknown(endpoint, arguments_[0])));
         }
         if (methodId === RpcMethodId_IValueReadonlyList_IndexOf && arguments_.length === 1) {
-            return await rpcInt32Codec.encodeUnknown(endpoint, await this.indexOf(await this.itemCodec.decodeUnknown(endpoint, arguments_[0])));
+            return await endpoint.vintCodec.encodeUnknown(endpoint, await this.indexOf(await this.itemCodec.decodeUnknown(endpoint, arguments_[0])));
         }
         throw new RpcProtocolError(`Unknown read-only-list method id: ${String(methodId)}`);
     }
@@ -694,20 +690,20 @@ export class RpcLocalList<T> extends RpcLocalReadonlyList<T> implements RpcList<
 
     override async invoke(endpoint: RpcEndpointServices, methodId: number, arguments_: readonly RpcJsonValue[]): Promise<RpcJsonValue> {
         if (methodId === RpcMethodId_IValueList_Set && arguments_.length === 2) {
-            await this.set(await rpcInt32Codec.decodeUnknown(endpoint, arguments_[0]), await this.itemCodec.decodeUnknown(endpoint, arguments_[1]));
+            await this.set(await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0]), await this.itemCodec.decodeUnknown(endpoint, arguments_[1]));
             return null;
         }
         if (methodId === RpcMethodId_IValueList_Add && arguments_.length === 1) {
-            return await rpcInt32Codec.encodeUnknown(endpoint, await this.add(await this.itemCodec.decodeUnknown(endpoint, arguments_[0])));
+            return await endpoint.vintCodec.encodeUnknown(endpoint, await this.add(await this.itemCodec.decodeUnknown(endpoint, arguments_[0])));
         }
         if (methodId === RpcMethodId_IValueList_Insert && arguments_.length === 2) {
-            return await rpcInt32Codec.encodeUnknown(endpoint, await this.insert(
-                await rpcInt32Codec.decodeUnknown(endpoint, arguments_[0]),
+            return await endpoint.vintCodec.encodeUnknown(endpoint, await this.insert(
+                await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0]),
                 await this.itemCodec.decodeUnknown(endpoint, arguments_[1]),
             ));
         }
         if (methodId === RpcMethodId_IValueList_RemoveAt && arguments_.length === 1) {
-            return await rpcBooleanCodec.encodeUnknown(endpoint, await this.removeAt(await rpcInt32Codec.decodeUnknown(endpoint, arguments_[0])));
+            return await rpcBooleanCodec.encodeUnknown(endpoint, await this.removeAt(await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0])));
         }
         if (methodId === RpcMethodId_IValueList_Clear && arguments_.length === 0) {
             await this.clear();
@@ -745,11 +741,11 @@ export class RpcLocalArray<T> extends RpcLocalReadonlyList<T> implements RpcArra
 
     override async invoke(endpoint: RpcEndpointServices, methodId: number, arguments_: readonly RpcJsonValue[]): Promise<RpcJsonValue> {
         if (methodId === RpcMethodId_IValueList_Set && arguments_.length === 2) {
-            await this.set(await rpcInt32Codec.decodeUnknown(endpoint, arguments_[0]), await this.itemCodec.decodeUnknown(endpoint, arguments_[1]));
+            await this.set(await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0]), await this.itemCodec.decodeUnknown(endpoint, arguments_[1]));
             return null;
         }
         if (methodId === RpcMethodId_IValueArray_Resize && arguments_.length === 1) {
-            await this.resize(await rpcInt32Codec.decodeUnknown(endpoint, arguments_[0]));
+            await this.resize(await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0]));
             return null;
         }
         return await super.invoke(endpoint, methodId, arguments_);
@@ -793,14 +789,14 @@ export class RpcLocalObservableList<T> extends RpcLocalList<T> implements RpcObs
         }
     }
 
-    async invokeEvent(eventId: number, arguments_: readonly RpcJsonValue[]): Promise<void> {
+    async invokeEvent(endpoint: RpcEndpointServices, eventId: number, arguments_: readonly RpcJsonValue[]): Promise<void> {
         if (eventId !== RpcEventId_IValueObservableList_ItemChanged || arguments_.length !== 3) {
             throw new RpcProtocolError(`Unknown observable-list event id: ${String(eventId)}`);
         }
         await this.itemChanged.dispatchRemote(
-            readUnknownInt32(arguments_[0], 'ItemChanged.index'),
-            readUnknownInt32(arguments_[1], 'ItemChanged.oldCount'),
-            readUnknownInt32(arguments_[2], 'ItemChanged.newCount'),
+            await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[0]),
+            await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[1]),
+            await endpoint.vintCodec.decodeUnknown(endpoint, arguments_[2]),
         );
     }
 
@@ -838,7 +834,7 @@ export class RpcLocalDictionary<K, V> extends LocalPredefinedObject implements R
 
     async invoke(endpoint: RpcEndpointServices, methodId: number, arguments_: readonly RpcJsonValue[]): Promise<RpcJsonValue> {
         if (methodId === RpcMethodId_IValueReadonlyDictionary_GetCount && arguments_.length === 0) {
-            return await rpcInt32Codec.encodeUnknown(endpoint, await this.count());
+            return await endpoint.vintCodec.encodeUnknown(endpoint, await this.count());
         }
         if (methodId === RpcMethodId_IValueReadonlyDictionary_Get && arguments_.length === 1) {
             return await this.valueCodec.encodeUnknown(endpoint, await this.get(await this.keyCodec.decodeUnknown(endpoint, arguments_[0])));

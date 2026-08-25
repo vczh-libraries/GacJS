@@ -6,7 +6,10 @@ Documents in this folder is also part of the release.
 It offers a guidance for implementing view models in other programming languages.
 So do not mention GacJS details, but how things work with TypeScript could be mentions, which serves as an example for similar languages.
 
-<!-- replace this comment with a list of documents in the same folder -->
+- [Features](Features.md): transport-independent endpoint, codec, object, event, and collection behavior.
+- [Memory Management](MemoryManagement.md): object identity, holds, proxy lifetime, disposal, and by-value slots.
+- [Code Generation](CodeGeneration.md): normalized metadata inputs, validation, and generated TypeScript bindings.
+- [Verifying RPC with Workflow](VerifyRpcWithWorkflow.md): cross-language driver/provider conformance procedure.
 
 ## Implementing View Models in Another Programming Language
 
@@ -14,39 +17,40 @@ So do not mention GacJS details, but how things work with TypeScript could be me
 <!-- Agent should not change this part unless there is any mistake in fact -->
 
 This is a guidance describing how to create view model implementation in another programming language other than C++,
-which requires `@rpc:interface` with or without `@rpc:ctor` is marked on the view model interface.
+which requires `@rpc:Interface` with or without `@rpc:Ctor` is marked on the view model interface.
 
 After calling `GacGen.exe` on, for example, a `Resource.xml`,
-we will get a `Resource.xml.log`, containing `RpcMetadata.txt` and `RpcMetadata.d.ts`.
-They are created separatedly for x86 and x64,
-in C++ there differences happen mostly around the `vint` data type,
-which could be either `int32_t` and `int64_t`.
-But for TypeScript there should be no difference,
-so we can always read the x64 version.
+we will get a `Resource.xml.log`, with architecture-specific `RpcMetadata.txt` and `RpcMetadata.d.ts`
+below `Resource.xml.log/x32` and `Resource.xml.log/x64`.
+The metadata can differ between x86 and x64 because the `vint` data type resolves to
+either a 32-bit or 64-bit schema type.
+A binding must therefore use metadata matching the tested driver ABI; the default Workflow
+stdio verification described here uses x64.
 
 `RpcMetadata.txt` extracts definition of the complete Workflow RPC view model definition long as all its dependencies.
 `RpcMetadata.d.ts` has definitions of schema for data exchanged running with Workflow RPC's JSON protocol.
+The two files are complementary code-generation inputs.
 Create view models in another programming language needs a code generator to be developed.
 
 ## Creating a Codegen
 
 `Workflow` repo in the same github organization has a lot of reusable materials for verifying a new codegen:
-- Test cases entry is defined in `Test/Resources/IndexRpc.txt.
+- Test cases entry is defined in `Test/Resources/IndexRpc.txt`.
 - Each test case is located in `Test/Resources/Rpc/<SAMPLE>*.txt`:
   - `<SAMPLE>.txt` defines rpc interfaces and shared code.
   - `<SAMPLE>_Service.txt` defines the service side code, containing implementation of rpc interfaces for the test case.
   - `<SAMPLE>_Client.txt` defines the client side code, containing expectation of the test case.
 - Each test case generates in `Test/Generated/RpcMetadata(32|64)`:
   - `Metadata_<SAMPLE>.txt`: The "RpcMetadata.txt".
-  - `Serialization_<SAMPLE>.txt`: The "RpcMetadata.d.ts".
+  - `Serialization_<SAMPLE>.d.ts`: The "RpcMetadata.d.ts".
   - `Wrapper_<SAMPLE>(_Json)?.txt`: Generated Workflow script to support the RPC. It will be compiled into C++ and be utilized in both client and service side of Workflow RPC.
 
 Here is what we need to manually do:
-- `Workflow/Source/Library/Rpc(Json)?` needs to be translated as a library, generated code could use them.
+- `Workflow/Source/Library/Rpc` and `Workflow/Source/Library/RpcJson` need to be translated as libraries, generated code could use them.
   - "The RPC library" means the translated version of this.
 
 Here is what a codegen is expected to do:
-- Read the generated `RpcMetadata.txt` as a source of truth, which is enough as input of codegen.
+- Read the generated `RpcMetadata.txt` and `RpcMetadata.d.ts` as complementary sources of truth.
 - If the target programming language could use types, an equivalence of `RpcMetadata.txt` and `RpcMetadata.d.ts` needs to be generated.
 - Equivalence of `Wrapper_<SAMPLE>(_Json)?.txt` needs to be generated, it connects the view model implementation and the RPC library.
   - The RPC library doesn't necessarily like the C++ one, so wrappers might also look different.
@@ -63,7 +67,10 @@ The CLI command starts a view model implementation as a CLI application, `RpcStd
 The CLI application should implement a compatible protocol, which should be compatible with the stdio redirection implementation of `INetworkProtocolServer`.
 
 `Workflow/Test/StartRpcStdio.(ps1|sh)` is an example of how to start `RpcStdioTest_Driver`.
-It starts `RpcStdioTest_Client`, which is also written in C++, to verify the C++ implementation of RPC interface implementation supporting code.
+It supplies a command that starts `RpcStdioTest_Service`, which is also written in C++,
+to verify the C++ implementation of RPC interface implementation supporting code.
+`RpcStdioTest_Driver` accepts that service command and an optional skip-list path,
+and appends one case name for each service launch; the service CLI accepts the appended case name.
 
 Besides of code that could be generated, shared functions in `<SAMPLE>.txt` as well as the whole `<SAMPLE>_Service.txt` needs to be manually translated into the target programming language.
 If any test case fail, aligning this part of code should be considered as test samples in `Workflow` might change.

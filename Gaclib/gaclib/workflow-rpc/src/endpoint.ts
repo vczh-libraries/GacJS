@@ -7,7 +7,7 @@ import {
     invokePredefinedLocalEvent,
     invokePredefinedProxyEvent,
 } from './collections.js';
-import { isNullReference, validateReferenceOrNull } from './codecs.js';
+import { isNullReference, rpcInt32Codec, validateReferenceOrNull } from './codecs.js';
 import {
     normalizeError,
     RpcEndpointClosedError,
@@ -24,6 +24,7 @@ import {
     RpcByvalReturnValue,
     RpcChannelClient,
     RpcCleanupScheduler,
+    RpcCodec,
     RpcDeclareRemoteServiceRequest,
     RpcDirectMessage,
     RpcEndInvokeMethodRequest,
@@ -198,6 +199,7 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
     public readonly clientId: number;
     public readonly completion: Promise<RpcEndpointCompletion>;
     private readonly channelName: string;
+    private vintCodecValue = rpcInt32Codec;
     private readonly cleanupScheduler: RpcCleanupScheduler;
     private readonly finalizer: RpcFinalizer | undefined;
     private readonly descriptors = new Map<number, RpcInterfaceDescriptor>();
@@ -279,6 +281,15 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
 
     get active(): boolean {
         return this.state !== 'closed';
+    }
+
+    get vintCodec(): RpcCodec<number> {
+        return this.vintCodecValue;
+    }
+
+    setVintCodec(codec: RpcCodec<number>): void {
+        this.ensureSetupState('set the RPC vint codec');
+        this.vintCodecValue = codec;
     }
 
     registerInterface(descriptor: RpcInterfaceDescriptor): void {
@@ -843,13 +854,7 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
                 || arguments_.length !== 3) {
                 throw new RpcProtocolError('Unknown predefined RPC event.');
             }
-            for (let index = 0; index < arguments_.length; index++) {
-                const argument = expectArray(arguments_[index], `Observable-list event argument ${String(index)}`);
-                if (argument.length !== 2 || argument[0] !== 'Int32') {
-                    throw new RpcProtocolError(`Observable-list event argument ${String(index)} must be an unknown Int32.`);
-                }
-                expectSafeInteger(argument[1], `Observable-list event argument ${String(index)}`);
-            }
+            for (let index = 0; index < arguments_.length; index++) await this.vintCodec.decodeUnknown(this, arguments_[index]);
         } else {
             event = this.findEvent(ref.typeId, eventId);
             if (arguments_.length !== event.parameters.length) {
@@ -878,7 +883,7 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
             target = resolved;
         }
         if (ref.typeId < 0) {
-            await invokePredefinedLocalEvent(target, eventId, arguments_).catch(async error => {
+            await invokePredefinedLocalEvent(target, this, eventId, arguments_).catch(async error => {
                 if (this.proxyRecords.has(target)) {
                     await invokePredefinedProxyEvent(target, eventId, arguments_);
                     return;
@@ -911,13 +916,19 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
         if (mode === 'byValue') {
             const copy = await use.codec.copy(this, value, new Set<object>());
             retained?.push(copy);
-            return await use.codec.encodeUnknown(this, copy);
+            return await (use.unknown === true
+                ? use.codec.encodeUnknown(this, copy)
+                : use.codec.encode(this, copy));
         }
-        return await use.codec.encodeUnknown(this, value);
+        return await (use.unknown === true
+            ? use.codec.encodeUnknown(this, value)
+            : use.codec.encode(this, value));
     }
 
     private decodeUse(use: RpcValueUse, value: RpcJsonValue): unknown {
-        return use.codec.decodeUnknown(this, value);
+        return use.unknown === true
+            ? use.codec.decodeUnknown(this, value)
+            : use.codec.decode(this, value);
     }
 
     private async encodeResult(use: RpcValueUse, value: unknown): Promise<RpcJsonValue | RpcByvalReturnValue> {
@@ -925,7 +936,9 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
             return await this.encodeUse(use, value);
         }
         const copy = await use.codec.copy(this, value, new Set<object>());
-        const encoded = await use.codec.encodeUnknown(this, copy);
+        const encoded = await (use.unknown === true
+            ? use.codec.encodeUnknown(this, copy)
+            : use.codec.encode(this, copy));
         if (this.nextSlotId >= Number.MAX_SAFE_INTEGER) {
             throw new RpcProtocolError('RPC by-value slot space is exhausted.');
         }
@@ -988,7 +1001,7 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
             this.nextObjectId = ref.objectId;
         }
         record.detach = ref.typeId < 0
-            ? attachPredefinedLocal(value, (eventId, arguments_) => this.broadcastRawEvent(ref, eventId, arguments_))
+            ? attachPredefinedLocal(value, this, (eventId, arguments_) => this.broadcastRawEvent(ref, eventId, arguments_))
             : this.attachEvents(value, ref);
     }
 
@@ -1073,6 +1086,9 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
             return existing.typeId === typeId ? existing : { ...existing, typeId };
         }
         const predefinedTypeId = getPredefinedLocalTypeId(value);
+        if (typeId < 0 && predefinedTypeId === undefined) {
+            throw new RpcProtocolError('A predefined RPC type requires a predefined local object.');
+        }
         if (predefinedTypeId !== undefined && predefinedTypeId !== typeId) {
             throw new RpcProtocolError('The predefined RPC object type does not match the requested type.');
         }
@@ -1367,12 +1383,12 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
                 const slot = expectSafeInteger(wrapper.slot, 'RPC by-value return slot');
                 const encodedResult = asJsonValue(wrapper.value, 'RPC by-value return value');
                 try {
-                    return await method.result.codec.decodeUnknown(this, encodedResult);
+                    return await this.decodeUse(method.result, encodedResult);
                 } finally {
                     await this.endInvokeMethodAt(record.ref.clientId, slot);
                 }
             }
-            return await method.result.codec.decodeUnknown(this, response.response as RpcJsonValue);
+            return await this.decodeUse(method.result, response.response as RpcJsonValue);
         } finally {
             lease.claims.delete(callClaim);
             lease.desiredHeld = lease.claims.size !== 0;
@@ -1390,12 +1406,15 @@ export class RpcEndpoint implements RpcEndpointServices, RpcProxyEndpoint {
             if (eventId !== -1 || arguments_.length !== 3) {
                 throw new RpcProtocolError('Unknown predefined RPC event.');
             }
-            await this.broadcastRawEvent(record.ref, eventId, arguments_.map((value, index) => {
+            const encoded: RpcJsonValue[] = [];
+            for (let index = 0; index < arguments_.length; index++) {
+                const value = arguments_[index];
                 if (typeof value !== 'number' || !Number.isSafeInteger(value)) {
                     throw new RpcProtocolError(`Observable-list event argument ${String(index)} must be a safe integer.`);
                 }
-                return ['Int32', value];
-            }));
+                encoded.push(await this.vintCodec.encodeUnknown(this, value));
+            }
+            await this.broadcastRawEvent(record.ref, eventId, encoded);
             return;
         }
         await this.broadcastEvent(record.ref, eventId, arguments_);

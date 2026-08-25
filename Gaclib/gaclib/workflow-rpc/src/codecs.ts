@@ -411,10 +411,8 @@ export function createInterfaceCodec<T extends object>(typeId: number, factory: 
     return createRpcCodec(`interface:${String(typeId)}`, {
         encode: (value, endpoint) => value === null ? { ...NULL_RPC_REFERENCE } : endpoint.objectToReference(value, typeId),
         decode: (value, endpoint) => endpoint.referenceToObject(readReference(value), factory),
-        encodeUnknown: (value, endpoint) => taggedReference(value === null
-            ? { ...NULL_RPC_REFERENCE }
-            : endpoint.objectToReference(value, typeId)),
-        decodeUnknown: (value, endpoint) => endpoint.referenceToObject(readTaggedReference(value), factory),
+        encodeUnknown: (value, endpoint) => value === null ? null : taggedReference(endpoint.objectToReference(value, typeId)),
+        decodeUnknown: (value, endpoint) => value === null ? null : endpoint.referenceToObject(readTaggedReference(value), factory),
     });
 }
 
