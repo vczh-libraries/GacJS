@@ -111,10 +111,13 @@ test('CLI grammar selects exact /Cli and rejects mixed, duplicate, and Core-only
 test('native launcher capability checks fail actionably before publishing an artifact', () => {
     expect(() => assertSupportedNodeVersion('v22.19.9')).toThrow(/requires Node >=22\.20/u);
     expect(() => assertSupportedNodeVersion('v23.1.0')).toThrow(/requires Node/u);
+    expect(() => assertSupportedNodeVersion('v25.1.0')).toThrow(/requires Node/u);
+    expect(() => assertSupportedNodeVersion('v27.1.0')).toThrow(/requires Node/u);
     expect(() => assertSupportedNodeVersion('not-node')).toThrow(/cannot parse/u);
     expect(() => assertSeaToolchain('v24.0.0', false, () => undefined)).toThrow(/experimental-sea-config is unavailable/u);
     expect(() => assertSeaToolchain('v24.0.0', true, undefined)).toThrow(/postject tool is unavailable/u);
     expect(() => assertSeaToolchain('v22.20.0', true, () => undefined)).not.toThrow();
+    expect(() => assertSeaToolchain('v26.0.0', true, () => undefined)).not.toThrow();
 });
 
 test('stdio codec is canonical, strict UTF-8, and rejects lone surrogates', () => {

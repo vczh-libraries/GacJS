@@ -8,7 +8,7 @@
     "gacjs-rpc-test": "./lib/src/cli.js"
   },
   "engines": {
-    "node": ">=22.20.0 <23 || >=24.0.0 <25"
+    "node": ">=22.20.0 <23 || >=24.0.0 <25 || >=26.0.0 <27"
   },
   "scripts": {
     "build": "rimraf ./lib && eslint --fix && tsc",

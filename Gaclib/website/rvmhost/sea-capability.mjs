@@ -5,8 +5,8 @@ export function assertSupportedNodeVersion(version) {
     }
     const major = Number(match[1]);
     const minor = Number(match[2]);
-    if (!((major === 22 && minor >= 20) || major === 24)) {
-        throw new Error(`gacjs-rvmhost SEA requires Node >=22.20 <23 or >=24 <25; received ${version}.`);
+    if (!((major === 22 && minor >= 20) || major === 24 || major === 26)) {
+        throw new Error(`gacjs-rvmhost SEA requires Node >=22.20 <23, >=24 <25, or >=26 <27; received ${version}.`);
     }
 }
 
