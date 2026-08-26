@@ -123,8 +123,9 @@ writeFileSync(configPath, `${JSON.stringify({
     useCodeCache: false,
     execArgvExtension: 'none',
 }, undefined, 4)}\n`, 'utf8');
-execFileSync(process.execPath, ['--experimental-sea-config', configPath], { stdio: 'inherit' });
-copyFileSync(await resolveSeaExecutableSource(), temporaryExecutablePath);
+const seaExecutableSource = await resolveSeaExecutableSource();
+execFileSync(seaExecutableSource, ['--experimental-sea-config', configPath], { stdio: 'inherit' });
+copyFileSync(seaExecutableSource, temporaryExecutablePath);
 if (process.platform !== 'win32') chmodSync(temporaryExecutablePath, 0o755);
 
 if (process.platform === 'darwin') {

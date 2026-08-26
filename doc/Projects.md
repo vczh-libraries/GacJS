@@ -353,11 +353,12 @@ export is browser-safe and accepts a generic channel client. The Node-only CLI
 supports independently started HTTP/MiniHTTP network mode and exact `/Cli`
 stdio mode. Its build also creates a stable platform-native Node SEA launcher:
 `lib/bin/gacjs-rvmhost.exe` on Windows or `lib/bin/gacjs-rvmhost` on Linux/macOS.
-On macOS, Homebrew's dynamically linked Node launcher does not contain the SEA
-injection fuse. The build downloads the matching official Node archive from
-`nodejs.org`, verifies it against `SHASUMS256.txt`, and caches its standalone
-binary under the package's ignored `node_modules/.cache` directory before
-injecting the application blob. Injection always uses a writable temporary copy.
+On macOS, Homebrew's dynamically linked Node launcher does not support SEA blob
+generation or contain the SEA injection fuse. The build downloads the matching
+official Node archive from `nodejs.org`, verifies it against `SHASUMS256.txt`,
+and caches its standalone binary under the package's ignored
+`node_modules/.cache` directory. That binary generates the application blob and
+provides the writable temporary copy used for injection.
 
 | Script | Action |
 |--------|--------|
