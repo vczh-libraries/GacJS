@@ -112,6 +112,7 @@ import * as Case_ListOps_DictionaryException from './cases/ListOps_DictionaryExc
 import * as Case_ListOps_ListException from './cases/ListOps_ListException/generated.js';
 import * as Case_ListOps_OblistEventException from './cases/ListOps_OblistEventException/generated.js';
 import * as Case_FailDoubleRegistration from './cases/FailDoubleRegistration/generated.js';
+import * as Case_FailDoubleRegistration_SharedMemsp from './cases/FailDoubleRegistration_SharedMemsp/generated.js';
 import * as Case_Inheritance from './cases/Inheritance/generated.js';
 import * as Case_Inheritance_MethodException from './cases/Inheritance_MethodException/generated.js';
 import * as Case_Inheritance_EventException from './cases/Inheritance_EventException/generated.js';
@@ -254,6 +255,7 @@ export interface RpcTestServiceFactories {
     readonly 'ListOps_ListException': RpcTestServiceFactory;
     readonly 'ListOps_OblistEventException': RpcTestServiceFactory;
     readonly 'FailDoubleRegistration': RpcTestServiceFactory;
+    readonly 'FailDoubleRegistration_SharedMemsp': RpcTestServiceFactory;
     readonly 'Inheritance': RpcTestServiceFactory;
     readonly 'Inheritance_MethodException': RpcTestServiceFactory;
     readonly 'Inheritance_EventException': RpcTestServiceFactory;
@@ -408,6 +410,7 @@ export const RpcTestCaseNames = [
     'ListOps_ListException',
     'ListOps_OblistEventException',
     'FailDoubleRegistration',
+    'FailDoubleRegistration_SharedMemsp',
     'Inheritance',
     'Inheritance_MethodException',
     'Inheritance_EventException',
@@ -541,6 +544,7 @@ export const RpcTestCases: Readonly<Record<RpcTestCaseName, RpcTestCaseDefinitio
     'ListOps_ListException': defineRpcTestCase('ListOps_ListException', 'ArrayBase<T, K>::Get(vint)#Argument index not in range.', Case_ListOps_ListException),
     'ListOps_OblistEventException': defineRpcTestCase('ListOps_OblistEventException', '0,0,1', Case_ListOps_OblistEventException),
     'FailDoubleRegistration': defineRpcTestCase('FailDoubleRegistration', '[exception]', Case_FailDoubleRegistration),
+    'FailDoubleRegistration_SharedMemsp': defineRpcTestCase('FailDoubleRegistration_SharedMemsp', '[call][service:Received 1st][client:Received 2nd][call][service:Received 1st][exception][call][exception][call][exception]', Case_FailDoubleRegistration_SharedMemsp),
     'Inheritance': defineRpcTestCase('Inheritance', '[][One][][Two][][][Derived]', Case_Inheritance),
     'Inheritance_MethodException': defineRpcTestCase('Inheritance_MethodException', '[][DoNotSetOneValue][][DoNotSetTwoValue]', Case_Inheritance_MethodException),
     'Inheritance_EventException': defineRpcTestCase('Inheritance_EventException', '[][1:CrashedAtServer;][][2:CrashedAtClient;]', Case_Inheritance_EventException),
