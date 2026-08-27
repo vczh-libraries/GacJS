@@ -81,6 +81,23 @@ function nullable(context: RpcTestServiceFactoryContext): void {
 }
 
 function localAndWrapper(context: RpcTestServiceFactoryContext): void {
+    const serviceObject2: DynamicRpcObject = {};
+    let receivedObject1: unknown = null;
+    let receivedObject2: unknown = null;
+    registerService(context, {
+        GetServiceResult: (): string => `[${String(receivedObject2 === serviceObject2)}]`,
+        Exchange1: (value: unknown): DynamicRpcObject => {
+            receivedObject1 = value;
+            return serviceObject2;
+        },
+        Exchange2: (value: unknown): unknown => {
+            receivedObject2 = value;
+            return receivedObject1;
+        },
+    });
+}
+
+function localAndWrapperSharedMemsp(context: RpcTestServiceFactoryContext): void {
     const serviceObject1: DynamicRpcObject = {};
     const serviceObject2: DynamicRpcObject = {};
     let receivedObject1: unknown = null;
@@ -91,9 +108,9 @@ function localAndWrapper(context: RpcTestServiceFactoryContext): void {
             receivedObject1 = value;
             return serviceObject2;
         },
-        Exchange2: (value: unknown): unknown => {
+        Exchange2: (value: unknown): DynamicRpcObject => {
             receivedObject2 = value;
-            return receivedObject1;
+            return serviceObject1;
         },
     });
 }
@@ -360,6 +377,7 @@ export const specialServiceFactories: Readonly<Record<string, RpcTestServiceFact
     Inheritance_MethodException: inheritanceMethodException,
     Inheritance_EventException: inheritanceEventException,
     LocalAndWrapper: localAndWrapper,
+    LocalAndWrapper_SharedMemsp: localAndWrapperSharedMemsp,
     Nullable: nullable,
     Overloading: overloading,
     PrimitiveTypes: primitiveTypes,
@@ -371,6 +389,7 @@ export const specialServiceFactories: Readonly<Record<string, RpcTestServiceFact
     PropDynamic: stringProperty,
     RequestService: requestService,
     ServiceWrapper: serviceWrapper,
+    ServiceWrapper_SharedMemsp: serviceWrapper,
 };
 
 export function specialServiceFactory(name: string): RpcTestServiceFactory {

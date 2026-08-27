@@ -53,6 +53,7 @@ whenever documented behavior changes.
 - When the sibling GacUI repository has been updated, run these additional synchronization commands before `yarn build` and `yarn test`:
   - `yarn run import`
   - `yarn codegen`
+- When the sibling Workflow checkout or its commits change, review the Workflow diff or commits for changes to `Test/Resources/Rpc` and `Test/Resources/IndexRpc.txt`. If RPC samples changed, update the handwritten service translations in `Gaclib/rpc-test/rpc-test-cases/src/services` before `yarn run import`, then run `yarn run import` and `yarn codegen` before `yarn build` and `yarn test`.
 - The root commands represent separate phases and must keep these responsibilities:
   - `import` refreshes files copied from upstream repositories and compiles packages that are code-generation tools. With Yarn 1, invoke this script as `yarn run import` because `yarn import` is a built-in Yarn command.
   - `codegen` runs the already-compiled code-generation tools and updates generated source files.

@@ -118,6 +118,7 @@ export const rpcTestServiceFactories: RpcTestServiceFactories = {
     'Inheritance_MethodException': specialServiceFactory('Inheritance_MethodException'),
     'Inheritance_EventException': specialServiceFactory('Inheritance_EventException'),
     'LocalAndWrapper': specialServiceFactory('LocalAndWrapper'),
+    'LocalAndWrapper_SharedMemsp': specialServiceFactory('LocalAndWrapper_SharedMemsp'),
     'Nullable': specialServiceFactory('Nullable'),
     'Overloading': specialServiceFactory('Overloading'),
     'PrimitiveTypes': specialServiceFactory('PrimitiveTypes'),
@@ -129,4 +130,5 @@ export const rpcTestServiceFactories: RpcTestServiceFactories = {
     'PropDynamic': specialServiceFactory('PropDynamic'),
     'RequestService': specialServiceFactory('RequestService'),
     'ServiceWrapper': specialServiceFactory('ServiceWrapper'),
+    'ServiceWrapper_SharedMemsp': specialServiceFactory('ServiceWrapper_SharedMemsp'),
 };

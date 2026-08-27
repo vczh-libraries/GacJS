@@ -58,9 +58,8 @@ Here is what a codegen is expected to do:
 
 ### Verifying the Codegen
 
-`Workflow/Test/StartRpcStdio_DtorSkipList.txt` is a skip list of a subset of test cases that depend on destructors.
-The target programming might not have destructors, or it has (e.g. `FinalizationRegistry` in TypeScript, or C#) but there is no guarantee about when to run the destructor.
-In this case, we should still generated code from all test cases, but offering this file to `RpcStdioTest_Driver` will skip this part of test cases.
+`Workflow/Test/StartRpcStdio_DtorSkipList.txt` is the cross-process compatibility list. Its historical name reflects the cases that depend on deterministic destructors: the target programming might not have destructors, or it has (e.g. `FinalizationRegistry` in TypeScript, or C#) but there is no guarantee about when to run them. The list also contains `*_SharedMemsp` cases whose assertions require `clientMain` and `serviceMain` to share one memory space.
+Code should still be generated for all indexed test cases, but offering this file to `RpcStdioTest_Driver` skips cases that an external provider cannot semantically execute.
 
 `RpcStdioTest_Driver` is a test app in `Workflow`, which keep launching a given CLI command for each test case, run it and compare the result to `IndexRpc.txt`.
 The CLI command starts a view model implementation as a CLI application, `RpcStdioTest_Driver` connects to it using stdio redirection.
