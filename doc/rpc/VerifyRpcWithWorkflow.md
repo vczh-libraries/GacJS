@@ -82,7 +82,7 @@ does not retry or add recovery handshakes.
 A skip is justified only by a semantic guarantee the target language cannot
 provide. JavaScript and TypeScript cannot guarantee deterministic finalizer or
 destructor timing and ordering, so the eight destructor cases in
-`StartRpcStdio_DtorSkipList.txt` are intentional. The two `*_SharedMemsp` cases
+`StartRpcStdio_DtorSkipList.txt` are intentional. The three `*_SharedMemsp` cases
 are also intentional skips for every external provider because their oracle
 compares state shared directly by `clientMain` and `serviceMain`. Difficulty, an
 unimplemented feature, or a provider defect is not a valid reason to skip a
@@ -91,8 +91,8 @@ case.
 Every skip entry must exactly match an indexed name. Tests should derive the index
 and skip sets dynamically, require every indexed case to have exactly one terminal
 pass or skip result, and reject unexpected skips. With the upstream files present
-when this guide was written, the observable result is 118 executed passes and 10
-intentional compatibility skips out of 128 indexed cases.
+when this guide was written, the observable result is 118 executed passes and 11
+intentional compatibility skips out of 129 indexed cases.
 
 ## Verification Procedure
 
@@ -100,7 +100,7 @@ First build Workflow's Debug x64 test solution using its prescribed build script
 Run `Workflow/Test/StartRpcStdio.ps1 Workflow/Test/StartRpcStdio_SharedMemspSkipList.txt`
 to establish that the native driver and native service pass every
 cross-process-compatible case. The in-memory Workflow UnitTest suite owns the
-two `*_SharedMemsp` cases. Confirm the driver, index, and both generated inputs
+three `*_SharedMemsp` cases. Confirm the driver, index, and both generated inputs
 for every case exist before diagnosing the port.
 
 Then compile the language port's generator, regenerate all bindings, and run

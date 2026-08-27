@@ -114,6 +114,7 @@ export const rpcTestServiceFactories: RpcTestServiceFactories = {
     'ListOps_ListException': specialServiceFactory('ListOps_ListException'),
     'ListOps_OblistEventException': specialServiceFactory('ListOps_OblistEventException'),
     'FailDoubleRegistration': specialServiceFactory('FailDoubleRegistration'),
+    'FailDoubleRegistration_SharedMemsp': specialServiceFactory('FailDoubleRegistration_SharedMemsp'),
     'Inheritance': specialServiceFactory('Inheritance'),
     'Inheritance_MethodException': specialServiceFactory('Inheritance_MethodException'),
     'Inheritance_EventException': specialServiceFactory('Inheritance_EventException'),

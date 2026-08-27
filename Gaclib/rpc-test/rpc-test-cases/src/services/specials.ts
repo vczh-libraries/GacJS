@@ -223,6 +223,20 @@ function failDoubleRegistration(context: RpcTestServiceFactoryContext): void {
     }
 }
 
+function failDoubleRegistrationSharedMemsp(context: RpcTestServiceFactoryContext): void {
+    const objects: DynamicRpcObject[] = [
+        { GetName: (): string => '1st' },
+        { GetName: (): string => '2nd' },
+    ];
+    const held: DynamicRpcObject[] = [];
+    registerService(context, {
+        SetObject: (obj: DynamicRpcObject, index: number): DynamicRpcObject => {
+            held.push(obj);
+            return objects[index];
+        },
+    });
+}
+
 function inheritance(context: RpcTestServiceFactoryContext): void {
     function one(): DynamicRpcObject {
         let value = '';
@@ -373,6 +387,7 @@ export const specialServiceFactories: Readonly<Record<string, RpcTestServiceFact
     ListOps_ListException: listException,
     ListOps_OblistEventException: observableListEventException,
     FailDoubleRegistration: failDoubleRegistration,
+    FailDoubleRegistration_SharedMemsp: failDoubleRegistrationSharedMemsp,
     Inheritance: inheritance,
     Inheritance_MethodException: inheritanceMethodException,
     Inheritance_EventException: inheritanceEventException,
