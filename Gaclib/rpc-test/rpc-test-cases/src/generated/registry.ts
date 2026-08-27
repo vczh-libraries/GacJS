@@ -116,6 +116,7 @@ import * as Case_Inheritance from './cases/Inheritance/generated.js';
 import * as Case_Inheritance_MethodException from './cases/Inheritance_MethodException/generated.js';
 import * as Case_Inheritance_EventException from './cases/Inheritance_EventException/generated.js';
 import * as Case_LocalAndWrapper from './cases/LocalAndWrapper/generated.js';
+import * as Case_LocalAndWrapper_SharedMemsp from './cases/LocalAndWrapper_SharedMemsp/generated.js';
 import * as Case_Nullable from './cases/Nullable/generated.js';
 import * as Case_Overloading from './cases/Overloading/generated.js';
 import * as Case_PrimitiveTypes from './cases/PrimitiveTypes/generated.js';
@@ -127,6 +128,7 @@ import * as Case_PropDefaultList from './cases/PropDefaultList/generated.js';
 import * as Case_PropDynamic from './cases/PropDynamic/generated.js';
 import * as Case_RequestService from './cases/RequestService/generated.js';
 import * as Case_ServiceWrapper from './cases/ServiceWrapper/generated.js';
+import * as Case_ServiceWrapper_SharedMemsp from './cases/ServiceWrapper_SharedMemsp/generated.js';
 
 export interface RpcTestContractModule {
     readonly AllRpcInterfaceDescriptors: readonly RPC.RpcInterfaceDescriptor[];
@@ -256,6 +258,7 @@ export interface RpcTestServiceFactories {
     readonly 'Inheritance_MethodException': RpcTestServiceFactory;
     readonly 'Inheritance_EventException': RpcTestServiceFactory;
     readonly 'LocalAndWrapper': RpcTestServiceFactory;
+    readonly 'LocalAndWrapper_SharedMemsp': RpcTestServiceFactory;
     readonly 'Nullable': RpcTestServiceFactory;
     readonly 'Overloading': RpcTestServiceFactory;
     readonly 'PrimitiveTypes': RpcTestServiceFactory;
@@ -267,6 +270,7 @@ export interface RpcTestServiceFactories {
     readonly 'PropDynamic': RpcTestServiceFactory;
     readonly 'RequestService': RpcTestServiceFactory;
     readonly 'ServiceWrapper': RpcTestServiceFactory;
+    readonly 'ServiceWrapper_SharedMemsp': RpcTestServiceFactory;
 }
 
 export interface RpcTestCaseDefinition {
@@ -408,6 +412,7 @@ export const RpcTestCaseNames = [
     'Inheritance_MethodException',
     'Inheritance_EventException',
     'LocalAndWrapper',
+    'LocalAndWrapper_SharedMemsp',
     'Nullable',
     'Overloading',
     'PrimitiveTypes',
@@ -419,6 +424,7 @@ export const RpcTestCaseNames = [
     'PropDynamic',
     'RequestService',
     'ServiceWrapper',
+    'ServiceWrapper_SharedMemsp',
 ] as const;
 
 export type RpcTestCaseName = typeof RpcTestCaseNames[number];
@@ -538,7 +544,8 @@ export const RpcTestCases: Readonly<Record<RpcTestCaseName, RpcTestCaseDefinitio
     'Inheritance': defineRpcTestCase('Inheritance', '[][One][][Two][][][Derived]', Case_Inheritance),
     'Inheritance_MethodException': defineRpcTestCase('Inheritance_MethodException', '[][DoNotSetOneValue][][DoNotSetTwoValue]', Case_Inheritance_MethodException),
     'Inheritance_EventException': defineRpcTestCase('Inheritance_EventException', '[][1:CrashedAtServer;][][2:CrashedAtClient;]', Case_Inheritance_EventException),
-    'LocalAndWrapper': defineRpcTestCase('LocalAndWrapper', '[false][true][true][false]', Case_LocalAndWrapper),
+    'LocalAndWrapper': defineRpcTestCase('LocalAndWrapper', '[true][true]', Case_LocalAndWrapper),
+    'LocalAndWrapper_SharedMemsp': defineRpcTestCase('LocalAndWrapper_SharedMemsp', '[false][true][true][false]', Case_LocalAndWrapper_SharedMemsp),
     'Nullable': defineRpcTestCase('Nullable', '[abc][null][null][def]', Case_Nullable),
     'Overloading': defineRpcTestCase('Overloading', '[123][true][abc][xyz][123,true,abc,xyz]', Case_Overloading),
     'PrimitiveTypes': defineRpcTestCase('PrimitiveTypes', '[6][12][1.75][2.875][Hi!][false][Autumn][13,27]', Case_PrimitiveTypes),
@@ -549,7 +556,8 @@ export const RpcTestCases: Readonly<Record<RpcTestCaseName, RpcTestCaseDefinitio
     'PropDefaultList': defineRpcTestCase('PropDefaultList', '[A][A][ValueChanged][BCD]', Case_PropDefaultList),
     'PropDynamic': defineRpcTestCase('PropDynamic', '[A][B][ValueChanged][B]', Case_PropDynamic),
     'RequestService': defineRpcTestCase('RequestService', 'Hello', Case_RequestService),
-    'ServiceWrapper': defineRpcTestCase('ServiceWrapper', '[false][true]', Case_ServiceWrapper),
+    'ServiceWrapper': defineRpcTestCase('ServiceWrapper', '[true]', Case_ServiceWrapper),
+    'ServiceWrapper_SharedMemsp': defineRpcTestCase('ServiceWrapper_SharedMemsp', '[false][true]', Case_ServiceWrapper_SharedMemsp),
 };
 
 export function selectRpcTestCase(name: string): RpcTestCaseDefinition {
