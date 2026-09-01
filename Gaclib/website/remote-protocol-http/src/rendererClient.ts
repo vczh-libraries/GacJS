@@ -66,7 +66,9 @@ class RemoteProtocolHttpClient implements IRemoteProtocolHttpClient {
         if (this.channelClient.clientId === undefined) {
             throw new Error('HTTP channel is not connected.');
         }
-        this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16 });
+        const platform = navigator.platform;
+        const osSuperKeyName = platform.startsWith('Mac') ? 'Command' : platform.startsWith('Win') ? 'Win' : 'Super';
+        this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16, osSuperKeyName });
         try {
             await this.channelClient.start();
         } catch (error) {

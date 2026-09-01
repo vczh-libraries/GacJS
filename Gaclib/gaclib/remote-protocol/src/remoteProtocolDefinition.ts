@@ -51,6 +51,8 @@ export enum IOMouseButton {
     Left = 'Left',
     Middle = 'Middle',
     Right = 'Right',
+    Mouse4 = 'Mouse4',
+    Mouse5 = 'Mouse5',
 }
 
 export enum ElementShapeType {
@@ -234,6 +236,7 @@ export interface ScreenConfig {
 
 export interface ControllerGlobalConfig {
     documentCaretFromEncoding: CharacterEncoding;
+    osSuperKeyName: TYPES.String;
 }
 
 export interface WindowSizingConfig {
@@ -251,6 +254,7 @@ export interface WindowShowing {
 export interface IOMouseInfo {
     ctrl: TYPES.Boolean;
     shift: TYPES.Boolean;
+    osSuper: TYPES.Boolean;
     left: TYPES.Boolean;
     middle: TYPES.Boolean;
     right: TYPES.Boolean;
@@ -270,6 +274,7 @@ export interface IOKeyInfo {
     ctrl: TYPES.Boolean;
     shift: TYPES.Boolean;
     alt: TYPES.Boolean;
+    osSuper: TYPES.Boolean;
     capslock: TYPES.Boolean;
     autoRepeatKeyDown: TYPES.Boolean;
 }
@@ -279,6 +284,7 @@ export interface IOCharInfo {
     ctrl: TYPES.Boolean;
     shift: TYPES.Boolean;
     alt: TYPES.Boolean;
+    osSuper: TYPES.Boolean;
     capslock: TYPES.Boolean;
 }
 
@@ -287,6 +293,7 @@ export interface GlobalShortcutKey {
     ctrl: TYPES.Boolean;
     shift: TYPES.Boolean;
     alt: TYPES.Boolean;
+    osSuper: TYPES.Boolean;
     code: TYPES.Key;
 }
 

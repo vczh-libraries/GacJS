@@ -101,7 +101,7 @@ Manages the overall connection lifecycle, font/screen configuration.
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `ControllerConnect` | `ControllerGlobalConfig` | Client informs the core it is ready, providing global configuration including `documentCaretFromEncoding` (`UTF8`/`UTF16`/`UTF32`) |
+| `ControllerConnect` | `ControllerGlobalConfig` | Client informs the core it is ready, providing global configuration including `documentCaretFromEncoding` (`UTF8`/`UTF16`/`UTF32`) and the platform name of the OS Super key |
 | `ControllerDisconnect` | — | Client requests disconnection |
 | `ControllerRequestExit` | — | Client politely asks the core to exit (e.g., user clicked close) |
 | `ControllerForceExit` | — | Client demands immediate shutdown |
@@ -112,7 +112,7 @@ Manages the overall connection lifecycle, font/screen configuration.
 | Type | Fields | Description |
 |------|--------|-------------|
 | `ScreenConfig` | `bounds`, `clientBounds: NativeRect`, `scalingX`, `scalingY: double` | Screen geometry and DPI scaling |
-| `ControllerGlobalConfig` | `documentCaretFromEncoding: CharacterEncoding` | Global settings sent on connect |
+| `ControllerGlobalConfig` | `documentCaretFromEncoding: CharacterEncoding`, `osSuperKeyName: string` | Global settings sent on connect |
 | `CharacterEncoding` | `UTF8`, `UTF16`, `UTF32` | Encoding used for document caret positions |
 
 ---
@@ -202,12 +202,12 @@ Handles keyboard and mouse input events and global shortcut keys.
 
 | Type | Fields | Description |
 |------|--------|-------------|
-| `IOMouseButton` | `Left`, `Middle`, `Right` | Mouse button enum |
-| `IOMouseInfo` | `ctrl`, `shift`, `left`, `middle`, `right: bool`, `x`, `y: NativeCoordinate`, `wheel: int`, `nonClient: bool` | Mouse state at time of event |
+| `IOMouseButton` | `Left`, `Middle`, `Right`, `Mouse4`, `Mouse5` | Mouse button enum |
+| `IOMouseInfo` | `ctrl`, `shift`, `osSuper`, `left`, `middle`, `right: bool`, `x`, `y: NativeCoordinate`, `wheel: int`, `nonClient: bool` | Mouse state at time of event |
 | `IOMouseInfoWithButton` | `button: IOMouseButton`, `info: IOMouseInfo` | Mouse event with which button was involved |
-| `IOKeyInfo` | `code: key`, `ctrl`, `shift`, `alt`, `capslock`, `autoRepeatKeyDown: bool` | Keyboard key event |
-| `IOCharInfo` | `code: char`, `ctrl`, `shift`, `alt`, `capslock: bool` | Character input event |
-| `GlobalShortcutKey` | `id: int`, `ctrl`, `shift`, `alt: bool`, `code: key` | Global shortcut key definition |
+| `IOKeyInfo` | `code: key`, `ctrl`, `shift`, `alt`, `osSuper`, `capslock`, `autoRepeatKeyDown: bool` | Keyboard key event |
+| `IOCharInfo` | `code: char`, `ctrl`, `shift`, `alt`, `osSuper`, `capslock: bool` | Character input event |
+| `GlobalShortcutKey` | `id: int`, `ctrl`, `shift`, `alt`, `osSuper: bool`, `code: key` | Global shortcut key definition |
 
 ---
 

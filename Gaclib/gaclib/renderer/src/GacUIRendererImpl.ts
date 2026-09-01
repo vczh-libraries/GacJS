@@ -1202,6 +1202,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         return {
             ctrl: event.ctrlKey,
             shift: event.shiftKey,
+            osSuper: event.metaKey,
             left: (event.buttons & 0x1) !== 0,
             middle: (event.buttons & 0x4) !== 0,
             right: (event.buttons & 0x2) !== 0,
@@ -1218,6 +1219,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             case 0: return SCHEMA.IOMouseButton.Left;
             case 1: return SCHEMA.IOMouseButton.Middle;
             case 2: return SCHEMA.IOMouseButton.Right;
+            case 3: return SCHEMA.IOMouseButton.Mouse4;
+            case 4: return SCHEMA.IOMouseButton.Mouse5;
             default: return undefined;
         }
     }
@@ -1231,11 +1234,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
         return {
             code: keyCode,
-            // Cross-platform compatibility: treat both Ctrl (Windows/Linux) and Cmd (Mac) as "ctrl"
-            // This allows application logic to work consistently across platforms without platform-specific code
-            ctrl: event.ctrlKey || event.metaKey,
+            ctrl: event.ctrlKey,
             shift: event.shiftKey,
             alt: event.altKey,
+            osSuper: event.metaKey,
             capslock: event.getModifierState('CapsLock'),
             autoRepeatKeyDown: autoRepeatKeyDown
         };
@@ -1347,7 +1349,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                         if (shortcut.code === keyInfo.code &&
                             shortcut.ctrl === keyInfo.ctrl &&
                             shortcut.shift === keyInfo.shift &&
-                            shortcut.alt === keyInfo.alt) {
+                            shortcut.alt === keyInfo.alt &&
+                            shortcut.osSuper === keyInfo.osSuper) {
                             this._events.OnIOGlobalShortcutKey(shortcut.id);
                             break;
                         }
@@ -1369,9 +1372,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                 if (charCode !== undefined) {
                     this._events.OnIOChar({
                         code: charCode,
-                        ctrl: keyEvent.ctrlKey || keyEvent.metaKey,
+                        ctrl: keyEvent.ctrlKey,
                         shift: keyEvent.shiftKey,
                         alt: keyEvent.altKey,
+                        osSuper: keyEvent.metaKey,
                         capslock: keyEvent.getModifierState('CapsLock')
                     });
                 }
