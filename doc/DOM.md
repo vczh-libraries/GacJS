@@ -30,6 +30,7 @@ See [Protocol.md](Protocol.md) for the full protocol reference.
 - [Measurement System](#measurement-system)
 - [Cursor Mapping](#cursor-mapping)
 - [Keyboard Mapping](#keyboard-mapping)
+- [Mouse Input](#mouse-input)
 - [Rendering Flow](#rendering-flow)
 - [Feature Gates](#feature-gates)
 
@@ -541,6 +542,15 @@ Auto-repeat detection:
 Cross-platform modifier handling:
 - `IOKeyInfo.ctrl` is set for both `Ctrl` (Windows/Linux) and `Cmd` (macOS)
 - This provides a unified interface for GacUI application shortcuts
+
+---
+
+## Mouse Input
+
+`GacUIRendererImpl` maps DOM button values 0 through 4 to Left, Middle, Right,
+Mouse4, and Mouse5. Consumed Mouse4/Mouse5 down and up events prevent their
+browser defaults so Back/Forward navigation cannot disconnect the renderer.
+Both events still reach Core and update application controls normally.
 
 ---
 

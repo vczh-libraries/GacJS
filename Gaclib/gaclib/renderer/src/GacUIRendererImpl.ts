@@ -1255,6 +1255,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             const mouseEvent = event as MouseEvent;
             const button = this._ioGetMouseButton(mouseEvent);
             if (this._events !== undefined && button !== undefined) {
+                if (button === SCHEMA.IOMouseButton.Mouse4 || button === SCHEMA.IOMouseButton.Mouse5) {
+                    mouseEvent.preventDefault();
+                }
                 const info = this._ioCreateMouseInfo(mouseEvent);
                 this._events.OnIOButtonDown({ button, info });
                 // When detail >= 2, this is the second mousedown of a double-click.
@@ -1270,6 +1273,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             const mouseEvent = event as MouseEvent;
             const button = this._ioGetMouseButton(mouseEvent);
             if (this._events !== undefined && button !== undefined) {
+                if (button === SCHEMA.IOMouseButton.Mouse4 || button === SCHEMA.IOMouseButton.Mouse5) {
+                    mouseEvent.preventDefault();
+                }
                 // If there's a pending double-click for this button, send it before mouseup
                 if (this._pendingDoubleClick !== undefined && this._pendingDoubleClick.button === button) {
                     this._events.OnIOButtonDoubleClick(this._pendingDoubleClick);
