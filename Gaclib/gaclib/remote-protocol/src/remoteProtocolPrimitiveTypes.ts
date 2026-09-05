@@ -1,3 +1,4 @@
+// Generated from VlppOS/Source/TUI/TUITypes.h. Do not edit.
 export type Boolean = boolean;
 export type Integer = number;
 export type Float = number;
@@ -13,17 +14,16 @@ export type List<T> = T[] | null;
 export type ArrayMap<T, Key extends string> = (T extends Record<Key, {}> ? T[] : never) | null;
 export type Dictionary<K, T> = [[K, T]] | null;
 
-// GacUI\Source\GuiTypes.h
+/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
 export enum Key {
-    /*
-     * Virtual Keys, Standard Set
-     */
+    KEY_UNKNOWN = -1,
+    KEY_MAXIMUM = 255,
     KEY_LBUTTON = 0x01,
     KEY_RBUTTON = 0x02,
     KEY_CANCEL = 0x03,
-    KEY_MBUTTON = 0x04,             /* NOT contiguous with L & RBUTTON */
-    KEY_XBUTTON1 = 0x05,            /* NOT contiguous with L & RBUTTON */
-    KEY_XBUTTON2 = 0x06,            /* NOT contiguous with L & RBUTTON */
+    KEY_MBUTTON = 0x04,
+    KEY_XBUTTON1 = 0x05,
+    KEY_XBUTTON2 = 0x06,
     KEY_BACK = 0x08,
     KEY_TAB = 0x09,
     KEY_CLEAR = 0x0C,
@@ -58,11 +58,6 @@ export enum Key {
     KEY_INSERT = 0x2D,
     KEY_DELETE = 0x2E,
     KEY_HELP = 0x2F,
-
-    /*
-     * VKEY_0 - VKEY_9 are the same as ASCII '0' - '9' (0x30 - 0x39)
-     * VKEY_A - VKEY_Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A)
-     */
     KEY_0 = 0x30,
     KEY_1 = 0x31,
     KEY_2 = 0x32,
@@ -145,21 +140,11 @@ export enum Key {
     KEY_F24 = 0x87,
     KEY_NUMLOCK = 0x90,
     KEY_SCROLL = 0x91,
-
-    /*
-     * Fujitsu/OASYS kbd definitions
-     */
-    KEY_OEM_FJ_JISHO = 0x92,        /* 'Dictionary' key */
-    KEY_OEM_FJ_MASSHOU = 0x93,      /* 'Unregister word' key */
-    KEY_OEM_FJ_TOUROKU = 0x94,      /* 'Register word' key */
-    KEY_OEM_FJ_LOYA = 0x95,         /* 'Left OYAYUBI' key */
-    KEY_OEM_FJ_ROYA = 0x96,         /* 'Right OYAYUBI' key */
-
-    /*
-     * VKEY_L* & VKEY_R* - left and right Alt, Ctrl and Shift virtual keys.
-     * Used only as parameters to GetAsyncKeyState() and GetKeyState().
-     * No other API or message will distinguish left and right keys in this way.
-     */
+    KEY_OEM_FJ_JISHO = 0x92,
+    KEY_OEM_FJ_MASSHOU = 0x93,
+    KEY_OEM_FJ_TOUROKU = 0x94,
+    KEY_OEM_FJ_LOYA = 0x95,
+    KEY_OEM_FJ_ROYA = 0x96,
     KEY_LSHIFT = 0xA0,
     KEY_RSHIFT = 0xA1,
     KEY_LCONTROL = 0xA2,
@@ -184,26 +169,18 @@ export enum Key {
     KEY_LAUNCH_MEDIA_SELECT = 0xB5,
     KEY_LAUNCH_APP1 = 0xB6,
     KEY_LAUNCH_APP2 = 0xB7,
-    KEY_OEM_PLUS = 0xBB,            /* '+' any country */
-    KEY_OEM_COMMA = 0xBC,           /* ',' any country */
-    KEY_OEM_MINUS = 0xBD,           /* '-' any country */
-    KEY_OEM_PERIOD = 0xBE,          /* '.' any country */
+    KEY_OEM_PLUS = 0xBB,
+    KEY_OEM_COMMA = 0xBC,
+    KEY_OEM_MINUS = 0xBD,
+    KEY_OEM_PERIOD = 0xBE,
     KEY_OEM_8 = 0xDF,
-
-    /*
- * Various extended or enhanced keyboards
-     */
-    KEY_OEM_AX = 0xE1,              /* 'AX' key on Japanese AX kbd */
-    KEY_OEM_102 = 0xE2,             /* "<>" or "\|" on RT 102-key kbd */
-    KEY_ICO_HELP = 0xE3,            /* Help key on ICO */
-    KEY_ICO_00 = 0xE4,              /* 00 key on ICO */
+    KEY_OEM_AX = 0xE1,
+    KEY_OEM_102 = 0xE2,
+    KEY_ICO_HELP = 0xE3,
+    KEY_ICO_00 = 0xE4,
     KEY_PROCESSKEY = 0xE5,
     KEY_ICO_CLEAR = 0xE6,
     KEY_PACKET = 0xE7,
-
-    /*
-     * Nokia/Ericsson definitions
-     */
     KEY_OEM_RESET = 0xE9,
     KEY_OEM_JUMP = 0xEA,
     KEY_OEM_PA1 = 0xEB,
@@ -226,29 +203,21 @@ export enum Key {
     KEY_NONAME = 0xFC,
     KEY_PA1 = 0xFD,
     KEY_OEM_CLEAR = 0xFE,
-
-    /*
-     * Friendly names for common keys (US)
-     */
-    KEY_SEMICOLON = 0xBA,           /* OEM_1 */
-    KEY_SLASH = 0xBF,               /* OEM_2 */
-    KEY_GRAVE_ACCENT = 0xC0,        /* OEM_3 */
-    KEY_RIGHT_BRACKET = 0xDB,       /* OEM_4 */
-    KEY_BACKSLASH = 0xDC,           /* OEM_5 */
-    KEY_LEFT_BRACKET = 0xDD,        /* OEM_6 */
-    KEY_APOSTROPHE = 0xDE,          /* OEM_7 */
-
-    /*
-     * Additionals
-     */
-    /* eslint-disable @typescript-eslint/no-duplicate-enum-values */
-    KEY_OEM_1 = 0xBA,               /* ';:' for US */
-    KEY_OEM_2 = 0xBF,               /* '/?' for US */
-    KEY_OEM_3 = 0xC0,               /* '`~' for US */
-    KEY_OEM_4 = 0xDB,               /* '[{' for US */
-    KEY_OEM_5 = 0xDC,               /* '\|' for US */
-    KEY_OEM_6 = 0xDD,               /* ']}' for US */
-    KEY_OEM_7 = 0xDE,               /* ''"' for US */
+    KEY_SEMICOLON = 0xBA,
+    KEY_SLASH = 0xBF,
+    KEY_GRAVE_ACCENT = 0xC0,
+    KEY_LEFT_BRACKET = 0xDB,
+    KEY_BACKSLASH = 0xDC,
+    KEY_RIGHT_BRACKET = 0xDD,
+    KEY_APOSTROPHE = 0xDE,
+    KEY_OEM_1 = 0xBA,
+    KEY_OEM_2 = 0xBF,
+    KEY_OEM_3 = 0xC0,
+    KEY_OEM_4 = 0xDB,
+    KEY_OEM_5 = 0xDC,
+    KEY_OEM_6 = 0xDD,
+    KEY_OEM_7 = 0xDE,
     KEY_HANJA = 0x19,
-    /* eslint-enable @typescript-eslint/no-duplicate-enum-values */
+    KEY_OEM_NEC_EQUAL = 0x92,
 }
+/* eslint-enable @typescript-eslint/no-duplicate-enum-values */

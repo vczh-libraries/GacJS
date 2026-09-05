@@ -39,7 +39,7 @@ Gaclib/
     └── entry/              ← @gaclib-website/entry
 ```
 
-Remote-protocol import inputs:
+Remote-protocol import inputs (including shared keys from the sibling VlppOS checkout):
 
 ```
 ..\GacUI\Source\PlatformProviders\Remote\Protocol\Metadata\Protocols.json
@@ -48,7 +48,8 @@ Remote-protocol import inputs:
         └── yarn run import
               └── Gaclib/gaclib/codegen-remote-protocol/src/Import/
                     ├── Protocols.json
-                    └── GuiRemoteProtocolAst_Json.d.ts
+                    ├── GuiRemoteProtocolAst_Json.d.ts
+                    └── TUITypes.h (from VlppOS/Source/TUI/TUITypes.h)
 ```
 
 The imported files retain their upstream names and are committed with the
@@ -138,8 +139,8 @@ The package is compiled during the import phase and is executed by
 
 The package deliberately has no `build` or `codegen` script. Key files:
 
-- `prepare.js` — refreshes `src/Import/Protocols.json` and `src/Import/GuiRemoteProtocolAst_Json.d.ts` from GacUI
-- `src/generateRemoteProtocol.ts` — generates type definitions and enums
+- `prepare.js` — refreshes `src/Import/Protocols.json` and `src/Import/GuiRemoteProtocolAst_Json.d.ts` from GacUI, and `src/Import/TUITypes.h` from VlppOS
+- `src/generateRemoteProtocol.ts` — generates protocol types/enums and primitive types, deriving Key from imported TUITypes.h (including UNKNOWN/MAXIMUM and bracket aliases)
 - `src/generateRemoteProtocolInvoking.ts` — generates protocol invocation/parsing code
 - `src/index.ts` — exports both generator functions without selecting an output directory or running them
 

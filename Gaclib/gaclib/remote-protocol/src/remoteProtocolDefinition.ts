@@ -254,6 +254,7 @@ export interface WindowShowing {
 export interface IOMouseInfo {
     ctrl: TYPES.Boolean;
     shift: TYPES.Boolean;
+    alt: TYPES.Boolean;
     osSuper: TYPES.Boolean;
     left: TYPES.Boolean;
     middle: TYPES.Boolean;

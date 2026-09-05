@@ -6,6 +6,7 @@
 import { execSync, spawn } from 'child_process';
 import net from 'node:net';
 import { chromium } from '@playwright/test';
+import { parseNetworkPackage } from '@gaclib-website/remote-protocol-http';
 import { beforeAll, afterAll, describe } from 'vitest';
 import {
     GACUI_SOLUTION_DIR,
@@ -33,6 +34,22 @@ export const PROTOCOL_HOST = 'localhost';
 export const PROTOCOL_PORT = 8888;
 export const CORE_AUTOMATION_CONTROLS_URL = 'http://localhost:8888/Automation/RemotingTest_Core/Controls';
 export const CORE_AUTOMATION_IO_URL = 'http://localhost:8888/Automation/RemotingTest_Core/IO';
+
+// Observe actual outgoing network packages without changing delivery or renderer state.
+export function observeProtocolEvents(page) {
+    const events = [];
+    page.on('request', request => {
+        if (request.method() !== 'POST' || !request.url().includes(':8888/')) return;
+        const body = request.postData();
+        if (body === null) return;
+        const message = parseNetworkPackage(body);
+        if (message.channelName !== 'GacUIRemoteProtocol') return;
+        for (const invoking of JSON.parse(message.messageBody)) {
+            if (invoking.semantic === 'Event') events.push(invoking);
+        }
+    });
+    return events;
+}
 
 export function describeProtocolTest(name, fn) {
     const suite = PROTOCOL_TEST_SKIP_REASON === null ? describe : describe.skip;

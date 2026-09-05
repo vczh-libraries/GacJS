@@ -19,7 +19,8 @@ import {
     openControlTab,
     findTextInputPointRightOfLabel,
     setupProtocolTest,
-    describeProtocolTest
+    describeProtocolTest,
+    observeProtocolEvents
 } from './Testing_Protocol.js';
 
 // ---------------------------------------------------------------------------
@@ -45,7 +46,8 @@ async function getLeafTexts(page) {
 // ---------------------------------------------------------------------------
 
 describeProtocolTest('SimpleTyping', () => {
-    const ctx = setupProtocolTest();
+    let outgoing;
+    const ctx = setupProtocolTest({ setupPage: async page => { outgoing = observeProtocolEvents(page); } });
     let searchLabelPos;
     let searchTextBox;
 
@@ -71,7 +73,7 @@ describeProtocolTest('SimpleTyping', () => {
         expect(searchLabelPos).toBeDefined();
         await clickAt(ctx.page, searchTextBox.x, searchTextBox.y);
 
-        for (const ch of 'Hello') {
+        for (const ch of 'Hello[Ab]{Cd}') {
             await ctx.page.keyboard.press(ch);
             await waitForIdle(ctx.page);
         }
@@ -82,6 +84,28 @@ describeProtocolTest('SimpleTyping', () => {
             const screen = document.getElementById('gacui-screen');
             return screen !== null ? screen.textContent : '';
         });
-        expect(screenText).toContain('Hello');
+        expect(screenText).toContain('Hello[Ab]{Cd}');
+        const keys = outgoing.filter(event => event.name === 'IOKeyDown').map(event => event.arguments.code);
+        expect(keys).toContain(0xDB);
+        expect(keys).toContain(0xDD);
+    });
+
+    test('Step 6: Preserve and type bracket keys after renderer replacement', async () => {
+        const page = await ctx.openPage();
+        expect(await openControlTab(page)).toBe(true);
+        await expect.poll(() => page.locator('#gacui-screen').textContent(), { timeout: 15000 }).toContain('Hello[Ab]{Cd}');
+        const label = (await getLeafTextPositions(page)).find(p => p.text.startsWith('Search'));
+        expect(label).toBeDefined();
+        const point = await findTextInputPointRightOfLabel(page, label);
+        await clickAt(page, point.x, point.y);
+        await page.keyboard.press('Control+a');
+        for (const ch of 'Again[Ef]{Gh}') {
+            await page.keyboard.press(ch);
+            await waitForIdle(page);
+        }
+        await expect.poll(() => page.locator('#gacui-screen').textContent(), { timeout: 15000 }).toContain('Again[Ef]{Gh}');
+        const keys = outgoing.filter(event => event.name === 'IOKeyDown').map(event => event.arguments.code);
+        expect(keys).toContain(0xDB);
+        expect(keys).toContain(0xDD);
     });
 });

@@ -1202,6 +1202,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         return {
             ctrl: event.ctrlKey,
             shift: event.shiftKey,
+            alt: event.altKey,
             osSuper: event.metaKey,
             left: (event.buttons & 0x1) !== 0,
             middle: (event.buttons & 0x4) !== 0,

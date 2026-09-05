@@ -57,6 +57,8 @@ Communication direction:
 
 These structs are used throughout other protocol messages.
 
+Shared coordinates, virtual keys and native input structs originate in `../VlppOS/Source/TUI/TUITypes.h`. The generator imports that header and derives `Key` values, including `KEY_UNKNOWN=-1`, `KEY_MAXIMUM=255`, `KEY_LEFT_BRACKET=0xDB` and `KEY_RIGHT_BRACKET=0xDD`. OEM_4/OEM_6 retain their values.
+
 ### Coordinate types (native, with DPI scaling)
 
 | Struct | Fields | Description |
@@ -169,6 +171,9 @@ Both events are annotated `@DropRepeat` — the server may ignore intermediate e
 
 ## IO Protocol
 
+Every `IOMouseInfo` carries `alt: bool` independently from `osSuper: bool`. Browser mouse/button/wheel payloads use `event.altKey` for Alt and `event.metaKey` for OS Super, including Mouse4/Mouse5 and double-click. The same native struct is serialized by GacUI; omission does not substitute for false. Native wheel coalescing flushes when either modifier changes, preserving each group's captured payload.
+
+
 Handles keyboard and mouse input events and global shortcut keys.
 
 ### Messages (Core → Client)
@@ -203,7 +208,7 @@ Handles keyboard and mouse input events and global shortcut keys.
 | Type | Fields | Description |
 |------|--------|-------------|
 | `IOMouseButton` | `Left`, `Middle`, `Right`, `Mouse4`, `Mouse5` | Mouse button enum |
-| `IOMouseInfo` | `ctrl`, `shift`, `osSuper`, `left`, `middle`, `right: bool`, `x`, `y: NativeCoordinate`, `wheel: int`, `nonClient: bool` | Mouse state at time of event |
+| `IOMouseInfo` | `ctrl`, `shift`, `alt`, `osSuper`, `left`, `middle`, `right: bool`, `x`, `y: NativeCoordinate`, `wheel: int`, `nonClient: bool` | Mouse state at time of event |
 | `IOMouseInfoWithButton` | `button: IOMouseButton`, `info: IOMouseInfo` | Mouse event with which button was involved |
 | `IOKeyInfo` | `code: key`, `ctrl`, `shift`, `alt`, `osSuper`, `capslock`, `autoRepeatKeyDown: bool` | Keyboard key event |
 | `IOCharInfo` | `code: char`, `ctrl`, `shift`, `alt`, `osSuper`, `capslock: bool` | Character input event |

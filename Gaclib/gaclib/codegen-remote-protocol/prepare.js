@@ -22,3 +22,9 @@ fs.writeFileSync(
     path.join(__dirname, 'src/Import/GuiRemoteProtocolAst_Json.d.ts'),
     astContent
 );
+
+const tuiTypesContent = fs.readFileSync(
+    path.resolve(GacUIPath, '../VlppOS/Source/TUI/TUITypes.h'),
+    'utf-8'
+).replace(/\r\n/g, '\n');
+fs.writeFileSync(path.join(__dirname, 'src/Import/TUITypes.h'), tuiTypesContent);

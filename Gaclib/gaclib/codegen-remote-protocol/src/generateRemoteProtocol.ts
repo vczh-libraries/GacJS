@@ -83,7 +83,38 @@ ${generateEvents(schema, classNames)}
 `);
 }
 
+
+function generatePrimitiveTypes(): string {
+    const input = fs.readFileSync(path.resolve(__dirname, '../src/Import/TUITypes.h'), 'utf-8');
+    const macroBegin = input.indexOf('#define GUI_DEFINE_KEYBOARD_CODE_BASIC');
+    const macroEnd = input.indexOf('#define GUI_DEFINE_KEYBOARD_CODE(ITEM)');
+    if (macroBegin === -1 || macroEnd <= macroBegin) {
+        throw new Error('The imported TUITypes.h keyboard macro chain is missing.');
+    }
+    const constants = [...input.matchAll(/KEY_(UNKNOWN|MAXIMUM)\s*=\s*(-?\d+)/gu)];
+    const keys = [...input.substring(macroBegin, macroEnd).matchAll(/^ITEM\(([A-Z0-9_]+),\s*(0x[0-9A-Fa-f]+)\)/gmu)];
+    if (constants.length !== 2 || keys.length === 0) {
+        throw new Error('The imported TUITypes.h keyboard declarations are incomplete.');
+    }
+    const names = [...constants, ...keys].map(match => match[1]);
+    if (new Set(names).size !== names.length) {
+        throw new Error('The imported TUITypes.h contains duplicate key names.');
+    }
+    return [
+        '// Generated from VlppOS/Source/TUI/TUITypes.h. Do not edit.',
+        'export type Boolean = boolean;\nexport type Integer = number;\nexport type Float = number;\nexport type Double = number;\nexport type String = string;\nexport type Char = string;\nexport type Color = string; // #FFFFFF\nexport type Binary = string; // base64 encoded\n\nexport type Ptr<T> = T | null;\nexport type Nullable<T> = T | null;\nexport type List<T> = T[] | null;\nexport type ArrayMap<T, Key extends string> = (T extends Record<Key, {}> ? T[] : never) | null;\nexport type Dictionary<K, T> = [[K, T]] | null;',
+        '',
+        '/* eslint-disable @typescript-eslint/no-duplicate-enum-values */',
+        'export enum Key {',
+        ...[...constants, ...keys].map(match => '    KEY_' + match[1] + ' = ' + match[2] + ','),
+        '}',
+        '/* eslint-enable @typescript-eslint/no-duplicate-enum-values */',
+        '',
+    ].join('\n');
+}
+
 export function generateRemoteProtocol(outputPath: string): void {
+    fs.writeFileSync(path.resolve(outputPath, 'remoteProtocolPrimitiveTypes.ts'), generatePrimitiveTypes());
     const inputJson = path.resolve(__dirname, '../src/Import/Protocols.json');
     const outputTs = path.resolve(outputPath, 'remoteProtocolDefinition.ts');
 
