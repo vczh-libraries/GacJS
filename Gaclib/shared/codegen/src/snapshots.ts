@@ -36,8 +36,9 @@ export function prepareSnapshots(): void {
                 // Recursively copy JSON files from subdirectory
                 copyJsonFiles(sourceItemPath, destItemPath);
             } else if (item.isFile() && path.extname(item.name).toLowerCase() === '.json') {
-                // Copy JSON file to destination
-                fs.copyFileSync(sourceItemPath, destItemPath);
+                // Keep generated text stable across upstream checkout line endings.
+                const jsonContent = fs.readFileSync(sourceItemPath, 'utf8').replace(/\r\n/g, '\n');
+                fs.writeFileSync(destItemPath, jsonContent, 'utf8');
                 console.log(`Copied: ${item.name} to ${path.relative(DestPath, destItemPath)}`);
             }
         }

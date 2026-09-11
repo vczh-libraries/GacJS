@@ -7,6 +7,10 @@ in the `@gaclib-website/entry` package. It renders GacUI unit test traces previo
 Each snapshot is a recorded sequence of rendering frames that can be replayed
 in the browser without running the server.
 
+`yarn codegen` copies these JSON files from the sibling GacUI checkout and
+normalizes CRLF line endings to LF, preserving the JSON content and UTF-8 BOM.
+This keeps generated snapshots stable across checkout platforms.
+
 ## Snapshot File Structure
 
 Snapshots live under `Gaclib/website/entry/assets/snapshots/` organized by category:

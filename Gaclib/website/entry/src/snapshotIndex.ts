@@ -29,6 +29,45 @@ export const Snapshot: SnapshotEntry = {
                     }
                 },
                 'ControlThemeName.json': 'File',
+                'DarkSkin': {
+                    'type': 'Folder',
+                    'content': {
+                        'DetachedListScroll': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File'
+                            }
+                        },
+                        'DetachedListScroll.json': 'File',
+                        'PaletteContract': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File'
+                            }
+                        },
+                        'PaletteContract.json': 'File',
+                        'RefreshPalettes': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_10.json': 'File',
+                                'frame_11.json': 'File',
+                                'frame_12.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File',
+                                'frame_9.json': 'File'
+                            }
+                        },
+                        'RefreshPalettes.json': 'File'
+                    }
+                },
                 'Dialog_Color': {
                     'type': 'Folder',
                     'content': {
@@ -130,6 +169,26 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'FilterExtensions_WildcardNoMatchDefault_Save.json': 'File',
+                        'InitialName_Open': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'InitialName_Open.json': 'File',
+                        'InitialName_Save': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'InitialName_Save.json': 'File',
                         'Listing_Root_Filter': {
                             'type': 'Folder',
                             'content': {
@@ -423,6 +482,29 @@ export const Snapshot: SnapshotEntry = {
                     }
                 },
                 'FocusedAndHide.json': 'File',
+                'RefreshThemes': {
+                    'type': 'Folder',
+                    'content': {
+                        'EditingAndScroll': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'EditingAndScroll.json': 'File',
+                        'OverridesAndWindows': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File'
+                            }
+                        },
+                        'OverridesAndWindows.json': 'File'
+                    }
+                },
                 'TabNavigate': {
                     'type': 'Folder',
                     'content': {
@@ -1133,6 +1215,12 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
+                                'RefreshThemes': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File'
+                                    }
+                                },
                                 'frame_0.json': 'File',
                                 'frame_1.json': 'File',
                                 'frame_2.json': 'File',
@@ -4164,7 +4252,9 @@ export const Snapshot: SnapshotEntry = {
                                                 'frame_3.json': 'File',
                                                 'frame_4.json': 'File',
                                                 'frame_5.json': 'File',
-                                                'frame_6.json': 'File'
+                                                'frame_6.json': 'File',
+                                                'frame_7.json': 'File',
+                                                'frame_8.json': 'File'
                                             }
                                         },
                                         'ComboEditor.json': 'File',
@@ -4193,7 +4283,17 @@ export const Snapshot: SnapshotEntry = {
                                                 'frame_6.json': 'File'
                                             }
                                         },
-                                        'ComboEditorWithSorterAndFilter2.json': 'File'
+                                        'ComboEditorWithSorterAndFilter2.json': 'File',
+                                        'TextEditorCaretAndGridFocus': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File',
+                                                'frame_2.json': 'File',
+                                                'frame_3.json': 'File'
+                                            }
+                                        },
+                                        'TextEditorCaretAndGridFocus.json': 'File'
                                     }
                                 },
                                 'CellVisualizer': {
@@ -4316,6 +4416,19 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'FilterByColumn.json': 'File',
+                                        'ResizeColumnSplitters': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File',
+                                                'frame_2.json': 'File',
+                                                'frame_3.json': 'File',
+                                                'frame_4.json': 'File',
+                                                'frame_5.json': 'File',
+                                                'frame_6.json': 'File'
+                                            }
+                                        },
+                                        'ResizeColumnSplitters.json': 'File',
                                         'SortByColumn': {
                                             'type': 'Folder',
                                             'content': {
@@ -4335,6 +4448,25 @@ export const Snapshot: SnapshotEntry = {
                                 'Properties': {
                                     'type': 'Folder',
                                     'content': {
+                                        'NavigateAfterMouseSelection': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File',
+                                                'frame_2.json': 'File',
+                                                'frame_3.json': 'File'
+                                            }
+                                        },
+                                        'NavigateAfterMouseSelection.json': 'File',
+                                        'NavigateColumnBoundaries': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File',
+                                                'frame_2.json': 'File'
+                                            }
+                                        },
+                                        'NavigateColumnBoundaries.json': 'File',
                                         'SelectCell': {
                                             'type': 'Folder',
                                             'content': {
@@ -9351,6 +9483,26 @@ export const Snapshot: SnapshotEntry = {
             }
         },
         'HelloWorld.json': 'File',
+        'Tui': {
+            'type': 'Folder',
+            'content': {
+                'Closing': {
+                    'type': 'Folder',
+                    'content': {}
+                },
+                'Closing.json': 'File',
+                'GridSeparators': {
+                    'type': 'Folder',
+                    'content': {}
+                },
+                'GridSeparators.json': 'File',
+                'RefreshThemes': {
+                    'type': 'Folder',
+                    'content': {}
+                },
+                'RefreshThemes.json': 'File'
+            }
+        },
         'UnitTestFramework': {
             'type': 'Folder',
             'content': {
