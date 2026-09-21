@@ -69,6 +69,12 @@ The portable fake-client unit suite is `RvmQuerySession.test.ts`. This inventory
 does not define suite operations or expected results; those belong to the
 GacUI SOP linked above.
 
+The browser-host suite covers both idle loss and loss during an RPC whose reply
+is held at the browser request boundary. The latter leaves a Core automation
+Controls read pending while stopping the host, then requires fatal delivery and
+Core termination. This guards endpoint shutdown from waiting on UI work after
+the UI event loop has exited.
+
 Each live suite is wrapped by `describeProtocolTest()` and normally creates its
 lifecycle with `setupProtocolTest(options)`.
 

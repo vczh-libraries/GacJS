@@ -587,6 +587,13 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'Closing.json': 'File',
+                        'CompositionUpdates': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File'
+                            }
+                        },
+                        'CompositionUpdates.json': 'File',
                         'Dragging': {
                             'type': 'Folder',
                             'content': {
@@ -1215,17 +1222,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                },
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File'
+                                }
                             }
                         },
                         'GuiLabel.json': 'File',
@@ -4290,7 +4297,9 @@ export const Snapshot: SnapshotEntry = {
                                                 'frame_0.json': 'File',
                                                 'frame_1.json': 'File',
                                                 'frame_2.json': 'File',
-                                                'frame_3.json': 'File'
+                                                'frame_3.json': 'File',
+                                                'frame_4.json': 'File',
+                                                'frame_5.json': 'File'
                                             }
                                         },
                                         'TextEditorCaretAndGridFocus.json': 'File'
@@ -9474,6 +9483,115 @@ export const Snapshot: SnapshotEntry = {
                     }
                 },
                 'EmptyWindow.json': 'File'
+            }
+        },
+        'EasyLayout': {
+            'type': 'Folder',
+            'content': {
+                'Bindings': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File',
+                        'frame_1.json': 'File',
+                        'frame_2.json': 'File',
+                        'frame_3.json': 'File'
+                    }
+                },
+                'Bindings.json': 'File',
+                'Descriptors00': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File'
+                    }
+                },
+                'Descriptors00.json': 'File',
+                'Descriptors01': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File'
+                    }
+                },
+                'Descriptors01.json': 'File',
+                'Descriptors10': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File'
+                    }
+                },
+                'Descriptors10.json': 'File',
+                'Descriptors11': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File'
+                    }
+                },
+                'Descriptors11.json': 'File',
+                'Descriptors20': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File'
+                    }
+                },
+                'Descriptors20.json': 'File',
+                'Descriptors21': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File'
+                    }
+                },
+                'Descriptors21.json': 'File',
+                'MixedHeights': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File',
+                        'frame_1.json': 'File',
+                        'frame_2.json': 'File'
+                    }
+                },
+                'MixedHeights.json': 'File',
+                'Namespace.json': 'File',
+                'Rejected0.json': 'File',
+                'Rejected1.json': 'File',
+                'Rejected10.json': 'File',
+                'Rejected11.json': 'File',
+                'Rejected12.json': 'File',
+                'Rejected13.json': 'File',
+                'Rejected14.json': 'File',
+                'Rejected15.json': 'File',
+                'Rejected16.json': 'File',
+                'Rejected17.json': 'File',
+                'Rejected18.json': 'File',
+                'Rejected19.json': 'File',
+                'Rejected2.json': 'File',
+                'Rejected20.json': 'File',
+                'Rejected21.json': 'File',
+                'Rejected22.json': 'File',
+                'Rejected23.json': 'File',
+                'Rejected24.json': 'File',
+                'Rejected25.json': 'File',
+                'Rejected26.json': 'File',
+                'Rejected27.json': 'File',
+                'Rejected28.json': 'File',
+                'Rejected29.json': 'File',
+                'Rejected3.json': 'File',
+                'Rejected4.json': 'File',
+                'Rejected5.json': 'File',
+                'Rejected6.json': 'File',
+                'Rejected7.json': 'File',
+                'Rejected8.json': 'File',
+                'Rejected9.json': 'File',
+                'Splitters': {
+                    'type': 'Folder',
+                    'content': {
+                        'frame_0.json': 'File',
+                        'frame_1.json': 'File',
+                        'frame_2.json': 'File',
+                        'frame_3.json': 'File',
+                        'frame_4.json': 'File',
+                        'frame_5.json': 'File'
+                    }
+                },
+                'Splitters.json': 'File'
             }
         },
         'HelloWorld': {

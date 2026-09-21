@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import {
     WEBSITE_URL,
+    CORE_AUTOMATION_CONTROLS_URL,
     clickAt,
     describeProtocolTest,
     getLeafTextPositions,
@@ -33,8 +34,8 @@ async function replaceInput(page, value) {
     await waitForIdle(page);
 }
 
-function registerBrowserHostTest(rendererTransport) {
-    describeProtocolTest(`Remote view-model browser host ${rendererTransport}`, () => {
+function registerBrowserHostTest(rendererTransport, blockedLoss = false) {
+    describeProtocolTest(`Remote view-model browser host ${rendererTransport}${blockedLoss ? " with a pending automation read" : ""}`, () => {
         let connectRequests = 0;
         const ctx = setupProtocolTest({
             serverArguments: ['/RVMT', rendererTransport],
@@ -71,11 +72,59 @@ function registerBrowserHostTest(rendererTransport) {
             positions = await getLeafTextPositions(replacement);
             expect(positions.some(position => position.text === 'Hello, Bob!')).toBe(true);
 
-            await ctx.page.evaluate(() => window.__gacui_rvmhost_session.host.stop());
-            const input = await findInput(replacement);
-            await clickAt(replacement, input.x, input.y);
-            await replacement.keyboard.press('Control+A');
-            await replacement.keyboard.type('Charlie');
+            if (blockedLoss) {
+                const heldRequests = [];
+                const controller = new AbortController();
+                let readCompleted = false;
+                let read;
+                let notifyBlocked;
+                let blockedTimeout;
+                const replyBlocked = new Promise((resolve, reject) => {
+                    notifyBlocked = resolve;
+                    blockedTimeout = setTimeout(() => reject(new Error('The host RPC reply was not intercepted.')), 10000);
+                });
+                try {
+                    await ctx.page.route('**/VlppInterProcess/{Request,Response}/**', route => {
+                        heldRequests.push(route);
+                        if (heldRequests.some(item => item.request().url().includes('/Request/'))
+                            && heldRequests.some(item => (item.request().postData() ?? '').includes('Hello, BobX!'))) {
+                            notifyBlocked();
+                        }
+                    });
+                    const input = await findInput(replacement);
+                    await clickAt(replacement, input.x, input.y);
+                    await replacement.keyboard.press('End');
+                    await replacement.keyboard.type('X');
+                    await replyBlocked;
+
+                    // The reply is held, so this read must be queued behind the real RPC call.
+                    const controlsUrl = rendererTransport === '/MiniHttp'
+                        ? CORE_AUTOMATION_CONTROLS_URL.replace('localhost', '127.0.0.1')
+                        : CORE_AUTOMATION_CONTROLS_URL;
+                    read = fetch(controlsUrl, { signal: controller.signal }).then(
+                        () => { readCompleted = true; },
+                        () => { readCompleted = true; },
+                    );
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    expect(readCompleted).toBe(false);
+                    await ctx.page.evaluate(() => window.__gacui_rvmhost_session.host.stop());
+                    for (const route of heldRequests) await route.abort();
+                    heldRequests.length = 0;
+                    await waitForChildProcessExit(ctx.serverProcess, 15000);
+                } finally {
+                    clearTimeout(blockedTimeout);
+                    controller.abort();
+                    if (read !== undefined) await read;
+                    for (const route of heldRequests) await route.abort().catch(() => {});
+                    await ctx.page.unrouteAll({ behavior: 'ignoreErrors' });
+                }
+            } else {
+                await ctx.page.evaluate(() => window.__gacui_rvmhost_session.host.stop());
+                const input = await findInput(replacement);
+                await clickAt(replacement, input.x, input.y);
+                await replacement.keyboard.press('Control+A');
+                await replacement.keyboard.type('Charlie');
+            }
             await replacement.waitForFunction(() => document.getElementById('gacui-error-message')?.textContent === 'RemotingTest_RvmHost disconnected.', undefined, { timeout: 30000 });
             expect(await replacement.locator('#gacui-error-message').textContent()).toBe('RemotingTest_RvmHost disconnected.');
             const core = ctx.serverProcess;
@@ -88,3 +137,6 @@ function registerBrowserHostTest(rendererTransport) {
 
 registerBrowserHostTest('/Http');
 registerBrowserHostTest('/MiniHttp');
+
+registerBrowserHostTest('/Http', true);
+registerBrowserHostTest('/MiniHttp', true);
