@@ -1222,17 +1222,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                }
+                                },
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
                             }
                         },
                         'GuiLabel.json': 'File',
@@ -2137,6 +2137,14 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'Scaffold_SmokeTest.json': 'File',
+                                        'Scaffold_SupplementaryCharacterInput': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File'
+                                            }
+                                        },
+                                        'Scaffold_SupplementaryCharacterInput.json': 'File',
                                         'Typing_TypeString_IgnoresWhenCtrlPressed': {
                                             'type': 'Folder',
                                             'content': {
@@ -2522,6 +2530,14 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'Scaffold_SmokeTest.json': 'File',
+                                        'Scaffold_SupplementaryCharacterInput': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File'
+                                            }
+                                        },
+                                        'Scaffold_SupplementaryCharacterInput.json': 'File',
                                         'Typing_TypeString_IgnoresWhenCtrlPressed': {
                                             'type': 'Folder',
                                             'content': {
@@ -2907,6 +2923,14 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'Scaffold_SmokeTest.json': 'File',
+                                        'Scaffold_SupplementaryCharacterInput': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File'
+                                            }
+                                        },
+                                        'Scaffold_SupplementaryCharacterInput.json': 'File',
                                         'Typing_TypeString_IgnoresWhenCtrlPressed': {
                                             'type': 'Folder',
                                             'content': {
@@ -3286,6 +3310,14 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'Scaffold_SmokeTest.json': 'File',
+                                        'Scaffold_SupplementaryCharacterInput': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File'
+                                            }
+                                        },
+                                        'Scaffold_SupplementaryCharacterInput.json': 'File',
                                         'Typing_TypeString_IgnoresWhenCtrlPressed': {
                                             'type': 'Folder',
                                             'content': {
@@ -3596,6 +3628,14 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'Scaffold_SmokeTest.json': 'File',
+                                        'Scaffold_SupplementaryCharacterInput': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File'
+                                            }
+                                        },
+                                        'Scaffold_SupplementaryCharacterInput.json': 'File',
                                         'Typing_TypeString_IgnoresWhenCtrlPressed': {
                                             'type': 'Folder',
                                             'content': {
