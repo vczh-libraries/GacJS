@@ -1222,17 +1222,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                },
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File'
+                                }
                             }
                         },
                         'GuiLabel.json': 'File',
