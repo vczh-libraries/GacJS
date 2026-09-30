@@ -1,0 +1,26 @@
+{
+    "name": "@gaclib-website/remote-protocol-wasm",
+    "version": "0.0.1",
+    "description": "GacUI Remote Protocol with a worker-owned WebAssembly core",
+    "type": "module",
+    "main": "./lib/src/index.js",
+    "exports": {
+        ".": {
+            "types": "./lib/src/index.d.ts",
+            "default": "./lib/src/index.js"
+        },
+        "./worker": "./lib/src/worker.js"
+    },
+    "scripts": {
+        "build": "rimraf ./lib && eslint --fix && tsc",
+        "test": "vitest run"
+    },
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "@gaclib-shared/eslint-shared": "^0.0.1"
+    },
+    "dependencies": {
+        "@gaclib-website/remote-protocol-http": "^0.0.1",
+        "@gaclib/remote-protocol": "^0.0.1"
+    }
+}

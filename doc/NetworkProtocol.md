@@ -509,6 +509,47 @@ For compatibility with the checked-in TypeScript and C++ implementations:
   as fatal.
 - Keep stdout free of logs, banners, and progress messages.
 
+## WebAssembly Worker Transport
+
+`@gaclib-website/remote-protocol-wasm` supplies the same `IChannelClient` contract
+over an owned dedicated worker. The worker loads the selected `app.mjs`/`app.wasm`
+and calls the `GacUIWasmApplication` Embind exports:
+
+```typescript
+StartApplication(receiver: (kind: string, connectionId: number, data: string) => string): string;
+ConnectToWasmCore(connectionId: number): string;
+SendDataToWasmCore(connectionId: number, data: string): string;
+DisconnectFromWasmCore(connectionId: number): string;
+```
+
+Every export returns an empty string on success or a diagnostic on failure.
+The receiver follows the same convention; exceptions do not cross the binding.
+Text is copied as UTF-16 at the boundary and converted to `WString` inside C++.
+Connection IDs identify transport endpoints, independently of the channel client
+IDs assigned by the unchanged VlppOS handshake. This permits separate host and
+renderer endpoints within one module. Ordinary data uses the same semicolon
+package envelope and JSON arrays as HTTP, without HTTP or Base64 framing.
+
+Notifications are `ready`, `renderer-ready`, `data`, `closed`, `error` and `exit`.
+`ready` permits channel connections. `renderer-ready` is sent after Core's RPC
+requester has acquired its service, so RVMT needs no admission polling.
+`exit` carries the C++ return code as decimal text. An existing application
+ignores repeated `StartApplication` calls; restarting means loading a fresh module.
+
+The module worker owns transport state and callbacks. Blocking GacUI work runs
+on a C++ pthread, with synchronous proxy calls to the module worker for outgoing
+messages and transport shutdown. This leaves both the page and module worker
+available for input and RPC replies. Core-authored `!Error` remains distinct from
+normal `ControllerConnectionStopped`, with the first terminal result retained.
+On a Core fatal error, the page preserves that error and directly terminates
+its module worker and children. Normal shutdown allows Core to finalize and
+release its RPC service before workers stop.
+
+The RVMT page uses `startRvmHostWithChannel` and the existing TypeScript
+`IViewModel.Translate` implementation. `Replace Renderer` creates a new renderer
+channel in the same module while preserving Core and the host. A separate page
+owns a separate Core. Page exit terminates the owned worker/pthread lifetime.
+
 ## Porting Checklist
 
 A compatible implementation should verify all of the following:

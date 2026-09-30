@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
     ...eslintShared,
     {
-        ignores: ['test/**', 'vitest.unit.config.js'],
+        ignores: ['test/**', 'vitest.unit.config.js', 'vitest.wasm.config.js'],
     },
     {
         languageOptions: {

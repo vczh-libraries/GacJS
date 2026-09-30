@@ -16,3 +16,15 @@ await build({
     platform: 'browser',
     target: 'es2022'
 });
+
+await build({
+    entryPoints: { wasm: path.resolve('./lib/wasm.js'), 'wasm-worker': '@gaclib-website/remote-protocol-wasm/worker' },
+    bundle: true,
+    minify: isShip,
+    sourcemap: !isShip,
+    keepNames: !isShip,
+    format: 'esm',
+    outdir: path.resolve('./lib/dist'),
+    platform: 'browser',
+    target: 'es2022',
+});

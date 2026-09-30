@@ -1,4 +1,4 @@
-// Generated from VlppOS/Source/TUI/TUITypes.h. Do not edit.
+// Generated from VlppOS/Source/WindowTypes.h. Do not edit.
 export type Boolean = boolean;
 export type Integer = number;
 export type Float = number;

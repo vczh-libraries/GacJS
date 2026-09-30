@@ -57,7 +57,7 @@ Communication direction:
 
 These structs are used throughout other protocol messages.
 
-Shared coordinates, virtual keys and native input structs originate in `../VlppOS/Source/TUI/TUITypes.h`. The generator imports that header and derives `Key` values, including `KEY_UNKNOWN=-1`, `KEY_MAXIMUM=255`, `KEY_LEFT_BRACKET=0xDB` and `KEY_RIGHT_BRACKET=0xDD`. OEM_4/OEM_6 retain their values.
+Shared coordinates, virtual keys and native input structs originate in `../VlppOS/Source/WindowTypes.h`. The generator imports that header and derives `Key` values, including `KEY_UNKNOWN=-1`, `KEY_MAXIMUM=255`, `KEY_LEFT_BRACKET=0xDB` and `KEY_RIGHT_BRACKET=0xDD`. OEM_4/OEM_6 retain their values.
 
 ### Coordinate types (native, with DPI scaling)
 

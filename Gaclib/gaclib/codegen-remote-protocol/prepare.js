@@ -23,8 +23,10 @@ fs.writeFileSync(
     astContent
 );
 
-const tuiTypesContent = fs.readFileSync(
-    path.resolve(GacUIPath, '../VlppOS/Source/TUI/TUITypes.h'),
+const windowTypesContent = fs.readFileSync(
+    path.resolve(GacUIPath, '../VlppOS/Source/WindowTypes.h'),
     'utf-8'
 ).replace(/\r\n/g, '\n');
-fs.writeFileSync(path.join(__dirname, 'src/Import/TUITypes.h'), tuiTypesContent);
+fs.writeFileSync(path.join(__dirname, 'src/Import/WindowTypes.h'), windowTypesContent);
+
+fs.rmSync(path.join(__dirname, 'src/Import/TUITypes.h'), { force: true });

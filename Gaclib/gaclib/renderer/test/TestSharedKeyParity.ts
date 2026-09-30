@@ -5,7 +5,7 @@ import { Key } from '@gaclib/remote-protocol';
 
 describe('Generated shared key declarations', () => {
     it('matches every imported VlppOS key and has no stale entries', () => {
-        const header = readFileSync(path.resolve('../codegen-remote-protocol/src/Import/TUITypes.h'), 'utf8');
+        const header = readFileSync(path.resolve('../codegen-remote-protocol/src/Import/WindowTypes.h'), 'utf8');
         const expected: Record<string, number> = { KEY_UNKNOWN: -1, KEY_MAXIMUM: 255 };
         for (const line of header.split('\n')) {
             const item = /ITEM\(\s*(\w+)\s*,\s*(0x[0-9A-Fa-f]+)\s*\)/u.exec(line);

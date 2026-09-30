@@ -41,6 +41,23 @@ test; use the platform commands in the operating guide for those checks.
 Protocol test files execute sequentially (`fileParallelism: false`) because
 they share a stateful server and fixed ports.
 
+### Linux WebAssembly apps
+
+The Wasm browser suite is separate from the Windows process harness. Follow the
+[Linux Wasm job](../../GacUI/.github/Jobs/job.rpWasm.prompt.md) to build all three
+apps, build GacJS, run `copy-wasm.sh`, and start the entry server. Then run
+`npm run test-wasm` from `Gaclib/website/entry`. `vitest.wasm.config.js` runs
+`test/Testing_Wasm.js` against the deployed modules without building or launching
+a native Core. The root `yarn test` also runs the portable channel tests in
+`remote-protocol-wasm`.
+
+Each page owns its Core worker and pthreads. Renderer replacement happens in the
+same page through the visible button; another tab starts an independent Core.
+RVMT keeps its TypeScript host alive during renderer replacement and Core
+shutdown. The suite follows the linked SOP for feature and failure checks and
+uses the existing renderer idle signal and visible DOM for synchronization.
+Native OS global hot keys are outside browser coverage.
+
 ## Test Harness
 
 All harness and test files live in `Gaclib/website/entry/test/`. These support

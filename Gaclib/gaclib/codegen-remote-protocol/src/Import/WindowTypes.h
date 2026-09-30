@@ -3,10 +3,10 @@ Author: Zihan Chen (vczh)
 Licensed under https://github.com/vczh-libraries/License
 ***********************************************************************/
 
-#ifndef VCZH_TUI_TYPES
-#define VCZH_TUI_TYPES
+#ifndef VCZH_WINDOW_TYPES
+#define VCZH_WINDOW_TYPES
 
-#include "../../Import/Vlpp.h"
+#include "../Import/Vlpp.h"
 
 namespace vl
 {

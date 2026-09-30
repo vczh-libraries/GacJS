@@ -34,6 +34,7 @@ Gaclib/
 │   └── rpc-test-cli/       ← @gaclib-rpc-test/rpc-test-cli
 └── website/
     ├── remote-protocol-http/ ← @gaclib-website/remote-protocol-http
+    ├── remote-protocol-wasm/ ← @gaclib-website/remote-protocol-wasm
     ├── rvm/                ← @gaclib-website/rvm
     ├── rvmhost/            ← @gaclib-website/rvmhost
     └── entry/              ← @gaclib-website/entry
@@ -49,7 +50,7 @@ Remote-protocol import inputs (including shared keys from the sibling VlppOS che
               └── Gaclib/gaclib/codegen-remote-protocol/src/Import/
                     ├── Protocols.json
                     ├── GuiRemoteProtocolAst_Json.d.ts
-                    └── TUITypes.h (from VlppOS/Source/TUI/TUITypes.h)
+                    └── WindowTypes.h (from VlppOS/Source/WindowTypes.h)
 ```
 
 The imported files retain their upstream names and are committed with the
@@ -139,8 +140,8 @@ The package is compiled during the import phase and is executed by
 
 The package deliberately has no `build` or `codegen` script. Key files:
 
-- `prepare.js` — refreshes `src/Import/Protocols.json` and `src/Import/GuiRemoteProtocolAst_Json.d.ts` from GacUI, and `src/Import/TUITypes.h` from VlppOS
-- `src/generateRemoteProtocol.ts` — generates protocol types/enums and primitive types, deriving Key from imported TUITypes.h (including UNKNOWN/MAXIMUM and bracket aliases)
+- `prepare.js` — refreshes `src/Import/Protocols.json` and `src/Import/GuiRemoteProtocolAst_Json.d.ts` from GacUI, and `src/Import/WindowTypes.h` from VlppOS
+- `src/generateRemoteProtocol.ts` — generates protocol types/enums and primitive types, deriving Key from imported WindowTypes.h (including UNKNOWN/MAXIMUM and bracket aliases)
 - `src/generateRemoteProtocolInvoking.ts` — generates protocol invocation/parsing code
 - `src/index.ts` — exports both generator functions without selecting an output directory or running them
 
@@ -329,6 +330,20 @@ The corresponding C++ source project is
 
 ---
 
+### @gaclib-website/remote-protocol-wasm
+
+**Path:** `Gaclib/website/remote-protocol-wasm/`
+
+Owns a dedicated worker loading the selected GacUI Wasm module. `WasmApplication`
+manages startup and logical connections; `WasmChannelClient` implements the same
+channel contract used by HTTP and Workflow RPC. `connectWasmServer` reuses the
+shared renderer adapter. The `./worker` entry is bundled separately by `entry` as
+`wasm-worker.js`. It loads `app.mjs` at runtime; Wasm binaries are never bundled
+or copied by the website build. Build and test phases compile/lint the package
+and verify channel routing, Unicode, admission, failure and shutdown.
+
+---
+
 ### @gaclib-website/rvm
 
 **Path:** `Gaclib/website/rvm/`
@@ -394,6 +409,7 @@ be the document root because the HTML pages use absolute paths such as
 |------|---------|
 | `/index.html` | Interactive UI — connects to the C++ HTTP server for live rendering |
 | `/index.html?rvmhost` | Starts the generated TypeScript RVM host and a separate renderer client in the page |
+| `/wasm-fct/`, `/wasm-rpt/`, `/wasm-rvmt/` | Worker-owned Wasm apps; RVMT includes the browser TypeScript view-model host |
 | `/snapshots.html` | Snapshot viewer — renders saved rendering traces from `assets/snapshots/` |
 | `/solidLabel.html` | Standalone test page for SolidLabel element rendering configurations |
 | `/elements.html` | Standalone test page for various element type rendering |
@@ -458,3 +474,20 @@ Workflow Debug x64 driver and GacJS, then invoke the driver in the current
 console with the TypeScript provider and approved destructor skip list. Because
 the driver is invoked directly, its stdout and stderr remain visible. Run the
 separate import and codegen phases first when their inputs have changed.
+
+## Running the Wasm Demos on Linux
+
+Build `GacUI/Test/Linux/WasmFCT`, `WasmRPT` and `WasmRVMT` using
+`../../../.github/Ubuntu/build.sh -bw -o` from each directory. All three use
+`VCZH_DEBUG_NO_REFLECTION`, x86 generated resources and Wasm `-O3`.
+After the normal GacJS build, run `../copy-wasm.sh` from `Gaclib`, then
+`npm run start` from `website/entry`. The explicit copy validates all source
+pairs and destination pages before copying; a missing input warns and exits
+nonzero. Re-run it after every website build, which cleans `lib/dist`.
+
+Each page loads its adjacent `app.mjs` and `app.wasm`. The module embeds the
+pthread bootstrap. The entry server provides `.mjs`/`.wasm` MIME types and
+COOP/COEP headers for shared memory. Browser page reload creates a fresh Core;
+`Replace Renderer` retains the current Core inside the same page.
+See the [Linux Wasm job](../../GacUI/.github/Jobs/job.rpWasm.prompt.md) for the
+complete verification procedure.

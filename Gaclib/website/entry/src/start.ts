@@ -19,6 +19,8 @@ const contentTypes: Readonly<Record<string, string>> = {
     '.jpeg': 'image/jpeg',
     '.jpg': 'image/jpeg',
     '.js': 'text/javascript; charset=utf-8',
+    '.mjs': 'text/javascript; charset=utf-8',
+    '.wasm': 'application/wasm',
     '.json': 'application/json; charset=utf-8',
     '.map': 'application/json; charset=utf-8',
     '.png': 'image/png',
@@ -55,6 +57,8 @@ function isPathInsideWebsite(candidate: string): boolean {
 }
 
 async function serveFile(request: IncomingMessage, response: ServerResponse<IncomingMessage>): Promise<void> {
+    response.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    response.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
     const method = request.method ?? 'GET';
     if (method !== 'GET' && method !== 'HEAD') {
         response.setHeader('Allow', 'GET, HEAD');

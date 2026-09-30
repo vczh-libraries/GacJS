@@ -14,6 +14,7 @@
         "start": "node ./lib/start.js",
         "test": "npm-run-all2 -s test-unit test-e2e",
         "test-unit": "vitest run --config vitest.unit.config.js",
+        "test-wasm": "vitest run --config vitest.wasm.config.js",
         "test-e2e": "node -e \"if (process.platform === 'win32') require('node:child_process').execSync('vitest run', { stdio: 'inherit' }); else console.log('Skipping Windows-only protocol E2E tests.')\""
     },
     "license": "Apache-2.0",
@@ -25,6 +26,7 @@
         "@gaclib/remote-protocol": "^0.0.1",
         "@gaclib/renderer": "^0.0.1",
         "@gaclib-website/remote-protocol-http": "^0.0.1",
+        "@gaclib-website/remote-protocol-wasm": "^0.0.1",
         "@gaclib-website/rvmhost": "^0.0.1",
         "esbuild": "0.25.8"
     }

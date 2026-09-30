@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Control Showcase — WebAssembly</title>
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/global.css">
+    <script type="module" src="/wasm.js"></script>
+</head>
+<body data-app="fct">
+    <div id="gacui-screen" class="gacui-container" tabindex="0"></div>
+    <button id="gacui-exit" disabled>Exit</button>
+    <button id="gacui-force-exit" disabled>Force Exit</button>
+    <button id="gacui-replace" disabled>Replace Renderer</button>
+    <div id="gacui-error-mask" class="gacui-error-mask">
+        <div class="gacui-error-cross"></div>
+        <div id="gacui-error-message" class="gacui-mask-message"></div>
+    </div>
+    <div id="gacui-success-mask" class="gacui-success-mask">
+        <div class="gacui-success-tick"></div>
+        <div id="gacui-success-message" class="gacui-mask-message"></div>
+    </div>
+</body>
+</html>

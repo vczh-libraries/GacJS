@@ -25,7 +25,7 @@ export class RemoteProtocolHttpDisconnectError extends Error {
     }
 }
 
-export interface IRemoteProtocolHttpClient {
+export interface IRemoteProtocolClient {
     readonly responses: IRemoteProtocolResponses;
     readonly events: IRemoteProtocolEvents;
     readonly channelClient: IChannelClient;
@@ -33,7 +33,9 @@ export interface IRemoteProtocolHttpClient {
     stop(): void;
 }
 
-class RemoteProtocolHttpClient implements IRemoteProtocolHttpClient {
+export type IRemoteProtocolHttpClient = IRemoteProtocolClient;
+
+class RemoteProtocolClient implements IRemoteProtocolClient {
     public readonly responses: IRemoteProtocolResponses;
     public readonly events: IRemoteProtocolEvents;
     private readonly unsubscribe: () => void;
@@ -64,28 +66,39 @@ class RemoteProtocolHttpClient implements IRemoteProtocolHttpClient {
 
     async start(): Promise<void> {
         if (this.channelClient.clientId === undefined) {
-            throw new Error('HTTP channel is not connected.');
+            throw new Error('Renderer channel is not connected.');
         }
         const platform = navigator.platform;
         const osSuperKeyName = platform.startsWith('Mac') ? 'Command' : platform.startsWith('Win') ? 'Win' : 'Super';
         this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16, osSuperKeyName });
-        try {
-            await this.channelClient.start();
-        } catch (error) {
-            if (error instanceof HttpChannelConnectionError) {
-                if (error.serverError) {
-                    throw new Error(error.message);
-                }
-                throw new RemoteProtocolHttpDisconnectError();
-            }
-            throw error;
-        }
+        await this.channelClient.start();
     }
 
     stop(): void {
         this.unsubscribe();
         this.channelClient.stop();
     }
+}
+
+class RemoteProtocolHttpClient extends RemoteProtocolClient {
+    async start(): Promise<void> {
+        try {
+            await super.start();
+        } catch (error) {
+            if (error instanceof HttpChannelConnectionError) {
+                if (error.serverError) throw new Error(error.message);
+                throw new RemoteProtocolHttpDisconnectError();
+            }
+            throw error;
+        }
+    }
+}
+
+export function createRemoteProtocolClient(
+    requests: IRemoteProtocolRequests,
+    channelClient: IChannelClient,
+): IRemoteProtocolClient {
+    return new RemoteProtocolClient(requests, channelClient);
 }
 
 export function createRemoteProtocolHttpClient(
