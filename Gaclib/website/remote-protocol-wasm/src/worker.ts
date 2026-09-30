@@ -1,10 +1,8 @@
 import { normalizeError, WasmCommand, WasmNotification } from './messages.js';
 
 interface WasmModule {
-    StartApplication(receiver: (kind: WasmNotification['kind'], connectionId: number, data: string) => string): string;
-    ConnectToWasmCore(connectionId: number): string;
+    StartApplication(receiver: (kind: WasmNotification['kind'], connectionId: number, data: string) => string, connectionCount: number): string;
     SendDataToWasmCore(connectionId: number, data: string): string;
-    DisconnectFromWasmCore(connectionId: number): string;
 }
 
 type WasmFactory = (options: { onAbort: (reason: unknown) => void }) => Promise<WasmModule>;
@@ -49,15 +47,11 @@ globalThis.onmessage = (event: MessageEvent<WasmCommand>): void => {
             if (module !== undefined) return;
             const loaded = await import(/* @vite-ignore */ command.moduleUrl) as { default: WasmFactory };
             module = await loaded.default({ onAbort: reason => { notify('error', 0, String(reason)); } });
-            check(module.StartApplication(receive));
+            check(module.StartApplication(receive, command.connectionCount));
             return;
         }
         if (module === undefined) throw new Error('The Wasm module has not started.');
-        switch (command.kind) {
-            case 'connect': check(module.ConnectToWasmCore(command.connectionId)); break;
-            case 'disconnect': check(module.DisconnectFromWasmCore(command.connectionId)); break;
-            case 'data': check(module.SendDataToWasmCore(command.connectionId, command.data)); break;
-        }
+        check(module.SendDataToWasmCore(command.connectionId, command.data));
     })().catch(error => {
         notify('error', 0, normalizeError(error).message);
     });

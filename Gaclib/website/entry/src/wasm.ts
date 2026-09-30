@@ -1,4 +1,4 @@
-import { IRemoteProtocolClient } from '@gaclib-website/remote-protocol-http';
+import { GACUI_REMOTE_PROTOCOL_CHANNEL_NAME, IRemoteProtocolClient } from '@gaclib-website/remote-protocol-http';
 import { connectWasmServer, WasmApplication } from '@gaclib-website/remote-protocol-wasm';
 import { RvmHostSession, startRvmHostWithChannel, RVM_CHANNEL_NAME, RVM_READY_CHANNEL_NAME } from '@gaclib-website/rvmhost';
 import { createHtmlRenderer, GacUIHtmlRendererExitError, GacUISettings, IGacUIRenderer } from '@gaclib/renderer';
@@ -21,6 +21,7 @@ declare global {
 
 const screen = document.getElementById('gacui-screen') as HTMLElement;
 const buttons = Array.from(document.querySelectorAll('button'));
+const reload = document.getElementById('gacui-reload') as HTMLButtonElement;
 const settings: GacUISettings = {
     target: screen,
     isShortcutReservedForBrowser,
@@ -43,22 +44,25 @@ function showMask(success: boolean, message: string): void {
     screen.append(mask);
     mask.classList.add('visible');
     for (const button of buttons) button.disabled = true;
+    reload.disabled = !success;
 }
 
 async function main(): Promise<void> {
     if (!globalThis.crossOriginIsolated) throw new Error('Serve this page with COOP/COEP headers using npm run start.');
+    const hasViewModel = document.body.dataset.app === 'rvmt';
     const application = new WasmApplication({
         moduleUrl: new URL('./app.mjs', location.href),
         workerUrl: new URL('/wasm-worker.js', location.href),
+        channels: [
+            [GACUI_REMOTE_PROTOCOL_CHANNEL_NAME],
+            ...(hasViewModel ? [[RVM_CHANNEL_NAME, RVM_READY_CHANNEL_NAME]] : []),
+        ],
     });
     const session: WasmSession = { application };
     window.__gacui_wasm_session = session;
     window.addEventListener('pagehide', () => { application.stop(); }, { once: true });
-    let generation = 0;
 
     const runRenderer = async (): Promise<void> => {
-        const current = ++generation;
-        session.renderer?.stop();
         screen.replaceChildren();
         const renderer = createHtmlRenderer(settings);
         const client = await connectWasmServer(application, renderer.requests);
@@ -66,22 +70,17 @@ async function main(): Promise<void> {
         session.client = client;
         renderer.start(client.responses, client.events);
         screen.focus();
-        for (const button of buttons) button.disabled = false;
+        for (const button of buttons) button.disabled = button === reload;
         try {
-            await client.start();
-            if (current !== generation) return;
+            try {
+                await client.start();
+            } catch (error) {
+                if (!(error instanceof GacUIHtmlRendererExitError)) throw error;
+            }
+            // Keep RPC alive until Core has released its service and finished shutdown.
             const result = await application.completion;
             if (result !== 0) throw new Error(`Wasm application exited with code ${String(result)}.`);
             showMask(true, 'GacUI core stopped.');
-        } catch (error) {
-            if (current !== generation) return;
-            if (!(error instanceof GacUIHtmlRendererExitError)) {
-                application.stop();
-                throw error;
-            }
-            // Keep RPC alive during normal finalization, including release of the held service.
-            await application.completion;
-            showMask(true, error.message);
         } finally {
             client.stop();
             renderer.stop();
@@ -97,12 +96,15 @@ async function main(): Promise<void> {
 
     (document.getElementById('gacui-exit') as HTMLButtonElement).onclick = () => { session.renderer?.requestStopToCore(false); };
     (document.getElementById('gacui-force-exit') as HTMLButtonElement).onclick = () => { session.renderer?.requestStopToCore(true); };
-    (document.getElementById('gacui-replace') as HTMLButtonElement).onclick = () => { void runRenderer().catch(reportError); };
+    reload.onclick = () => {
+        reload.disabled = true;
+        location.reload();
+    };
 
     try {
         await application.ready;
-        if (document.body.dataset.app === 'rvmt') {
-            const channel = application.createChannel([RVM_CHANNEL_NAME, RVM_READY_CHANNEL_NAME]);
+        if (hasViewModel) {
+            const channel = application.channels[1];
             await channel.connect();
             // This browser TypeScript host implements IViewModel.Translate using the generated x86 RPC binding.
             session.host = startRvmHostWithChannel(channel);
@@ -112,6 +114,8 @@ async function main(): Promise<void> {
         await runRenderer();
     } catch (error) {
         reportError(error);
+    } finally {
+        session.host?.stop();
     }
 }
 

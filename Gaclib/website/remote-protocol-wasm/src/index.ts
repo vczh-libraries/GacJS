@@ -12,7 +12,6 @@ import {
 } from '@gaclib-website/remote-protocol-http/channel';
 import {
     createRemoteProtocolClient,
-    GACUI_REMOTE_PROTOCOL_CHANNEL_NAME,
     IRemoteProtocolClient,
 } from '@gaclib-website/remote-protocol-http';
 import { IRemoteProtocolRequests } from '@gaclib/remote-protocol';
@@ -21,6 +20,7 @@ import { deferred, normalizeError, WasmCommand, WasmNotification } from './messa
 export interface WasmApplicationOptions {
     moduleUrl: string | URL;
     workerUrl: string | URL;
+    channels: readonly (readonly string[])[];
     createWorker?: (url: string | URL) => Worker;
 }
 
@@ -29,14 +29,15 @@ export class WasmApplication {
     private readonly readySignal = deferred<void>();
     private readonly rendererSignal = deferred<void>();
     private readonly exitSignal = deferred<number>();
-    private readonly connections = new Map<number, WasmChannelClient>();
-    private nextConnectionId = 1;
     private stopped = false;
+    readonly channels: readonly WasmChannelClient[];
     readonly ready = this.readySignal.promise;
     readonly rendererReady = this.rendererSignal.promise;
     readonly completion = this.exitSignal.promise;
 
     constructor(options: WasmApplicationOptions) {
+        if (options.channels.length === 0) throw new Error('A Wasm application needs at least one connection.');
+        this.channels = options.channels.map((names, index) => new WasmChannelClient(this, index + 1, names));
         this.worker = (options.createWorker ?? (url => new Worker(url, { type: 'module' })))(options.workerUrl);
         this.worker.onmessage = (event: MessageEvent<WasmNotification>) => {
             if (this.stopped) return;
@@ -45,8 +46,8 @@ export class WasmApplication {
                 switch (kind) {
                     case 'ready': this.readySignal.resolve(); break;
                     case 'renderer-ready': this.rendererSignal.resolve(); break;
-                    case 'data': this.connections.get(connectionId)?.receive(data); break;
-                    case 'closed': this.connections.get(connectionId)?.closed(); break;
+                    case 'data': this.channels[connectionId - 1]?.receive(data); break;
+                    case 'closed': this.channels[connectionId - 1]?.closed(); break;
                     case 'error': this.fail(new Error(data)); break;
                     case 'exit':
                         this.worker.terminate();
@@ -54,8 +55,7 @@ export class WasmApplication {
                         this.readySignal.reject(new Error('Wasm application exited before startup.'));
                         this.rendererSignal.reject(new Error('Wasm application exited before renderer admission.'));
                         this.exitSignal.resolve(Number(data));
-                        for (const connection of this.connections.values()) connection.closed();
-                        this.connections.clear();
+                        for (const connection of this.channels) connection.closed();
                         break;
                     default: throw new Error(`Unknown Wasm notification: ${String(kind)}`);
                 }
@@ -64,7 +64,7 @@ export class WasmApplication {
             }
         };
         this.worker.onerror = event => { this.fail(new Error(event.message)); };
-        this.send({ kind: 'start', moduleUrl: String(options.moduleUrl) });
+        this.send({ kind: 'start', moduleUrl: String(options.moduleUrl), connectionCount: this.channels.length });
     }
 
     private fail(error: Error): void {
@@ -72,26 +72,13 @@ export class WasmApplication {
         this.readySignal.reject(error);
         this.rendererSignal.reject(error);
         this.exitSignal.reject(error);
-        for (const connection of this.connections.values()) connection.fail(error);
+        for (const connection of this.channels) connection.fail(error);
         this.stop();
     }
 
     send(command: WasmCommand): void {
         if (this.stopped) throw new Error('Wasm application is stopped.');
         this.worker.postMessage(command);
-    }
-
-    createChannel(channelNames: readonly string[]): WasmChannelClient {
-        if (this.stopped) throw new Error('Wasm application is stopped.');
-        const id = this.nextConnectionId++;
-        const client = new WasmChannelClient(this, id, channelNames);
-        this.connections.set(id, client);
-        return client;
-    }
-
-    disconnect(connectionId: number): void {
-        if (!this.connections.delete(connectionId) || this.stopped) return;
-        this.send({ kind: 'disconnect', connectionId });
     }
 
     stop(): void {
@@ -102,8 +89,7 @@ export class WasmApplication {
         this.readySignal.reject(error);
         this.rendererSignal.reject(error);
         this.exitSignal.reject(error);
-        for (const connection of this.connections.values()) connection.closed();
-        this.connections.clear();
+        for (const connection of this.channels) connection.closed();
     }
 }
 
@@ -134,7 +120,6 @@ export class WasmChannelClient implements IChannelClient {
         this.connecting ??= (async () => {
             await this.application.ready;
             if (this.currentState !== 'connecting') throw new Error('Wasm channel is closed.');
-            this.application.send({ kind: 'connect', connectionId: this.connectionId });
             this.application.send({
                 kind: 'data', connectionId: this.connectionId,
                 data: serializeNetworkPackage({ channelName: '', messageBody: this.channelNames.join('!') }),
@@ -224,7 +209,6 @@ export class WasmChannelClient implements IChannelClient {
         this.currentState = 'failed';
         this.assignment.reject(error);
         this.completed.resolve({ type: 'failed', error });
-        this.application.disconnect(this.connectionId);
     }
 
     closed(): void {
@@ -236,13 +220,12 @@ export class WasmChannelClient implements IChannelClient {
 
     stop(): void {
         this.closed();
-        this.application.disconnect(this.connectionId);
     }
 }
 
 export async function connectWasmServer(application: WasmApplication, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolClient> {
     await application.rendererReady;
-    const channel = application.createChannel([GACUI_REMOTE_PROTOCOL_CHANNEL_NAME]);
+    const channel = application.channels[0];
     await channel.connect();
     return createRemoteProtocolClient(requests, channel);
 }

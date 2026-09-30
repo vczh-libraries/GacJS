@@ -1,6 +1,5 @@
 export type WasmCommand =
-    | { kind: 'start'; moduleUrl: string }
-    | { kind: 'connect' | 'disconnect'; connectionId: number }
+    | { kind: 'start'; moduleUrl: string; connectionCount: number }
     | { kind: 'data'; connectionId: number; data: string };
 
 export interface WasmNotification {

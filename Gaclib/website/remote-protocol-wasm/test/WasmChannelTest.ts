@@ -14,29 +14,27 @@ class FakeWorker {
     }
 }
 
-function setup(): { worker: FakeWorker; application: WasmApplication } {
+function setup(channels = [['GacUIRemoteProtocol']]): { worker: FakeWorker; application: WasmApplication } {
     const worker = new FakeWorker();
     const application = new WasmApplication({
         moduleUrl: 'http://localhost/demo/app.mjs',
         workerUrl: 'http://localhost/wasm-worker.js',
+        channels,
         createWorker: () => worker as unknown as Worker,
     });
     return { worker, application };
 }
 
 test('host and renderer have independent channels, IDs and ordered Unicode messages', async () => {
-    const { worker, application } = setup();
-    const host = application.createChannel(['ViewModelChannel', 'ViewModelReadyChannel']);
-    const renderer = application.createChannel(['GacUIRemoteProtocol']);
+    const { worker, application } = setup([['ViewModelChannel', 'ViewModelReadyChannel'], ['GacUIRemoteProtocol']]);
+    const [host, renderer] = application.channels;
     const hosting = host.connect();
     const rendering = renderer.connect();
-    expect(worker.sent).toEqual([{ kind: 'start', moduleUrl: 'http://localhost/demo/app.mjs' }]);
+    expect(worker.sent).toEqual([{ kind: 'start', moduleUrl: 'http://localhost/demo/app.mjs', connectionCount: 2 }]);
     worker.notify('ready');
     await application.ready;
     expect(worker.sent.slice(1)).toEqual([
-        { kind: 'connect', connectionId: 1 },
         { kind: 'data', connectionId: 1, data: ';;ViewModelChannel!ViewModelReadyChannel' },
-        { kind: 'connect', connectionId: 2 },
         { kind: 'data', connectionId: 2, data: ';;GacUIRemoteProtocol' },
     ]);
     worker.notify('data', 1, '4;;');
@@ -60,12 +58,13 @@ test('host and renderer have independent channels, IDs and ordered Unicode messa
     expect(host.state).toBe('assigned');
     application.stop();
     expect(await host.completion).toEqual({ type: 'stopped' });
+    expect(worker.sent.every(command => command.kind === 'start' || command.kind === 'data')).toBe(true);
 });
 
 test('Core fatal errors win over close and release a blocked channel reader', async () => {
     const { worker, application } = setup();
     worker.notify('ready');
-    const client = application.createChannel(['GacUIRemoteProtocol']);
+    const [client] = application.channels;
     const connected = client.connect();
     await application.ready;
     worker.notify('data', 1, '2;;');
@@ -83,22 +82,22 @@ test('Core fatal errors win over close and release a blocked channel reader', as
 });
 
 test('rejected admission settles connect and does not terminate another connection', async () => {
-    const { worker, application } = setup();
+    const { worker, application } = setup([['ViewModelChannel', 'ViewModelReadyChannel'], ['GacUIRemoteProtocol']]);
     worker.notify('ready');
-    const rejected = application.createChannel(['ViewModelChannel', 'ViewModelReadyChannel']);
+    const [rejected, renderer] = application.channels;
     const connecting = expect(rejected.connect()).rejects.toThrow('closed before assignment');
     await application.ready;
     worker.notify('closed', 1);
     await connecting;
-    expect(application.createChannel(['GacUIRemoteProtocol']).state).toBe('connecting');
+    expect(renderer.state).toBe('connecting');
     application.stop();
 });
 
 test('malformed and duplicate assignments are terminal for their channel', async () => {
     for (const packet of ['bad', '0;;', '2,3;;', '2;;unexpected']) {
-        const { worker, application } = setup();
+        const { worker, application } = setup([['A']]);
         worker.notify('ready');
-        const client = application.createChannel(['A']);
+        const [client] = application.channels;
         const connecting = expect(client.connect()).rejects.toThrow();
         await application.ready;
         worker.notify('data', 1, packet);
@@ -106,9 +105,9 @@ test('malformed and duplicate assignments are terminal for their channel', async
         expect(client.state).toBe('failed');
         application.stop();
     }
-    const { worker, application } = setup();
+    const { worker, application } = setup([['A']]);
     worker.notify('ready');
-    const client = application.createChannel(['A']);
+    const [client] = application.channels;
     const connecting = client.connect();
     await application.ready;
     worker.notify('data', 1, '2;;');

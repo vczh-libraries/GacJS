@@ -51,11 +51,14 @@ apps, build GacJS, run `copy-wasm.sh`, and start the entry server. Then run
 a native Core. The root `yarn test` also runs the portable channel tests in
 `remote-protocol-wasm`.
 
-Each page owns its Core worker and pthreads. Renderer replacement happens in the
-same page through the visible button; another tab starts an independent Core.
-RVMT keeps its TypeScript host alive during renderer replacement and Core
-shutdown. The suite follows the linked SOP for feature and failure checks and
-uses the existing renderer idle signal and visible DOM for synchronization.
+Each page owns its Core worker and pthreads. The suite verifies Exit cancellation,
+Exit and Force Exit followed by Reload, fresh UI state, and recreated RVMT hosts.
+Reload stays disabled until normal Core completion; RVMT keeps its host alive
+through Core's service release. Fatal errors leave Reload disabled. The fixed
+startup connections have no separate host-disconnection or replacement-renderer
+operation. The suite also covers the linked SOP's feature operations, RPT fatal
+errors and live-page closure, using renderer idle signals and visible DOM for
+synchronization and checking actual worker termination.
 Native OS global hot keys are outside browser coverage.
 
 ## Test Harness

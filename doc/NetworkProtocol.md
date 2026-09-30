@@ -516,22 +516,22 @@ over an owned dedicated worker. The worker loads the selected `app.mjs`/`app.was
 and calls the `GacUIWasmApplication` Embind exports:
 
 ```typescript
-StartApplication(receiver: (kind: string, connectionId: number, data: string) => string): string;
-ConnectToWasmCore(connectionId: number): string;
+StartApplication(receiver: (kind: string, connectionId: number, data: string) => string, connectionCount: number): string;
 SendDataToWasmCore(connectionId: number, data: string): string;
-DisconnectFromWasmCore(connectionId: number): string;
 ```
 
 Every export returns an empty string on success or a diagnostic on failure.
 The receiver follows the same convention; exceptions do not cross the binding.
 Text is copied as UTF-16 at the boundary and converted to `WString` inside C++.
-Connection IDs identify transport endpoints, independently of the channel client
-IDs assigned by the unchanged VlppOS handshake. This permits separate host and
-renderer endpoints within one module. Ordinary data uses the same semicolon
+Startup creates the fixed transport endpoints with IDs 1 through `connectionCount`,
+before reporting `ready`. `WasmApplicationOptions.channels` declares their channel
+sets in that order; the renderer occupies the first endpoint and RVMT adds a host
+endpoint. These transport IDs are independent of the channel client IDs assigned
+by the unchanged VlppOS handshake. Ordinary data uses the same semicolon
 package envelope and JSON arrays as HTTP, without HTTP or Base64 framing.
 
 Notifications are `ready`, `renderer-ready`, `data`, `closed`, `error` and `exit`.
-`ready` permits channel connections. `renderer-ready` is sent after Core's RPC
+`ready` permits channel handshakes on the installed connections. `renderer-ready` is sent after Core's RPC
 requester has acquired its service, so RVMT needs no admission polling.
 `exit` carries the C++ return code as decimal text. An existing application
 ignores repeated `StartApplication` calls; restarting means loading a fresh module.
@@ -546,9 +546,12 @@ its module worker and children. Normal shutdown allows Core to finalize and
 release its RPC service before workers stop.
 
 The RVMT page uses `startRvmHostWithChannel` and the existing TypeScript
-`IViewModel.Translate` implementation. `Replace Renderer` creates a new renderer
-channel in the same module while preserving Core and the host. A separate page
-owns a separate Core. Page exit terminates the owned worker/pthread lifetime.
+`IViewModel.Translate` implementation. Connections last for the application;
+there are no exported connect/disconnect functions or renderer replacement.
+After normal Core completion, Reload becomes enabled. Clicking it immediately
+disables the button and reloads the page, recreating Core, renderer and host with
+fresh state. Reload remains disabled during startup, operation, canceled Exit
+and fatal errors. Page exit terminates the owned worker/pthread lifetime.
 
 ## Porting Checklist
 

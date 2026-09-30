@@ -335,7 +335,7 @@ The corresponding C++ source project is
 **Path:** `Gaclib/website/remote-protocol-wasm/`
 
 Owns a dedicated worker loading the selected GacUI Wasm module. `WasmApplication`
-manages startup and logical connections; `WasmChannelClient` implements the same
+manages startup with a fixed set of logical connections; `WasmChannelClient` implements the same
 channel contract used by HTTP and Workflow RPC. `connectWasmServer` reuses the
 shared renderer adapter. The `./worker` entry is bundled separately by `entry` as
 `wasm-worker.js`. It loads `app.mjs` at runtime; Wasm binaries are never bundled
@@ -479,7 +479,11 @@ separate import and codegen phases first when their inputs have changed.
 
 Build `GacUI/Test/Linux/WasmFCT`, `WasmRPT` and `WasmRVMT` using
 `../../../.github/Ubuntu/build.sh -bw -o` from each directory. All three use
-`VCZH_DEBUG_NO_REFLECTION`, x86 generated resources and Wasm `-O3`.
+`VCZH_DEBUG_NO_REFLECTION`, merged DarkSkin sources from
+`Source/Skins/DarkSkin/Source`, x86 demo sources and Wasm `-O3`.
+The same directories support a native `-f -o` compile/link check with x64 demo
+sources; the resulting CLI binaries immediately return 0. Rebuild the Wasm
+outputs afterward because a native full build cleans `Bin`.
 After the normal GacJS build, run `../copy-wasm.sh` from `Gaclib`, then
 `npm run start` from `website/entry`. The explicit copy validates all source
 pairs and destination pages before copying; a missing input warns and exits
@@ -487,7 +491,8 @@ nonzero. Re-run it after every website build, which cleans `lib/dist`.
 
 Each page loads its adjacent `app.mjs` and `app.wasm`. The module embeds the
 pthread bootstrap. The entry server provides `.mjs`/`.wasm` MIME types and
-COOP/COEP headers for shared memory. Browser page reload creates a fresh Core;
-`Replace Renderer` retains the current Core inside the same page.
+COOP/COEP headers for shared memory. Reload is disabled while the application is
+starting or running. Normal Core completion enables it; clicking it reloads the
+page with a fresh Core, renderer and RVMT host, discarding previous UI state.
 See the [Linux Wasm job](../../GacUI/.github/Jobs/job.rpWasm.prompt.md) for the
 complete verification procedure.

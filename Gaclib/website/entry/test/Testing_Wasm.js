@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
 import { chromium, expect as expectUI } from '@playwright/test';
 import { IOMouseButton } from '@gaclib/remote-protocol';
-import { clickAt, findTextInputPointRightOfLabel, getLeafTextPositions, setupIdleTracking, waitUntilIdle, waitForIdle } from './Testing_Protocol.js';
+import { clickAt, findTextInputPointRightOfLabel, getLeafTextPositions, setupIdleTracking, waitUntilIdle } from './Testing_Protocol.js';
 
 let browser;
 let page;
@@ -33,11 +33,17 @@ async function open(app, title) {
     page.on('dialog', dialog => { errors.push(dialog.message()); void dialog.dismiss(); });
     await setupIdleTracking(page);
     await page.goto(`http://127.0.0.1:8896/wasm-${app}/`);
+    await ready(title);
+}
+
+async function ready(title) {
     await expect.poll(async () => errors.length > 0 || (await page.locator('#gacui-screen').textContent()).includes(title), { timeout: 60000 }).toBe(true);
     expect(errors).toEqual([]);
     await waitUntilIdle(page, 60000);
     await expectUI(page.locator('#gacui-screen')).toContainText(title);
     await expectUI(page.locator('#gacui-error-mask')).not.toBeVisible();
+    await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeDisabled();
+    await expectUI(page.getByRole('button', { name: 'Replace Renderer', exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => crossOriginIsolated)).toBe(true);
     expect((await browserSession.send('Target.getTargets')).targetInfos.some(target => target.type === 'worker')).toBe(true);
     await page.evaluate(() => {
@@ -79,6 +85,8 @@ async function stopped() {
     expect(await page.evaluate(() => window.__gacui_wasm_session.application.completion)).toBe(0);
     await expectUI(page.locator('#gacui-error-mask')).not.toBeVisible();
     await workersStopped();
+    await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeEnabled();
+    for (const name of ['Exit', 'Force Exit']) await expectUI(page.getByRole('button', { name, exact: true })).toBeDisabled();
 }
 
 async function workersStopped() {
@@ -100,17 +108,15 @@ async function editorPoint() {
 
 async function leafTexts() { return (await getLeafTextPositions(page)).map(position => position.text); }
 
-async function replaceRenderer() {
-    await page.evaluate(() => { window.__wasm_old_client = window.__gacui_wasm_session.client; });
-    await page.getByRole('button', { name: 'Replace Renderer', exact: true }).click();
-    await page.waitForFunction(() => window.__gacui_wasm_session.client !== window.__wasm_old_client);
-    await waitForIdle(page);
-    const previous = await page.evaluate(async () => {
-        const result = await window.__wasm_old_client.channelClient.completion;
-        return { type: result.type, message: result.error?.message };
-    });
-    expect(previous).toEqual({ type: 'failed', message: 'IGacUIRenderer exited due to receiving RequestControllerConnectionStopped.' });
-    await expectUI(page.locator('#gacui-error-mask')).not.toBeVisible();
+async function reloadApplication(title) {
+    page.__idleState.pending = false;
+    await Promise.all([
+        page.waitForEvent('domcontentloaded'),
+        page.getByRole('button', { name: 'Reload', exact: true }).click(),
+    ]);
+    await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeDisabled();
+    await ready(title);
+    await expectUI(page.locator('#gacui-success-mask')).not.toBeVisible();
 }
 
 async function shortcutsAndMouse() {
@@ -191,13 +197,14 @@ async function fatal(message) {
     await expectUI(page.locator('#gacui-success-mask')).not.toBeVisible();
     await expect(page.evaluate(() => window.__gacui_wasm_session.application.completion)).rejects.toThrow('Wasm application stopped.');
     await workersStopped();
+    await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeDisabled();
     await expect.poll(() => errors).toEqual(expectedErrors);
     const packets = await page.evaluate(() => window.__wasm_errors);
     const rendererPackets = packets.filter(packet => packet.data.endsWith(`;!Error;${message}`));
     expect(rendererPackets).toHaveLength(1);
 }
 
-test('WasmRPT renders and exchanges Home/DataGrid/Document events, replaces its renderer and exits', async () => {
+test('WasmRPT renders, cancels Exit, and reloads fresh state after Exit and Force Exit', async () => {
     await open('rpt', 'Remote Protocol Test');
     await clickText('Click Me!');
     await expectUI(page.locator('#gacui-screen')).toContainText('You have clicked!');
@@ -221,12 +228,27 @@ test('WasmRPT renders and exchanges Home/DataGrid/Document events, replaces its 
     await expectUI(page.locator('#gacui-screen')).toContainText('Pretend to be starting!');
     await clickText('OK');
     await expectUI(page.locator('#gacui-screen')).not.toContainText('Pretend to be starting!');
-    await replaceRenderer();
     await clickText('Home');
     await expectUI(page.locator('#gacui-screen')).toContainText('You have clicked!');
-    await replaceRenderer();
-    await expectUI(page.locator('#gacui-screen')).toContainText('You have clicked!');
-    await shortcutsAndMouse();
+    await page.getByRole('button', { name: 'Exit', exact: true }).click();
+    await expectUI(page.locator('#gacui-screen')).toContainText('Do you want to exit?');
+    await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeDisabled();
+    await clickText('Cancel');
+    await expectUI(page.locator('#gacui-screen')).not.toContainText('Do you want to exit?');
+    await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeDisabled();
+    await page.getByRole('button', { name: 'Exit', exact: true }).click();
+    await expectUI(page.locator('#gacui-screen')).toContainText('Do you want to exit?');
+    await clickText('OK');
+    await stopped();
+    await reloadApplication('Remote Protocol Test');
+    await expect.poll(leafTexts).toContain('Click Me!');
+    expect(await leafTexts()).not.toContain('You have clicked!');
+    await clickText('Click Me!');
+    await expect.poll(leafTexts).toContain('You have clicked!');
+    await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
+    await stopped();
+    await reloadApplication('Remote Protocol Test');
+    await expect.poll(leafTexts).toContain('Click Me!');
     await clickText('File');
     await clickText('self.Close() (InvokeInMainThread)');
     await expectUI(page.locator('#gacui-screen')).toContainText('Do you want to exit?');
@@ -234,7 +256,7 @@ test('WasmRPT renders and exchanges Home/DataGrid/Document events, replaces its 
     await stopped();
 });
 
-test('WasmFCT preserves both editors, lists and input through tabs, palette refresh and renderer replacement', async () => {
+test('WasmFCT renders its merged skin and reloads with fresh editors and palette', async () => {
     await open('fct', 'Complete Control Showcase');
     await clickText('Add 10 items');
     await expect.poll(async () => (await leafTexts()).filter(text => text === '0')).toHaveLength(2);
@@ -276,28 +298,26 @@ test('WasmFCT preserves both editors, lists and input through tabs, palette refr
     for (const marker of ['Wasm[Ab]{Cd}', 'WasmRichEditor']) await expectUI(page.locator('#gacui-screen')).toContainText(marker);
     await clickText('Window Manager');
     await expect.poll(leafTexts).toContain('Aurora');
-    await replaceRenderer();
-    await shortcutsAndMouse();
+    await page.getByRole('button', { name: 'Exit', exact: true }).click();
+    await stopped();
+    await reloadApplication('Complete Control Showcase');
     await clickText('Control');
-    for (const marker of ['Wasm[Ab]{Cd}', 'WasmRichEditor']) await expectUI(page.locator('#gacui-screen')).toContainText(marker);
+    await clickText('Document Editor (Ribbon)');
+    for (const marker of ['Wasm[Ab]{Cd}', 'WasmRichEditor']) await expectUI(page.locator('#gacui-screen')).not.toContainText(marker);
+    expect(await colors()).not.toContain('rgb(22, 138, 122)');
+    await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
+    await stopped();
+    await reloadApplication('Complete Control Showcase');
+    await clickText('Add 10 items');
+    await expect.poll(async () => (await leafTexts()).filter(text => text === '0')).toHaveLength(2);
     await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
     await stopped();
 });
 
-test('WasmRVMT retains its TypeScript host through rejected admission and renderer replacement', async () => {
+test('WasmRVMT recreates Core and its TypeScript host after Exit and Force Exit', async () => {
     await open('rvmt', 'Remote View Model Test');
     await expectUI(page.locator('#gacui-screen')).toContainText('Hello, !');
     await typeGreeting('WasmRPC');
-    const rejection = await page.evaluate(async () => {
-        const host = window.__gacui_wasm_session.application.createChannel(['ViewModelChannel', 'ViewModelReadyChannel']);
-        try { await host.connect(); return ''; }
-        catch (error) { return error.message; }
-        finally { host.stop(); }
-    });
-    expect(rejection).not.toBe('');
-    await typeGreeting('OriginalHost');
-    await replaceRenderer();
-    await expect.poll(leafTexts).toContain('Hello, OriginalHost!');
     await typeGreeting('WasmUTF16');
     const cdp = await page.context().newCDPSession(page);
     for (const key of '你好') {
@@ -306,6 +326,17 @@ test('WasmRVMT retains its TypeScript host through rejected admission and render
     }
     await cdp.detach();
     await expect.poll(leafTexts).toContain('Hello, WasmUTF16你好!');
+    await page.getByRole('button', { name: 'Exit', exact: true }).click();
+    await stopped();
+    await reloadApplication('Remote View Model Test');
+    await expect.poll(leafTexts).toContain('Hello, !');
+    expect(await leafTexts()).not.toContain('Hello, WasmUTF16你好!');
+    await typeGreeting('ReloadedHost');
+    await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
+    await stopped();
+    await reloadApplication('Remote View Model Test');
+    await expect.poll(leafTexts).toContain('Hello, !');
+    await typeGreeting('ReloadedAgain');
     await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
     await stopped();
 });
@@ -316,35 +347,6 @@ test('WasmRPT preserves the exact Core-authored fatal error', async () => {
     await clickText('Fatel Error');
     await fatal(expectedErrors[0]);
 });
-
-for (const pending of [false, true]) {
-    test(`WasmRVMT reports accepted-host loss ${pending ? 'during an outstanding RPC' : 'before the next RPC'}`, async () => {
-        await open('rvmt', 'Remote View Model Test');
-        await typeGreeting('Alive');
-        const point = await editorPoint();
-        await clickAt(page, point.x, point.y);
-        await page.keyboard.press('End');
-        expectedErrors = ['RemotingTest_RvmHost disconnected.'];
-        if (pending) {
-            await page.evaluate(() => {
-                const channel = window.__gacui_wasm_session.host.channel;
-                const send = channel.sendToClient.bind(channel);
-                channel.sendToClient = (id, name, body) => {
-                    if (body.includes('Hello, AliveX!')) {
-                        window.__wasm_rpc_reply_held = true;
-                        return new Promise(() => {});
-                    }
-                    return send(id, name, body);
-                };
-            });
-            await page.keyboard.type('X');
-            await page.waitForFunction(() => window.__wasm_rpc_reply_held === true);
-        }
-        await page.evaluate(() => { window.__gacui_wasm_session.host.stop(); });
-        if (!pending) await page.keyboard.type('X');
-        await fatal(expectedErrors[0]);
-    });
-}
 
 test('closing a live Wasm page terminates its Core and pthreads', async () => {
     await open('rvmt', 'Remote View Model Test');
