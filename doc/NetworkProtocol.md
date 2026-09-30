@@ -5,6 +5,7 @@ renderer or remote view-model host in another programming language. It covers
 the protocols used by:
 
 - `Gaclib/website/remote-protocol-http`
+- `Gaclib/website/remote-protocol-wasm`
 - `Gaclib/website/rvmhost`
 - `Gaclib/website/rvm`
 - `Gaclib/website/entry`
@@ -19,6 +20,12 @@ The HTTP and stdio transports described here are test and demonstration
 transports. They provide no authentication, authorization, TLS termination,
 message replay, end-to-end application acknowledgement, or exactly-once
 delivery.
+
+`remote-protocol-wasm` demos how to connect the HTML5 renderer to a GacUI application compiled into a WebAssembly file.
+In [GacUI's Test/Linux](https://github.com/vczh-libraries/GacUI/tree/master/Test/Linux) there are 3 test apps to run with test pages in `Gaclib/website/entry`:
+- `WasmFCT`: `/wasm-fct/index.html`
+- `WasmRPT`: `/wasm-rpt/index.html`
+- `WasmRVMT`: `/wasm-rvmt/index.html`
 
 ## Two Handshake Levels
 
