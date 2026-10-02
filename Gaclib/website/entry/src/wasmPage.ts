@@ -2,7 +2,7 @@ import { GACUI_REMOTE_PROTOCOL_CHANNEL_NAME, IRemoteProtocolClient } from '@gacl
 import { connectWasmServer, WasmApplication } from '@gaclib-website/remote-protocol-wasm';
 import { RvmHostSession, startRvmHostWithChannel, RVM_CHANNEL_NAME, RVM_READY_CHANNEL_NAME } from '@gaclib-website/rvmhost';
 import { createHtmlRenderer, GacUIHtmlRendererExitError, GacUISettings, IGacUIRenderer } from '@gaclib/renderer';
-import { isShortcutReservedForBrowser } from './index.js';
+import { isShortcutReservedForBrowser } from '@gaclib/renderer';
 
 interface WasmSession {
     application: WasmApplication;

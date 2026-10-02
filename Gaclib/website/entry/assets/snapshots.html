@@ -7,7 +7,6 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="./global.css" />
     <link rel="stylesheet" type="text/css" href="./snapshots.css" />
-    <script src="/index.js"></script>
 </head>
 
 <body>
@@ -28,7 +27,8 @@
         </div>
     </div>
 
-    <script lang="javascript">
+    <script type="module">
+        import * as GacUIHtmlRenderer from "/entry.js";
         function renderFrame(frameData) {
             const gacuiScreen = document.getElementById('gacuiScreen');
             GacUIHtmlRenderer.renderUI(gacuiScreen, frameData.trace, frameData.index);

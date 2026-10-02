@@ -6,7 +6,6 @@
   <title>GacUI SolidLabel</title>
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="stylesheet" type="text/css" href="./global.css" />
-  <script src="/index.js"></script>
 </head>
 
 <body>
@@ -17,7 +16,8 @@
   <button onclick="useWebkitLineClamp(false)">Default</button>
   <button onclick="useWebkitLineClamp(true)">useWebkitLineClamp</button>
 
-  <script lang="javascript">
+  <script type="module">
+        import * as GacUIHtmlRenderer from "/gacui.js";
     const alignmentX = ['Left', 'Center', 'Right'];
     const alignmentY = ['Top', 'Center', 'Bottom'];
 
@@ -88,6 +88,7 @@
       reloadSolidLabels();
     }
 
+    window.useWebkitLineClamp = useWebkitLineClamp;
     reloadSolidLabels();
   </script>
 </body>

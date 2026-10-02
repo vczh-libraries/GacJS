@@ -27,6 +27,7 @@
         "@gaclib/renderer": "^0.0.1",
         "@gaclib-website/remote-protocol-http": "^0.0.1",
         "@gaclib-website/remote-protocol-wasm": "^0.0.1",
+        "@gaclib-website/rvm": "^0.0.1",
         "@gaclib-website/rvmhost": "^0.0.1",
         "esbuild": "0.25.8"
     }

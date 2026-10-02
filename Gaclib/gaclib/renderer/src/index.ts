@@ -25,3 +25,4 @@ export * from './domRenderer/elementMeasurer';
 export * from './domRenderer/virtualDomRenderer';
 export { IVirtualDom, IVirtualDomProvider, RootVirtualDomId, ClippedVirtualDomId } from './dom/virtualDom';
 export * from './dom/virtualDomBuilding';
+export { isShortcutReservedForBrowser } from './shortcuts';

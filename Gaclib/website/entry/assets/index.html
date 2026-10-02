@@ -6,15 +6,14 @@
     <title>GacUI HTML Renderer</title>
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="./global.css" />
-    <script src="/index.js"></script>
 </head>
 
 <body>
     <div id="gacui-screen" class="gacui-container" tabindex="0">
         <!-- Content goes here -->
     </div>
-    <button onclick="gacuiRenderer.requestStopToCore(false)">Exit</button>
-    <button onclick="gacuiRenderer.requestStopToCore(true)">Force Exit</button>
+    <button id="gacui-exit">Exit</button>
+    <button id="gacui-force-exit">Force Exit</button>
 
     <div id="gacui-error-mask" class="gacui-error-mask">
         <div class="gacui-error-cross"></div>
@@ -24,8 +23,11 @@
         <div class="gacui-success-tick"></div>
         <div id="gacui-success-message" class="gacui-mask-message"></div>
     </div>
-    <script lang="javascript">
+    <script type="module">
+        import * as GacUIHtmlRenderer from "/entry.js";
         let gacuiRenderer;
+        document.getElementById('gacui-exit').onclick = () => gacuiRenderer?.requestStopToCore(false);
+        document.getElementById('gacui-force-exit').onclick = () => gacuiRenderer?.requestStopToCore(true);
 
         // Event bridges for Playwright tests.
         // idle: fires when the server sends RequestRendererIdle (UI is stable).

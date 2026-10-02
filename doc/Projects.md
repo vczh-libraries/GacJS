@@ -401,7 +401,7 @@ press ENTER to stop it. The command is portable across Windows, Linux, and
 macOS. On Windows, IIS may already own port `8896`; in that case the command
 reports that IIS may already be serving the site. The generated directory must
 be the document root because the HTML pages use absolute paths such as
-`/index.js`.
+`/gacui.js` and `/entry.js`.
 
 **HTML pages:**
 
@@ -414,24 +414,24 @@ be the document root because the HTML pages use absolute paths such as
 | `/solidLabel.html` | Standalone test page for SolidLabel element rendering configurations |
 | `/elements.html` | Standalone test page for various element type rendering |
 
-**Global variable:** The esbuild bundle exposes a `GacUIHtmlRenderer` IIFE global
-containing all exports from `src/index.ts`:
+**Browser bundles:** These are ES modules with named exports, not globals.
 
-| Export | Description |
-|--------|-------------|
-| `runGacUI(settings)` | Initialize renderer + HTTP client and start the session |
-| `runRvmGacUI(settings)` | Return a stoppable session immediately while a browser RVM host acquires its service and connects a separate renderer |
-| `isShortcutReservedForBrowser(event)` | Filter keyboard events that should pass through to the browser |
-| `GacUIHtmlRendererExitError` | Error class thrown on graceful exit |
-| `RemoteProtocolHttpDisconnectError` | Error class reported when the HTTP core disconnects |
-| `applyBounds(element, rect)` | Apply positioning CSS to an HTML element |
-| `applyTypedStyle(element, desc)` | Apply element-type-specific CSS |
-| `applyFeatureGates(gates)` | Set runtime feature flags |
-| `Snapshot` | Snapshot index data |
-| `createTreeElement(...)` | Build a tree-view UI component |
-| `readSnapshot(...)` | Parse snapshot file structure |
-| `readFrames(...)` | Parse rendering trace frames |
-| `renderUI(...)` | Render a single snapshot frame |
+| Bundle | Contents |
+|--------|----------|
+| `gacui.js` | All `@gaclib/renderer` exports, including `createHtmlRenderer`, `isShortcutReservedForBrowser`, styles and feature gates; no `website/*` dependencies |
+| `wasm.js` | `@gaclib-website/remote-protocol-wasm`, including `WasmApplication` and `connectWasmServer` |
+| `http.js` | `@gaclib-website/remote-protocol-http`, including channel clients and renderer adapters |
+| `rvm.js` | Generated `@gaclib-website/rvm` bindings |
+| `wasm-worker.js` | Dedicated application worker from `remote-protocol-wasm/worker` |
+| `entry.js` | HTTP/RVM page session helpers and snapshot viewer exports |
+| `wasm-page.js` | Startup, buttons and masks for the three Wasm test pages |
+
+The four libraries are independently bundled, without shared chunks or page startup
+side effects. Another site can copy `gacui.js`, `wasm.js`, `wasm-worker.js` and the
+three Emscripten artifacts, then supply its own page. Demo composition imports
+these library bundles so renderer classes and feature flags keep one identity.
+There is no standalone browser bundle for `rvmhost`; its browser-safe helpers are
+included in the demo composition, and its CLI build is unchanged.
 
 | Script | Action |
 |--------|--------|

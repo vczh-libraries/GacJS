@@ -6,7 +6,6 @@
   <title>GacUI Elements</title>
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="stylesheet" type="text/css" href="./global.css" />
-  <script src="/index.js"></script>
 </head>
 
 <body>
@@ -65,7 +64,8 @@
     </div>
   </div>
 
-  <script lang="javascript">
+  <script type="module">
+        import * as GacUIHtmlRenderer from "/gacui.js";
 
     const containerDiv = document.getElementById('gacui-screen');
 

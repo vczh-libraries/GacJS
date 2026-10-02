@@ -70,9 +70,12 @@ whenever documented behavior changes.
 
 - Source code of the website is in `(repo-root)/Gaclib/website/entry/assets`.
 - After compilation everything will be generated and copied to `(repo-root)/Gaclib/website/entry/lib/dist`; the website starts here.
-- `/index.js` is referenced in multiple HTML files:
-  - It injects a `GacUIHtmlRenderer` global variable.
-  - All members in `GacUIHtmlRenderer` are exported objects from `(repo-root)/Gaclib/website/remote-protocol-http/src/index.ts`.
+- Browser libraries are standalone ES modules in `Gaclib/website/entry/lib/dist`:
+  - `gacui.js` exports `@gaclib/renderer`, with no `website/*` package dependencies.
+  - `wasm.js`, `http.js`, and `rvm.js` export their respective website packages.
+  - `wasm-worker.js` loads the Emscripten application; it is required alongside `wasm.js`.
+  - `entry.js` and `wasm-page.js` contain the test website composition and import these libraries.
+  - `rvmhost` remains a CLI package with browser-safe helpers used by page composition; there is no standalone browser bundle for it.
 - Files you absolutely cannot modify whatever happens:
   - `(repo-root)/Gaclib/gaclib/remote-protocol`: all files in this folder.
   - `(repo-root)/Gaclib/website/entry/assets/snapshots`: all files in this folder.
