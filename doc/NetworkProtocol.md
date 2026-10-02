@@ -519,8 +519,11 @@ For compatibility with the checked-in TypeScript and C++ implementations:
 ## WebAssembly Worker Transport
 
 `@gaclib-website/remote-protocol-wasm` supplies the same `IChannelClient` contract
-over an owned dedicated worker. The worker loads the selected `app.mjs`/`app.wasm`
-and calls the `GacUIWasmApplication` Embind exports:
+over an owned dedicated `wasm-worker.js`. It imports the selected `app.mjs`
+and calls its original default factory. Emscripten loads the adjacent `app.wasm`
+and `app.worker.js`; the latter starts pthreads and imports the adjacent module.
+Deploy all three matching generated files together. The application host then
+calls the `GacUIWasmApplication` Embind exports:
 
 ```typescript
 StartApplication(receiver: (kind: string, connectionId: number, data: string) => string, connectionCount: number): string;

@@ -35,7 +35,7 @@ The existing demos run the core inside the browser. To prepare them on Linux:
 
 1. Build `WasmFCT`, `WasmRPT`, and `WasmRVMT` in the sibling GacUI checkout. From each `GacUI/Test/Linux/<project>` directory, run `../../../.github/Ubuntu/build.sh -bw -o`.
 2. Build GacJS with `yarn build` from `Gaclib`.
-3. From `Gaclib`, run `../copy-wasm.sh` to copy each demo's `app.mjs` and `app.wasm` into the website. Repeat this after every website build because that build cleans the output directory.
+3. From `Gaclib`, run `../copy-wasm.sh` to copy each demo's matching `app.mjs`, `app.wasm` and `app.worker.js` into the website. Repeat this after every website build because that build cleans the output directory.
 
 See [the WebAssembly build guide](doc/Projects.md#running-the-wasm-demos-on-linux) for details. The website build does not compile or copy the WebAssembly binaries automatically.
 

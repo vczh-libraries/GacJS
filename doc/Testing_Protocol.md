@@ -51,6 +51,13 @@ apps, build GacJS, run `copy-wasm.sh`, and start the entry server. Then run
 a native Core. The root `yarn test` also runs the portable channel tests in
 `remote-protocol-wasm`.
 
+Deploy the matching `app.mjs`, `app.wasm` and `app.worker.js` beside every demo
+page. Verify Chromium and Firefox load the separate pthread script and its
+module imports without worker errors. `wasm-worker.js` is GacJS's application
+host, distinct from Emscripten's generated `app.worker.js`. The existing
+regression suite uses Chromium CDP for mouse input and worker lifetime checks;
+also exercise startup, input and shutdown/reload in Firefox with Playwright.
+
 Each page owns its Core worker and pthreads. The suite verifies Exit cancellation,
 Exit and Force Exit followed by Reload, fresh UI state, and recreated RVMT hosts.
 Reload stays disabled until normal Core completion; RVMT keeps its host alive

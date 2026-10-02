@@ -486,11 +486,17 @@ sources; the resulting CLI binaries immediately return 0. Rebuild the Wasm
 outputs afterward because a native full build cleans `Bin`.
 After the normal GacJS build, run `../copy-wasm.sh` from `Gaclib`, then
 `npm run start` from `website/entry`. The explicit copy validates all source
-pairs and destination pages before copying; a missing input warns and exits
+sets of `app.mjs`, `app.wasm` and `app.worker.js` and destination pages before
+copying; a missing or empty source input warns and exits
 nonzero. Re-run it after every website build, which cleans `lib/dist`.
 
-Each page loads its adjacent `app.mjs` and `app.wasm`. The module embeds the
-pthread bootstrap. The entry server provides `.mjs`/`.wasm` MIME types and
+Keep all three generated files together beside each page. Packaging leaves
+Emscripten's `app.mjs` byte-for-byte unchanged: its default factory loads the
+adjacent `app.worker.js`, which imports the adjacent module. GacJS's own
+`wasm-worker.js` hosts the application and is distinct from the generated
+pthread worker. These outputs remain ignored build artifacts. Use a full
+`-fbw -o` rebuild to replace previously patched modules.
+The entry server provides JavaScript-module/Wasm MIME types and
 COOP/COEP headers for shared memory. Reload is disabled while the application is
 starting or running. Normal Core completion enables it; clicking it reloads the
 page with a fresh Core, renderer and RVMT host, discarding previous UI state.
