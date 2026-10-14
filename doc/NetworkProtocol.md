@@ -353,6 +353,11 @@ and "Login received" are all earlier states, not complete RVM readiness.
   process-readiness signals, not wire messages. `--service-only` emits only the
   first marker.
 
+If network admission or the session fails, the CLI reports the error to stderr
+and exits with code 1 after canceled HTTP work and diagnostic output finish.
+It does not retry a rejected host connection. Exact `/Cli` mode retains its
+immediate process termination behavior.
+
 Do not reuse the RVM host's token or assigned ID for the renderer. The two roles
 advertise different channel sets and use separate logical connections.
 

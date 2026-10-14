@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import * as fs from 'node:fs';
+import { createServer } from 'node:http';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { PassThrough, Writable } from 'node:stream';
@@ -476,6 +478,82 @@ interface TranscriptProcess {
     readonly arguments: readonly string[];
     readonly name: string;
 }
+
+test('Node ESM CLI and native SEA reject network admission without a runtime assertion', async () => {
+    const packageRoot = path.resolve(import.meta.dirname, '..');
+    const executable = path.join(packageRoot, 'lib', 'bin', process.platform === 'win32' ? 'gacjs-rvmhost.exe' : 'gacjs-rvmhost');
+    const specifications: TranscriptProcess[] = [
+        { name: 'Node CLI', command: process.execPath, arguments: [path.join(packageRoot, 'lib', 'src', 'cli.js')] },
+        { name: 'SEA', command: executable, arguments: [] },
+    ];
+    for (const specification of specifications) {
+        const requests: { readonly method: string | undefined; readonly url: string | undefined; readonly body: string }[] = [];
+        const server = createServer((request, response) => {
+            let body = '';
+            request.setEncoding('utf8');
+            request.on('data', chunk => { body += String(chunk); });
+            request.on('end', () => {
+                requests.push({ method: request.method, url: request.url, body });
+                if (request.method === 'GET' && request.url === '/test/VlppInterProcess/Connect') {
+                    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf8' });
+                    response.end('/VlppInterProcess/Request/rejected;/VlppInterProcess/Response/rejected');
+                } else if (request.method === 'POST' && request.url === '/test/VlppInterProcess/Response/rejected') {
+                    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf8' });
+                    response.end();
+                } else {
+                    response.writeHead(404, 'Connection stopped', { 'Content-Length': '0' });
+                    response.end();
+                }
+            });
+        });
+        server.listen(0, '127.0.0.1');
+        await once(server, 'listening');
+        try {
+            const address = server.address();
+            if (address === null || typeof address === 'string') throw new Error('HTTP test server has no TCP address.');
+            const child = spawn(specification.command, [...specification.arguments,
+                '--origin', `http://127.0.0.1:${String(address.port)}`, '--base-path', '/test', '--service-only'], {
+                cwd: packageRoot,
+                stdio: ['ignore', 'pipe', 'pipe'],
+                windowsHide: true,
+            });
+            let stdout = '';
+            let stderr = '';
+            child.stdout.on('data', chunk => { stdout += String(chunk); });
+            child.stderr.on('data', chunk => { stderr += String(chunk); });
+            let timedOut = false;
+            const timeout = setTimeout(() => {
+                timedOut = true;
+                child.kill('SIGKILL');
+            }, 5000);
+            try {
+                const exit = await new Promise<{ readonly code: number | null; readonly signal: NodeJS.Signals | null }>((resolve, reject) => {
+                    child.once('error', reject);
+                    child.once('close', (code, signal) => resolve({ code, signal }));
+                });
+                expect(timedOut, `${specification.name} did not exit after network rejection`).toBe(false);
+                expect(exit, `${specification.name}: ${stderr}`).toEqual({ code: 1, signal: null });
+                expect(stdout).toBe('');
+                expect(stderr).toBe('gacjs-rvmhost: HTTP channel closed before client assignment.\n');
+                expect(requests).toEqual([
+                    { method: 'GET', url: '/test/VlppInterProcess/Connect', body: '' },
+                    { method: 'POST', url: '/test/VlppInterProcess/Response/rejected', body: ';;ViewModelChannel!ViewModelReadyChannel' },
+                    { method: 'POST', url: '/test/VlppInterProcess/Request/rejected', body: '' },
+                ]);
+            } finally {
+                clearTimeout(timeout);
+                if (child.exitCode === null && child.signalCode === null) {
+                    const closed = once(child, 'close');
+                    child.kill('SIGKILL');
+                    await closed;
+                }
+            }
+        } finally {
+            server.closeAllConnections();
+            await new Promise<void>(resolve => { server.close(() => resolve()); });
+        }
+    }
+}, 15000);
 
 async function runTranscript(specification: TranscriptProcess): Promise<void> {
     const child = spawn(specification.command, specification.arguments, {
