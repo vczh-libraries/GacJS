@@ -183,7 +183,7 @@ test('createVirtualDomFromRenderingDom - simple tree root(a(b(c,d)), e)', () => 
     
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', data: '' } };
     const solidLabelDesc: TypedElementDesc = {
         type: SCHEMA.RendererType.SolidLabel,
         desc: {

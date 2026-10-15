@@ -5,7 +5,10 @@
     <title>Remote Protocol Test — WebAssembly</title>
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="/global.css">
-    <script type="module" src="/wasm-page.js"></script>
+    <script type="module">
+        import { startWasmPage } from '/wasm-page.js';
+        void startWasmPage();
+    </script>
 </head>
 <body data-app="rpt">
     <div id="gacui-screen" class="gacui-container" tabindex="0"></div>

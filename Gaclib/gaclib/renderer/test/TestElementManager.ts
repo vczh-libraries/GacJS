@@ -56,14 +56,14 @@ describe('ElementManager', () => {
         expect(manager.getDesc(999)).toBeUndefined();
     });
 
-    it('should return undefined for getDesc when updateDesc has not been called', () => {
+    it('should initialize Raw with an empty descriptor before an update arrives', () => {
         const manager = new ElementManager();
         const id = 1;
         const type = SCHEMA.RendererType.Raw;
 
         manager.create(id, type);
 
-        expect(manager.getDesc(id)).toBeUndefined();
+        expect(manager.getDesc(id)).toEqual({ type, desc: { id, rawId: '', data: '' } });
     });
 
     it('should update element desc with matching type', () => {
@@ -99,7 +99,8 @@ describe('ElementManager', () => {
         manager.create(id, type);
 
         const desc: TypedElementDesc = {
-            type: SCHEMA.RendererType.Raw
+            type: SCHEMA.RendererType.Raw,
+            desc: { id, rawId: 'Raw', data: 'data' }
         };
 
         manager.updateDesc(id, desc);
@@ -127,7 +128,8 @@ describe('ElementManager', () => {
         const manager = new ElementManager();
 
         const desc: TypedElementDesc = {
-            type: SCHEMA.RendererType.Raw
+            type: SCHEMA.RendererType.Raw,
+            desc: { id: 999, rawId: '', data: '' }
         };
 
         expect(() => manager.updateDesc(999, desc)).toThrow('Element with id 999 does not exist');
@@ -141,7 +143,8 @@ describe('ElementManager', () => {
         manager.create(id, createdType);
 
         const desc: TypedElementDesc = {
-            type: SCHEMA.RendererType.Raw  // Different type
+            type: SCHEMA.RendererType.Raw, // Different type
+            desc: { id, rawId: '', data: '' }
         };
 
         expect(() => manager.updateDesc(id, desc)).toThrow('Element type mismatch: expected SolidBorder, got Raw');
@@ -175,7 +178,8 @@ describe('ElementManager', () => {
         };
 
         const desc2: TypedElementDesc = {
-            type: SCHEMA.RendererType.Raw
+            type: SCHEMA.RendererType.Raw,
+            desc: { id: 2, rawId: '', data: '' }
         };
 
         manager.updateDesc(1, desc1);

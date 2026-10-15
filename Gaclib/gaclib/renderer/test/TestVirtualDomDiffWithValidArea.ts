@@ -625,7 +625,7 @@ test('updateVirtualDomWithRenderingDomDiff - Category 3: Mixed operations with e
             shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
         }
     };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 107, rawId: '', data: '' } };
 
     // Create elements for both r1 and r2 DOMs (reused between states)
     elements.createWithDesc(106, focusRectangleDesc);  // focus rectangle
@@ -759,7 +759,7 @@ test('updateVirtualDomWithRenderingDomDiff - Category 3: Mixed operations with e
             shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
         }
     };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 109, rawId: '', data: '' } };
 
     // Create elements for both r1 and r2 DOMs (reused between states)
     elements.createWithDesc(108, focusRectangleDesc);  // focus rectangle

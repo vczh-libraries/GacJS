@@ -1,5 +1,5 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
-import { GacUISettings, IGacUIRenderer } from './interfaces';
+import { GacUIRawElement, GacUISettings, IGacUIRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
@@ -57,6 +57,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _renderingRecord: VirtualDomRecord;
     private _images: Map<SCHEMA.TYPES.Integer, SCHEMA.ImageCreation> = new Map();
     private _pendingElements: Map<SCHEMA.TYPES.Integer, HTMLElement> = new Map();
+    private _rawElements = new Map<SCHEMA.TYPES.Integer, GacUIRawElement>();
+    private _rawInstalledListeners = new Set<(element: GacUIRawElement) => void>();
+    private _rawUninstalledListeners = new Set<(element: GacUIRawElement) => void>();
+    private _rawUpdatedListeners = new Set<(element: GacUIRawElement) => void>();
 
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
@@ -163,6 +167,25 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     get requests(): SCHEMA.IRemoteProtocolRequests {
         return (<SCHEMA.IRemoteProtocolRequests>(<unknown>this));
+    }
+
+    getRawElements(): readonly GacUIRawElement[] {
+        return Object.freeze([...this._rawElements.values()]);
+    }
+
+    rawElementInstalled(listener: (element: GacUIRawElement) => void): () => void {
+        this._rawInstalledListeners.add(listener);
+        return () => { this._rawInstalledListeners.delete(listener); };
+    }
+
+    rawElementUninstalled(listener: (element: GacUIRawElement) => void): () => void {
+        this._rawUninstalledListeners.add(listener);
+        return () => { this._rawUninstalledListeners.delete(listener); };
+    }
+
+    rawElementUpdated(listener: (element: GacUIRawElement) => void): () => void {
+        this._rawUpdatedListeners.add(listener);
+        return () => { this._rawUpdatedListeners.delete(listener); };
     }
 
     abstract start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
@@ -967,10 +990,18 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             return;
         }
 
+        const raw = this._rawElements.get(id);
+        const rawChanged = raw !== undefined && typedDesc.type === SCHEMA.RendererType.Raw &&
+            (raw.id !== typedDesc.desc.rawId || raw.data !== typedDesc.desc.data);
         this._renderingRecord.elements.updateDesc(id, typedDesc);
         const virtualDom = this._renderingRecord.elementToDoms.get(id);
         if (virtualDom) {
             virtualDom.updateTypedDesc(id, typedDesc);
+        }
+        if (raw !== undefined && rawChanged) {
+            for (const listener of [...this._rawUpdatedListeners]) {
+                listener(raw);
+            }
         }
     }
 
@@ -982,9 +1013,15 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         for (const creation of requestArgs) {
             this._renderingRecord.elements.create(creation.id, creation.type);
 
-            // For FocusRectangle and Raw, call updateDesc since they have no desc
-            if (creation.type === SCHEMA.RendererType.FocusRectangle || creation.type === SCHEMA.RendererType.Raw) {
+            // FocusRectangle remains descriptor-free. Raw starts with empty strings.
+            if (creation.type === SCHEMA.RendererType.FocusRectangle) {
                 this._updateElement(creation.id, { type: creation.type });
+            } else if (creation.type === SCHEMA.RendererType.Raw) {
+                const raw = this._renderingRecord.elements.getRawElement(creation.id);
+                this._rawElements.set(creation.id, raw);
+                for (const listener of [...this._rawInstalledListeners]) {
+                    listener(raw);
+                }
             }
         }
     }
@@ -1000,7 +1037,17 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             }
             this._paragraphElements.delete(id);
             this._paragraphCarets.delete(id);
-            this._renderingRecord.elements.destroy(id);
+            try {
+                const raw = this._rawElements.get(id);
+                if (raw !== undefined) {
+                    for (const listener of [...this._rawUninstalledListeners]) {
+                        listener(raw);
+                    }
+                }
+            } finally {
+                this._rawElements.delete(id);
+                this._renderingRecord.elements.destroy(id);
+            }
         }
     }
 
@@ -1012,6 +1059,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         if (requestArgs.updatedElements) {
             for (const elementDesc of requestArgs.updatedElements) {
                 switch (elementDesc[0]) {
+                    case 'ElementDesc_Raw':
+                        this._updateElement(elementDesc[1].id, { type: SCHEMA.RendererType.Raw, desc: elementDesc[1] });
+                        break;
                     case 'ElementDesc_SolidBorder':
                         this.RequestRendererUpdateElement_SolidBorder(elementDesc[1]);
                         break;

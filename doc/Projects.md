@@ -227,6 +227,12 @@ See [DOM.md](DOM.md) for detailed rendering documentation.
 
 Main export: `createHtmlRenderer(settings: GacUISettings): IGacUIRenderer`
 
+The exported `GacUIRawElement` type exposes read-only `element`, `id` and `data`
+properties. `IGacUIRenderer.getRawElements()` enumerates current Raw elements;
+`rawElementInstalled`, `rawElementUninstalled` and `rawElementUpdated` register
+synchronous listeners returning unsubscribe functions. Pages own drawing inside
+the persistent div. See [Raw DOM rendering](DOM.md#raw) for lifetime and cleanup.
+
 ---
 
 ### @gaclib/workflow-rpc
@@ -407,7 +413,7 @@ be the document root because the HTML pages use absolute paths such as
 
 | Page | Purpose |
 |------|---------|
-| `/index.html` | Interactive UI — connects to the C++ HTTP server for live rendering |
+| `/index.html` | Interactive HTTP rendering, with a page-owned FullControlTest Raw Clock painter |
 | `/index.html?rvmhost` | Starts the generated TypeScript RVM host and a separate renderer client in the page |
 | `/wasm-fct/`, `/wasm-rpt/`, `/wasm-rvmt/` | Worker-owned Wasm apps; RVMT includes the browser TypeScript view-model host |
 | `/snapshots.html` | Snapshot viewer — renders saved rendering traces from `assets/snapshots/` |
@@ -424,7 +430,7 @@ be the document root because the HTML pages use absolute paths such as
 | `rvm.js` | Generated `@gaclib-website/rvm` bindings |
 | `wasm-worker.js` | Dedicated application worker from `remote-protocol-wasm/worker` |
 | `entry.js` | HTTP/RVM page session helpers and snapshot viewer exports |
-| `wasm-page.js` | Startup, buttons and masks for the three Wasm test pages |
+| `wasm-page.js` | Explicit `startWasmPage(rendererSetup?)`, buttons and masks for the three Wasm test pages |
 
 The four libraries are independently bundled, without shared chunks or page startup
 side effects. Another site can copy `gacui.js`, `wasm.js`, `wasm-worker.js` and the
@@ -433,11 +439,35 @@ these library bundles so renderer classes and feature flags keep one identity.
 There is no standalone browser bundle for `rvmhost`; its browser-safe helpers are
 included in the demo composition, and its CLI build is unchanged.
 
+`GacUIHtmlRenderer.runGacUI` returns `[renderer, client]`. The HTTP page attaches
+raw listeners and enumerates existing records before `client.start()`; the
+already-started `?rvmhost` session uses the same idempotent late attachment.
+The Wasm pages explicitly call `startWasmPage`; its optional renderer-setup
+callback runs before renderer protocol delivery and can return a cleanup function
+retained until completion, error or page teardown. RPT and RVMT call it without
+a painter; FCT supplies its clock setup. Worker ownership, RVMT host shutdown,
+Exit/Force Exit and fresh Reload remain part of the shared page composition.
+
+The clock code lives in `<GacJS repo>/Gaclib/website/entry/assets/index.html` and
+`<GacJS repo>/Gaclib/website/entry/assets/wasm-fct/index.html`. Each matching raw
+record (`FullControlTest.Clock`) gets one canvas. It parses only received
+`HH:mm:ss` data (hours 00–23, minutes/seconds 00–59), leaving empty or invalid
+state blank. Data updates, host resizing, visibility changes and device pixel
+ratio changes redraw the last received time; no browser clock or ticking timer
+advances it. ID changes attach/detach the painter, and session cleanup disconnects
+subscriptions and observers while preserving the final picture.
+
 | Script | Action |
 |--------|--------|
 | `yarn build` | Compile → copy assets → esbuild (dev mode) |
 | `yarn build-ship` | Compile → copy assets → esbuild (minified, no sourcemaps) |
 | `npm run start` | Serve `lib/dist` on port 8896 until ENTER is pressed |
+
+After `yarn build`, `yarn workspace @gaclib-website/entry test-unit` includes
+Chromium tests of the built HTTP clock page and controlled Wasm page setup and
+cleanup. These tests use controlled clients and do not launch native Core or
+execute Wasm binaries. Actual FCT/RPT/RVMT Wasm runtime checks remain part of the
+Linux procedure below.
 
 ---
 

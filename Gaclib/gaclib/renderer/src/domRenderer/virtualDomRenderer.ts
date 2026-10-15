@@ -98,6 +98,7 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlType
     ) {
         super(id, validArea);
         this.htmlElement = document.createElement('div');
+        applyCommonStyle(this.htmlElement);
     }
 
     protected getExpectedChildType(): string {
@@ -122,6 +123,7 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlType
 
 class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes> {
     public readonly htmlElement: HTMLElement;
+    private _rawElement: HTMLDivElement | undefined;
 
     constructor(
         id: SCHEMA.TYPES.Integer,
@@ -151,7 +153,15 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     }
 
     protected onUpdateTypedDesc(elementId: SCHEMA.TYPES.Integer | undefined, typedDesc: TypedElementDesc | undefined): void {
-        void elementId; // elementId parameter added for consistency but not used in this implementation
+        const rawElement = typedDesc?.type === SCHEMA.RendererType.Raw && elementId !== undefined
+            ? this.elements.getRawElement(elementId).element
+            : undefined;
+        if (this._rawElement !== rawElement) {
+            if (this._rawElement?.parentElement === this.htmlElement) {
+                this._rawElement.remove();
+            }
+            this._rawElement = rawElement;
+        }
         // Apply typed style to the HTML element
         if (typedDesc === undefined) {
             applyCommonStyle(this.htmlElement);
@@ -160,6 +170,9 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
         }
         // applyCommonStyle/applyTypedStyle replaces cssText, so re-apply cursor
         this.applyCursorStyle(this.props);
+        if (rawElement !== undefined && this.htmlElement.firstChild !== rawElement) {
+            this.htmlElement.insertBefore(rawElement, this.htmlElement.firstChild);
+        }
     }
 
     private applyCursorStyle(props: VirtualDomProperties): void {
@@ -188,8 +201,12 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
     }
 
     protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
-        // Update HTML element children
+        // Raw drawing contents belong to the page. Reconcile only the surrounding
+        // renderer node, retaining the lifetime-owned div as its first child.
         const htmlChildren = children.map(child => child.htmlElement);
+        if (this._rawElement !== undefined) {
+            htmlChildren.unshift(this._rawElement);
+        }
         this.htmlElement.replaceChildren(...htmlChildren);
         const border = getExtraBorder(this.htmlElement)
         if (border) {

@@ -10,7 +10,7 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
 
     const elements: ElementManager = new ElementManager({ renderDebugInfo: true });
     for (const [id, type] of trace.createdElements!) {
-        if (type === SCHEMA.RendererType.FocusRectangle || type === SCHEMA.RendererType.Raw) {
+        if (type === SCHEMA.RendererType.FocusRectangle) {
             elements.createWithDesc(id, { type });
         }
     }
@@ -22,6 +22,10 @@ export function renderUI(gacuiScreen: HTMLElement, trace: SCHEMA.UnitTest_Render
 
     for (const [id, desc] of frame.elements!) {
         switch (desc[0]) {
+            case 'ElementDesc_Raw': {
+                elements.createWithDesc(id, { type: SCHEMA.RendererType.Raw, desc: desc[1] });
+                break;
+            }
             case 'ElementDesc_SolidBorder': {
                 elements.createWithDesc(id, { type: SCHEMA.RendererType.SolidBorder, desc: desc[1] });
                 break;

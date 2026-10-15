@@ -1,7 +1,8 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
+import { GacUIRawElement } from './interfaces';
 
 export type TypedElementDesc =
-    | { type: SCHEMA.RendererType.Raw }
+    | { type: SCHEMA.RendererType.Raw; desc: SCHEMA.ElementDesc_Raw }
     | { type: SCHEMA.RendererType.FocusRectangle }
     | { type: SCHEMA.RendererType.SolidBorder; desc: SCHEMA.ElementDesc_SolidBorder }
     | { type: SCHEMA.RendererType.SolidBackground; desc: SCHEMA.ElementDesc_SolidBackground }
@@ -35,11 +36,12 @@ export function getDefaultElementManagerConfig(): ElementManagerConfig {
 /*
  * ElementManager for renderer life cycle.
  *
- * A newly created element only get a type without desc assigned.
+ * A newly created element only gets a type, except Raw which starts with empty strings.
  * updateDesc is not allowed to change the element type.
  */
 export class ElementManager {
     private _elements: Map<SCHEMA.TYPES.Integer, ElementRecord> = new Map();
+    private _rawElements: Map<SCHEMA.TYPES.Integer, GacUIRawElement> = new Map();
     private _config: ElementManagerConfig;
 
     constructor(config?: Partial<ElementManagerConfig>) {
@@ -69,7 +71,9 @@ export class ElementManager {
         if (this._elements.has(id)) {
             throw new Error(`Element with id ${id} already exists`);
         }
-        this._elements.set(id, { type });
+        this._elements.set(id, type === SCHEMA.RendererType.Raw
+            ? { type, desc: { type, desc: { id, rawId: '', data: '' } } }
+            : { type });
     }
 
     createWithDesc(id: SCHEMA.TYPES.Integer, typedDesc: TypedElementDesc): void {
@@ -79,6 +83,28 @@ export class ElementManager {
 
     destroy(id: SCHEMA.TYPES.Integer): void {
         this._elements.delete(id);
+        this._rawElements.delete(id);
+    }
+
+    getRawElement(id: SCHEMA.TYPES.Integer): GacUIRawElement {
+        const record = this._elements.get(id);
+        if (record === undefined || record.type !== SCHEMA.RendererType.Raw) {
+            throw new Error(`Element with id ${id} is not a Raw element`);
+        }
+        let raw = this._rawElements.get(id);
+        if (raw === undefined) {
+            const element = document.createElement('div');
+            // Only the page owns this div's contents. The surrounding renderer node
+            // provides its position, clipping, cursor and protocol child hierarchy.
+            element.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; min-width:0; min-height:0; overflow:hidden; pointer-events:none;';
+            raw = Object.freeze({
+                element,
+                get id(): string { return record.desc?.type === SCHEMA.RendererType.Raw ? record.desc.desc.rawId : ''; },
+                get data(): string { return record.desc?.type === SCHEMA.RendererType.Raw ? record.desc.desc.data : ''; }
+            });
+            this._rawElements.set(id, raw);
+        }
+        return raw;
     }
 
     getType(id: SCHEMA.TYPES.Integer): SCHEMA.RendererType | undefined {

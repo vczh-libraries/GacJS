@@ -144,6 +144,7 @@ export type DocumentRunProperty =
     | ['DocumentInlineObjectRunProperty', DocumentInlineObjectRunProperty];
 
 export type OrdinaryElementDescVariant =
+    | ['ElementDesc_Raw', ElementDesc_Raw]
     | ['ElementDesc_SolidBorder', ElementDesc_SolidBorder]
     | ['ElementDesc_SinkBorder', ElementDesc_SinkBorder]
     | ['ElementDesc_SinkSplitter', ElementDesc_SinkSplitter]
@@ -155,6 +156,7 @@ export type OrdinaryElementDescVariant =
     | ['ElementDesc_ImageFrame', ElementDesc_ImageFrame];
 
 export type UnitTest_ElementDescVariant =
+    | ['ElementDesc_Raw', ElementDesc_Raw]
     | ['ElementDesc_SolidBorder', ElementDesc_SolidBorder]
     | ['ElementDesc_SinkBorder', ElementDesc_SinkBorder]
     | ['ElementDesc_SinkSplitter', ElementDesc_SinkSplitter]
@@ -302,6 +304,12 @@ export interface ElementShape {
     shapeType: ElementShapeType;
     radiusX: TYPES.Integer;
     radiusY: TYPES.Integer;
+}
+
+export interface ElementDesc_Raw {
+    id: TYPES.Integer;
+    rawId: TYPES.String;
+    data: TYPES.String;
 }
 
 export interface ElementDesc_SolidBorder {

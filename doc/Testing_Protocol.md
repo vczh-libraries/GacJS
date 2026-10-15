@@ -91,10 +91,22 @@ The live Playwright suite files are:
 - `Testing_Protocol_RemoteViewModel_Node.js`
 - `Testing_Protocol_RemoteViewModel_Cli.js`
 - `Testing_Protocol_RemoteViewModel_Cpp.js`
+- `Testing_Protocol_RawClock.js`
 
-The portable fake-client unit suite is `RvmQuerySession.test.ts`. This inventory
-does not define suite operations or expected results; those belong to the
-GacUI SOP linked above.
+The portable unit suites include `RvmQuerySession.test.ts`,
+`RawBrowser.test.ts` and the controlled Wasm page composition tests. The Raw
+browser suite serves built assets on an ephemeral port and sends controlled JSON
+protocol messages through the real adapter and renderer. It checks clock pixels,
+data-only updates, resizing/DPI, raw div lifetime across DOM reconstruction,
+retained completion/error pictures and recorded snapshot playback. These tests
+run through `yarn workspace @gaclib-website/entry test-unit` after building.
+
+The focused live Raw Clock suite additionally checks the existing FCT Core's
+time updates and tab hide/show. `GACUI_PROTOCOL_TESTS_BUILT=1` can reuse an
+existing compatible Core executable; verify its provenance and availability
+before invoking the suite because the existing harness builds if it is absent.
+This focused clock coverage leaves the general showcase SOP unchanged. The other
+suite operations and expected results belong to the GacUI SOP linked above.
 
 The browser-host suite covers both idle loss and loss during an RPC whose reply
 is held at the browser request boundary. The latter leaves a Core automation

@@ -101,7 +101,7 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
     
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', data: '' } };
     const elements: ElementManager = new ElementManager();
     elements.createWithDesc(101, focusRectangleDesc);
     elements.createWithDesc(102, rawDesc);
@@ -382,7 +382,7 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
 
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', data: '' } };
     const solidBorderDesc1: TypedElementDesc = {
         type: SCHEMA.RendererType.SolidBorder,
         desc: {
@@ -403,7 +403,7 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
     const elements: ElementManager = new ElementManager();
     elements.createWithDesc(101, focusRectangleDesc);
     elements.createWithDesc(102, rawDesc);
-    elements.createWithDesc(103, rawDesc);
+    elements.createWithDesc(103, { ...rawDesc, desc: { ...rawDesc.desc, id: 103 } });
     elements.createWithDesc(201, solidBorderDesc1);
     elements.createWithDesc(202, solidBorderDesc2);
     
@@ -526,7 +526,7 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
             shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
         }
     };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 105, rawId: '', data: '' } };
 
     const elements: ElementManager = new ElementManager();
     elements.createWithDesc(104, focusRectangleDesc);

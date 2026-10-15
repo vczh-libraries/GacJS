@@ -152,14 +152,43 @@ overflow: hidden;
 
 ### Raw
 
-A transparent container with no visual representation.
+An application drawing surface with a persistent `HTMLDivElement`. The protocol
+descriptor supplies an application string ID and data; the page decides how to
+draw them. The reusable renderer does not interpret these strings.
 
 ```html
-<div style="/* base style only */"></div>
+<div style="/* renderer bounds, clipping and input */">
+  <div style="/* persistent raw drawing surface */"><!-- page content --></div>
+  <!-- renderer children -->
+</div>
 ```
 
-Used as a layout-only node — the GacUI composition system may produce these for
-positioning children without any graphical element.
+`IGacUIRenderer.getRawElements()` returns read-only records with
+`{ element: HTMLDivElement, id: string, data: string }`. The public `id` is the
+descriptor's `rawId`, not its numeric renderer ID or an HTML document ID. Empty
+and duplicate strings are valid. Records and divs remain stable until protocol
+destruction, including while hidden or detached from the rendering DOM.
+
+`rawElementInstalled`, `rawElementUninstalled` and `rawElementUpdated` register
+synchronous listeners and return unsubscribe functions. Creation inserts the
+record before installed listeners run, with empty strings. A descriptor applies
+both strings before one updated notification, only when a value changes.
+Uninstalled listeners can still enumerate the record; removal follows their
+callbacks. Destroying and recreating the same numeric ID creates a new record.
+Subscribe to updates as well as installation when selecting by string ID, then
+enumerate existing records to support late attachment.
+
+The renderer retains the drawing div across full DOM rebuilds, clipping wrapper
+changes, reparenting and bounds updates. Its page-owned children are separate
+from renderer child reconciliation. Pages should use absolutely positioned,
+non-interactive drawing content so it adds no intrinsic minimum size and input
+continues to reach GacUI. Observe the div's size and device pixel ratio when
+sizing a canvas: descriptors may arrive before layout, including at zero bounds.
+
+Protocol destruction ends the element lifetime. Transport loss and `stop()`
+retain the last picture and do not synthesize uninstallation. A page must dispose
+its subscriptions and drawing observers on session completion, errors and
+teardown, without clearing the retained canvas. Cleanup must be idempotent.
 
 ---
 

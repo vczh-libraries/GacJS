@@ -260,6 +260,29 @@ Polygon, ImageFrame, DocumentParagraph
 
 Descriptions sent as part of `ElementBeginRendering.updatedElements`.
 
+### ElementDesc_Raw
+
+Transports application drawing state without imposing a browser drawing format.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `int` | Numeric renderer ownership ID |
+| `rawId` | `string` | Application ID, exposed as the raw record's string `id` |
+| `data` | `string` | Application drawing data |
+
+Each descriptor sends both strings together. A newly created browser record has
+empty strings until its first descriptor arrives. Empty or duplicate `rawId`
+values do not change ownership. The descriptor belongs to both
+`OrdinaryElementDescVariant` and `UnitTest_ElementDescVariant`; only
+FocusRectangle remains descriptor-free. Snapshot playback consumes the recorded
+Raw descriptor without installing the FullControlTest painter.
+
+The core batches dirty state into frames. A data change requests a frame; an
+isolated ID change may arrive on a later independently requested frame. Browser
+listeners report applied state, including descriptors for currently hidden
+elements. There are no additional raw-element wire messages or browser polling.
+See [DOM.md](DOM.md#raw) for the public collection, listener and lifetime contract.
+
 ### ElementDesc_SolidBorder
 
 Draws a solid-color border.
