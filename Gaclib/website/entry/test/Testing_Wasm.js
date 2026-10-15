@@ -341,6 +341,71 @@ test('WasmRVMT recreates Core and its TypeScript host after Exit and Force Exit'
     await stopped();
 });
 
+test('WasmFCT Raw Clock paints received time through hide/show, resize, palette refresh and Reload', async () => {
+    await open('fct', 'Complete Control Showcase');
+    const showClock = async () => {
+        await clickText('Misc');
+        await clickText('Raw Clock');
+        await page.waitForFunction(() => {
+            const records = window.__gacui_wasm_session.renderer.getRawElements();
+            const clock = records.find(record => record.id === 'FullControlTest.Clock');
+            const canvas = clock?.element.querySelector('canvas');
+            return clock !== undefined && /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/u.test(clock.data)
+                && canvas !== null && canvas !== undefined && canvas.isConnected && canvas.width > 0 && canvas.height > 0
+                && canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some((value, index) => index % 4 === 3 && value !== 0);
+        });
+        await expectUI(page.locator('#gacui-screen canvas')).toHaveCount(1);
+    };
+    const captureClock = () => page.evaluate(() => {
+        const clock = window.__gacui_wasm_session.renderer.getRawElements().find(record => record.id === 'FullControlTest.Clock');
+        const canvas = clock.element.querySelector('canvas');
+        window.__rawClockRecord = clock;
+        window.__rawClockCanvas = canvas;
+        return { data: clock.data, pixels: canvas.toDataURL(), width: canvas.width, height: canvas.height };
+    });
+    const waitForTick = async before => {
+        // Observe actual Core data and completed canvas paints without generating input.
+        await page.waitForFunction(before => {
+            const clock = window.__rawClockRecord;
+            const canvas = window.__rawClockCanvas;
+            return clock.data !== before.data && canvas.toDataURL() !== before.pixels;
+        }, before);
+    };
+    await showClock();
+    const first = await captureClock();
+    await waitForTick(first);
+    await clickText('Elements');
+    await page.waitForFunction(() => !window.__rawClockCanvas.isConnected);
+    await clickText('Raw Clock');
+    await page.waitForFunction(() => window.__rawClockCanvas.isConnected);
+    expect(await page.evaluate(() => {
+        const clock = window.__gacui_wasm_session.renderer.getRawElements().find(record => record.id === 'FullControlTest.Clock');
+        return clock === window.__rawClockRecord && clock.element.querySelector('canvas') === window.__rawClockCanvas;
+    })).toBe(true);
+    await page.setViewportSize({ width: 1100, height: 850 });
+    await page.waitForFunction(() => {
+        const canvas = window.__rawClockCanvas;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0
+            && canvas.width === Math.max(1, Math.round(rect.width * devicePixelRatio))
+            && canvas.height === Math.max(1, Math.round(rect.height * devicePixelRatio));
+    });
+    await waitForTick(await captureClock());
+    await clickText('Window Manager');
+    await clickText('Aurora');
+    await showClock();
+    await waitForTick(await captureClock());
+    for (const shutdown of ['Exit', 'Force Exit']) {
+        await page.getByRole('button', { name: shutdown, exact: true }).click();
+        await stopped();
+        await reloadApplication('Complete Control Showcase');
+        await showClock();
+        await waitForTick(await captureClock());
+    }
+    await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
+    await stopped();
+});
+
 test('WasmRPT preserves the exact Core-authored fatal error', async () => {
     await open('rpt', 'Remote Protocol Test');
     expectedErrors = ['This is a fatel error!'];

@@ -51,12 +51,19 @@ apps, build GacJS, run `copy-wasm.sh`, and start the entry server. Then run
 a native Core. The root `yarn test` also runs the portable channel tests in
 `remote-protocol-wasm`.
 
+The current three-file contract requires Emscripten 3.1.51; see the
+[SDK compatibility note](Projects.md#running-the-wasm-demos-on-linux) before
+building, especially when replacing objects made by a different SDK.
+
 Deploy the matching `app.mjs`, `app.wasm` and `app.worker.js` beside every demo
 page. Verify Chromium and Firefox load the separate pthread script and its
 module imports without worker errors. `wasm-worker.js` is GacJS's application
 host, distinct from Emscripten's generated `app.worker.js`. The existing
-regression suite uses Chromium CDP for mouse input and worker lifetime checks;
-also exercise startup, input and shutdown/reload in Firefox with Playwright.
+regression suite uses Chromium CDP for mouse input and worker lifetime checks.
+`Testing_Wasm_Firefox.js` also runs through `test-wasm` and checks all three
+pages' module/pthread requests, startup, input, Exit cancellation and shutdown/reload.
+It checks the live FCT clock and RVMT Unicode RPC; the Unicode keystrokes use
+DOM keyboard events because Firefox has no CDP input endpoint.
 
 Each page owns its Core worker and pthreads. The suite verifies Exit cancellation,
 Exit and Force Exit followed by Reload, fresh UI state, and recreated RVMT hosts.
@@ -67,6 +74,13 @@ operation. The suite also covers the linked SOP's feature operations, RPT fatal
 errors and live-page closure, using renderer idle signals and visible DOM for
 synchronization and checking actual worker termination.
 Native OS global hot keys are outside browser coverage.
+
+The real Wasm FCT suite also selects Misc / Raw Clock and checks received
+`FullControlTest.Clock` state, nonempty canvas pixels and changing hands without
+input. It verifies record/canvas identity across tab hide/show, pixel-buffer
+resizing, palette refresh and fresh drawing after both Exit and Force Exit followed
+by Reload. Fixed-time and ID-transition cases remain in the controlled Raw browser
+suite; live wall-clock values are not snapshot baselines.
 
 ## Test Harness
 

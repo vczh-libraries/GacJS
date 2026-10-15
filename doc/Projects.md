@@ -507,6 +507,16 @@ separate import and codegen phases first when their inputs have changed.
 
 ## Running the Wasm Demos on Linux
 
+Use Emscripten **3.1.51** for this deployment contract, activated through emsdk
+in the build shell. It emits the separate, nonempty `app.worker.js` required
+by `copy-wasm.sh`. Emscripten 3.1.52 changed the ES-module worker suffix;
+3.1.58 moved pthread startup into the main module, and 3.1.68 removed the
+transitional empty worker file. These newer outputs do not satisfy this
+three-file contract. Do not fabricate a worker file or patch `app.mjs` to pass
+deployment validation. Switching SDK versions requires full `-fbw -o` rebuilds
+of all three applications because Emscripten does not guarantee object ABI
+compatibility between releases.
+
 Build `GacUI/Test/Linux/WasmFCT`, `WasmRPT` and `WasmRVMT` using
 `../../../.github/Ubuntu/build.sh -bw -o` from each directory. All three use
 `VCZH_DEBUG_NO_REFLECTION`, merged DarkSkin sources from
