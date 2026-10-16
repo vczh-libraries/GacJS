@@ -263,6 +263,10 @@ Descriptions sent as part of `ElementBeginRendering.updatedElements`.
 ### ElementDesc_Raw
 
 Transports application drawing state without imposing a browser drawing format.
+The XML `<Raw/>` element exposes these strings through `GuiRawElementBase`; the
+active renderer supplies the drawing implementation. This is the recommended
+owner-drawing path for both local and remote GacUI applications. The TUI backend
+does not support it.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -276,6 +280,14 @@ values do not change ownership. The descriptor belongs to both
 `OrdinaryElementDescVariant` and `UnitTest_ElementDescVariant`; only
 FocusRectangle remains descriptor-free. Snapshot playback consumes the recorded
 Raw descriptor without installing the FullControlTest painter.
+
+The Raw descriptor contains neither a native drawing context nor an image frame.
+A browser page must attach its own painter to the Raw div, and a native remote
+renderer must attach drawing handlers to its platform element. These local
+subscriptions are not additional messages in the protocol. For snapshot
+inspection, the native GacUI viewer substitutes an ellipsized `Id: Data` label;
+the browser snapshot viewer retains the descriptor and empty drawing surface
+unless a painter is explicitly installed.
 
 The core batches dirty state into frames. A data change requests a frame; an
 isolated ID change may arrive on a later independently requested frame. Browser

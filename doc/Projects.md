@@ -233,6 +233,12 @@ properties. `IGacUIRenderer.getRawElements()` enumerates current Raw elements;
 synchronous listeners returning unsubscribe functions. Pages own drawing inside
 the persistent div. See [Raw DOM rendering](DOM.md#raw) for lifetime and cleanup.
 
+The XML `<Raw/>` element is the recommended owner-drawing entry point across
+GacUI's graphical backends, including remote rendering. The Core owns `Id` and
+`Data`; browser pages supply their own canvas/SVG/DOM painter. Direct2D, GDI,
+Cairo and CoreGraphics drawing handlers belong to native renderers and are not
+transported to a browser. TUI does not support this element.
+
 ---
 
 ### @gaclib/workflow-rpc

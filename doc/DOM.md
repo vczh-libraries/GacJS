@@ -156,6 +156,14 @@ An application drawing surface with a persistent `HTMLDivElement`. The protocol
 descriptor supplies an application string ID and data; the page decides how to
 draw them. The reusable renderer does not interpret these strings.
 
+`<Raw/>` is the standard, recommended GacUI owner-drawing element, both locally
+and over the remote protocol. Its reflected `GuiRawElementBase` exposes `Id` and
+`Data`; native clients select Direct2D, GDI, Cairo or CoreGraphics through their
+resource manager, while GacJS supplies the div below. Native drawing callbacks
+do not run in the browser: provide the corresponding page-owned painter. The
+protocol carries drawing state, not native graphics handles or rendered pixels.
+GacUI's TUI backend does not support `<Raw/>`.
+
 ```html
 <div style="/* renderer bounds, clipping and input */">
   <div style="/* persistent raw drawing surface */"><!-- page content --></div>
@@ -184,6 +192,13 @@ from renderer child reconciliation. Pages should use absolutely positioned,
 non-interactive drawing content so it adds no intrinsic minimum size and input
 continues to reach GacUI. Observe the div's size and device pixel ratio when
 sizing a canvas: descriptors may arrive before layout, including at zero bounds.
+Give the owning GacUI composition explicit bounds or a minimum size; canvas
+content does not supply a minimum size to the Core layout engine.
+
+Changing `Data` on the Core requests repaint; changing `Id` only marks state
+dirty for the next otherwise-required frame. Equal assignments do nothing.
+Several setters can coalesce into one applied descriptor, so use the latest
+record state instead of treating update callbacks as an application event log.
 
 Protocol destruction ends the element lifetime. Transport loss and `stop()`
 retain the last picture and do not synthesize uninstallation. A page must dispose

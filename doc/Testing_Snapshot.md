@@ -11,6 +11,15 @@ in the browser without running the server.
 normalizes CRLF line endings to LF, preserving the JSON content and UTF-8 BOM.
 This keeps generated snapshots stable across checkout platforms.
 
+Raw elements record `ElementDesc_Raw` with numeric renderer `id`, application
+string `rawId`, and string `data`. Browser playback restores that state and the
+persistent Raw div, but does not install the FullControlTest clock painter or
+capture its canvas pixels. Inspect the descriptor to verify state transitions;
+use the live or controlled Raw Clock suites for drawing checks. The native
+GacUI snapshot viewer instead displays an ellipsized `Id: Data` label as a
+diagnostic representation. Neither viewer's default presentation is the
+application's owner-drawing implementation.
+
 ## Snapshot File Structure
 
 Snapshots live under `Gaclib/website/entry/assets/snapshots/` organized by category:
