@@ -109,9 +109,22 @@ export async function runGacUI(settings) {
 
 export function runRvmGacUI(settings) {
     const { renderer, client, completion } = createSession(settings, true);
+    const state = window.rawTest;
+    state.hostStops = 0;
+    let stopped = false;
+    let finishHost;
+    const hostOutcome = new Promise(resolve => { finishHost = resolve; });
+    state.finishHost = () => finishHost('stopped');
     return {
-        renderer, rendererClient: client, completion,
+        renderer, rendererClient: client, completion, hostOutcome,
         startup: Promise.resolve(),
-        stop() { client.stop(); renderer.stop(); },
+        stop() {
+            if (stopped) return;
+            stopped = true;
+            state.hostStops++;
+            finishHost('stopped');
+            client.stop();
+            renderer.stop();
+        },
     };
 }

@@ -210,6 +210,7 @@
             let session;
             let disposeClocks;
             let pageHidden = false;
+            let keepRvmHost = false;
             window.addEventListener('pagehide', () => {
                 pageHidden = true;
                 disposeClocks?.();
@@ -226,6 +227,7 @@
                 if (rvmhost) {
                     session = GacUIHtmlRenderer.runRvmGacUI(settings);
                     window.__gacui_rvmhost_session = session;
+                    void session.hostOutcome.then(() => session.stop());
                     await session.startup;
                     renderer = session.renderer;
                     client = session.rendererClient;
@@ -245,6 +247,8 @@
                 if (pageHidden) return;
                 if (error instanceof GacUIHtmlRenderer.GacUIHtmlRendererExitError ||
                     error instanceof GacUIHtmlRenderer.RemoteProtocolHttpDisconnectError) {
+                    // Renderer takeover does not release Core's accepted view-model host.
+                    keepRvmHost = session !== undefined;
                     showMask(successMask, successMessage, getMessage(error));
                 } else {
                     showMask(errorMask, errorMessage, getMessage(error));
@@ -253,7 +257,7 @@
 
             } finally {
                 disposeClocks?.();
-                if (session) session.stop();
+                if (session && (!keepRvmHost || pageHidden)) session.stop();
                 else {
                     client?.stop();
                     renderer?.stop();

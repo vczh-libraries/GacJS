@@ -112,8 +112,11 @@ The portable unit suites include `RvmQuerySession.test.ts`,
 browser suite serves built assets on an ephemeral port and sends controlled JSON
 protocol messages through the real adapter and renderer. It checks clock pixels,
 data-only updates, resizing/DPI, raw div lifetime across DOM reconstruction,
-retained completion/error pictures and recorded snapshot playback. These tests
-run through `yarn workspace @gaclib-website/entry test-unit` after building.
+retained completion/error pictures and recorded snapshot playback. It also checks
+that renderer takeover preserves a page's accepted RVM host while disposing its
+renderer subscriptions; host completion, fatal failure and page teardown clean
+up the remaining session. These tests run through
+`yarn workspace @gaclib-website/entry test-unit` after building.
 
 The focused live Raw Clock suite additionally checks the existing FCT Core's
 time updates and tab hide/show. `GACUI_PROTOCOL_TESTS_BUILT=1` can reuse an

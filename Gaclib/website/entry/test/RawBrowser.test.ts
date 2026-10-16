@@ -242,6 +242,32 @@ test('a detached descriptor update redraws after same-frame reattachment at the 
     })).toBe(true);
 });
 
+test.each(['disconnect', 'exit', 'fatal'])('rvmhost %s preserves only a detached renderer host until page teardown', async outcome => {
+    const page = await open('?rvmhost');
+    await waitForCanvas(page, 240, 240);
+    const before = await picture(page);
+    if (outcome === 'fatal') expectedErrors.push('Controlled raw clock failure');
+    await page.evaluate(outcome => (window as any).rawTest.finish(outcome), outcome);
+    await page.waitForFunction(() => Object.values((window as any).rawTest.listeners).every(count => count === 0));
+    expect(await picture(page)).toEqual(before);
+    expect(await page.evaluate(() => (window as any).rawObserved.size)).toBe(0);
+    expect(await page.evaluate(() => (window as any).rawTest.hostStops)).toBe(outcome === 'fatal' ? 1 : 0);
+    await page.evaluate(() => {
+        window.dispatchEvent(new Event('pagehide'));
+        window.dispatchEvent(new Event('pagehide'));
+    });
+    expect(await page.evaluate(() => (window as any).rawTest.hostStops)).toBe(1);
+});
+
+test('an accepted host completing after renderer takeover cleans the remaining session', async () => {
+    const page = await open('?rvmhost');
+    await page.evaluate(() => (window as any).rawTest.finish('exit'));
+    await page.locator('#gacui-success-mask.visible').waitFor();
+    expect(await page.evaluate(() => (window as any).rawTest.hostStops)).toBe(0);
+    await page.evaluate(() => (window as any).rawTest.finishHost());
+    await page.waitForFunction(() => (window as any).rawTest.hostStops === 1);
+});
+
 test.each(['normal', 'disconnect', 'exit', 'fatal'])('session %s cleans subscriptions and observers while retaining pixels', async outcome => {
     const page = await open();
     await paint(page);

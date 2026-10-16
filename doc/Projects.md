@@ -442,6 +442,11 @@ included in the demo composition, and its CLI build is unchanged.
 `GacUIHtmlRenderer.runGacUI` returns `[renderer, client]`. The HTTP page attaches
 raw listeners and enumerates existing records before `client.start()`; the
 already-started `?rvmhost` session uses the same idempotent late attachment.
+When another renderer takes over, the HTTP page disposes its renderer and clock
+subscriptions while keeping its accepted view-model host available to Core.
+Host completion, page teardown and fatal failure stop the whole page session.
+The renderer's connection-stopped notification also occurs during takeover, so
+it cannot establish that Core has finished using the host.
 The Wasm pages explicitly call `startWasmPage`; its optional renderer-setup
 callback runs before renderer protocol delivery and can return a cleanup function
 retained until completion, error or page teardown. RPT and RVMT call it without
