@@ -63,12 +63,12 @@ export async function startWasmPage(setupRenderer?: WasmRendererSetup): Promise<
         disposeSetup = undefined;
         cleanup?.();
     };
-    const stopRenderer = (): void => {
+    const stopRenderer = (disconnected = false): void => {
         cleanupSetup();
         if (rendererStopped) return;
         rendererStopped = true;
+        if (rendererStarted) session?.renderer?.stop(disconnected);
         session?.client?.stop();
-        if (rendererStarted) session?.renderer?.stop();
     };
     const stopApplication = (): void => {
         if (applicationStopped || session === undefined) return;
@@ -151,7 +151,7 @@ export async function startWasmPage(setupRenderer?: WasmRendererSetup): Promise<
             throw error;
         }
     } finally {
-        stopRenderer();
+        stopRenderer(true);
         stopHost();
         window.removeEventListener('pagehide', onPageHide);
     }

@@ -137,6 +137,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
      ***************************************************************************************/
 
     constructor(private _settings: GacUISettings) {
+        this._pointStyle = document.createElement('style');
+        this._pointStyle.textContent = '.gacui-point-surface, .gacui-point-surface * { touch-action: none !important; }';
+        document.head.appendChild(this._pointStyle);
+        this._settings.target.classList.add('gacui-point-surface');
         this._settings.target.innerText = 'Starting GacUI HTML Renderer ...';
 
         const bounds = this._getBounds();
@@ -215,8 +219,20 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._resizeObserver.observe(this._settings.target);
     }
 
-    stop(): void {
+    stop(disconnected = false): void {
+        if (this._stopping) return;
         this._stopping = true;
+        if (!disconnected && this._pointContacts.size !== 0) {
+            this._endPoints(SCHEMA.IOPointEndReason.Canceled_WindowDestroyed, performance.now());
+        }
+        for (const pointerId of this._pointContacts.keys()) {
+            if (this._settings.target.hasPointerCapture(pointerId)) this._settings.target.releasePointerCapture(pointerId);
+        }
+        this._pointContacts.clear();
+        document.removeEventListener('pointerup', this._drainPoint, true);
+        document.removeEventListener('pointercancel', this._drainPoint, true);
+        this._pointStyle.remove();
+        this._settings.target.classList.remove('gacui-point-surface');
         this._stopCaretBlink();
         this._resizeObserver.disconnect();
         this._uninstallEvents();
@@ -285,7 +301,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     RequestControllerConnectionStopped(): void {
-        this.stop();
+        this.stop(true);
         throw new GacUIHtmlRendererExitError();
     }
 
@@ -1296,11 +1312,145 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     // Helper method to hook any type of event
     private _ioHookEvent(eventName: string, handler: EventListener): void {
-        this._eventHandlers.set(eventName, handler);
-        this._settings.target.addEventListener(eventName, handler);
+        const wrapped: EventListener = event => {
+            if (!eventName.startsWith('pointer') && eventName !== 'lostpointercapture' && this._isTouchCompatibility(event)) {
+                if (event.cancelable) event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+            handler(event);
+        };
+        this._eventHandlers.set(eventName, wrapped);
+        this._settings.target.addEventListener(eventName, wrapped, { passive: false });
+    }
+
+    private _pointSequence = 0n;
+    private _pointIndex = 0;
+    private _nextPointId = 0;
+    private _pointContacts = new Map<number, number>();
+    private _pointCanceled = false;
+    private _lastPointerType = '';
+    private _pointStyle: HTMLStyleElement;
+
+    private _drainPoint = (event: PointerEvent): void => {
+        if (this._pointCanceled && event.pointerType === 'touch') this._pointContacts.delete(event.pointerId);
+    };
+
+    private _nextPointEventIndex(): number {
+        if (this._pointIndex >= 0x7ffffffe) throw new Error('Point event indices exhausted.');
+        return ++this._pointIndex;
+    }
+
+    private _pointTimestamp(milliseconds: number): string {
+        const microseconds = Math.round(milliseconds * 1000);
+        if (!Number.isSafeInteger(microseconds) || microseconds < 0) {
+            throw new Error('Point timestamp must be nonnegative safe integer microseconds.');
+        }
+        return BigInt(microseconds).toString();
+    }
+
+    private _pointSample(event: PointerEvent, pointId: number): SCHEMA.IOPointInfo {
+        const { x, y } = this._ioGetRelativeCoordinates(event);
+        return {
+            sequenceId: this._pointSequence.toString(), pointId,
+            timestamp: this._pointTimestamp(event.timeStamp),
+            activePointCount: this._pointContacts.size,
+            position: { x: { value: x }, y: { value: y } },
+            primary: event.isPrimary, ctrl: event.ctrlKey, shift: event.shiftKey,
+            alt: event.altKey, osSuper: event.metaKey,
+            contactBounds: {
+                x1: { value: Math.round(x - event.width / 2) },
+                y1: { value: Math.round(y - event.height / 2) },
+                x2: { value: Math.round(x + event.width / 2) },
+                y2: { value: Math.round(y + event.height / 2) }
+            },
+            pressure: event.pressure, orientation: null, platformFrameId: null
+        };
+    }
+
+    private _endPoints(reason: SCHEMA.IOPointEndReason, timestamp: number): void {
+        if (this._pointCanceled) return;
+        this._pointCanceled = true;
+        this._events.OnIOPointEnded({
+            sequenceId: this._pointSequence.toString(), eventIndex: this._nextPointEventIndex(),
+            timestamp: this._pointTimestamp(timestamp), accepted: true, reason
+        });
+    }
+
+    private _onPoint(event: PointerEvent): void {
+        this._lastPointerType = event.pointerType;
+        if (event.pointerType !== 'touch' || this._stopping) return;
+        if (event.cancelable) event.preventDefault();
+        const target = this._settings.target;
+        if (event.type === 'pointerdown') {
+            if (this._pointContacts.has(event.pointerId)) return;
+            const starting = this._pointContacts.size === 0;
+            if (starting) {
+                if (this._pointSequence === 18446744073709551615n) throw new Error('Point sequence IDs exhausted.');
+                this._pointSequence++;
+                this._pointIndex = 0;
+                this._nextPointId = 0;
+                this._pointCanceled = false;
+            }
+            if (this._nextPointId >= 0x7fffffff) throw new Error('Point IDs exhausted.');
+            const pointId = this._nextPointId++;
+            this._pointContacts.set(event.pointerId, pointId);
+            target.setPointerCapture(event.pointerId);
+            if (this._pointCanceled) return;
+            const info = this._pointSample(event, pointId);
+            if (starting) this._events.OnIOPointStarted({ eventIndex: 0, info });
+            this._events.OnIOPointDown({ eventIndex: this._nextPointEventIndex(), info });
+            return;
+        }
+        const pointId = this._pointContacts.get(event.pointerId);
+        if (pointId === undefined) return;
+        if (event.type === 'pointercancel' || event.type === 'lostpointercapture') {
+            this._endPoints(event.type === 'pointercancel'
+                ? SCHEMA.IOPointEndReason.Canceled_PlatformCanceled
+                : SCHEMA.IOPointEndReason.Canceled_CaptureLost, event.timeStamp);
+            if (event.type === 'pointercancel') this._pointContacts.delete(event.pointerId);
+            return;
+        }
+        if (event.type === 'pointerup') this._pointContacts.delete(event.pointerId);
+        if (this._pointCanceled) return;
+        const send = (sample: PointerEvent): void => {
+            const action = { eventIndex: this._nextPointEventIndex(), info: this._pointSample(sample, pointId) };
+            switch (event.type) {
+                case 'pointermove': this._events.OnIOPointUpdate(action); break;
+                case 'pointerup': this._events.OnIOPointUp(action); break;
+                case 'pointerenter': this._events.OnIOPointEnter(action); break;
+                case 'pointerleave': this._events.OnIOPointLeave(action); break;
+            }
+        };
+        const samples = event.type === 'pointermove' ? event.getCoalescedEvents?.() ?? [] : [];
+        if (samples.length === 0) send(event);
+        else for (const sample of samples) send(sample);
+        if (event.type === 'pointerup' && this._pointContacts.size === 0) {
+            this._endPoints(SCHEMA.IOPointEndReason.Succeeded, event.timeStamp);
+        }
+    }
+
+    private _isTouchCompatibility(event: Event): boolean {
+        if (!(event instanceof MouseEvent) || event instanceof WheelEvent) return false;
+        if (event instanceof PointerEvent && event.pointerType === 'touch') return true;
+        const capabilities = (event as MouseEvent & { sourceCapabilities?: { firesTouchEvents: boolean } }).sourceCapabilities;
+        if (capabilities !== undefined && capabilities !== null) return capabilities.firesTouchEvents;
+        if (['click', 'auxclick', 'contextmenu'].includes(event.type) && event.detail === 0) return false;
+        return this._lastPointerType === 'touch';
     }
 
     private _installEvents(): void {
+        document.addEventListener('pointerup', this._drainPoint, true);
+        document.addEventListener('pointercancel', this._drainPoint, true);
+        for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'pointerenter', 'pointerleave', 'lostpointercapture']) {
+            this._ioHookEvent(name, event => this._onPoint(event as PointerEvent));
+        }
+        for (const name of ['pointerover', 'pointerout']) {
+            this._ioHookEvent(name, event => { this._lastPointerType = (event as PointerEvent).pointerType; });
+        }
+        for (const name of ['click', 'auxclick', 'contextmenu', 'dblclick']) {
+            this._ioHookEvent(name, () => {});
+        }
         // Mouse down handler
         this._ioHookEvent('mousedown', (event: Event) => {
             const mouseEvent = event as MouseEvent;

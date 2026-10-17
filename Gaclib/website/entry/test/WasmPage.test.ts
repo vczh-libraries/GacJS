@@ -114,7 +114,7 @@ test('Wasm setup precedes connection and delivery, with retained picture and ide
     expect(h.events).not.toContain('cleanup');
     h.core.resolve(0);
     await running;
-    expect(h.events.slice(-3)).toEqual(['cleanup', 'client-stop', 'renderer-stop']);
+    expect(h.events.slice(-3)).toEqual(['cleanup', 'renderer-stop', 'client-stop']);
     expect(h.elements.screen.children).toEqual([h.picture, h.elements['success-mask']]);
     expect(h.elements['success-mask'].classList.has('visible')).toBe(true);
     expect(h.elements.reload.disabled).toBe(false);
@@ -133,7 +133,7 @@ test('RVMT holds its host through Core completion and cleans drawing on fatal er
     expect(h.events.slice(0, 5)).toEqual(['application', 'host-connect', 'host-start', 'renderer', 'setup']);
     h.delivery.reject(new Error('controlled fatal error'));
     await result;
-    expect(h.events.slice(-5)).toEqual(['application-stop', 'cleanup', 'client-stop', 'renderer-stop', 'host-stop']);
+    expect(h.events.slice(-5)).toEqual(['application-stop', 'cleanup', 'renderer-stop', 'client-stop', 'host-stop']);
     expect(h.elements.screen.children).toEqual([h.picture, h.elements['error-mask']]);
     expect(h.elements['error-message'].textContent).toBe('controlled fatal error');
     expect(h.elements.reload.disabled).toBe(true);
@@ -159,10 +159,10 @@ test('page teardown overlapping failure disposes drawing and renderer only once'
     const running = startWasmPage(h.setupRenderer);
     await h.started.promise;
     h.pageWindow.dispatchEvent(new Event('pagehide'));
-    expect(h.events.slice(-5)).toEqual(['cleanup', 'client-stop', 'renderer-stop', 'application-stop', 'host-stop']);
+    expect(h.events.slice(-5)).toEqual(['cleanup', 'renderer-stop', 'client-stop', 'application-stop', 'host-stop']);
     h.delivery.reject(new Error('closed after pagehide'));
     await running;
-    for (const event of ['cleanup', 'client-stop', 'renderer-stop', 'host-stop']) {
+    for (const event of ['cleanup', 'renderer-stop', 'client-stop', 'host-stop']) {
         expect(h.events.filter(value => value === event)).toHaveLength(1);
     }
     expect(h.elements.screen.children).toEqual([h.picture]);
@@ -221,13 +221,14 @@ test('page teardown during RVMT host startup stops that host and prevents render
     expect(h.events).toEqual(['application', 'host-connect', 'host-start', 'application-stop', 'host-stop']);
 });
 
-test('all built Wasm pages explicitly start, and FCT keeps its clock painter in the page', () => {
+test('all built Wasm pages explicitly start, and FCT shares the page-owned raw painter', () => {
     const http = readFileSync(new URL('../lib/dist/index.html', import.meta.url), 'utf8');
-    const clock = http.slice(http.indexOf('        function installRawClocks('), http.indexOf('        // Event bridges')).trim();
+    const painterImport = "import { installFullControlTestRawElements } from '/fullControlTestRaw.js'";
+    expect(http).toContain(painterImport);
     for (const app of ['fct', 'rpt', 'rvmt']) {
         const html = readFileSync(new URL(`../lib/dist/wasm-${app}/index.html`, import.meta.url), 'utf8');
         expect(html).toContain("import { startWasmPage } from '/wasm-page.js'");
-        expect(html).toContain(app === 'fct' ? 'void startWasmPage(installRawClocks)' : 'void startWasmPage()');
-        if (app === 'fct') expect(html).toContain(clock);
+        expect(html).toContain(app === 'fct' ? 'void startWasmPage(installFullControlTestRawElements)' : 'void startWasmPage()');
+        if (app === 'fct') expect(html).toContain(painterImport);
     }
 });

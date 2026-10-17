@@ -61,10 +61,10 @@ export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = 
         hostStopped = true;
         host.stop();
     };
-    const stopRenderer = (): void => {
+    const stopRenderer = (disconnected = false): void => {
         if (rendererStopped) return;
         rendererStopped = true;
-        renderer.stop();
+        renderer.stop(disconnected);
     };
     const stopRendererClient = (): void => {
         if (rendererClientStopped || rendererClient === undefined) return;
@@ -127,7 +127,7 @@ export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = 
             stopHost();
             rendererChannel?.stop();
             stopRendererClient();
-            if (rendererStarted) stopRenderer();
+            if (rendererStarted) stopRenderer(true);
             throw normalized;
         }
     })();
@@ -156,8 +156,8 @@ export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = 
             stopped = true;
             resolveStopped?.();
             rendererChannel?.stop();
-            stopRendererClient();
             stopRenderer();
+            stopRendererClient();
             stopHost();
         },
     };

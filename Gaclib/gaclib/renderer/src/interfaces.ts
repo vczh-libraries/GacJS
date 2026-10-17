@@ -10,7 +10,8 @@ export interface GacUIRawElement {
 export interface IGacUIRenderer {
     get requests(): SCHEMA.IRemoteProtocolRequests;
     start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
-    stop(): void;
+    /** Dispose while connected, or pass true after transport teardown to suppress outgoing events. */
+    stop(disconnected?: boolean): void;
     requestStopToCore(forceExit: boolean): void;
     getRawElements(): readonly GacUIRawElement[];
     rawElementInstalled(listener: (element: GacUIRawElement) => void): () => void;

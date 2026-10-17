@@ -16,7 +16,7 @@ class RawTestRenderer extends GacUIRendererImpl {
 }
 
 function createRenderer(): RawTestRenderer {
-    const target = Object.assign(new EventTarget(), { clientWidth: 500, clientHeight: 400 }) as unknown as HTMLElement;
+    const target = Object.assign(new EventTarget(), { clientWidth: 500, clientHeight: 400, classList: { add() {}, remove() {} } }) as unknown as HTMLElement;
     const renderer = new RawTestRenderer({
         target,
         isShortcutReservedForBrowser: () => false,
@@ -40,7 +40,10 @@ function update(renderer: RawTestRenderer, id: number, rawId: string, data: stri
 
 beforeEach(() => {
     vi.stubGlobal('document', {
-        createElement: () => ({ style: {}, id: '' })
+        createElement: () => ({ style: {}, id: '', remove() {} }),
+        head: { appendChild() {} },
+        addEventListener() {},
+        removeEventListener() {}
     });
     vi.stubGlobal('window', {
         getComputedStyle: () => ({ fontFamily: 'Arial' })

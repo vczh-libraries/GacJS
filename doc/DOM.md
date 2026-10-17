@@ -634,3 +634,11 @@ Runtime toggles in `featureGates.ts`:
 | Gate | Default | Effect |
 |------|---------|--------|
 | `useWebkitLineClamp` | `false` | Enables `-webkit-line-clamp` for multi-line text ellipsis. Falls back to `text-overflow: ellipsis` when disabled. |
+
+## Touch ownership and FullControlTest.Touching
+
+The renderer installs touch-action none on its stable target and every descendant before input begins. Descendant coverage matters because overflow-hidden DOM nodes establish scroll containers. Each touch pointer is captured on that stable target, so replacing rendered children or moving outside does not change the sequence target. Samples use target-relative CSS pixels and client contact rectangles; canvas DPR does not rescale input. Unavailable touch orientation/platform frame identity remain null.
+
+Down-order contact slots are never reused within an overlapping sequence. Normal Up followed by lostpointercapture is cleanup, not cancellation of remaining contacts. Unexpected capture loss ends once, then drains physical Up/Cancel; pointercancel retires its own contact immediately. Connected disposal sends one Canceled_WindowDestroyed End before detaching listeners/captures. After transport loss, stop(true) performs silent cleanup and Core owns its disconnect cancellation. Touch compatibility mouse/boundary/activation events are suppressed locally and synchronously while real mouse/pen and non-touch activation retain their path.
+
+The page-owned painter in `<GacJS repo>/Gaclib/website/entry/assets/fullControlTestRaw.js` handles Clock and Touching for both HTTP and the WASM FCT entry. Touching data is centerX,centerY,axisX,axisY,count followed by count pointId,x,y triples. It draws Core's transformed sky-blue rectangle and yellow radius-16 contact circles. Raw hooks retain one canvas, track resize/DPR, redraw data changes and release observers on removal/disposal. The painter never computes gestures. Core's Misc > Touching page owns translation, rotation, scaling, three-contact pause and membership rebasing.

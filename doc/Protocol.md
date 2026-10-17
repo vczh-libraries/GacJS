@@ -570,3 +570,13 @@ Protocol definitions support annotations that control optimization behavior:
 | `@DropConsecutive` | Consecutive events may be coalesced (e.g., rapid mouse moves) |
 | `@Cpp(...)` | Maps to a C++ type (irrelevant for TypeScript implementation) |
 | `@CppNamespace(...)` | C++ namespace mapping (irrelevant for TypeScript implementation) |
+
+## Explicit point sequences
+
+Point records are events from renderer to Core: IOPointStarted carries the first sample at eventIndex 0, then IOPointDown repeats it at index 1. IOPointUpdate, IOPointUp, IOPointEnter and IOPointLeave follow the same consecutive stream across contacts, and IOPointEnded is the sole terminal boundary. Final Up does not implicitly finish Core state. They are ordered, unfiltered records and never share the pending mouse-move slot.
+
+IOPointInfo includes sequenceId, pointId, timestamp, activePointCount, position, primary, Ctrl/Shift/Alt/Super, and nullable contactBounds, pressure, orientation and platformFrameId. sequenceId, timestamp and platformFrameId are canonical unsigned decimal strings through 18446744073709551615; null differs from "0". Use strings/BigInt, not JavaScript numbers, for these fields. Point/event indices are bounded integers. Generate definitions from `<GacUI repo>/Source/PlatformProviders/Remote/Protocol/Protocol_IO.txt` with Metadata_UpdateProtocol and the GacJS import/codegen pipeline.
+
+Core assigns public window-lifetime sequence IDs shared with Core automation. It queries acceptance once, routes accepted actions to one captured target, and substitutes its latched acceptance into End. Rejection retains Started/End but sends only the original first contact through typed mouse fallback. Secondary contacts never take over. Core ignores absent/nested/foreign/retired sequences and stale duplicate indices; a forward gap is a protocol error. Cancellation/disconnect releases point capture and fallback without activation.
+
+GacJS acquires touch PointerEvents and immediately owns them locally. Native remote renderers do the same at native listener acceptance. This prevents renderer-side compatibility mouse streams from duplicating Core fallback. Pen and independent mouse preserve the existing path. Browser and shared worker adapters carry the same point records; WASM runtime validation is separate.

@@ -470,3 +470,172 @@ test('browser snapshot renderer consumes generated Raw descriptors and ordinary 
     expect(result.noClock).toBe(true);
     expect(result.ordinaryText).toContain('Hello');
 }, 30000);
+
+
+test('Touching painter draws Core rectangle and contact markers, updates and changes IDs', async () => {
+    const current = await open();
+    await current.evaluate(() => {
+        const t = (window as any).rawTest;
+        t.describe('FullControlTest.Touching', '120,120,1,0,1,0,40,40');
+        t.layout();
+    });
+    await waitForCanvas(current, 240, 240);
+    const before = await picture(current);
+    expect(before.painted).toBeGreaterThan(15000);
+    const samples = await current.evaluate(() => {
+        const canvas = (window as any).rawTest.renderer.getRawElements()[0].element.querySelector('canvas');
+        const context = canvas.getContext('2d');
+        return [Array.from(context.getImageData(120,120,1,1).data), Array.from(context.getImageData(55,40,1,1).data)];
+    });
+    expect(samples[0]).toEqual([135,206,235,255]);
+    expect(samples[1][0]).toBeGreaterThan(200);
+    await current.evaluate(() => (window as any).rawTest.describe('FullControlTest.Touching', '160,140,0.8,0.4,0'));
+    await expect.poll(async () => (await picture(current)).hash).not.toBe(before.hash);
+    await paint(current);
+    await expectHands(current, '10:20:30');
+});
+
+test('Browser touch injection owns the surface, orders overlapping contacts and suppresses mouse compatibility', async () => {
+    const current = await open();
+    await paint(current);
+    await current.evaluate(() => { document.body.style.minHeight = '3000px'; document.body.style.overflow = 'auto'; });
+    const target = current.locator('#gacui-screen');
+    const bounds = (await target.boundingBox())!;
+    const cdp = await current.context().newCDPSession(current);
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    const a = { x: bounds.x + 70, y: bounds.y + 80, id: 10, radiusX: 5, radiusY: 7, force: 0.7 };
+    const b = { x: bounds.x + 110, y: bounds.y + 100, id: 20 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [a] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [a,b] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [a] });
+    await current.evaluate(() => (window as any).rawTest.layout(280,260));
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{...b,x:b.x+20}] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{...b,x:bounds.x+bounds.width+80,y:bounds.y+bounds.height+80}] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{...b,x:b.x+20}] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{...b,x:b.x+20},a] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    const messages = await current.evaluate(() => (window as any).rawTest.sent.filter((v:any) => v.semantic === 'Event'));
+    const points = messages.filter((v:any) => v.name.startsWith('IOPoint'));
+    expect(points[0].name).toBe('IOPointStarted');
+    expect(points.at(-1).name).toBe('IOPointEnded');
+    expect(points.filter((v:any) => v.name === 'IOPointStarted')).toHaveLength(1);
+    expect(points.filter((v:any) => v.name === 'IOPointEnded')).toHaveLength(1);
+    expect(points.filter((v:any) => v.name === 'IOPointDown').map((v:any) => v.arguments.info.pointId)).toEqual([0,1,2]);
+    expect(points.map((v:any) => v.arguments.eventIndex)).toEqual(points.map((_v:any,i:number) => i));
+    expect(points.at(-1).arguments.reason).toBe('Succeeded');
+    expect(messages.filter((v:any) => /^IOButton|^IOMouse/.test(v.name))).toEqual([]);
+    expect(await current.evaluate(() => window.scrollY)).toBe(0);
+    expect(points.some((v:any) => v.name === 'IOPointUpdate' && v.arguments.info.position.x.value > bounds.width)).toBe(true);
+    expect(await target.evaluate(element => [...element.querySelectorAll('*')].every(child => getComputedStyle(child).touchAction === 'none'))).toBe(true);
+    await current.mouse.click(bounds.x+50,bounds.y+60);
+    expect(await current.evaluate(() => (window as any).rawTest.sent.filter((v:any) => v.name === 'IOButtonDown').length)).toBe(1);
+    await current.evaluate(() => {
+        const outside = document.createElement('button');
+        outside.id = 'outside-touch'; outside.textContent = 'Outside';
+        outside.style.cssText = 'position:fixed;right:0;top:0;width:60px;height:30px';
+        outside.onclick = () => outside.dataset.clicked = 'yes';
+        document.body.append(outside);
+    });
+    const outside = (await current.locator('#outside-touch').boundingBox())!;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{x:outside.x+30,y:outside.y+15,id:90}] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    expect(await current.locator('#outside-touch').getAttribute('data-clicked')).toBe('yes');
+});
+
+
+test('Synthetic capture loss drains contacts, preserves sparse IDs and stops after disposal', async () => {
+    const current = await open();
+    await paint(current);
+    const result = await current.evaluate(() => {
+        const t = (window as any).rawTest;
+        const root = document.getElementById('gacui-screen')!;
+        // Synthetic PointerEvents cannot acquire real pointer capture. Capture calls
+        // are stubbed only in this adapter test; the CDP test exercises actual capture.
+        root.setPointerCapture = () => {};
+        root.hasPointerCapture = () => false;
+        const send = (type: string, id: number, primary = false) => root.dispatchEvent(new PointerEvent(type,
+            { bubbles: true, cancelable: true, pointerType: 'touch', pointerId: id, isPrimary: primary,
+                clientX: 60, clientY: 70, width: 8, height: 12, pressure: 0.5 }));
+        send('pointerdown', 7, true);
+        send('pointerdown', 8);
+        send('pointerup', 7, true);
+        send('lostpointercapture', 7, true);
+        send('pointermove', 8);
+        send('pointerdown', 7);
+        send('lostpointercapture', 8);
+        send('pointermove', 7);
+        send('pointerup', 8);
+        send('pointerdown', 9);
+        send('pointerup', 7);
+        send('pointerup', 9);
+        send('pointerdown', 7, true);
+        send('pointercancel', 7, true);
+        send('lostpointercapture', 7, true);
+        send('pointerdown', 10, true);
+        send('pointerup', 10, true);
+        send('pointerdown', 12, true);
+        t.renderer.stop();
+        t.renderer.stop();
+        const before = t.sent.length;
+        send('pointerdown', 11, true);
+        return { events: t.sent.filter((v: any) => v.name.startsWith('IOPoint')), silent: t.sent.length === before };
+    });
+    const groups = Map.groupBy(result.events, (v: any) => v.arguments.sequenceId ?? v.arguments.info.sequenceId);
+    expect(groups.size).toBe(4);
+    const sequences = [...groups.values()] as any[][];
+    expect(sequences[0].map(v => v.name)).toEqual(['IOPointStarted','IOPointDown','IOPointDown','IOPointUp','IOPointUpdate','IOPointDown','IOPointEnded']);
+    expect(sequences[0].filter(v => v.name === 'IOPointDown').map(v => v.arguments.info.pointId)).toEqual([0,1,2]);
+    expect(sequences.map(v => v.at(-1).arguments.reason)).toEqual(['Canceled_CaptureLost','Canceled_PlatformCanceled','Succeeded','Canceled_WindowDestroyed']);
+    for (const sequence of sequences) expect(sequence.map(v => v.arguments.eventIndex)).toEqual(sequence.map((_v, i) => i));
+    expect(result.silent).toBe(true);
+});
+
+
+test('Synthetic coalesced samples preserve metadata and disconnected cleanup emits no stale End', async () => {
+    const current = await open();
+    await paint(current);
+    const result = await current.evaluate(() => {
+        const t = (window as any).rawTest;
+        const root = document.getElementById('gacui-screen')!;
+        root.setPointerCapture = () => {};
+        root.hasPointerCapture = () => false;
+        const box = root.getBoundingClientRect();
+        const child = document.createElement('span');
+        child.style.overflow = 'hidden';
+        root.append(child);
+        const sample = (type: string, x: number) => new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerType: 'touch', pointerId: 2, isPrimary: true,
+            clientX: box.left + x, clientY: box.top + 40, width: 8, height: 12, pressure: 0.75,
+            ctrlKey: true, shiftKey: true, altKey: true, metaKey: true,
+        });
+        const down = sample('pointerdown', 30);
+        child.dispatchEvent(down);
+        child.remove();
+        const move = sample('pointermove', 70);
+        Object.defineProperty(move, 'getCoalescedEvents', { value: () => [sample('pointermove', 50), sample('pointermove', 50)] });
+        root.dispatchEvent(move);
+        const before = t.sent.filter((v: any) => v.name.startsWith('IOPoint'));
+        t.renderer.stop(true);
+        return { before, after: t.sent.filter((v: any) => v.name.startsWith('IOPoint')),
+            canceled: down.defaultPrevented };
+    });
+    expect(result.canceled).toBe(true);
+    expect(result.after).toEqual(result.before);
+    expect(result.before.map((v: any) => v.name)).toEqual(['IOPointStarted','IOPointDown','IOPointUpdate','IOPointUpdate']);
+    expect(result.before.map((v: any) => v.arguments.eventIndex)).toEqual([0,1,2,3]);
+    expect(result.before[0].arguments.info).toEqual(result.before[1].arguments.info);
+    for (const record of result.before) {
+        const info = record.arguments.info;
+        expect(info.sequenceId).toBe('1');
+        expect(info.timestamp).toMatch(/^[0-9]+$/u);
+        expect(info.pointId).toBe(0);
+        expect(info.activePointCount).toBe(1);
+        expect([info.primary,info.ctrl,info.shift,info.alt,info.osSuper]).toEqual([true,true,true,true,true]);
+        expect(info.pressure).toBe(0.75);
+        expect(info.orientation).toBeNull();
+        expect(info.platformFrameId).toBeNull();
+    }
+    expect(result.before[0].arguments.info.position).toEqual({x:{value:30},y:{value:40}});
+    expect(result.before[0].arguments.info.contactBounds).toEqual({x1:{value:26},y1:{value:34},x2:{value:34},y2:{value:46}});
+    expect(result.before.slice(2).map((v: any) => v.arguments.info.position.x.value)).toEqual([50,50]);
+});

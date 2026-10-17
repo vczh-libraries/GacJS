@@ -6,10 +6,11 @@ export * from '/entry-real.js';
 
 function createSession(settings, alreadyStarted) {
     const renderer = createHtmlRenderer(settings);
+    const sent = [];
     let receive;
     const protocolClient = createRemoteProtocolHttpClient(renderer.requests, {
         onMessage(handler) { receive = handler; return () => undefined; },
-        sendToClient() { return Promise.resolve(); },
+        sendToClient(_id, _channel, body) { sent.push(...JSON.parse(body)); return Promise.resolve(); },
     });
     renderer.start(protocolClient.responses, protocolClient.events);
     const send = (name, args) => receive({
@@ -51,7 +52,7 @@ function createSession(settings, alreadyStarted) {
     const root = children => node(-1, null, rect(0, 0, 0, 0), children);
     let frameId = 0;
     const state = {
-        renderer, counts, listeners, rect, content, node, root,
+        renderer, counts, listeners, rect, content, node, root, sent,
         started: false,
         clientStops: 0,
         describe(rawId, data) {

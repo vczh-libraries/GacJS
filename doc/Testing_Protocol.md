@@ -267,3 +267,11 @@ renderer signal instead of polling or delaying the test.
   `await page.screenshot({ path: 'test.png' })`.
 - Core launch, endpoint, port, browser, and manual-operation problems belong to
   the [operating guide](../../GacUI/.github/Jobs/DebugRemoteProtocolWithGacJS.md).
+
+## Point input verification
+
+The controlled RawBrowser suite distinguishes synthetic PointerEvent adapter checks from Chromium CDP touch injection. It checks sparse slots, normal Up/lostcapture ordering, reused pointer IDs, cancellation draining, stable capture across child replacement, descendant touch-action, mouse suppression and independent mouse input. The Touching painter test checks actual rectangle/contact pixels, changed transforms and Clock/Touching ID transitions.
+
+`<GacJS repo>/Gaclib/website/entry/test/Testing_Protocol_Touching.js` drives browser input against real /Http and /MiniHttp FCT Core processes. It compares Core raw state with browser drawing for one/two/three contacts, membership rebasing, cancellation, and rejected-tab fallback. It uses the ordinary protocol lifecycle and its existing server. Run from `<GacJS repo>/Gaclib`: yarn run import, yarn codegen, yarn build, yarn test. Repeated codegen must leave generated output unchanged. The native counterpart uses the GacUI JSON/filter harness and Win32/x64 decimal round trips.
+
+Follow `<GacUI repo>/.github/Jobs/DebugRemoteProtocolSop.md` for the complete operation matrix, native renderer automation and Windows injection. Listener automation, synthetic browser events, browser input injection, Windows injection and physical hardware are different evidence categories. A shared renderer or schema build does not establish a WASM runtime result; that coverage remains separate.

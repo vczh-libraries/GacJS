@@ -29,120 +29,7 @@
         document.getElementById('gacui-exit').onclick = () => gacuiRenderer?.requestStopToCore(false);
         document.getElementById('gacui-force-exit').onclick = () => gacuiRenderer?.requestStopToCore(true);
 
-        // The page owns the drawing; the renderer owns each raw div and its layout.
-        function installRawClocks(renderer) {
-            const clocks = new Map();
-            let disposed = false;
-            let resolution;
-
-            const removeClock = (raw, retainPicture = false) => {
-                const clock = clocks.get(raw);
-                if (clock === undefined) return;
-                clock.observer.disconnect();
-                clock.cancelRedraw();
-                if (!retainPicture) clock.canvas.remove();
-                clocks.delete(raw);
-            };
-            const updateClock = (raw) => {
-                if (disposed) return;
-                if (raw.id !== 'FullControlTest.Clock') {
-                    removeClock(raw);
-                    return;
-                }
-                let clock = clocks.get(raw);
-                if (clock === undefined) {
-                    const canvas = document.createElement('canvas');
-                    canvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;min-width:0;min-height:0;pointer-events:none';
-                    canvas.setAttribute('aria-hidden', 'true');
-                    const context = canvas.getContext('2d');
-                    let redrawFrame;
-                    const cancelRedraw = () => {
-                        if (redrawFrame !== undefined) cancelAnimationFrame(redrawFrame);
-                        redrawFrame = undefined;
-                    };
-                    const draw = (retryLayout = true) => {
-                        if (disposed || context === null) return;
-                        const bounds = raw.element.getBoundingClientRect();
-                        if (bounds.width <= 0 || bounds.height <= 0) {
-                            // A protocol batch can detach/update/reattach at the same size,
-                            // which need not trigger ResizeObserver. Retry that layout once.
-                            if (retryLayout && redrawFrame === undefined) {
-                                redrawFrame = requestAnimationFrame(() => {
-                                    redrawFrame = undefined;
-                                    draw(false);
-                                });
-                            }
-                            return;
-                        }
-                        cancelRedraw();
-                        const ratio = window.devicePixelRatio || 1;
-                        const width = Math.max(1, Math.round(bounds.width * ratio));
-                        const height = Math.max(1, Math.round(bounds.height * ratio));
-                        if (canvas.width !== width) canvas.width = width;
-                        if (canvas.height !== height) canvas.height = height;
-                        context.setTransform(ratio, 0, 0, ratio, 0, 0);
-                        context.clearRect(0, 0, bounds.width, bounds.height);
-                        const match = /^(\d{2}):(\d{2}):(\d{2})$/.exec(raw.data);
-                        if (match === null) return;
-                        const [hour, minute, second] = match.slice(1).map(Number);
-                        if (hour >= 24 || minute >= 60 || second >= 60) return;
-                        const cx = bounds.width / 2;
-                        const cy = bounds.height / 2;
-                        const radius = Math.min(bounds.width, bounds.height) / 2 - 10;
-                        if (radius <= 0) return;
-                        context.lineWidth = 2;
-                        context.strokeStyle = '#ffffff';
-                        context.beginPath();
-                        context.arc(cx, cy, radius, 0, Math.PI * 2);
-                        context.stroke();
-                        const line = (angle, start, end, color) => {
-                            context.strokeStyle = color;
-                            context.beginPath();
-                            context.moveTo(cx + Math.cos(angle) * radius * start, cy + Math.sin(angle) * radius * start);
-                            context.lineTo(cx + Math.cos(angle) * radius * end, cy + Math.sin(angle) * radius * end);
-                            context.stroke();
-                        };
-                        for (let i = 0; i < 12; i++) line(i * Math.PI / 6, 0.94, 1, '#ffffff');
-                        line((hour + minute / 60 + second / 3600) * Math.PI / 6 - Math.PI / 2, 0, 90 / 160, '#00ffff');
-                        line((minute + second / 60) * Math.PI / 30 - Math.PI / 2, 0, 110 / 160, '#00ff00');
-                        line(second * Math.PI / 30 - Math.PI / 2, 0, 130 / 160, '#ffff00');
-                    };
-                    const observer = new ResizeObserver(() => draw());
-                    clock = { canvas, observer, draw, cancelRedraw };
-                    clocks.set(raw, clock);
-                    raw.element.appendChild(canvas);
-                    observer.observe(raw.element);
-                }
-                clock.draw();
-            };
-            const redraw = () => {
-                for (const clock of clocks.values()) clock.draw();
-            };
-            const watchResolution = () => {
-                resolution?.removeEventListener('change', watchResolution);
-                if (disposed) return;
-                resolution = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
-                resolution.addEventListener('change', watchResolution);
-                redraw();
-            };
-            const unsubscribes = [
-                renderer.rawElementInstalled(updateClock),
-                renderer.rawElementUpdated(updateClock),
-                renderer.rawElementUninstalled(raw => removeClock(raw)),
-            ];
-            // Also covers the already-started rvmhost session and hidden elements.
-            for (const raw of renderer.getRawElements()) updateClock(raw);
-            window.addEventListener('resize', redraw);
-            watchResolution();
-            return () => {
-                if (disposed) return;
-                disposed = true;
-                for (const unsubscribe of unsubscribes) unsubscribe();
-                window.removeEventListener('resize', redraw);
-                resolution?.removeEventListener('change', watchResolution);
-                for (const raw of clocks.keys()) removeClock(raw, true);
-            };
-        }
+        import { installFullControlTestRawElements } from '/fullControlTestRaw.js';
 
         // Event bridges for Playwright tests.
         // idle: fires when the server sends RequestRendererIdle (UI is stable).
@@ -217,8 +104,8 @@
                 if (session) {
                     session.stop();
                 } else {
-                    client?.stop();
                     renderer?.stop();
+                    client?.stop();
                 }
                 delete window.__gacui_rvmhost_session;
             }, { once: true });
@@ -236,7 +123,7 @@
                 }
                 if (pageHidden) return;
                 gacuiRenderer = renderer;
-                disposeClocks = installRawClocks(renderer);
+                disposeClocks = installFullControlTestRawElements(renderer);
                 settings.suggestMinSize(0, 0);
                 if (session) {
                     await session.completion;
