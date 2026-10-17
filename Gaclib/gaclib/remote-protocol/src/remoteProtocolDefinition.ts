@@ -55,6 +55,14 @@ export enum IOMouseButton {
     Mouse5 = 'Mouse5',
 }
 
+export enum IOPointEndReason {
+    Succeeded = 'Succeeded',
+    Canceled_Unknown = 'Canceled_Unknown',
+    Canceled_PlatformCanceled = 'Canceled_PlatformCanceled',
+    Canceled_CaptureLost = 'Canceled_CaptureLost',
+    Canceled_WindowDestroyed = 'Canceled_WindowDestroyed',
+}
+
 export enum ElementShapeType {
     Rectangle = 'Rectangle',
     Ellipse = 'Ellipse',
@@ -298,6 +306,36 @@ export interface GlobalShortcutKey {
     alt: TYPES.Boolean;
     osSuper: TYPES.Boolean;
     code: TYPES.Key;
+}
+
+export interface IOPointInfo {
+    sequenceId: TYPES.String;
+    pointId: TYPES.Integer;
+    timestamp: TYPES.String;
+    activePointCount: TYPES.Integer;
+    position: NativePoint;
+    primary: TYPES.Boolean;
+    ctrl: TYPES.Boolean;
+    shift: TYPES.Boolean;
+    alt: TYPES.Boolean;
+    osSuper: TYPES.Boolean;
+    contactBounds: TYPES.Nullable<NativeRect>;
+    pressure: TYPES.Nullable<TYPES.Double>;
+    orientation: TYPES.Nullable<TYPES.Double>;
+    platformFrameId: TYPES.Nullable<TYPES.String>;
+}
+
+export interface IOPointAction {
+    eventIndex: TYPES.Integer;
+    info: IOPointInfo;
+}
+
+export interface IOPointEnd {
+    sequenceId: TYPES.String;
+    eventIndex: TYPES.Integer;
+    timestamp: TYPES.String;
+    accepted: TYPES.Boolean;
+    reason: IOPointEndReason;
 }
 
 export interface ElementShape {
@@ -663,4 +701,11 @@ export interface IRemoteProtocolEvents {
     OnIOKeyDown(eventArgs: IOKeyInfo): void;
     OnIOKeyUp(eventArgs: IOKeyInfo): void;
     OnIOChar(eventArgs: IOCharInfo): void;
+    OnIOPointStarted(eventArgs: IOPointAction): void;
+    OnIOPointDown(eventArgs: IOPointAction): void;
+    OnIOPointUpdate(eventArgs: IOPointAction): void;
+    OnIOPointUp(eventArgs: IOPointAction): void;
+    OnIOPointEnter(eventArgs: IOPointAction): void;
+    OnIOPointLeave(eventArgs: IOPointAction): void;
+    OnIOPointEnded(eventArgs: IOPointEnd): void;
 }

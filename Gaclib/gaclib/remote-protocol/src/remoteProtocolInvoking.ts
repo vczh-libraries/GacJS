@@ -545,4 +545,60 @@ export class EventToJson implements SCHEMA.IRemoteProtocolEvents {
             arguments: eventArgs,
         });
     }
+
+    OnIOPointStarted(eventArgs: SCHEMA.IOPointAction): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointStarted',
+            arguments: eventArgs,
+        });
+    }
+
+    OnIOPointDown(eventArgs: SCHEMA.IOPointAction): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointDown',
+            arguments: eventArgs,
+        });
+    }
+
+    OnIOPointUpdate(eventArgs: SCHEMA.IOPointAction): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointUpdate',
+            arguments: eventArgs,
+        });
+    }
+
+    OnIOPointUp(eventArgs: SCHEMA.IOPointAction): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointUp',
+            arguments: eventArgs,
+        });
+    }
+
+    OnIOPointEnter(eventArgs: SCHEMA.IOPointAction): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointEnter',
+            arguments: eventArgs,
+        });
+    }
+
+    OnIOPointLeave(eventArgs: SCHEMA.IOPointAction): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointLeave',
+            arguments: eventArgs,
+        });
+    }
+
+    OnIOPointEnded(eventArgs: SCHEMA.IOPointEnd): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'IOPointEnded',
+            arguments: eventArgs,
+        });
+    }
 }
