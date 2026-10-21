@@ -62,7 +62,7 @@ host, distinct from Emscripten's generated `app.worker.js`. The existing
 regression suite uses Chromium CDP for mouse input and worker lifetime checks.
 `Testing_Wasm_Firefox.js` also runs through `test-wasm` and checks all three
 pages' module/pthread requests, startup, input, Exit cancellation and shutdown/reload.
-It checks the live FCT clock and RVMT Unicode RPC; the Unicode keystrokes use
+It checks the live FCT clock, DOM-synthetic Touching/TouchingList gestures and RVMT Unicode RPC; the Unicode keystrokes use
 DOM keyboard events because Firefox has no CDP input endpoint.
 
 Each page owns its Core worker and pthreads. The suite verifies Exit cancellation,
@@ -81,6 +81,10 @@ input. It verifies record/canvas identity across tab hide/show, pixel-buffer
 resizing, palette refresh and fresh drawing after both Exit and Force Exit followed
 by Reload. Fixed-time and ID-transition cases remain in the controlled Raw browser
 suite; live wall-clock values are not snapshot baselines.
+
+The Wasm touch suite observes the real worker channel without a native HTTP Core. Chromium CDP drives acquisition, overlapping/reused contacts, cancellation, capture across resize, manipulation pixels and identity-safe list swipes. Firefox uses explicitly synthetic PointerEvents with capture stubs, so it verifies adapter/Core/rendering behavior without claiming native browser capture. The portable Wasm channel test separately preserves full-width decimal sequence, timestamp and frame fields.
+
+Set `GACUI_PUBLIC_DEMO_URL` to the public launcher route and run `npm run test-wasm -- test/Testing_Wasm_Public.js` to exercise WebsiteSource's launcher through its scoped service worker in Chromium and Firefox. The test checks download progress, isolation, separate workers, Raw Clock, Touching, TouchingList, painter cleanup and fresh state after browser refresh. Set `GACUI_PUBLIC_HOME` as well to follow the homepage's Web demo link. The public suite is skipped when no destination is supplied. Build and stage final artifacts first; it does not publish or rebuild the site.
 
 ## Test Harness
 
@@ -115,7 +119,9 @@ data-only updates, resizing/DPI, raw div lifetime across DOM reconstruction,
 retained completion/error pictures and recorded snapshot playback. It also checks
 that renderer takeover preserves a page's accepted RVM host while disposing its
 renderer subscriptions; host completion, fatal failure and page teardown clean
-up the remaining session. These tests run through
+up the remaining session. Teardown during bootstrap does not stop an unstarted
+renderer; a rejected second host must retain its original connection error
+without a ResizeObserver cleanup error. These tests run through
 `yarn workspace @gaclib-website/entry test-unit` after building.
 
 The focused live Raw Clock suite additionally checks the existing FCT Core's

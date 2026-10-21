@@ -1,6 +1,7 @@
 import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
 import { firefox, expect as expectUI } from '@playwright/test';
 import { clickAt, getLeafTextPositions, setupIdleTracking, waitUntilIdle } from './Testing_Protocol.js';
+import { observeWasm, touchDriver, checkTouching, checkTouchingList, checkOrdinaryTouch } from './WasmTouching.js';
 
 let browser;
 let page;
@@ -64,6 +65,10 @@ async function exercise(app, marker) {
             return clock.data !== first.data && clock.element.querySelector('canvas').toDataURL() !== first.pixels;
         }, first);
         await expectUI(page.locator('#gacui-screen canvas')).toHaveCount(1);
+        const send = await touchDriver(page, false);
+        await checkTouching(page, send, false);
+        await checkTouchingList(page, send);
+        await checkOrdinaryTouch(page, send);
     } else if (app === 'rpt') {
         await expectUI(page.locator('#gacui-screen')).toContainText('Click Me!');
         await clickText('Click Me!');
@@ -101,6 +106,7 @@ test.each([
     page.on('pageerror', error => errors.push(error.message));
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await setupIdleTracking(page);
+    await observeWasm(page);
     await page.goto(`http://127.0.0.1:8896/wasm-${app}/`);
     await ready(title);
     await exercise(app, 'FirefoxRPC');

@@ -69,7 +69,10 @@ function fakeRenderer() {
         value: {
             requests: {},
             start: () => { starts++; },
-            stop: () => { stops++; },
+            stop: () => {
+                if (starts === 0) throw new Error('Renderer has not started.');
+                stops++;
+            },
         },
         starts: () => starts,
         stops: () => stops,
@@ -90,7 +93,8 @@ test('query session is returned before bootstrap and page teardown cancels it im
     session.stop();
     await expect(session.startup).rejects.toThrow(/stopped during bootstrap/u);
     expect(host.stops()).toBe(1);
-    expect(renderer.stops()).toBe(1);
+    expect(renderer.starts()).toBe(0);
+    expect(renderer.stops()).toBe(0);
 });
 
 test('query composition retries renderer assignment, preserves host failure after assignment, and tears down exactly once', async () => {

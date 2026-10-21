@@ -62,7 +62,7 @@ export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = 
         host.stop();
     };
     const stopRenderer = (disconnected = false): void => {
-        if (rendererStopped) return;
+        if (rendererStopped || !rendererStarted) return;
         rendererStopped = true;
         renderer.stop(disconnected);
     };

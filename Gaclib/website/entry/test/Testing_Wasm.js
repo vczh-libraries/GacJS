@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
 import { chromium, expect as expectUI } from '@playwright/test';
 import { IOMouseButton } from '@gaclib/remote-protocol';
 import { clickAt, findTextInputPointRightOfLabel, getLeafTextPositions, setupIdleTracking, waitUntilIdle } from './Testing_Protocol.js';
+import { observeWasm, touchDriver, checkTouching, checkTouchingList, checkOrdinaryTouch } from './WasmTouching.js';
 
 let browser;
 let page;
@@ -32,6 +33,7 @@ async function open(app, title) {
     page.on('console', message => { if (message.type() === 'error') console.log('Browser:', message.text()); });
     page.on('dialog', dialog => { errors.push(dialog.message()); void dialog.dismiss(); });
     await setupIdleTracking(page);
+    await observeWasm(page);
     await page.goto(`http://127.0.0.1:8896/wasm-${app}/`);
     await ready(title);
 }
@@ -411,6 +413,32 @@ test('WasmRPT preserves the exact Core-authored fatal error', async () => {
     expectedErrors = ['This is a fatel error!'];
     await clickText('Fatel Error');
     await fatal(expectedErrors[0]);
+});
+
+test('WasmFCT touch crosses the worker channel and updates painted transforms and list identities', async () => {
+    await open('fct', 'Complete Control Showcase');
+    await page.evaluate(() => { document.body.style.minHeight = '3000px'; document.body.style.overflow = 'auto'; });
+    const outer = await page.evaluate(() => [scrollX, scrollY]);
+    let send = await touchDriver(page);
+    await checkTouching(page, send);
+    await checkTouchingList(page, send);
+    await checkOrdinaryTouch(page, send);
+    expect(await page.evaluate(() => [scrollX, scrollY])).toEqual(outer);
+    await clickText('Window Manager');
+    await clickText('Aurora');
+    await checkTouchingList(page, send);
+    await checkOrdinaryTouch(page, send);
+    await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
+    await stopped();
+    expect(await page.evaluate(() => window.__rawObservers.size)).toBe(0);
+    await reloadApplication('Complete Control Showcase');
+    send = await touchDriver(page);
+    await checkTouching(page, send);
+    await checkTouchingList(page, send);
+    await checkOrdinaryTouch(page, send);
+    await page.getByRole('button', { name: 'Exit', exact: true }).click();
+    await stopped();
+    expect(await page.evaluate(() => window.__rawObservers.size)).toBe(0);
 });
 
 test('closing a live Wasm page terminates its Core and pthreads', async () => {
