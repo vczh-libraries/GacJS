@@ -1,5 +1,9 @@
 import * as RPC from '@gaclib/workflow-rpc';
 import type {
+    IServiceLocal as StructTraversalService,
+    Node as StructTraversalNode,
+} from '../generated/cases/StructTraversal/generated.js';
+import type {
     RpcTestServiceFactory,
     RpcTestServiceFactoryContext,
 } from '../generated/registry.js';
@@ -78,6 +82,14 @@ function nullable(context: RpcTestServiceFactoryContext): void {
             return `[${valueText}][${objectText}]`;
         },
     });
+}
+
+function structTraversal(context: RpcTestServiceFactoryContext): void {
+    registerService(context, {
+        Echo: (value: StructTraversalNode | null): StructTraversalNode | null => value,
+        EchoList: (values: ReadonlyArray<StructTraversalNode>): ReadonlyArray<StructTraversalNode> => values,
+        EchoMap: (values: ReadonlyMap<string, StructTraversalNode>): ReadonlyMap<string, StructTraversalNode> => values,
+    } satisfies StructTraversalService);
 }
 
 function localAndWrapper(context: RpcTestServiceFactoryContext): void {
@@ -405,6 +417,7 @@ export const specialServiceFactories: Readonly<Record<string, RpcTestServiceFact
     RequestService: requestService,
     ServiceWrapper: serviceWrapper,
     ServiceWrapper_SharedMemsp: serviceWrapper,
+    StructTraversal: structTraversal,
 };
 
 export function specialServiceFactory(name: string): RpcTestServiceFactory {

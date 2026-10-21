@@ -130,6 +130,7 @@ import * as Case_PropDynamic from './cases/PropDynamic/generated.js';
 import * as Case_RequestService from './cases/RequestService/generated.js';
 import * as Case_ServiceWrapper from './cases/ServiceWrapper/generated.js';
 import * as Case_ServiceWrapper_SharedMemsp from './cases/ServiceWrapper_SharedMemsp/generated.js';
+import * as Case_StructTraversal from './cases/StructTraversal/generated.js';
 
 export interface RpcTestContractModule {
     readonly AllRpcInterfaceDescriptors: readonly RPC.RpcInterfaceDescriptor[];
@@ -273,6 +274,7 @@ export interface RpcTestServiceFactories {
     readonly 'RequestService': RpcTestServiceFactory;
     readonly 'ServiceWrapper': RpcTestServiceFactory;
     readonly 'ServiceWrapper_SharedMemsp': RpcTestServiceFactory;
+    readonly 'StructTraversal': RpcTestServiceFactory;
 }
 
 export interface RpcTestCaseDefinition {
@@ -428,6 +430,7 @@ export const RpcTestCaseNames = [
     'RequestService',
     'ServiceWrapper',
     'ServiceWrapper_SharedMemsp',
+    'StructTraversal',
 ] as const;
 
 export type RpcTestCaseName = typeof RpcTestCaseNames[number];
@@ -562,6 +565,7 @@ export const RpcTestCases: Readonly<Record<RpcTestCaseName, RpcTestCaseDefinitio
     'RequestService': defineRpcTestCase('RequestService', 'Hello', Case_RequestService),
     'ServiceWrapper': defineRpcTestCase('ServiceWrapper', '[true]', Case_ServiceWrapper),
     'ServiceWrapper_SharedMemsp': defineRpcTestCase('ServiceWrapper_SharedMemsp', '[false][true]', Case_ServiceWrapper_SharedMemsp),
+    'StructTraversal': defineRpcTestCase('StructTraversal', '28', Case_StructTraversal),
 };
 
 export function selectRpcTestCase(name: string): RpcTestCaseDefinition {

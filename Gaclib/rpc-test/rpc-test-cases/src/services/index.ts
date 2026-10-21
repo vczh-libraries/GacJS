@@ -132,4 +132,5 @@ export const rpcTestServiceFactories: RpcTestServiceFactories = {
     'RequestService': specialServiceFactory('RequestService'),
     'ServiceWrapper': specialServiceFactory('ServiceWrapper'),
     'ServiceWrapper_SharedMemsp': specialServiceFactory('ServiceWrapper_SharedMemsp'),
+    'StructTraversal': specialServiceFactory('StructTraversal'),
 };

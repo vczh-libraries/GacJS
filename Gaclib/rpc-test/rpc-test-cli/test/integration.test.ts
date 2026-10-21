@@ -80,7 +80,7 @@ function getWorkflowDriverBuild(workflowRoot: string, workflowTestRoot: string):
     const driverRoot = path.join(workflowTestRoot, 'Linux/RpcStdioTest_Driver');
     return {
         executable: path.join(workflowRoot, '.github/Ubuntu/build.sh'),
-        arguments_: [],
+        arguments_: ['-o'],
         cwd: driverRoot,
         driver: path.join(driverRoot, 'Bin/RpcStdioTest_Driver'),
     };

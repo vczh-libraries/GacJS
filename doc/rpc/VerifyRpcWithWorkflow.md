@@ -57,6 +57,11 @@ service requests should retain their case-specific semantics. A missing
 handwritten registration must fail the build rather than becoming a runtime
 fallback.
 
+`StructTraversal` echoes nullable nodes, node lists, and node dictionaries without
+modifying them, matching `<Workflow repo>/Test/Resources/Rpc/StructTraversal_Service.txt`.
+Its client verifies repeated struct fields and nested nullable values through the
+generated codecs as part of the ordinary indexed conformance run.
+
 ## Stdio Admission and Lifecycle
 
 The provider implements the client side of Workflow's stdio redirection protocol.
@@ -91,8 +96,8 @@ case.
 Every skip entry must exactly match an indexed name. Tests should derive the index
 and skip sets dynamically, require every indexed case to have exactly one terminal
 pass or skip result, and reject unexpected skips. With the upstream files present
-when this guide was written, the observable result is 118 executed passes and 11
-intentional compatibility skips out of 129 indexed cases.
+when this guide was written, the observable result is 119 executed passes and 11
+intentional compatibility skips out of 130 indexed cases.
 
 ## Verification Procedure
 
@@ -120,3 +125,7 @@ driver output attached to the calling console.
 A conforming run exits zero, reports the exact dynamic pass/skip partition, keeps
 provider stdout frame-only, and rejects missing, extra, or unknown direct provider
 arguments with a nonzero exit and stderr diagnostic.
+
+The root `yarn test` integration suite builds the native Workflow driver with
+`build.sh -o` on Linux and macOS, so the conformance run exercises optimized C++
+and can reuse an optimized release-CI build.
