@@ -1222,17 +1222,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                }
+                                },
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
                             }
                         },
                         'GuiLabel.json': 'File',
@@ -8841,6 +8841,53 @@ export const Snapshot: SnapshotEntry = {
                                 }
                             }
                         }
+                    }
+                },
+                'PointScrolling': {
+                    'type': 'Folder',
+                    'content': {
+                        'MultilineTextBox': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'MultilineTextBox.json': 'File',
+                        'TextList': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File'
+                            }
+                        },
+                        'TextList.json': 'File',
+                        'TouchingList': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File',
+                                'frame_9.json': 'File'
+                            }
+                        },
+                        'TouchingList.json': 'File'
                     }
                 },
                 'Ribbon': {
