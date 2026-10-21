@@ -670,25 +670,39 @@ async function runUnexpectedEof(specification: TranscriptProcess): Promise<void>
     let stderr = '';
     child.stdout.on('data', chunk => { stdout += String(chunk); });
     child.stderr.on('data', chunk => { stderr += String(chunk); });
-    await waitUntil(() => stdout.includes('\n'));
-    const lines = stdout.split(/\r?\n/u);
-    expect(lines.shift()).toBe(STDIO_JOIN_GOLDEN);
-    stdout = lines.join('\n');
-    child.stdin.write(encodeStdioMessage('3;;'), 'ascii');
-    await waitUntil(() => stdout.includes('\n'));
-    expect(stdout.split(/\r?\n/u)[0]).toBe(STDIO_READY_GOLDEN);
-    child.stdin.end();
-    const exit = await new Promise<{ readonly code: number | null; readonly signal: NodeJS.Signals | null }>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            child.kill();
-            reject(new Error(`${specification.name} did not exit after stdin EOF; stderr=${stderr}`));
-        }, 5000);
-        child.once('exit', (code, signal) => {
-            clearTimeout(timeout);
-            resolve({ code, signal });
+    const nextLine = async (): Promise<string> => {
+        const signal = AbortSignal.timeout(5000);
+        while (!stdout.includes('\n')) {
+            await once(child.stdout, 'data', { signal });
+        }
+        const newline = stdout.indexOf('\n');
+        const line = stdout.substring(0, newline).replace(/\r$/u, '');
+        stdout = stdout.substring(newline + 1);
+        return line;
+    };
+    try {
+        expect(await nextLine()).toBe(STDIO_JOIN_GOLDEN);
+        child.stdin.write(encodeStdioMessage('3;;'), 'ascii');
+        expect(await nextLine()).toBe(STDIO_READY_GOLDEN);
+        child.stdin.end();
+        const exit = await new Promise<{ readonly code: number | null; readonly signal: NodeJS.Signals | null }>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                child.kill();
+                reject(new Error(`${specification.name} did not exit after stdin EOF; stderr=${stderr}`));
+            }, 5000);
+            child.once('exit', (code, signal) => {
+                clearTimeout(timeout);
+                resolve({ code, signal });
+            });
         });
-    });
-    expect(exit).toEqual({ code: 1, signal: null });
+        expect(exit).toEqual({ code: 1, signal: null });
+    } finally {
+        if (child.exitCode === null && child.signalCode === null) {
+            const closed = once(child, 'close');
+            child.kill('SIGKILL');
+            await closed;
+        }
+    }
 }
 
 test('Node ESM CLI and native SEA both match the Core stdio transcript and exit 1 on !Exit', async () => {

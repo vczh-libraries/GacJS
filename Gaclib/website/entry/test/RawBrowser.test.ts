@@ -539,7 +539,7 @@ test('Browser touch injection owns the surface, orders overlapping contacts and 
     const outside = (await current.locator('#outside-touch').boundingBox())!;
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{x:outside.x+30,y:outside.y+15,id:90}] });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    expect(await current.locator('#outside-touch').getAttribute('data-clicked')).toBe('yes');
+    await expect.poll(() => current.locator('#outside-touch').getAttribute('data-clicked')).toBe('yes');
 });
 
 
