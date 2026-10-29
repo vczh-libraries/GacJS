@@ -7,6 +7,50 @@ export enum CharacterEncoding {
     UTF32 = 'UTF32',
 }
 
+export enum InjectionLocaleOperation {
+    Invariant = 'Invariant',
+    SystemDefault = 'SystemDefault',
+    UserDefault = 'UserDefault',
+    Enumerate = 'Enumerate',
+    ShortDateFormats = 'ShortDateFormats',
+    LongDateFormats = 'LongDateFormats',
+    YearMonthDateFormats = 'YearMonthDateFormats',
+    LongTimeFormats = 'LongTimeFormats',
+    ShortTimeFormats = 'ShortTimeFormats',
+    ShortDayOfWeekName = 'ShortDayOfWeekName',
+    LongDayOfWeekName = 'LongDayOfWeekName',
+    ShortMonthName = 'ShortMonthName',
+    LongMonthName = 'LongMonthName',
+    ToLower = 'ToLower',
+    ToUpper = 'ToUpper',
+    ToLinguisticLower = 'ToLinguisticLower',
+    ToLinguisticUpper = 'ToLinguisticUpper',
+}
+
+export enum InjectionFileOperation {
+    PathDelimiter = 'PathDelimiter',
+    CompatibleDelimiters = 'CompatibleDelimiters',
+    Initialize = 'Initialize',
+    Concat = 'Concat',
+    Relative = 'Relative',
+    IsRoot = 'IsRoot',
+    IsFile = 'IsFile',
+    IsFolder = 'IsFolder',
+    Info = 'Info',
+    Copy = 'Copy',
+    DeleteFile = 'DeleteFile',
+    RenameFile = 'RenameFile',
+    Folders = 'Folders',
+    Files = 'Files',
+    CreateFolder = 'CreateFolder',
+    DeleteFolder = 'DeleteFolder',
+    RenameFolder = 'RenameFolder',
+    OpenRead = 'OpenRead',
+    OpenWrite = 'OpenWrite',
+    OpenReadWrite = 'OpenReadWrite',
+    Commit = 'Commit',
+}
+
 export enum WindowHitTestResult {
     BorderNoSizing = 'BorderNoSizing',
     BorderLeft = 'BorderLeft',
@@ -247,6 +291,68 @@ export interface ScreenConfig {
 export interface ControllerGlobalConfig {
     documentCaretFromEncoding: CharacterEncoding;
     osSuperKeyName: TYPES.String;
+    injectDateTime: TYPES.Boolean;
+    injectLocale: TYPES.Boolean;
+    injectFileSystem: TYPES.Boolean;
+}
+
+export interface InjectionDateTime {
+    year: TYPES.Integer;
+    month: TYPES.Integer;
+    day: TYPES.Integer;
+    hour: TYPES.Integer;
+    minute: TYPES.Integer;
+    second: TYPES.Integer;
+    milliseconds: TYPES.Integer;
+}
+
+export interface InjectionLocaleRequest {
+    operation: InjectionLocaleOperation;
+    localeName: TYPES.String;
+    text: TYPES.String;
+    index: TYPES.Integer;
+}
+
+export interface InjectionFileInfo {
+    size: TYPES.String;
+    hardLinkCount: TYPES.String;
+    creationTime: TYPES.Nullable<InjectionDateTime>;
+    lastAccessTime: TYPES.Nullable<InjectionDateTime>;
+    lastModifiedTime: TYPES.Nullable<InjectionDateTime>;
+    lastChangeTime: TYPES.Nullable<InjectionDateTime>;
+    isDirectory: TYPES.Boolean;
+    isSymbolicLink: TYPES.Boolean;
+    isReparsePoint: TYPES.Boolean;
+    canRead: TYPES.Boolean;
+    canWrite: TYPES.Boolean;
+    canExecute: TYPES.Boolean;
+    isReadOnly: TYPES.Boolean;
+    isHidden: TYPES.Boolean;
+    isSystem: TYPES.Boolean;
+    isArchive: TYPES.Boolean;
+    isCompressed: TYPES.Boolean;
+    isEncrypted: TYPES.Boolean;
+    isSparse: TYPES.Boolean;
+    isTemporary: TYPES.Boolean;
+    isOffline: TYPES.Boolean;
+    isNotContentIndexed: TYPES.Boolean;
+    isImmutable: TYPES.Boolean;
+    isAppendOnly: TYPES.Boolean;
+}
+
+export interface InjectionFileRequest {
+    operation: InjectionFileOperation;
+    path: TYPES.String;
+    target: TYPES.String;
+    content: TYPES.Binary;
+}
+
+export interface InjectionFileResponse {
+    success: TYPES.Boolean;
+    text: TYPES.String;
+    paths: TYPES.List<TYPES.String>;
+    info: TYPES.Nullable<InjectionFileInfo>;
+    content: TYPES.Binary;
 }
 
 export interface WindowSizingConfig {
@@ -425,6 +531,11 @@ export interface ImageMetadata {
     id: TYPES.Integer;
     format: ImageFormatType;
     frames: TYPES.List<ImageFrameMetadata>;
+}
+
+export interface ImageSaveRequest {
+    id: TYPES.Integer;
+    format: ImageFormatType;
 }
 
 export interface ElementDesc_ImageFrame {
@@ -620,6 +731,10 @@ export interface IRemoteProtocolRequests {
     RequestControllerGetScreenConfig(id: number): void;
     RequestControllerConnectionEstablished(): void;
     RequestControllerConnectionStopped(): void;
+    RequestInjectionLocalToUtc(id: number, requestArgs: InjectionDateTime): void;
+    RequestInjectionUtcToLocal(id: number, requestArgs: InjectionDateTime): void;
+    RequestInjectionLocale(id: number, requestArgs: InjectionLocaleRequest): void;
+    RequestInjectionFileSystem(id: number, requestArgs: InjectionFileRequest): void;
     RequestWindowGetBounds(id: number): void;
     RequestWindowNotifySetTitle(requestArgs: TYPES.String): void;
     RequestWindowNotifySetEnabled(requestArgs: TYPES.Boolean): void;
@@ -645,6 +760,7 @@ export interface IRemoteProtocolRequests {
     RequestIOIsKeyToggled(id: number, requestArgs: TYPES.Key): void;
     RequestImageCreated(id: number, requestArgs: ImageCreation): void;
     RequestImageDestroyed(requestArgs: TYPES.Integer): void;
+    RequestImageSave(id: number, requestArgs: ImageSaveRequest): void;
     RequestRendererUpdateElement_DocumentParagraph(id: number, requestArgs: ElementDesc_DocumentParagraph): void;
     RequestDocumentParagraph_GetCaret(id: number, requestArgs: GetCaretRequest): void;
     RequestDocumentParagraph_GetCaretBounds(id: number, requestArgs: GetCaretBoundsRequest): void;
@@ -668,10 +784,15 @@ export interface IRemoteProtocolRequests {
 export interface IRemoteProtocolResponses {
     RespondControllerGetFontConfig(id: number, responseArgs: FontConfig): void;
     RespondControllerGetScreenConfig(id: number, responseArgs: ScreenConfig): void;
+    RespondInjectionLocalToUtc(id: number, responseArgs: InjectionDateTime): void;
+    RespondInjectionUtcToLocal(id: number, responseArgs: InjectionDateTime): void;
+    RespondInjectionLocale(id: number, responseArgs: TYPES.List<TYPES.String>): void;
+    RespondInjectionFileSystem(id: number, responseArgs: InjectionFileResponse): void;
     RespondWindowGetBounds(id: number, responseArgs: WindowSizingConfig): void;
     RespondIOIsKeyPressing(id: number, responseArgs: TYPES.Boolean): void;
     RespondIOIsKeyToggled(id: number, responseArgs: TYPES.Boolean): void;
     RespondImageCreated(id: number, responseArgs: ImageMetadata): void;
+    RespondImageSave(id: number, responseArgs: TYPES.Binary): void;
     RespondRendererUpdateElement_DocumentParagraph(id: number, responseArgs: UpdateElement_DocumentParagraphResponse): void;
     RespondDocumentParagraph_GetCaret(id: number, responseArgs: GetCaretResponse): void;
     RespondDocumentParagraph_GetCaretBounds(id: number, responseArgs: GetCaretBoundsResponse): void;

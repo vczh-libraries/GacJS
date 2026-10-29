@@ -208,6 +208,30 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
             case 'ControllerGetScreenConfig':
                 receiver.RequestControllerGetScreenConfig(pi.id);
                 break;
+            case 'InjectionLocalToUtc':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestInjectionLocalToUtc(pi.id, (<SCHEMA.InjectionDateTime>pi.arguments));
+                break;
+            case 'InjectionUtcToLocal':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestInjectionUtcToLocal(pi.id, (<SCHEMA.InjectionDateTime>pi.arguments));
+                break;
+            case 'InjectionLocale':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestInjectionLocale(pi.id, (<SCHEMA.InjectionLocaleRequest>pi.arguments));
+                break;
+            case 'InjectionFileSystem':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestInjectionFileSystem(pi.id, (<SCHEMA.InjectionFileRequest>pi.arguments));
+                break;
             case 'WindowGetBounds':
                 receiver.RequestWindowGetBounds(pi.id);
                 break;
@@ -228,6 +252,12 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
                     throw new Error('Missing arguments for request: ' + pi.name);
                 }
                 receiver.RequestImageCreated(pi.id, (<SCHEMA.ImageCreation>pi.arguments));
+                break;
+            case 'ImageSave':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestImageSave(pi.id, (<SCHEMA.ImageSaveRequest>pi.arguments));
                 break;
             case 'RendererUpdateElement_DocumentParagraph':
                 if (pi.arguments === undefined) {
@@ -296,6 +326,42 @@ export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
         });
     }
 
+    RespondInjectionLocalToUtc(id: number, responseArgs: SCHEMA.InjectionDateTime): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'InjectionLocalToUtc',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondInjectionUtcToLocal(id: number, responseArgs: SCHEMA.InjectionDateTime): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'InjectionUtcToLocal',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondInjectionLocale(id: number, responseArgs: SCHEMA.TYPES.List<SCHEMA.TYPES.String>): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'InjectionLocale',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondInjectionFileSystem(id: number, responseArgs: SCHEMA.InjectionFileResponse): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'InjectionFileSystem',
+            arguments: responseArgs,
+        });
+    }
+
     RespondWindowGetBounds(id: number, responseArgs: SCHEMA.WindowSizingConfig): void {
         this.callback({
             semantic: 'Response',
@@ -328,6 +394,15 @@ export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
             semantic: 'Response',
             id,
             name: 'ImageCreated',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondImageSave(id: number, responseArgs: SCHEMA.TYPES.Binary): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'ImageSave',
             arguments: responseArgs,
         });
     }

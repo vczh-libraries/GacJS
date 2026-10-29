@@ -6,7 +6,7 @@ export type Double = number;
 export type String = string;
 export type Char = string;
 export type Color = string; // #FFFFFF
-export type Binary = string; // base64 encoded
+export type Binary = string | null; // base64 encoded; null denotes an unavailable stream
 
 export type Ptr<T> = T | null;
 export type Nullable<T> = T | null;
