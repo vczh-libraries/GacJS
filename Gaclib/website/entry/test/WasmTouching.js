@@ -273,7 +273,8 @@ export async function checkTouchingList(page, send) {
     await send('touchStart', [a]); await move(maximum); await reveal(maximum);
     await send('touchEnd', []);
     await poll(() => identities(page)).toEqual(original.filter(id => id !== original[1]));
-    expect((await rows(page))[1].top).toBeCloseTo(row.top, 0);
+    // Row removal reaches the DOM before the measured layout closes the gap.
+    await poll(async () => (await rows(page))[1]?.top).toBeCloseTo(row.top, 0);
     await poll(() => redWidths(page)).toEqual([]);
 
     const beforeFinalUp = await identities(page);
