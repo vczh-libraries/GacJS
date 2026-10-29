@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, expect, test } from 'vitest';
 import { chromium, expect as expectUI } from '@playwright/test';
 import { IOMouseButton } from '@gaclib/remote-protocol';
 import { clickAt, findTextInputPointRightOfLabel, getLeafTextPositions, setupIdleTracking, waitUntilIdle } from './Testing_Protocol.js';
-import { observeWasm, touchDriver, checkTouching, checkTouchingList, checkOrdinaryTouch } from './WasmTouching.js';
+import { observeWasm, checkLocalServices, touchDriver, checkTouching, checkTouchingList, checkOrdinaryTouch } from './WasmTouching.js';
 
 let browser;
 let page;
@@ -42,6 +42,7 @@ async function ready(title) {
     await expect.poll(async () => errors.length > 0 || (await page.locator('#gacui-screen').textContent()).includes(title), { timeout: 60000 }).toBe(true);
     expect(errors).toEqual([]);
     await waitUntilIdle(page, 60000);
+    await checkLocalServices(page);
     await expectUI(page.locator('#gacui-screen')).toContainText(title);
     await expectUI(page.locator('#gacui-error-mask')).not.toBeVisible();
     await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toBeDisabled();
@@ -83,6 +84,7 @@ async function clickText(text) {
 }
 
 async function stopped() {
+    await checkLocalServices(page);
     await expectUI(page.locator('#gacui-success-mask')).toBeVisible();
     expect(await page.evaluate(() => window.__gacui_wasm_session.application.completion)).toBe(0);
     await expectUI(page.locator('#gacui-error-mask')).not.toBeVisible();

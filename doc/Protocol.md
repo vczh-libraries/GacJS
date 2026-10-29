@@ -442,6 +442,8 @@ Manages image resources.
 
 ## Browser injections
 
+The WASM demo composition explicitly advertises all three injection capabilities as false, and its shared Core configuration rejects them. WASM uses its own date/time, `EnUsLocaleImpl` and direct `OpfsFileSystemImpl`, while still using `ImageSave` for document persistence. HTTP query options keep their independent opt-in behavior.
+
 The shared renderer groups injection requests and delegates to `<GacJS repo>/Gaclib/gaclib/renderer/src/injections/injectDateTime.ts`, `injectLocale.ts` and `injectFileSystem.ts`. HTTP capabilities are opt-in on both Core and renderer; see [NetworkProtocol.md](NetworkProtocol.md#http-entry-injection-options).
 
 `InjectionLocalToUtc` and `InjectionUtcToLocal` exchange calendar fields, preserving milliseconds and using the browser timezone rules for the requested date, including daylight saving. Core retains its UTC clock, date construction and arithmetic.

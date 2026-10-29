@@ -51,6 +51,8 @@ apps, build GacJS, run `copy-wasm.sh`, and start the entry server. Then run
 a native Core. The root `yarn test` also runs the portable channel tests in
 `remote-protocol-wasm`.
 
+The live Chromium and Firefox suites inspect each actual `ControllerConnect` payload, requiring `injectDateTime`, `injectLocale` and `injectFileSystem` to be present and false. They also reject injection requests during the exercised application operations and after Reload. Verify the shared Core startup configuration independently; renderer capability checks alone do not establish Core policy.
+
 The current three-file contract requires Emscripten 3.1.51; see the
 [SDK compatibility note](Projects.md#running-the-wasm-demos-on-linux) before
 building, especially when replacing objects made by a different SDK.

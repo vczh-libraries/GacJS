@@ -7,6 +7,7 @@ import { clickAt, getLeafTextPositions } from './Testing_Protocol.js';
 export async function observeWasm(page) {
     await page.addInitScript(() => {
         window.__touchWire = { events: [], raw: {}, received: 0, downloads: [] };
+        window.__serviceWire = { connections: [], injections: [] };
         const inspect = value => {
             if (value === null || typeof value !== 'object') return;
             if (typeof value.rawId === 'string' && typeof value.data === 'string') window.__touchWire.raw[value.rawId] = value.data;
@@ -18,6 +19,8 @@ export async function observeWasm(page) {
             const offset = command.data.indexOf(marker);
             if (offset === -1) return;
             const messages = JSON.parse(command.data.slice(offset + marker.length));
+            if (outgoing) window.__serviceWire.connections.push(...messages.filter(message => message.name === 'ControllerConnect'));
+            else window.__serviceWire.injections.push(...messages.filter(message => message.name.startsWith('Injection')));
             if (outgoing) window.__touchWire.events.push(...messages.filter(message => message.semantic === 'Event'));
             else { inspect(messages); window.__touchWire.received++; }
         };
@@ -42,6 +45,17 @@ export async function observeWasm(page) {
             if (data.kind === 'wasm-download') window.__touchWire.downloads.push(data);
         });
     });
+}
+
+export async function checkLocalServices(page) {
+    const wire = await page.evaluate(() => window.__serviceWire);
+    expect(wire.connections).toHaveLength(1);
+    expect(wire.connections[0].arguments).toMatchObject({
+        injectDateTime: false,
+        injectLocale: false,
+        injectFileSystem: false,
+    });
+    expect(wire.injections).toEqual([]);
 }
 
 export const poll = callback => expect.poll(callback, { timeout: 15000 });

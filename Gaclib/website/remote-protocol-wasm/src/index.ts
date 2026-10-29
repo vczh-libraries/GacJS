@@ -227,5 +227,9 @@ export async function connectWasmServer(application: WasmApplication, requests: 
     await application.rendererReady;
     const channel = application.channels[0];
     await channel.connect();
-    return createRemoteProtocolClient(requests, channel);
+    return createRemoteProtocolClient(requests, channel, {
+        injectDateTime: false,
+        injectLocale: false,
+        injectFileSystem: false,
+    });
 }

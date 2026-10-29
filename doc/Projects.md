@@ -520,6 +520,8 @@ separate import and codegen phases first when their inputs have changed.
 
 ## Running the Wasm Demos on Linux
 
+The three demos explicitly disable all renderer injection capabilities at startup. Their shared Core startup also disables injection, retaining WASM DateTime, the existing en-US locale and direct OPFS filesystem services. Normal Exit/Force Exit followed by Reload preserves OPFS data while creating fresh application state. These pages have no injection controls or native Core host option.
+
 Use Emscripten **3.1.51** for this deployment contract, activated through emsdk
 in the build shell. It emits the separate, nonempty `app.worker.js` required
 by `copy-wasm.sh`. Emscripten 3.1.52 changed the ES-module worker suffix;
