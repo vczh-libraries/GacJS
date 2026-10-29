@@ -73,7 +73,13 @@ for (const transport of ['/Http', '/MiniHttp']) describeProtocolTest('Touching b
         expect((await state()).slice(0,4)).toEqual(transformed);
         a = {...a, x:a.x+10}; b = {...b, x:b.x+10};
         await send('touchMove', [a,b]);
-        await poll(async () => (await state())[0]).toBeCloseTo(transformed[0]+10, 2);
+        // Core rounds each incremental translation to logical pixels and carries
+        // a fractional residual bounded by half a pixel, as in the Wasm check.
+        await poll(async () => (await state())[0]).toBeCloseTo(transformed[0]+10, 0);
+        const translated = await state();
+        expect(translated[1]).toBeCloseTo(transformed[1], 0);
+        expect(translated[2]).toBeCloseTo(transformed[2], 10);
+        expect(translated[3]).toBeCloseTo(transformed[3], 10);
         await send('touchEnd', []);
         await poll(async () => (await state())[4]).toBe(0);
         const picture = () => canvas.evaluate(element => {
