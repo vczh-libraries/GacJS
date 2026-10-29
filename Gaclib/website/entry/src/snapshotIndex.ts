@@ -540,6 +540,16 @@ export const Snapshot: SnapshotEntry = {
                 'Tooltip': {
                     'type': 'Folder',
                     'content': {
+                        'DestroyVisibleTooltipOwner': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'DestroyVisibleTooltipOwner.json': 'File',
                         'ShowTooltipAndLeave': {
                             'type': 'Folder',
                             'content': {
@@ -1222,17 +1232,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                },
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File'
+                                }
                             }
                         },
                         'GuiLabel.json': 'File',
@@ -8901,8 +8911,21 @@ export const Snapshot: SnapshotEntry = {
                                     'content': {
                                         'frame_0.json': 'File',
                                         'frame_1.json': 'File',
+                                        'frame_10.json': 'File',
+                                        'frame_11.json': 'File',
+                                        'frame_12.json': 'File',
+                                        'frame_13.json': 'File',
+                                        'frame_14.json': 'File',
+                                        'frame_15.json': 'File',
+                                        'frame_16.json': 'File',
                                         'frame_2.json': 'File',
-                                        'frame_3.json': 'File'
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File',
+                                        'frame_8.json': 'File',
+                                        'frame_9.json': 'File'
                                     }
                                 },
                                 'Dropdown.json': 'File',
