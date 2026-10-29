@@ -2,8 +2,10 @@ import { IRemoteProtocolRequests } from '@gaclib/remote-protocol';
 import { afterEach, expect, test, vi } from 'vitest';
 import {
     connectHttpServer,
+    createRemoteProtocolClient,
     RemoteProtocolHttpDisconnectError
 } from '../src/index';
+import { IChannelClient } from '../src/channel';
 
 const host = 'http://localhost:8888';
 const baseUrl = '/GacUIRemoteProtocolHttp/VlppInterProcess';
@@ -59,6 +61,32 @@ async function connectWithRequest(
 
 afterEach(() => {
     vi.unstubAllGlobals();
+});
+
+test('renderer handshake defaults capabilities off and advertises each selected capability', async () => {
+    vi.stubGlobal('navigator', { platform: 'Win32' });
+    for (let mask = 0; mask < 8; mask++) {
+        const sent: { name: string; arguments: Record<string, unknown> }[] = [];
+        const channel = {
+            clientId: 2,
+            onMessage: () => () => undefined,
+            sendToClient: (_id: number, _name: string, body: string) => { sent.push(...JSON.parse(body) as typeof sent); return Promise.resolve(); },
+            start: () => Promise.resolve(),
+            stop: () => undefined,
+        } as unknown as IChannelClient;
+        const options = mask === 0 ? undefined : {
+            injectDateTime: (mask & 1) !== 0, injectLocale: (mask & 2) !== 0, injectFileSystem: (mask & 4) !== 0,
+        };
+        const client = createRemoteProtocolClient({} as IRemoteProtocolRequests, channel, options);
+        await client.start();
+        expect(sent[0].name).toBe('ControllerConnect');
+        expect(sent[0].arguments).toMatchObject({
+            injectDateTime: (mask & 1) !== 0, injectLocale: (mask & 2) !== 0, injectFileSystem: (mask & 4) !== 0,
+        });
+        client.stop();
+        client.responses.RespondInjectionLocale(42, ['late response']);
+        expect(sent).toHaveLength(1);
+    }
 });
 
 test('a failed long-poll request is a terminal disconnect without retrying', async () => {

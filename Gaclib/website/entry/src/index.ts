@@ -8,12 +8,16 @@ import {
 import { IChannelClient } from '@gaclib-website/remote-protocol-http/channel';
 import { createHtmlRenderer, IGacUIRenderer, GacUISettings } from '@gaclib/renderer'
 import { RvmHostSession, startBrowserRvmHost } from '@gaclib-website/rvmhost';
+import { ConnectionOptions, coreOrigin } from './connectionOptions';
+export { parseConnectionOptions, connectionOptionsUrl, coreOrigin } from './connectionOptions';
 
 export { isShortcutReservedForBrowser } from '@gaclib/renderer';
 
-export async function runGacUI(settings: GacUISettings): Promise<[IGacUIRenderer, IRemoteProtocolHttpClient]> {
+export async function runGacUI(settings: GacUISettings, options?: ConnectionOptions): Promise<[IGacUIRenderer, IRemoteProtocolHttpClient]> {
     const renderer = createHtmlRenderer(settings);
-    const client = await connectHttpServer('http://localhost:8888', renderer.requests);
+    const client = await connectHttpServer(coreOrigin(options?.corehost === true ? options.host : 'localhost'), renderer.requests, undefined, {
+        injectDateTime: options?.remoteDT, injectLocale: options?.remoteLocale, injectFileSystem: options?.remoteFS,
+    });
     renderer.start(client.responses, client.events);
     return [renderer, client];
 }
@@ -29,6 +33,7 @@ export interface RvmGacUISession {
 }
 
 export interface RvmGacUIOptions {
+    readonly connection?: ConnectionOptions;
     readonly createRenderer?: (settings: GacUISettings) => IGacUIRenderer;
     readonly startHost?: () => RvmHostSession;
     readonly createRendererChannel?: () => IChannelClient;
@@ -41,12 +46,14 @@ function normalizeError(error: unknown): Error {
 }
 
 export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = {}): RvmGacUISession {
+    const connection = options.connection;
+    const origin = coreOrigin(connection?.corehost === true ? connection.host : 'localhost');
     const renderer = (options.createRenderer ?? createHtmlRenderer)(settings);
     const startHost: () => RvmHostSession = options.startHost
-        ?? (() => startBrowserRvmHost());
+        ?? (() => startBrowserRvmHost({ origin }));
     const host = startHost();
     const createRendererChannel = options.createRendererChannel
-        ?? (() => new HttpChannelClient({ channelNames: ['GacUIRemoteProtocol'] }));
+        ?? (() => new HttpChannelClient({ origin, channelNames: ['GacUIRemoteProtocol'] }));
     const createRendererClient = options.createRendererClient ?? createRemoteProtocolHttpClient;
     const retryDelay = options.retryDelay ?? (() => new Promise<void>(resolve => setTimeout(resolve, 25)));
     let rendererClient: IRemoteProtocolHttpClient | undefined;
@@ -103,7 +110,9 @@ export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = 
                         channel.stop();
                         throw new Error('The RVM host stopped before renderer assignment.');
                     }
-                    rendererClient = createRendererClient(renderer.requests, channel);
+                    rendererClient = createRendererClient(renderer.requests, channel, {
+                        injectDateTime: connection?.remoteDT, injectLocale: connection?.remoteLocale, injectFileSystem: connection?.remoteFS,
+                    });
                     renderer.start(rendererClient.responses, rendererClient.events);
                     rendererStarted = true;
                     rendererChannel = undefined;

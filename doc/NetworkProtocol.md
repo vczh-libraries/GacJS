@@ -243,7 +243,7 @@ Install message handlers before starting the application handshake. Then send
 this package to receiver 1:
 
 ```text
-1;GacUIRemoteProtocol;[{"semantic":"Event","name":"ControllerConnect","arguments":{"documentCaretFromEncoding":"UTF16"}}]
+1;GacUIRemoteProtocol;[{"semantic":"Event","name":"ControllerConnect","arguments":{"documentCaretFromEncoding":"UTF16","injectDateTime":false,"injectLocale":false,"injectFileSystem":false}}]
 ```
 
 This line is the complete HTTP request body in UTF-8. No part of it is Base64.
@@ -279,6 +279,18 @@ according to [Protocol.md](Protocol.md).
 
 `ControllerDisconnect` is an application event. It is not an HTTP transport
 disconnect handshake.
+
+### HTTP entry injection options
+
+`index.html?remoteDT&remoteLocale&remoteFS&corehost=localhost` advertises the three capabilities in `ControllerConnect`. All are false when absent. Names are case insensitive and flags use presence, including `remoteFS=false`. The independent `rvmhost` flag starts a browser view-model host. Five checkboxes and REFRESH replace all case variants of these parameters, preserve unrelated query parameters, pathname and fragment, and navigate once. Editing a checkbox alone leaves the current connection intact. The host text box is disabled unless its checkbox is checked.
+
+`corehost` accepts a hostname, IPv4 or IPv6 address, without a scheme, path or port. IPv6 authorities are bracketed; the entered case is preserved. Both clients use the same destination on protocol port 8888. The default is localhost. Core's automation port remains independent.
+
+Core must also enable `/remoteDT`, `/remoteLocale` or `/remoteFS`. Core off retains its predecessor regardless of the renderer capability. When Core enables a feature but the renderer omits it or disconnects, DateTime/Locale use the predecessor and filesystem presents an empty read-only root. A replacement renderer's handshake reevaluates all capabilities. Filesystem requests complete asynchronously in order with their original correlation IDs; a stopped renderer cannot send a delayed completion through a replacement connection. Streams opened on the old renderer intentionally fail on close after loss/replacement.
+
+The browser filesystem is persistent OPFS for the page origin, requiring a secure context and available storage. REFRESH does not erase it. See [Browser injections](Protocol.md#browser-injections) for the operation contracts. HTTP flags do not change the Wasm demos' separate startup path, whose Core injection preferences remain disabled.
+
+REFRESH with `rvmhost` also unloads the accepted view-model host. That loss is fatal to RVMT Core, so restart the Core for this refresh; there is no host reconnection handshake. Use FCT or a separately hosted RVMT session for renderer-only replacement tests. Closing a tab alone does not prove Core has observed transport loss.
 
 ## RVM Host over HTTP
 

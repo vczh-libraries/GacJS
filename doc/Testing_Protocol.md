@@ -88,6 +88,14 @@ Set `GACUI_PUBLIC_DEMO_URL` to the public launcher route and run `npm run test-w
 
 ## Test Harness
 
+### Injection coverage
+
+After import/codegen and `yarn build`, renderer unit tests cover calendar conversions, all locale operations and unavailable storage. `ConnectionOptions.test.ts` checks defaults, case-insensitive presence, host validation and idempotent URL rebuilding. `RawBrowser.test.ts` exercises the real renderer in Chromium: timezone offsets for winter/summer, milliseconds, OPFS operations, ordered binary commits, empty files, metadata, Unicode rename and persistence across refresh, plus checkbox/host controls. These controlled transport tests do not substitute for live Core routing checks.
+
+For live checks, launch FCT with each Core/renderer option combination, using `/remoteDT /remoteLocale /remoteFS` and `?remoteDT&remoteLocale&remoteFS`. Inspect actual injection requests and fresh Core queries; cached localization labels alone cannot establish routing. Use an origin-private fixture such as `<GacUI repo>/Test/TestDocument.bin` for document save/reload/export and inspect the persisted OPFS bytes. Core off must retain its predecessor; Core on with a missing renderer capability must use the DateTime/Locale predecessor or empty filesystem. Observe transport loss before asserting fallback, then reconnect with capabilities off/on. Close an old stream only in a separate expected-failure run.
+
+`corehost` must reach both renderer and optional RVM host on port 8888. REFRESH preserves OPFS, but with `rvmhost` it destroys the accepted host and requires restarting RVMT Core. Use FCT or a separately hosted RVMT session for renderer-only lifecycle checks. These HTTP flags do not enable injection in the Wasm demo startup path; report native/Wasm platform coverage separately. Temporary provider overrides used to distinguish routing must be removed before rebuilding and the final real-browser smoke check.
+
 All harness and test files live in `Gaclib/website/entry/test/`. These support
 files define the shared harness:
 

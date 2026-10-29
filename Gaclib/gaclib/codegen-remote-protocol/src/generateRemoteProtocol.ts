@@ -102,7 +102,7 @@ function generatePrimitiveTypes(): string {
     }
     return [
         '// Generated from VlppOS/Source/WindowTypes.h. Do not edit.',
-        'export type Boolean = boolean;\nexport type Integer = number;\nexport type Float = number;\nexport type Double = number;\nexport type String = string;\nexport type Char = string;\nexport type Color = string; // #FFFFFF\nexport type Binary = string; // base64 encoded\n\nexport type Ptr<T> = T | null;\nexport type Nullable<T> = T | null;\nexport type List<T> = T[] | null;\nexport type ArrayMap<T, Key extends string> = (T extends Record<Key, {}> ? T[] : never) | null;\nexport type Dictionary<K, T> = [[K, T]] | null;',
+        'export type Boolean = boolean;\nexport type Integer = number;\nexport type Float = number;\nexport type Double = number;\nexport type String = string;\nexport type Char = string;\nexport type Color = string; // #FFFFFF\nexport type Binary = string | null; // base64 encoded; null denotes an unavailable stream\n\nexport type Ptr<T> = T | null;\nexport type Nullable<T> = T | null;\nexport type List<T> = T[] | null;\nexport type ArrayMap<T, Key extends string> = (T extends Record<Key, {}> ? T[] : never) | null;\nexport type Dictionary<K, T> = [[K, T]] | null;',
         '',
         '/* eslint-disable @typescript-eslint/no-duplicate-enum-values */',
         'export enum Key {',

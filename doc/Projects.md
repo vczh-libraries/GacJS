@@ -426,6 +426,8 @@ be the document root because the HTML pages use absolute paths such as
 | `/solidLabel.html` | Standalone test page for SolidLabel element rendering configurations |
 | `/elements.html` | Standalone test page for various element type rendering |
 
+The HTTP entry page also accepts `remoteDT`, `remoteLocale`, `remoteFS` and `corehost=hostname` (case-insensitive names). Five checkboxes, the host text box and REFRESH rebuild the current URL. Both the renderer and an optional browser RVM host use that destination on port 8888. Injection flags require matching native Core switches; they do not enable injection in the separate Wasm startup path. See [README HTTP testing](../README.md#http-testing) for storage and refresh constraints.
+
 **Browser bundles:** These are ES modules with named exports, not globals.
 
 | Bundle | Contents |

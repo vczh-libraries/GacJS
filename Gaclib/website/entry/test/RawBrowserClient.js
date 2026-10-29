@@ -7,10 +7,22 @@ export * from '/entry-real.js';
 function createSession(settings, alreadyStarted) {
     const renderer = createHtmlRenderer(settings);
     const sent = [];
+    let nextRequest = 1;
+    const pending = new Map();
     let receive;
     const protocolClient = createRemoteProtocolHttpClient(renderer.requests, {
         onMessage(handler) { receive = handler; return () => undefined; },
-        sendToClient(_id, _channel, body) { sent.push(...JSON.parse(body)); return Promise.resolve(); },
+        sendToClient(_id, _channel, body) {
+            const invocations = JSON.parse(body);
+            sent.push(...invocations);
+            for (const invocation of invocations) {
+                if (invocation.semantic === 'Response') {
+                    pending.get(invocation.id)?.(invocation.arguments);
+                    pending.delete(invocation.id);
+                }
+            }
+            return Promise.resolve();
+        },
     });
     renderer.start(protocolClient.responses, protocolClient.events);
     const send = (name, args) => receive({
@@ -53,6 +65,16 @@ function createSession(settings, alreadyStarted) {
     let frameId = 0;
     const state = {
         renderer, counts, listeners, rect, content, node, root, sent,
+        request(name, args) {
+            const id = nextRequest++;
+            return new Promise(resolve => {
+                pending.set(id, resolve);
+                receive({ senderClientId: 1, channelName: 'GacUIRemoteProtocol', messageBody: JSON.stringify([
+                    { semantic: 'Request', id, name, arguments: args },
+                ]) });
+                send('RendererIdle');
+            });
+        },
         started: false,
         clientStops: 0,
         describe(rawId, data) {
@@ -129,3 +151,4 @@ export function runRvmGacUI(settings) {
         },
     };
 }
+export { parseConnectionOptions, connectionOptionsUrl, coreOrigin } from '/entry-real.js';

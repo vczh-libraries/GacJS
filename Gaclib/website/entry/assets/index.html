@@ -9,6 +9,16 @@
 </head>
 
 <body>
+    <form id="connection-options">
+        <label><input type="checkbox" id="option-rvmhost">rvmhost</label>
+        <label><input type="checkbox" id="option-remoteDT">remoteDT</label>
+        <label><input type="checkbox" id="option-remoteLocale">remoteLocale</label>
+        <label><input type="checkbox" id="option-remoteFS">remoteFS</label>
+        <label><input type="checkbox" id="option-corehost">corehost</label>
+        <input id="option-host" aria-label="Core host" value="localhost" disabled>
+        <button type="submit">REFRESH</button>
+        <span id="connection-error" role="alert"></span>
+    </form>
     <div id="gacui-screen" class="gacui-container" tabindex="0">
         <!-- Content goes here -->
     </div>
@@ -25,6 +35,20 @@
     </div>
     <script type="module">
         import * as GacUIHtmlRenderer from "/entry.js";
+        const connection = GacUIHtmlRenderer.parseConnectionOptions(location.href);
+        const optionNames = ['rvmhost', 'remoteDT', 'remoteLocale', 'remoteFS', 'corehost'];
+        const hostInput = document.getElementById('option-host');
+        for (const name of optionNames) document.getElementById(`option-${name}`).checked = connection[name];
+        hostInput.value = connection.host;
+        hostInput.disabled = !connection.corehost;
+        document.getElementById('option-corehost').onchange = event => { hostInput.disabled = !event.target.checked; };
+        document.getElementById('connection-options').onsubmit = event => {
+            event.preventDefault();
+            const selected = { ...connection, host: hostInput.value };
+            for (const name of optionNames) selected[name] = document.getElementById(`option-${name}`).checked;
+            try { location.href = GacUIHtmlRenderer.connectionOptionsUrl(location.href, selected); }
+            catch (error) { document.getElementById('connection-error').textContent = error.message; }
+        };
         let gacuiRenderer;
         document.getElementById('gacui-exit').onclick = () => gacuiRenderer?.requestStopToCore(false);
         document.getElementById('gacui-force-exit').onclick = () => gacuiRenderer?.requestStopToCore(true);
@@ -110,16 +134,16 @@
                 delete window.__gacui_rvmhost_session;
             }, { once: true });
             try {
-                const rvmhost = new URLSearchParams(location.search).has('rvmhost');
+                const rvmhost = connection.rvmhost;
                 if (rvmhost) {
-                    session = GacUIHtmlRenderer.runRvmGacUI(settings);
+                    session = GacUIHtmlRenderer.runRvmGacUI(settings, { connection });
                     window.__gacui_rvmhost_session = session;
                     void session.hostOutcome.then(() => session.stop());
                     await session.startup;
                     renderer = session.renderer;
                     client = session.rendererClient;
                 } else {
-                    [renderer, client] = await GacUIHtmlRenderer.runGacUI(settings);
+                    [renderer, client] = await GacUIHtmlRenderer.runGacUI(settings, connection);
                 }
                 if (pageHidden) return;
                 gacuiRenderer = renderer;

@@ -4,6 +4,137 @@ import { createServer, Server } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 
+test('entry options initialize by case-insensitive presence and refresh without duplicates', async () => {
+    const page = await open('?REMOTEdt&remoteDT&RemoteLocale&REMOTeFS&CoreHost=MyHost&extra=keep#fragment');
+    expect(await page.locator('#option-remoteDT').isChecked()).toBe(true);
+    expect(await page.locator('#option-rvmhost').isChecked()).toBe(false);
+    expect(await page.locator('#option-host').inputValue()).toBe('MyHost');
+    await page.locator('#option-corehost').uncheck();
+    expect(await page.locator('#option-host').isDisabled()).toBe(true);
+    await page.locator('#option-corehost').check();
+    await page.locator('#option-host').fill('::1');
+    for (let i = 0; i < 2; i++) {
+        await Promise.all([page.waitForEvent('load'), page.getByRole('button', { name: 'REFRESH', exact: true }).click()]);
+        const url = new URL(page.url());
+        expect(url.searchParams.getAll('remoteDT')).toEqual(['']);
+        expect(url.searchParams.get('corehost')).toBe('::1');
+        expect(url.searchParams.get('extra')).toBe('keep');
+        expect(url.hash).toBe('#fragment');
+    }
+});
+
+test('browser injection conversions use the requested date timezone and preserve milliseconds', async () => {
+    const page = await open('', 'America/New_York');
+    const values = await page.evaluate(async () => {
+        const query = (window as any).rawTest.request;
+        const winter = { year: 2024, month: 1, day: 1, hour: 2, minute: 3, second: 4, milliseconds: 567 };
+        const summer = { ...winter, month: 7 };
+        const a = await query('InjectionUtcToLocal', winter);
+        const b = await query('InjectionUtcToLocal', summer);
+        return { a, b, back: await query('InjectionLocalToUtc', a) };
+    });
+    expect(values.a).toEqual({ year: 2023, month: 12, day: 31, hour: 21, minute: 3, second: 4, milliseconds: 567 });
+    expect(values.b).toEqual({ year: 2024, month: 6, day: 30, hour: 22, minute: 3, second: 4, milliseconds: 567 });
+    expect(values.back).toEqual({ year: 2024, month: 1, day: 1, hour: 2, minute: 3, second: 4, milliseconds: 567 });
+});
+
+test('real OPFS implements every operation and persists ordered binary writes across refresh', async () => {
+    const page = await open();
+    const results = await page.evaluate(async () => {
+        const query = (window as any).rawTest.request;
+        const file = (operation: string, path = '/', target = '', content: string | null = null): Promise<any> => query('InjectionFileSystem', { operation, path, target, content });
+        const results: Record<string, any> = {};
+        results.delimiter = await file('PathDelimiter');
+        results.compatible = await file('CompatibleDelimiters');
+        results.initialize = await file('Initialize', '目录/../persist');
+        results.invalid = await file('Initialize', '../outside');
+        results.concat = await file('Concat', '/persist', '/absolute/./file');
+        results.root = await file('IsRoot');
+        results.rootDelete = await file('DeleteFolder');
+        results.rootRename = await file('RenameFolder', '/', 'other');
+        results.mkdir = await file('CreateFolder', '/persist');
+        results.mkdirAgain = await file('CreateFolder', '/persist');
+        results.isFolder = await file('IsFolder', '/persist');
+        results.missing = await file('OpenRead', '/persist/missing');
+        results.empty = await file('OpenReadWrite', '/persist/文.bin');
+        // Issue dependent requests in one batch without awaiting persistence.
+        const commit = file('Commit', '/persist/文.bin', '', 'AAEC/w==');
+        const read = file('OpenRead', '/persist/文.bin');
+        results.commit = await commit;
+        results.read = await read;
+        results.readWrite = await file('OpenReadWrite', '/persist/文.bin');
+        results.isFile = await file('IsFile', '/persist/文.bin');
+        results.info = await file('Info', '/persist/文.bin');
+        results.relative = await file('Relative', '/persist/文.bin', '/elsewhere/a');
+        results.copy = await file('Copy', '/persist/文.bin', '/persist/copy.bin');
+        results.copyExists = await file('IsFile', '/persist/copy.bin');
+        results.writeOnly = await file('OpenWrite', '/persist/文.bin');
+        results.beforeClose = await file('OpenRead', '/persist/文.bin');
+        results.emptyCommit = await file('Commit', '/persist/文.bin', '', '');
+        results.afterClose = await file('OpenRead', '/persist/文.bin');
+        await file('Commit', '/persist/文.bin', '', 'AP+A');
+        results.rename = await file('RenameFile', '/persist/文.bin', '改.bin');
+        results.files = await file('Files', '/persist');
+        results.folders = await file('Folders', '/');
+        results.renameIntoSelf = await file('RenameFolder', '/persist', '/persist/child');
+        results.renameFolder = await file('RenameFolder', '/persist', '/saved');
+        results.deleteNonempty = await file('DeleteFolder', '/saved');
+        results.failedCommit = await file('Commit', '/missing/path', '', 'AA==');
+        return results;
+    });
+    expect(results.delimiter.text).toBe('/');
+    expect(results.compatible.text).toBe('');
+    expect(results.initialize.text).toBe('/persist');
+    expect(results.invalid.success).toBe(false);
+    expect(results.concat.text).toBe('/absolute/file');
+    for (const name of ['root', 'mkdir', 'isFolder', 'empty', 'commit', 'read', 'readWrite', 'isFile', 'info', 'rename', 'renameFolder']) expect(results[name].success, name).toBe(true);
+    for (const name of ['rootDelete', 'rootRename', 'mkdirAgain', 'missing', 'copy', 'copyExists', 'renameIntoSelf', 'deleteNonempty', 'failedCommit']) expect(results[name].success, name).toBe(false);
+    expect(results.empty.content).toBe('');
+    expect(results.read.content).toBe('AAEC/w==');
+    expect(results.readWrite.content).toBe('AAEC/w==');
+    expect(results.writeOnly.content).toBe('');
+    expect(results.beforeClose.content).toBe('AAEC/w==');
+    expect(results.afterClose.content).toBe('');
+    expect(results.info.info.size).toBe('4');
+    expect(results.info.info.creationTime).toBeNull();
+    expect(results.info.info.lastModifiedTime).not.toBeNull();
+    expect(results.relative.text).toBe('../elsewhere/a');
+    expect(results.files.paths).toEqual(['/persist/改.bin']);
+    expect(results.folders.paths).toContain('/persist');
+    await page.reload();
+    await page.waitForFunction(() => (window as any).rawTest?.started === true);
+    const saved = await page.evaluate(async () => {
+        const request = (window as any).rawTest.request;
+        const value = await request('InjectionFileSystem', { operation: 'OpenRead', path: '/saved/改.bin', target: '', content: null });
+        const removeFile = await request('InjectionFileSystem', { operation: 'DeleteFile', path: '/saved/改.bin', target: '', content: null });
+        const removeFolder = await request('InjectionFileSystem', { operation: 'DeleteFolder', path: '/saved', target: '', content: null });
+        return { value, removeFile, removeFolder };
+    });
+    expect(saved.value.content).toBe('AP+A');
+    expect(saved.removeFile.success).toBe(true);
+    expect(saved.removeFolder.success).toBe(true);
+});
+
+test('ImageSave preserves original bytes and completes supported and unsupported encodings', async () => {
+    const page = await open();
+    const values = await page.evaluate(async () => {
+        const request = (window as any).rawTest.request;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 2;
+        canvas.getContext('2d')!.fillRect(0, 0, 2, 2);
+        const png = canvas.toDataURL('image/png').split(',')[1];
+        const metadata = await request('ImageCreated', { id: 100, imageData: png, imageDataOmitted: false });
+        const original = await request('ImageSave', { id: 100, format: 'Unknown' });
+        const jpeg = await request('ImageSave', { id: 100, format: 'Jpeg' });
+        const unavailable = await request('ImageSave', { id: 100, format: 'Wmp' });
+        return { png, metadata, original, jpeg, unavailable };
+    });
+    expect(values.metadata.format).toBe('Png');
+    expect(values.original).toBe(values.png);
+    expect(values.jpeg.startsWith('/9j/')).toBe(true);
+    expect(values.unavailable).toBeNull();
+});
+
 // These tests consume built assets, use a real Chromium DOM/canvas, and never
 // invoke the Windows native Core build or the live protocol harness.
 const dist = resolve(import.meta.dirname, '../lib/dist');
@@ -48,10 +179,10 @@ afterAll(async () => {
     await new Promise<void>((resolve, reject) => server?.close(error => error === undefined ? resolve() : reject(error)));
 });
 
-async function open(query = ''): Promise<Page> {
+async function open(query = '', timezoneId?: string): Promise<Page> {
     errors = [];
     expectedErrors = [];
-    page = await browser.newPage({ viewport: { width: 900, height: 700 } });
+    page = await browser.newPage({ viewport: { width: 900, height: 700 }, timezoneId });
     page.on('pageerror', error => { errors.push(error.message); });
     await page.addInitScript(() => {
         const original = window.ResizeObserver;

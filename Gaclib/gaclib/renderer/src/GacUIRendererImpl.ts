@@ -1,4 +1,8 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
+import { injectLocalToUtc, injectUtcToLocal } from './injections/injectDateTime';
+import { injectLocale } from './injections/injectLocale';
+import { FileSystemInjection } from './injections/injectFileSystem';
+import { getImageContentType, getImageDataUrl, getImageFormatType } from './domRenderer/elementStyles_Image';
 import { GacUIRawElement, GacUISettings, IGacUIRenderer } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
@@ -306,6 +310,30 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     /****************************************************************************************
+     * Injections (DateTime, Locale, FileSystem)
+     ***************************************************************************************/
+
+    private _fileSystemInjection = new FileSystemInjection();
+
+    RequestInjectionLocalToUtc(id: number, requestArgs: SCHEMA.InjectionDateTime): void {
+        this._responses.RespondInjectionLocalToUtc(id, injectLocalToUtc(requestArgs));
+    }
+
+    RequestInjectionUtcToLocal(id: number, requestArgs: SCHEMA.InjectionDateTime): void {
+        this._responses.RespondInjectionUtcToLocal(id, injectUtcToLocal(requestArgs));
+    }
+
+    RequestInjectionLocale(id: number, requestArgs: SCHEMA.InjectionLocaleRequest): void {
+        this._responses.RespondInjectionLocale(id, injectLocale(requestArgs));
+    }
+
+    RequestInjectionFileSystem(id: number, requestArgs: SCHEMA.InjectionFileRequest): void {
+        const responses = this._responses;
+        this._fileSystemInjection.request(requestArgs, result => responses.RespondInjectionFileSystem(id, result),
+            () => !this._stopping && this._responses === responses);
+    }
+
+    /****************************************************************************************
      * MainWindow
      ***************************************************************************************/
 
@@ -432,6 +460,38 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     RequestImageDestroyed(requestArgs: SCHEMA.TYPES.Integer): void {
         // unregister the image
         this._images.delete(requestArgs);
+    }
+
+    RequestImageSave(id: number, requestArgs: SCHEMA.ImageSaveRequest): void {
+        const creation = this._images.get(requestArgs.id);
+        if (creation === undefined) throw new Error(`Unknown image ID ${requestArgs.id}.`);
+        const sourceFormat = getImageFormatType(creation.imageData);
+        if (requestArgs.format === SCHEMA.ImageFormatType.Unknown || requestArgs.format === sourceFormat) {
+            this._responses.RespondImageSave(id, creation.imageData);
+            return;
+        }
+        const responses = this._responses;
+        const respond = (content: SCHEMA.TYPES.Binary): void => {
+            if (!this._stopping && this._responses === responses) responses.RespondImageSave(id, content);
+        };
+        if (requestArgs.format !== SCHEMA.ImageFormatType.Png && requestArgs.format !== SCHEMA.ImageFormatType.Jpeg) {
+            respond(null);
+            return;
+        }
+        const image = new Image();
+        image.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = image.naturalWidth;
+                canvas.height = image.naturalHeight;
+                canvas.getContext('2d')!.drawImage(image, 0, 0);
+                const mime = getImageContentType(requestArgs.format);
+                const data = canvas.toDataURL(mime);
+                respond(data.startsWith(`data:${mime};base64,`) ? data.substring(data.indexOf(',') + 1) : null);
+            } catch { respond(null); }
+        };
+        image.onerror = () => respond(null);
+        image.src = getImageDataUrl(getImageContentType(sourceFormat), creation.imageData);
     }
 
     RequestRendererUpdateElement_ImageFrame(requestArgs: SCHEMA.ElementDesc_ImageFrame): void {

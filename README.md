@@ -61,6 +61,10 @@ For testing the same HTML5 renderer against a native core, run [RemotingTest_Cor
 
 For a TypeScript view model over HTTP, run Core with `/RVMT /Http` or `/RVMT /MiniHttp` and open [the renderer with a TypeScript host](http://localhost:8896/index.html?rvmhost), without starting a separate view-model host.
 
+The HTTP page's first row configures `rvmhost`, `remoteDT`, `remoteLocale`, `remoteFS` and an optional `corehost` hostname or IP address. Query names are case insensitive; flags are enabled by presence. Select the options and press **REFRESH** to reconnect. The default destination is localhost on protocol port 8888. Enable matching `/remoteDT`, `/remoteLocale` and `/remoteFS` switches on native Core to use the browser's timezone, locale and persistent origin-private filesystem (OPFS). OPFS needs a secure context such as HTTPS or localhost and browser storage access. It never exposes Core's files. These HTTP options do not change Wasm demo startup.
+
+REFRESH preserves OPFS data and unrelated URL parameters. With `rvmhost`, refresh also ends the accepted view-model host, which is fatal to its RVMT Core: restart that Core before reconnecting. See [injection contracts](doc/Protocol.md#browser-injections) and [connection lifecycle](doc/NetworkProtocol.md).
+
 ![RPT_Windows](RPT_Windows.png)
 ![RPT_Ubuntu](RPT_Ubuntu.png)
 ![RPT_macOS](RPT_macOS.png)

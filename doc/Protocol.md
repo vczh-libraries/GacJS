@@ -427,6 +427,7 @@ Manages image resources.
 |---------|---------|----------|-------------|
 | `ImageCreated` | `ImageCreation` | `ImageMetadata` | Send image binary data; client decodes and returns metadata (format, per-frame sizes) |
 | `ImageDestroyed` | `int` | — | Release an image resource by ID |
+| `ImageSave` | `ImageSaveRequest` | `binary` | Preserve the source bytes for its original format or Unknown; encode PNG/JPEG through canvas; return null when an encoding is unavailable |
 
 ### Supporting types
 
@@ -438,6 +439,20 @@ Manages image resources.
 | `ImageFormatType` | `Bmp`, `Gif`, `Icon`, `Jpeg`, `Png`, `Tiff`, `Wmp`, `Unknown` | Detected image format |
 
 ---
+
+## Browser injections
+
+The shared renderer groups injection requests and delegates to `<GacJS repo>/Gaclib/gaclib/renderer/src/injections/injectDateTime.ts`, `injectLocale.ts` and `injectFileSystem.ts`. HTTP capabilities are opt-in on both Core and renderer; see [NetworkProtocol.md](NetworkProtocol.md#http-entry-injection-options).
+
+`InjectionLocalToUtc` and `InjectionUtcToLocal` exchange calendar fields, preserving milliseconds and using the browser timezone rules for the requested date, including daylight saving. Core retains its UTC clock, date construction and arithmetic.
+
+`InjectionLocale` covers every operation. Invariant is the empty name mapped to `en-US`; system default comes from Intl and user default from `navigator.language`. Enumeration is the documented finite candidate set in `injectLocale.ts`, filtered through Intl and combined with preferred languages; it is not the browser's entire locale database. Explicit locale queries are independent of this list. Date patterns use Gregorian/Latin-number Intl field order and the portable Core token subset, omitting literal ASCII words because Core has no literal quoting. Time patterns use 24-hour `HH:mm:ss` and `HH:mm`. Day/month names and case mapping use the requested locale. Core performs formatting, comparison and search.
+
+`InjectionFileSystem` uses the origin's OPFS. Root and working directory are `/`; paths use `/`, normalize `.`/`..`, reject traversal above root, and preserve Unicode. Storage requires a secure context (HTTPS or localhost) and permission/support from the browser; ordinary unavailable storage, quota and missing-entry failures return failed operation results. It does not use Core storage, a file picker or startup clearing.
+
+Files expose byte size and last-modified time; unavailable timestamps remain null. Metadata-preserving Copy fails without changing the destination. Rename copies then removes with the Wasm root, destination and descendant restrictions. ReadOnly/ReadWrite snapshot all bytes; ReadWrite preserves existing content and creates missing files. WriteOnly starts with an empty snapshot. Successful empty opens return the non-null Base64 string `""`. Commit replaces the full content, including zero bytes, and responds after the writable is closed. Core owns stream buffering and commits on close. Each renderer serializes asynchronous filesystem requests and suppresses replies after its connection stops.
+
+`ImageSave` is separate from filesystem injection. Original-format/Unknown saves retain source bytes and frames. PNG/JPEG conversion uses the first decoded frame and browser canvas encoding; unavailable encoders return null. Protocol binary values are Base64 strings or null, preserving the distinction between empty content and an unavailable stream.
 
 ## Document Paragraph Protocol
 

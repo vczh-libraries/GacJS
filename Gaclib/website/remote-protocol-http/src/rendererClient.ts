@@ -35,16 +35,25 @@ export interface IRemoteProtocolClient {
 
 export type IRemoteProtocolHttpClient = IRemoteProtocolClient;
 
+export interface RendererInjectionOptions {
+    readonly injectDateTime?: boolean;
+    readonly injectLocale?: boolean;
+    readonly injectFileSystem?: boolean;
+}
+
 class RemoteProtocolClient implements IRemoteProtocolClient {
     public readonly responses: IRemoteProtocolResponses;
     public readonly events: IRemoteProtocolEvents;
     private readonly unsubscribe: () => void;
+    private stopped = false;
 
     constructor(
         private readonly requests: IRemoteProtocolRequests,
         public readonly channelClient: IChannelClient,
+        private readonly injections: RendererInjectionOptions = {},
     ) {
         const callback: ProtocolInvokingHandler = invoking => {
+            if (this.stopped) return;
             void this.channelClient.sendToClient(
                 GACUI_REMOTE_PROTOCOL_CORE_CLIENT_ID,
                 GACUI_REMOTE_PROTOCOL_CHANNEL_NAME,
@@ -70,11 +79,17 @@ class RemoteProtocolClient implements IRemoteProtocolClient {
         }
         const platform = navigator.platform;
         const osSuperKeyName = platform.startsWith('Mac') ? 'Command' : platform.startsWith('Win') ? 'Win' : 'Super';
-        this.events.OnControllerConnect({ documentCaretFromEncoding: CharacterEncoding.UTF16, osSuperKeyName });
+        this.events.OnControllerConnect({
+            documentCaretFromEncoding: CharacterEncoding.UTF16, osSuperKeyName,
+            injectDateTime: this.injections.injectDateTime ?? false,
+            injectLocale: this.injections.injectLocale ?? false,
+            injectFileSystem: this.injections.injectFileSystem ?? false,
+        });
         await this.channelClient.start();
     }
 
     stop(): void {
+        this.stopped = true;
         this.unsubscribe();
         this.channelClient.stop();
     }
@@ -97,26 +112,29 @@ class RemoteProtocolHttpClient extends RemoteProtocolClient {
 export function createRemoteProtocolClient(
     requests: IRemoteProtocolRequests,
     channelClient: IChannelClient,
+    injections: RendererInjectionOptions = {},
 ): IRemoteProtocolClient {
-    return new RemoteProtocolClient(requests, channelClient);
+    return new RemoteProtocolClient(requests, channelClient, injections);
 }
 
 export function createRemoteProtocolHttpClient(
     requests: IRemoteProtocolRequests,
     channelClient: IChannelClient,
+    injections: RendererInjectionOptions = {},
 ): IRemoteProtocolHttpClient {
-    return new RemoteProtocolHttpClient(requests, channelClient);
+    return new RemoteProtocolHttpClient(requests, channelClient, injections);
 }
 
 export async function connectHttpServer(
     host: string,
     requests: IRemoteProtocolRequests,
     basePath = DEFAULT_HTTP_CHANNEL_BASE_PATH,
+    injections: RendererInjectionOptions = {},
 ): Promise<IRemoteProtocolHttpClient> {
     const channelClient = await connectHttpChannel({
         origin: host,
         basePath,
         channelNames: [GACUI_REMOTE_PROTOCOL_CHANNEL_NAME],
     });
-    return createRemoteProtocolHttpClient(requests, channelClient);
+    return createRemoteProtocolHttpClient(requests, channelClient, injections);
 }

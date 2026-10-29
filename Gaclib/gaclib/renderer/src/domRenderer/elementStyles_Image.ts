@@ -4,7 +4,8 @@ import * as SCHEMA from '@gaclib/remote-protocol';
  * ImageFrame
  **********************************************************************/
 
-export function getImageFormatType(imageData: string): SCHEMA.ImageFormatType {
+export function getImageFormatType(imageData: SCHEMA.TYPES.Binary): SCHEMA.ImageFormatType {
+    if (imageData === null) throw new Error('Image data is unavailable.');
     const bin = atob(imageData);
     if (bin.substring(0, 2) === 'BM') {
         return SCHEMA.ImageFormatType.Bmp;
@@ -42,11 +43,11 @@ export function getImageContentType(type: SCHEMA.ImageFormatType): string {
     }
 }
 
-export function getImageDataUrl(contentType: string, imageData: string): string {
+export function getImageDataUrl(contentType: string, imageData: SCHEMA.TYPES.Binary): string {
     return `data:${contentType};base64,${imageData}`;
 }
 
-export function getImageUrl(contentType: string, imageData: string): string {
+export function getImageUrl(contentType: string, imageData: SCHEMA.TYPES.Binary): string {
     return `url(${getImageDataUrl(contentType, imageData)})`;
 }
 
