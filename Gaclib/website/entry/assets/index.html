@@ -46,7 +46,11 @@
             event.preventDefault();
             const selected = { ...connection, host: hostInput.value };
             for (const name of optionNames) selected[name] = document.getElementById(`option-${name}`).checked;
-            try { location.href = GacUIHtmlRenderer.connectionOptionsUrl(location.href, selected); }
+            try {
+                const url = GacUIHtmlRenderer.connectionOptionsUrl(location.href, selected);
+                if (url === location.href) location.reload();
+                else location.href = url;
+            }
             catch (error) { document.getElementById('connection-error').textContent = error.message; }
         };
         let gacuiRenderer;
