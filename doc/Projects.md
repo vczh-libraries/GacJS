@@ -414,6 +414,8 @@ macOS. On Windows, IIS may already own port `8896`; in that case the command
 reports that IIS may already be serving the site. The generated directory must
 be the document root because the HTML pages use absolute paths such as
 `/gacui.js` and `/entry.js`.
+On startup, the command prints the main website URL and direct links to the
+WasmFCT, WasmRPT, and WasmRVMT test pages.
 
 **HTML pages:**
 

@@ -225,6 +225,9 @@ async function main(): Promise<void> {
     }
 
     console.log(`GacJS website is available at ${websiteUrl}.`);
+    console.log(`WasmFCT: ${websiteUrl}/wasm-fct/`);
+    console.log(`WasmRPT: ${websiteUrl}/wasm-rpt/`);
+    console.log(`WasmRVMT: ${websiteUrl}/wasm-rvmt/`);
     console.log('Press ENTER to stop.');
     await waitForStop(server);
 }
