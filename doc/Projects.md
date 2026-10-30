@@ -522,17 +522,16 @@ separate import and codegen phases first when their inputs have changed.
 
 The three demos explicitly disable all renderer injection capabilities at startup. Their shared Core startup also disables injection, retaining WASM DateTime, the existing en-US locale and direct OPFS filesystem services. Normal Exit/Force Exit followed by Reload preserves OPFS data while creating fresh application state. These pages have no injection controls or native Core host option.
 
-Use Emscripten **3.1.51** for this deployment contract, activated through emsdk
-in the build shell. It emits the separate, nonempty `app.worker.js` required
-by `copy-wasm.sh`. Emscripten 3.1.52 changed the ES-module worker suffix;
-3.1.58 moved pthread startup into the main module, and 3.1.68 removed the
-transitional empty worker file. These newer outputs do not satisfy this
-three-file contract. Do not fabricate a worker file or patch `app.mjs` to pass
-deployment validation. Switching SDK versions requires full `-fbw -o` rebuilds
-of all three applications because Emscripten does not guarantee object ABI
-compatibility between releases.
+Emscripten **3.1.69** emits `app.mjs` and `app.wasm`; pthread workers load
+`app.mjs` itself. `copy-wasm.sh` requires these two files and also copies
+`app.worker.js` when present, preserving support for older builds such as
+Emscripten **3.1.51**. Emscripten 3.1.58 moved pthread startup into the main
+module, and 3.1.68 removed the transitional empty worker file. Do not fabricate
+a worker file or patch `app.mjs` to pass deployment validation. Switching SDK
+versions requires full `-fbw -o` rebuilds of all three applications because
+Emscripten does not guarantee object ABI compatibility between releases.
 
-Build `GacUI/Test/Linux/WasmFCT`, `WasmRPT` and `WasmRVMT` using
+Build `<GacUI repo>/Test/Linux/WasmFCT`, `WasmRPT` and `WasmRVMT` using
 `../../../.github/Ubuntu/build.sh -bw -o` from each directory. All three use
 `VCZH_DEBUG_NO_REFLECTION`, merged DarkSkin sources from
 `Source/Skins/DarkSkin/Source`, x86 demo sources and Wasm `-O3`.
@@ -541,16 +540,17 @@ sources; the resulting CLI binaries immediately return 0. Rebuild the Wasm
 outputs afterward because a native full build cleans `Bin`.
 After the normal GacJS build, run `../copy-wasm.sh` from `Gaclib`, then
 `npm run start` from `website/entry`. The explicit copy validates all source
-sets of `app.mjs`, `app.wasm` and `app.worker.js` and destination pages before
-copying; a missing or empty source input warns and exits
-nonzero. Re-run it after every website build, which cleans `lib/dist`.
+sets of `app.mjs` and `app.wasm` and destination pages before copying; a missing
+or empty required source input warns and exits nonzero. It copies the optional
+`app.worker.js` when present and removes any stale deployed copy when absent.
+Re-run it after every website build, which cleans `lib/dist`.
 
-Keep all three generated files together beside each page. Packaging leaves
-Emscripten's `app.mjs` byte-for-byte unchanged: its default factory loads the
-adjacent `app.worker.js`, which imports the adjacent module. GacJS's own
-`wasm-worker.js` hosts the application and is distinct from the generated
-pthread worker. These outputs remain ignored build artifacts. Use a full
-`-fbw -o` rebuild to replace previously patched modules.
+Keep the matching generated files together beside each page. Packaging leaves
+Emscripten's `app.mjs` byte-for-byte unchanged: its default factory starts
+pthread workers from the module itself or the older separate worker script.
+GacJS's own `wasm-worker.js` hosts the application and remains required with
+either output format. These outputs remain ignored build artifacts. Use a
+full `-fbw -o` rebuild to replace previously patched modules.
 The entry server provides JavaScript-module/Wasm MIME types and
 COOP/COEP headers for shared memory. Reload is disabled while the application is
 starting or running. Normal Core completion enables it; clicking it reloads the

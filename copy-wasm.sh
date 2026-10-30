@@ -5,7 +5,7 @@ GACJS_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 GACUI_ROOT="${GACJS_ROOT}/../GacUI"
 DIST_ROOT="${GACJS_ROOT}/Gaclib/website/entry/lib/dist"
 WASM_APPS=(FCT RPT RVMT)
-WASM_FILES=(app.mjs app.wasm app.worker.js)
+WASM_FILES=(app.mjs app.wasm)
 
 # Validate every input before changing any deployed app.
 for WASM_APP in "${WASM_APPS[@]}"; do
@@ -27,5 +27,11 @@ for WASM_APP in "${WASM_APPS[@]}"; do
     for WASM_FILE in "${WASM_FILES[@]}"; do
         cp -- "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/${WASM_FILE}" "${DIST_ROOT}/wasm-${WASM_PAGE}/"
     done
+    # Older Emscripten builds use a separate pthread worker.
+    if [ -f "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.worker.js" ]; then
+        cp -- "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.worker.js" "${DIST_ROOT}/wasm-${WASM_PAGE}/"
+    else
+        rm -f -- "${DIST_ROOT}/wasm-${WASM_PAGE}/app.worker.js"
+    fi
     echo "Copied Wasm${WASM_APP} to ${DIST_ROOT}/wasm-${WASM_PAGE}/"
 done

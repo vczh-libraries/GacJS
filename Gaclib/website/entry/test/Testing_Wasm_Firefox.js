@@ -36,7 +36,7 @@ async function ready(title) {
     // Firefox omits worker fetches from page request events. Inspect the workers
     // and their resource timing entries without replacing the actual modules.
     const workers = page.workers();
-    expect(workers.some(worker => worker.url().endsWith('/app.worker.js'))).toBe(true);
+    expect(workers.some(worker => worker.url().endsWith('/app.mjs') || worker.url().endsWith('/app.worker.js'))).toBe(true);
     const resources = (await Promise.all(workers.map(worker => worker.evaluate(() =>
         performance.getEntriesByType('resource').map(resource => resource.name))))).flat();
     for (const artifact of ['app.mjs', 'app.wasm']) {

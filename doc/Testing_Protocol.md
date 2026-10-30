@@ -53,14 +53,14 @@ a native Core. The root `yarn test` also runs the portable channel tests in
 
 The live Chromium and Firefox suites inspect each actual `ControllerConnect` payload, requiring `injectDateTime`, `injectLocale` and `injectFileSystem` to be present and false. They also reject injection requests during the exercised application operations and after Reload. Verify the shared Core startup configuration independently; renderer capability checks alone do not establish Core policy.
 
-The current three-file contract requires Emscripten 3.1.51; see the
-[SDK compatibility note](Projects.md#running-the-wasm-demos-on-linux) before
-building, especially when replacing objects made by a different SDK.
+See the [SDK compatibility note](Projects.md#running-the-wasm-demos-on-linux)
+before building, especially when replacing objects made by a different SDK.
 
-Deploy the matching `app.mjs`, `app.wasm` and `app.worker.js` beside every demo
-page. Verify Chromium and Firefox load the separate pthread script and its
-module imports without worker errors. `wasm-worker.js` is GacJS's application
-host, distinct from Emscripten's generated `app.worker.js`. The existing
+Deploy the matching `app.mjs` and `app.wasm` beside every demo page, along with
+`app.worker.js` when the compiler emits it. Verify Chromium and Firefox start
+pthread workers and load the module and Wasm without worker errors. The worker
+URL is `app.mjs` for current builds or `app.worker.js` for older builds.
+`wasm-worker.js` is GacJS's application host and remains required. The existing
 regression suite uses Chromium CDP for mouse input and worker lifetime checks.
 `Testing_Wasm_Firefox.js` also runs through `test-wasm` and checks all three
 pages' module/pthread requests, startup, input, Exit cancellation and shutdown/reload.

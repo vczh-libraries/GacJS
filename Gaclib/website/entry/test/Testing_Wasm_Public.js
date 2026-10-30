@@ -24,7 +24,7 @@ for (const [name, engine] of [['Chromium', chromium], ['Firefox', firefox]]) {
             await expectUI(page.locator('#gacui-error-mask')).not.toBeVisible();
             await expectUI(page.getByRole('button', { name: 'Reload', exact: true })).toHaveCount(0);
             expect(page.workers().some(worker => worker.url().endsWith('/wasm-worker.js'))).toBe(true);
-            expect(page.workers().some(worker => worker.url().endsWith('/app.worker.js'))).toBe(true);
+            expect(page.workers().some(worker => worker.url().endsWith('/app.mjs') || worker.url().endsWith('/app.worker.js'))).toBe(true);
             const progress = await page.locator('#gacui-progress').evaluate(node => ({ value: node.value, max: node.max }));
             expect(progress.value).toBe(progress.max);
             expect(progress.max).toBeGreaterThan(1000000);
