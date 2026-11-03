@@ -388,7 +388,8 @@ export async function checkDocumentTouch(page, send) {
     const focus = { id: 204, x: rect.x + 5, y: rect.y + 5 };
     await send('touchStart', [focus]); await send('touchEnd', []);
     await waitForIdle(page);
-    await page.keyboard.press('Control+a');
+    await page.keyboard.press('Control+Home');
+    await page.keyboard.press('Control+Shift+End');
     await waitForIdle(page);
     await page.keyboard.type('I am the bone of my sword.');
     for (let line = 0; line < 40; line++) {
