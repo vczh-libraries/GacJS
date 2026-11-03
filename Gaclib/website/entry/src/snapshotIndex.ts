@@ -540,6 +540,16 @@ export const Snapshot: SnapshotEntry = {
                 'Tooltip': {
                     'type': 'Folder',
                     'content': {
+                        'CloseWindowOwner': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'CloseWindowOwner.json': 'File',
                         'DestroyVisibleTooltipOwner': {
                             'type': 'Folder',
                             'content': {
@@ -550,6 +560,16 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'DestroyVisibleTooltipOwner.json': 'File',
+                        'HideWindowOwner': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'HideWindowOwner.json': 'File',
                         'ShowTooltipAndLeave': {
                             'type': 'Folder',
                             'content': {
@@ -587,6 +607,21 @@ export const Snapshot: SnapshotEntry = {
                 'Windows': {
                     'type': 'Folder',
                     'content': {
+                        'ClosePopupOwner': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File'
+                            }
+                        },
+                        'ClosePopupOwner.json': 'File',
                         'Closing': {
                             'type': 'Folder',
                             'content': {
@@ -624,6 +659,21 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'Enabling.json': 'File',
+                        'HidePopupOwner': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File'
+                            }
+                        },
+                        'HidePopupOwner.json': 'File',
                         'Order': {
                             'type': 'Folder',
                             'content': {
@@ -634,6 +684,20 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'Order.json': 'File',
+                        'PopupOwnerReuse': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File'
+                            }
+                        },
+                        'PopupOwnerReuse.json': 'File',
                         'Resizing': {
                             'type': 'Folder',
                             'content': {
@@ -1232,17 +1296,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                },
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File'
+                                }
                             }
                         },
                         'GuiLabel.json': 'File',
@@ -8856,7 +8920,7 @@ export const Snapshot: SnapshotEntry = {
                 'PointScrolling': {
                     'type': 'Folder',
                     'content': {
-                        'MultilineTextBox': {
+                        'DocumentMomentum': {
                             'type': 'Folder',
                             'content': {
                                 'frame_0.json': 'File',
@@ -8866,7 +8930,74 @@ export const Snapshot: SnapshotEntry = {
                                 'frame_4.json': 'File'
                             }
                         },
+                        'DocumentMomentum.json': 'File',
+                        'DocumentMomentumEditable': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'DocumentMomentumEditable.json': 'File',
+                        'DocumentMomentumSelectable': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'DocumentMomentumSelectable.json': 'File',
+                        'ListMomentum': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'ListMomentum.json': 'File',
+                        'MultilineTextBox': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File'
+                            }
+                        },
                         'MultilineTextBox.json': 'File',
+                        'SuppressLeftClick': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'SuppressLeftClick.json': 'File',
+                        'SuppressRightClick': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'SuppressRightClick.json': 'File',
                         'TextList': {
                             'type': 'Folder',
                             'content': {
@@ -9473,6 +9604,20 @@ export const Snapshot: SnapshotEntry = {
                                             }
                                         },
                                         'ClickSubMenu.json': 'File',
+                                        'CloseOwner': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File',
+                                                'frame_2.json': 'File',
+                                                'frame_3.json': 'File',
+                                                'frame_4.json': 'File',
+                                                'frame_5.json': 'File',
+                                                'frame_6.json': 'File',
+                                                'frame_7.json': 'File'
+                                            }
+                                        },
+                                        'CloseOwner.json': 'File',
                                         'DisplaySubMenu': {
                                             'type': 'Folder',
                                             'content': {
@@ -9484,7 +9629,21 @@ export const Snapshot: SnapshotEntry = {
                                                 'frame_5.json': 'File'
                                             }
                                         },
-                                        'DisplaySubMenu.json': 'File'
+                                        'DisplaySubMenu.json': 'File',
+                                        'HideOwner': {
+                                            'type': 'Folder',
+                                            'content': {
+                                                'frame_0.json': 'File',
+                                                'frame_1.json': 'File',
+                                                'frame_2.json': 'File',
+                                                'frame_3.json': 'File',
+                                                'frame_4.json': 'File',
+                                                'frame_5.json': 'File',
+                                                'frame_6.json': 'File',
+                                                'frame_7.json': 'File'
+                                            }
+                                        },
+                                        'HideOwner.json': 'File'
                                     }
                                 },
                                 'Click': {
@@ -9509,6 +9668,39 @@ export const Snapshot: SnapshotEntry = {
                                     }
                                 },
                                 'ShortcutKey.json': 'File'
+                            }
+                        },
+                        'GuiToolstripMenuOwner': {
+                            'type': 'Folder',
+                            'content': {
+                                'Close': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File'
+                                    }
+                                },
+                                'Close.json': 'File',
+                                'Hide': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File'
+                                    }
+                                },
+                                'Hide.json': 'File'
                             }
                         },
                         'GuiToolstripToolBar': {
