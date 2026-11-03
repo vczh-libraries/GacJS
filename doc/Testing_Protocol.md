@@ -86,6 +86,8 @@ suite; live wall-clock values are not snapshot baselines.
 
 The Wasm touch suite observes the real worker channel without a native HTTP Core. Chromium CDP drives acquisition, overlapping/reused contacts, cancellation, capture across resize, manipulation pixels and identity-safe list swipes. Firefox uses explicitly synthetic PointerEvents with capture stubs, so it verifies adapter/Core/rendering behavior without claiming native browser capture. The portable Wasm channel test separately preserves full-width decimal sequence, timestamp and frame fields.
 
+Document touch checks use short presses to position or preserve the caret range and End-time long presses to extend a collapsed range. A long press on a selected range must emit one long offer and one right click, with no short offer. Document drags scroll the viewport; reversing the drag restores the same selection rendering. The optional momentum continues after Up in Selectable and Editable modes, stops at a fresh contact, and preserves the range after returning to the original viewport. These checks require a freshly rebuilt FCT Core, including for Wasm.
+
 Set `GACUI_PUBLIC_DEMO_URL` to the public launcher route and run `npm run test-wasm -- test/Testing_Wasm_Public.js` to exercise WebsiteSource's launcher through its scoped service worker in Chromium and Firefox. The test checks download progress, isolation, separate workers, Raw Clock, Touching, TouchingList, painter cleanup and fresh state after browser refresh. Set `GACUI_PUBLIC_HOME` as well to follow the homepage's Web demo link. The public suite is skipped when no destination is supplied. Build and stage final artifacts first; it does not publish or rebuild the site.
 
 ## Test Harness

@@ -1,6 +1,7 @@
 import { test, expect } from 'vitest';
-import { clickAt, describeProtocolTest, getLeafTextPositions, setupProtocolTest, observeProtocolEvents,
+import { clickAt, describeProtocolTest, getLeafTextPositions, setupProtocolTest, observeProtocolEvents, waitForIdle,
     CORE_AUTOMATION_CONTROLS_URL } from './Testing_Protocol.js';
+import { checkDocumentTouch } from './WasmTouching.js';
 
 function findRaw(value, id) {
     if (value === null || typeof value !== 'object') return undefined;
@@ -43,6 +44,7 @@ for (const transport of ['/Http', '/MiniHttp']) describeProtocolTest('Touching b
         await canvas.waitFor();
         const bounds = await canvas.boundingBox();
         await page.mouse.move(1, 1);
+        await waitForIdle(page);
         const events = observeProtocolEvents(page);
         const cdp = await page.context().newCDPSession(page);
         await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
@@ -112,6 +114,7 @@ for (const transport of ['/Http', '/MiniHttp']) describeProtocolTest('Touching b
         expect(events.filter(e => /^IOButton/.test(e.name))).toEqual([]);
         await select(page, 'Touching'); // Independent physical mouse path still works.
         await poll(async () => (await raw()) !== undefined).toBe(true);
+        await checkDocumentTouch(page, send);
         expect(errors).toEqual([]);
     });
 });

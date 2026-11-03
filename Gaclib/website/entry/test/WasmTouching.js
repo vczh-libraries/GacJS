@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
 import { expect as expectUI } from '@playwright/test';
-import { clickAt, getLeafTextPositions } from './Testing_Protocol.js';
+import { clickAt, getLeafTextPositions, waitForIdle } from './Testing_Protocol.js';
 
 // Observe the real worker boundary without replacing the channel, Core or painter.
 // This also works with WebsiteSource's public launcher, which has no test session API.
@@ -375,29 +375,90 @@ export async function checkOrdinaryTouch(page, send) {
     await poll(async () => (await selectedItem())?.top).toBeCloseTo(task.top, 0);
     await poll(patch).toBe(selectedRow);
     await page.setViewportSize(viewport);
-    // Real input on nested document spans must select text rather than scroll its container.
+    await checkDocumentTouch(page, send);
+}
+
+export async function checkDocumentTouch(page, send) {
+    // Presses select text; accepted drags scroll while preserving the range.
     await select(page, 'Control'); await select(page, 'TextBox');
+    await expectUI(page.locator('#gacui-screen').getByText(/^Touch: Short=/u)).toBeVisible();
     const paragraph = page.locator('#gacui-screen span').filter({ hasText: 'I am the bone' }).first();
     await expectUI(paragraph).toBeVisible();
-    const rect = await paragraph.boundingBox();
-    const paragraphBox = page.locator('#gacui-screen div').filter({ hasText: 'I am the bone' }).last();
+    let rect = await paragraph.boundingBox();
+    const focus = { id: 204, x: rect.x + 5, y: rect.y + 5 };
+    await send('touchStart', [focus]); await send('touchEnd', []);
+    await waitForIdle(page);
+    await page.keyboard.press('Control+a');
+    await waitForIdle(page);
+    await page.keyboard.type('I am the bone of my sword.');
+    for (let line = 0; line < 40; line++) {
+        await page.keyboard.press('Enter');
+        await page.keyboard.type(`Line ${line}.`);
+        await expectUI(page.locator('#gacui-screen span').filter({ hasText: `Line ${line}.` })).toBeVisible();
+    }
+    await page.keyboard.press('Control+Home');
+    await waitForIdle(page);
+    await expectUI(paragraph).toBeVisible();
+    rect = await paragraph.boundingBox();
+    const paragraphBox = page.locator('#gacui-screen span').filter({ hasText: 'Line 5.' }).first();
     const initialBox = await paragraphBox.boundingBox();
     const text = { id: 204, x: rect.x + 5, y: rect.y + 5 };
     const selected = () => page.locator('#gacui-screen span').evaluateAll(nodes => nodes.filter(node => {
         const color = getComputedStyle(node).backgroundColor;
         return node.textContent.length > 0 && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent';
     }).map(node => node.textContent).join(''));
-    const before = await selected();
-    await send('touchStart', [text]);
-    await send('touchMove', [{ ...text, x: text.x + 100, y: text.y + 25 }]);
-    await poll(selected).not.toBe(before);
-    const firstSelection = await selected();
-    await send('touchMove', [{ ...text, x: text.x + 180, y: text.y + 50 }]);
-    await poll(selected).not.toBe(firstSelection);
+    const counters = async () => {
+        const value = (await texts(page)).find(value => value.startsWith('Touch: Short='));
+        return value.match(/^Touch: Short=(\d+) Long=(\d+) Right=(\d+)$/u).slice(1).map(Number);
+    };
+    await send('touchStart', [text]); await send('touchEnd', []);
+    await poll(selected).toBe('');
+    const endpoint = { ...text, x: text.x + 100, y: text.y + 25 };
+    await send('touchStart', [endpoint]);
+    await page.waitForTimeout(550);
+    expect(await selected()).toBe(''); // Recognition happens only at successful End.
     await send('touchEnd', []);
-    // Selection splits text into new spans; inspect the enclosing paragraph.
-    const after = await paragraphBox.boundingBox();
-    expect(after.y).toBeCloseTo(initialBox.y, 0);
+    await poll(selected).not.toBe('');
+    const firstSelection = await selected();
+    for (const duration of [0, 550]) {
+        const before = await counters();
+        await send('touchStart', [endpoint]);
+        if (duration) await page.waitForTimeout(duration);
+        await send('touchEnd', []);
+        await poll(selected).toBe(firstSelection);
+        await poll(counters).toEqual(duration
+            ? [before[0], before[1] + 1, before[2] + 1]
+            : [before[0] + 1, before[1], before[2]]);
+    }
+    // A middle paragraph stays visible while the viewport moves and reverses.
+    const drag = { ...endpoint, y: endpoint.y + 60 };
+    await send('touchStart', [drag]);
+    await send('touchMove', [{ ...drag, y: drag.y - 40 }]);
+    await poll(async () => (await paragraphBox.boundingBox()).y).toBeLessThan(initialBox.y);
+    await send('touchMove', [drag]); await send('touchEnd', []);
+    await poll(async () => (await paragraphBox.boundingBox()).y).toBeCloseTo(initialBox.y, 0);
+    await poll(selected).toBe(firstSelection);
+    for (const selectable of [false, true]) {
+        if (selectable) await select(page, 'Selection Only');
+        await select(page, 'Document Momentum');
+        await send('touchStart', [drag]); await page.waitForTimeout(100);
+        await send('touchMove', [{ ...drag, y: drag.y - 40 }]); await page.waitForTimeout(100);
+        await send('touchEnd', []);
+        const released = (await paragraphBox.boundingBox()).y;
+        await poll(async () => (await paragraphBox.boundingBox()).y).toBeLessThan(released);
+        await send('touchStart', [drag]); await page.waitForTimeout(100);
+        const stopped = (await paragraphBox.boundingBox()).y;
+        await page.waitForTimeout(250);
+        expect((await paragraphBox.boundingBox()).y).toBe(stopped);
+        await send('touchCancel', []);
+        await select(page, 'Document Momentum');
+        await send('touchStart', [drag]);
+        await send('touchMove', [{ ...drag, y: drag.y + 300 }]); await send('touchEnd', []);
+        await poll(async () => (await paragraphBox.boundingBox()).y).toBeCloseTo(initialBox.y, 0);
+        await poll(selected).toBe(firstSelection);
+    }
+    await select(page, 'Selection Only');
+    await send('touchStart', [endpoint]); await send('touchEnd', []);
     await page.keyboard.press('ArrowRight');
     await page.keyboard.type('TouchKeyboard');
     await expectUI(page.locator('#gacui-screen')).toContainText('TouchKeyboard');
