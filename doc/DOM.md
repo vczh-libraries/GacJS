@@ -578,6 +578,12 @@ JavaScript `KeyboardEvent` is converted to GacUI key codes using a three-tier st
 2. **`event.key`** (logical character) — fallback
 3. **`event.keyCode`** (legacy numeric code) — last resort
 
+Character input accepts a single Unicode code point in `event.key`, including
+supplementary characters. `IOChar` carries one UTF-16 code unit per event; a pair
+is sent in order with the same modifier flags. UTF-32 Core input combines the
+pair before delivering the character to controls. Enter and Tab retain their
+character mappings; named keys do not emit character events.
+
 Auto-repeat detection:
 - Track currently-pressed keys in a `Set`
 - If a key-down fires while already in the set → `autoRepeatKeyDown = true`

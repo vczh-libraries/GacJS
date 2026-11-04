@@ -20,6 +20,15 @@ for WASM_APP in "${WASM_APPS[@]}"; do
             exit 1
         fi
     done
+    # Older modules import a separate pthread worker; validate it with the
+    # other inputs so a broken final app cannot partially replace deployment.
+    if grep -Fq 'app.worker.js' "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.mjs"; then
+        WASM_WORKER="${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.worker.js"
+        if [ ! -f "${WASM_WORKER}" ] || [ ! -s "${WASM_WORKER}" ]; then
+            echo "Warning: missing or empty ${WASM_WORKER}; build GacUI with -bw -o first." >&2
+            exit 1
+        fi
+    fi
 done
 
 for WASM_APP in "${WASM_APPS[@]}"; do
@@ -28,7 +37,7 @@ for WASM_APP in "${WASM_APPS[@]}"; do
         cp -- "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/${WASM_FILE}" "${DIST_ROOT}/wasm-${WASM_PAGE}/"
     done
     # Older Emscripten builds use a separate pthread worker.
-    if [ -f "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.worker.js" ]; then
+    if [ -s "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.worker.js" ]; then
         cp -- "${GACUI_ROOT}/Test/Linux/Wasm${WASM_APP}/Bin/app.worker.js" "${DIST_ROOT}/wasm-${WASM_PAGE}/"
     else
         rm -f -- "${DIST_ROOT}/wasm-${WASM_PAGE}/app.worker.js"

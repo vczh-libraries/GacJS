@@ -525,8 +525,8 @@ separate import and codegen phases first when their inputs have changed.
 The three demos explicitly disable all renderer injection capabilities at startup. Their shared Core startup also disables injection, retaining WASM DateTime, the existing en-US locale and direct OPFS filesystem services. Normal Exit/Force Exit followed by Reload preserves OPFS data while creating fresh application state. These pages have no injection controls or native Core host option.
 
 Emscripten **3.1.69** emits `app.mjs` and `app.wasm`; pthread workers load
-`app.mjs` itself. `copy-wasm.sh` requires these two files and also copies
-`app.worker.js` when present, preserving support for older builds such as
+`app.mjs` itself. `copy-wasm.sh` requires these two files and requires a nonempty
+`app.worker.js` when the module references it, preserving support for older builds such as
 Emscripten **3.1.51**. Emscripten 3.1.58 moved pthread startup into the main
 module, and 3.1.68 removed the transitional empty worker file. Do not fabricate
 a worker file or patch `app.mjs` to pass deployment validation. Switching SDK
@@ -542,9 +542,10 @@ sources; the resulting CLI binaries immediately return 0. Rebuild the Wasm
 outputs afterward because a native full build cleans `Bin`.
 After the normal GacJS build, run `../copy-wasm.sh` from `Gaclib`, then
 `npm run start` from `website/entry`. The explicit copy validates all source
-sets of `app.mjs` and `app.wasm` and destination pages before copying; a missing
-or empty required source input warns and exits nonzero. It copies the optional
-`app.worker.js` when present and removes any stale deployed copy when absent.
+sets of `app.mjs`, `app.wasm`, referenced `app.worker.js` files and destination
+pages before copying; a missing or empty required source input warns and exits
+nonzero without changing any deployed file. It also copies an unreferenced
+`app.worker.js` when nonempty and removes any stale deployed copy otherwise.
 Re-run it after every website build, which cleans `lib/dist`.
 
 Keep the matching generated files together beside each page. Packaging leaves

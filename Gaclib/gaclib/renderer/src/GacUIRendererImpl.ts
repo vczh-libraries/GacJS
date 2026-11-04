@@ -1629,16 +1629,16 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             if (this._events !== undefined) {
                 const key = keyEvent.key;
                 let charCode: string | undefined;
-                if (key.length === 1) {
+                if ([...key].length === 1) {
                     charCode = key;
                 } else if (key === 'Enter') {
                     charCode = '\r';
                 } else if (key === 'Tab') {
                     charCode = '\t';
                 }
-                if (charCode !== undefined) {
+                for (const code of charCode?.split('') ?? []) {
                     this._events.OnIOChar({
-                        code: charCode,
+                        code,
                         ctrl: keyEvent.ctrlKey,
                         shift: keyEvent.shiftKey,
                         alt: keyEvent.altKey,

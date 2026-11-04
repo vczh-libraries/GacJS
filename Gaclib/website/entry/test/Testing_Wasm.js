@@ -324,17 +324,17 @@ test('WasmRVMT recreates Core and its TypeScript host after Exit and Force Exit'
     await typeGreeting('WasmRPC');
     await typeGreeting('WasmUTF16');
     const cdp = await page.context().newCDPSession(page);
-    for (const key of '你好') {
+    for (const key of '你好🙂') {
         await cdp.send('Input.dispatchKeyEvent', { type: 'keyDown', key, code: 'KeyA', windowsVirtualKeyCode: 65, text: key });
         await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key, code: 'KeyA', windowsVirtualKeyCode: 65 });
     }
     await cdp.detach();
-    await expect.poll(leafTexts).toContain('Hello, WasmUTF16你好!');
+    await expect.poll(leafTexts).toContain('Hello, WasmUTF16你好🙂!');
     await page.getByRole('button', { name: 'Exit', exact: true }).click();
     await stopped();
     await reloadApplication('Remote View Model Test');
     await expect.poll(leafTexts).toContain('Hello, !');
-    expect(await leafTexts()).not.toContain('Hello, WasmUTF16你好!');
+    expect(await leafTexts()).not.toContain('Hello, WasmUTF16你好🙂!');
     await typeGreeting('ReloadedHost');
     await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
     await stopped();

@@ -4,6 +4,26 @@ import { createServer, Server } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 
+test('keyboard input preserves supplementary UTF-16 units and modifiers', async () => {
+    const page = await open();
+    const events = await page.evaluate(async () => {
+        const target = document.getElementById('gacui-screen')!;
+        for (const key of ['A', '中', '🙂', 'Enter', 'Tab', 'ArrowLeft', 'Unidentified']) {
+            target.dispatchEvent(new KeyboardEvent('keydown', {
+                key, code: 'KeyA', bubbles: true,
+                ctrlKey: true, shiftKey: true, altKey: true, metaKey: true,
+            }));
+            target.dispatchEvent(new KeyboardEvent('keyup', { key, code: 'KeyA', bubbles: true }));
+        }
+        await new Promise(resolve => setTimeout(resolve, 50));
+        return (window as any).rawTest.sent.filter((event: any) => event.name === 'IOChar').map((event: any) => event.arguments);
+    });
+    expect(events.map((event: any) => event.code)).toEqual('A中🙂\r\t'.split(''));
+    for (const event of events) {
+        expect(event).toMatchObject({ ctrl: true, shift: true, alt: true, osSuper: true, capslock: false });
+    }
+});
+
 test('entry options initialize by case-insensitive presence and refresh without duplicates', async () => {
     const page = await open('?REMOTEdt&remoteDT&RemoteLocale&REMOTeFS&CoreHost=MyHost&extra=keep#fragment');
     expect(await page.locator('#option-remoteDT').isChecked()).toBe(true);
