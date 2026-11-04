@@ -602,6 +602,15 @@ Mouse4, and Mouse5. Consumed Mouse4/Mouse5 down and up events prevent their
 browser defaults so Back/Forward navigation cannot disconnect the renderer.
 Both events still reach Core and update application controls normally.
 
+Core's `IORequireCapture` keeps mouse down, movement and release events flowing
+when a drag leaves the renderer surface but remains in the browser document.
+Document listeners forward only events originating outside the surface, so
+ordinary events from rendered children are delivered once. Coordinates remain
+relative to the renderer and can fall outside its bounds. `IOReleaseCapture`
+ends this forwarding; stopping the renderer also clears capture and removes
+the document listeners. This prevents a modal resize from remaining active
+after its mouse release occurs outside the rendered surface.
+
 ---
 
 ## Rendering Flow

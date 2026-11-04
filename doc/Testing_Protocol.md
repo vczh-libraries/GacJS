@@ -136,6 +136,10 @@ renderer; a rejected second host must retain its original connection error
 without a ResizeObserver cleanup error. These tests run through
 `yarn workspace @gaclib-website/entry test-unit` after building.
 
+The controlled browser suite also checks Core-requested mouse capture across
+the renderer boundary, including an outside release, single delivery inside
+rendered children, and removal of document forwarding on release or disposal.
+
 The focused live Raw Clock suite additionally checks the existing FCT Core's
 time updates and tab hide/show. `GACUI_PROTOCOL_TESTS_BUILT=1` can reuse an
 existing compatible Core executable; verify its provenance and availability

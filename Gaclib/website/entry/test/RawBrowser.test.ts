@@ -24,6 +24,53 @@ test('keyboard input preserves supplementary UTF-16 units and modifiers', async 
     }
 });
 
+test('Core mouse capture delivers outside release once and stops on release or disposal', async () => {
+    const current = await open();
+    await paint(current);
+    const bounds = (await current.locator('#gacui-screen').boundingBox())!;
+    await current.mouse.move(bounds.x + 50, bounds.y + 60);
+    await current.evaluate(() => { (window as any).rawTest.sent.length = 0; });
+    await current.mouse.down();
+    await current.evaluate(() => (window as any).rawTest.renderer.requests.RequestIORequireCapture());
+    await current.mouse.move(bounds.x + bounds.width + 10, bounds.y + 60);
+    await current.mouse.up();
+    const buttons = () => current.evaluate(() => (window as any).rawTest.sent.filter((event: any) =>
+        event.name === 'IOButtonDown' || event.name === 'IOButtonUp'));
+    await expect.poll(async () => (await buttons()).map((event: any) => event.name)).toEqual(['IOButtonDown', 'IOButtonUp']);
+    const released = (await buttons())[1];
+    expect(released.arguments.info).toMatchObject({ left: false, x: { value: bounds.width + 10 }, y: { value: 60 } });
+
+    // A child-targeted event bubbles through both the surface and document.
+    // Capture must not duplicate the ordinary surface delivery.
+    const counts = await current.evaluate(async () => {
+        const t = (window as any).rawTest;
+        const target = document.getElementById('gacui-screen')!;
+        const send = (node: Element) => {
+            for (const type of ['mousedown', 'mousemove', 'mouseup']) {
+                node.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true,
+                    button: 0, buttons: type === 'mouseup' ? 0 : 1, clientX: 2, clientY: 2 }));
+            }
+        };
+        const count = async () => {
+            await t.request('ControllerGetFontConfig');
+            return t.sent.filter((event: any) => ['IOButtonDown', 'IOMouseMoving', 'IOButtonUp'].includes(event.name)).length;
+        };
+        const before = await count();
+        send(target.querySelector('canvas')!);
+        const inside = await count();
+        t.renderer.requests.RequestIOReleaseCapture();
+        send(document.body);
+        const afterRelease = await count();
+        t.renderer.requests.RequestIORequireCapture();
+        t.renderer.stop();
+        send(document.body);
+        send(target);
+        const afterStop = await count();
+        return { inside: inside - before, released: afterRelease - inside, stopped: afterStop - afterRelease };
+    });
+    expect(counts).toEqual({ inside: 3, released: 0, stopped: 0 });
+});
+
 test('entry options initialize by case-insensitive presence and refresh without duplicates', async () => {
     const page = await open('?REMOTEdt&remoteDT&RemoteLocale&REMOTeFS&CoreHost=MyHost&extra=keep#fragment');
     expect(await page.locator('#option-remoteDT').isChecked()).toBe(true);

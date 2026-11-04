@@ -1269,15 +1269,15 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     /****************************************************************************************
-     * IO (ignored)
+     * IO capture
      ***************************************************************************************/
 
     RequestIORequireCapture(): void {
-        // ignored
+        this._mouseCaptured = true;
     }
 
     RequestIOReleaseCapture(): void {
-        // ignored
+        this._mouseCaptured = false;
     }
 
     /****************************************************************************************
@@ -1304,6 +1304,14 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     // Event handlers map for all types of events
     private _eventHandlers: Map<string, EventListener> = new Map();
+
+    private _mouseCaptured = false;
+    private _capturedMouseEvent: EventListener = event => {
+        if (!this._mouseCaptured) return;
+        // Events inside the surface already passed through its ordinary handler.
+        if (event.target instanceof Node && this._settings.target.contains(event.target)) return;
+        this._eventHandlers.get(event.type)?.(event);
+    };
 
     // Key state tracking
     private _pressedKeys: Set<SCHEMA.TYPES.Key> = new Set();
@@ -1500,6 +1508,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     private _installEvents(): void {
+        for (const name of ['mousedown', 'mousemove', 'mouseup']) {
+            document.addEventListener(name, this._capturedMouseEvent);
+        }
         document.addEventListener('pointerup', this._drainPoint, true);
         document.addEventListener('pointercancel', this._drainPoint, true);
         for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'pointerenter', 'pointerleave', 'lostpointercapture']) {
@@ -1682,6 +1693,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     private _uninstallEvents(): void {
+        this._mouseCaptured = false;
+        for (const name of ['mousedown', 'mousemove', 'mouseup']) {
+            document.removeEventListener(name, this._capturedMouseEvent);
+        }
         // Remove all event handlers using the map
         for (const [eventName, handler] of this._eventHandlers) {
             this._settings.target.removeEventListener(eventName, handler);
