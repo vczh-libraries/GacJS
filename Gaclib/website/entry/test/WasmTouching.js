@@ -447,7 +447,10 @@ export async function checkDocumentTouch(page, send) {
         await send('touchEnd', []);
         const released = (await paragraphBox.boundingBox()).y;
         await poll(async () => (await paragraphBox.boundingBox()).y).toBeLessThan(released);
-        await send('touchStart', [drag]); await page.waitForTimeout(100);
+        // Consume the flick's idle before waiting for the stopping contact's render.
+        await waitForIdle(page);
+        await send('touchStart', [drag]);
+        await waitForIdle(page);
         const stopped = (await paragraphBox.boundingBox()).y;
         await page.waitForTimeout(250);
         expect((await paragraphBox.boundingBox()).y).toBe(stopped);

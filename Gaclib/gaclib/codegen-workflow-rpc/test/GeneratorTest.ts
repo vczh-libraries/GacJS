@@ -41,7 +41,8 @@ test('real RVM fixture produces exact IDs and a self-contained public surface de
     expect(first.files[0].content).toContain('registerIViewModelService');
 });
 
-test('full-surface fixture emits inheritance, overload, property, event, collection, and transfer glue', () => {
+// This test also type-checks the generated module and its runtime dependency graph.
+test('full-surface fixture emits inheritance, overload, property, event, collection, and transfer glue', { timeout: 30_000 }, () => {
     const result = generate('FullSurface');
     const source = result.files[0].content;
     expect(result.contract.interfaces).toHaveLength(3);
