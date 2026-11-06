@@ -130,6 +130,12 @@ if (process.platform !== 'win32') chmodSync(temporaryExecutablePath, 0o755);
 
 if (process.platform === 'darwin') {
     execFileSync('codesign', ['--remove-signature', temporaryExecutablePath], { stdio: 'inherit' });
+} else if (process.platform === 'win32') {
+    execFileSync('powershell.exe', [
+        '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+        '-File', join(packageRoot, 'remove-windows-signature.ps1'),
+        '-ExecutablePath', temporaryExecutablePath,
+    ], { stdio: 'inherit' });
 }
 await inject(temporaryExecutablePath, 'NODE_SEA_BLOB', readFileSync(blobPath), {
     sentinelFuse,

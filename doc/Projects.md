@@ -388,6 +388,22 @@ and caches its standalone binary under the package's ignored
 `node_modules/.cache` directory. That binary generates the application blob and
 provides the writable temporary copy used for injection.
 
+The build bundles the CLI into `lib/sea/gacjs-rvmhost.cjs`, then Node creates
+`lib/sea/sea-prep.blob`: the temporary single executable application (SEA)
+payload containing that JavaScript and its execution settings. `postject`
+embeds the blob as `NODE_SEA_BLOB` in a copy of Node, producing the standalone
+launcher. The blob and its config are deleted after injection; the launcher
+needs neither those files nor a separate Node installation. This build disables
+V8 snapshots and code caching.
+
+Before injection, the build removes the copied executable's original signature
+on Windows and macOS, since it cannot remain valid after embedding the app.
+Windows uses `remove-windows-signature.ps1` and the built-in ImageHlp API through
+Windows PowerShell, without requiring Windows SDK `signtool`. This avoids
+`postject`'s `The signature seems corrupted!` warning when parsing the original
+Node certificate. The installed Node executable is unchanged. The Windows
+launcher is unsigned; macOS applies an ad-hoc signature after injection.
+
 | Script | Action |
 |--------|--------|
 | `yarn build` | Clean → lint → compile → bundle CLI → build/inject native SEA |
