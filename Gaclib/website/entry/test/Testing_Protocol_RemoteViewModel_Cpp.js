@@ -88,12 +88,28 @@ describeProtocolTest('Remote view-model direct C++ requester compatibility', () 
         }
     });
 
-    test('Core-compatible native launcher passes both built-in C++ calls and is reaped', async () => {
-        const source = path.join(GACLIB_ROOT, 'website', 'rvmhost', 'lib', 'bin', 'gacjs-rvmhost.exe');
-        const launcher = path.join(temporary, 'native Cpp host.exe');
+    test('quoted native host command still passes both built-in C++ calls', async () => {
+        const host = path.join(GACUI_SOLUTION_DIR, 'x64', 'Debug', 'RemotingTest_RvmHost.exe');
+        const cpp = spawn(CPP_EXE, [`/Cli:"${host}"`], {
+            cwd: GACUI_SOLUTION_DIR,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true,
+        });
+        try {
+            await waitForAutomationControl(CPP_CONTROLS_URL, 'Remote View Model Test');
+            await stopCppTest(cpp);
+            expect(cpp.exitCode).toBe(0);
+        } finally {
+            if (cpp.exitCode === null) cpp.kill();
+        }
+    });
+
+    test('Node command with a quoted script path passes both built-in C++ calls and is reaped', async () => {
+        const source = path.join(GACLIB_ROOT, 'website', 'rvmhost', 'lib', 'src', 'cli.js');
+        const script = path.join(temporary, 'Cpp host script.mjs');
         const pidFile = path.join(temporary, 'cpp-cli.pid');
-        fs.copyFileSync(source, launcher);
-        const cpp = spawn(CPP_EXE, [`/Cli:"${launcher}"`], {
+        fs.copyFileSync(source, script);
+        const cpp = spawn(CPP_EXE, [`/Cli:node --unhandled-rejections=strict "${script}"`], {
             cwd: GACUI_SOLUTION_DIR,
             env: { ...process.env, GACJS_RVMHOST_PID_FILE: pidFile },
             stdio: ['ignore', 'pipe', 'pipe'],

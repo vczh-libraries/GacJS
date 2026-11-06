@@ -166,10 +166,13 @@ lifecycle with `setupProtocolTest(options)`.
 - Page setup and optional child-process cleanup callbacks.
 - Opt-in graceful Core teardown.
 - A `serverEnvironment` merged into the Core environment for isolated
-  black-box hooks such as the native host PID file.
+  black-box hooks such as the Node host PID file.
 
-Keep `/Cli:<absolute path>` as one array element so paths containing spaces are
-passed as one argument. Use `openPage(url, false)` when a test intentionally
+Keep `/Cli:node "<absolute script path>"` as one array element. The process API
+handles quoting the outer argument; retain the inner quotes around the script
+path. Core appends ` /Cli`. The CLI suites use Node options and a copied `.mjs`
+script whose path contains spaces, and verify both Core and `CppTest_Rvm`.
+Use `openPage(url, false)` when a test intentionally
 expects application startup to be rejected and therefore must skip the normal
 rendered-page barrier.
 

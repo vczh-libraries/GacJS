@@ -19,10 +19,9 @@ import {
 } from './Testing_Protocol.js';
 
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'gacjs cli e2e '));
-const sourceLauncher = path.join(GACLIB_ROOT, 'website', 'rvmhost', 'lib', 'bin', process.platform === 'win32' ? 'gacjs-rvmhost.exe' : 'gacjs-rvmhost');
-const launcher = path.join(temporary, process.platform === 'win32' ? 'native host with spaces.exe' : 'native host with spaces');
-fs.copyFileSync(sourceLauncher, launcher);
-if (process.platform !== 'win32') fs.chmodSync(launcher, 0o755);
+const sourceScript = path.join(GACLIB_ROOT, 'website', 'rvmhost', 'lib', 'src', 'cli.js');
+const script = path.join(temporary, 'host script with spaces.mjs');
+fs.copyFileSync(sourceScript, script);
 
 afterAll(() => {
     fs.rmSync(temporary, { recursive: true, force: true });
@@ -81,7 +80,7 @@ function configureCliTest(pidFile, rendererTransport = '/Http') {
     let connectRequests = 0;
     let connectBodies = [];
     const ctx = setupProtocolTest({
-        serverArguments: ['/RVMT', rendererTransport, `/Cli:"${launcher}"`],
+        serverArguments: ['/RVMT', rendererTransport, `/Cli:node --unhandled-rejections=strict "${script}"`],
         websiteUrl: WEBSITE_URL,
         gracefulTeardown: true,
         serverEnvironment: { GACJS_RVMHOST_PID_FILE: pidFile },
@@ -115,10 +114,10 @@ function configureCliTest(pidFile, rendererTransport = '/Http') {
     };
 }
 
-describeProtocolTest('Remote view-model Core-launched native CLI', () => {
+describeProtocolTest('Remote view-model Core-launched Node CLI', () => {
     const state = configureCliTest(path.join(temporary, 'graceful.pid'), '/MiniHttp');
 
-    test('uses one quoted executable argument, keeps RVM off HTTP, and reaps on graceful Core exit', async () => {
+    test('passes Node arguments and a quoted script path, keeps RVM off HTTP, and reaps on graceful Core exit', async () => {
         expect(state.hostPid).not.toBeNull();
         expect(state.hostPid).not.toBe(state.ctx.serverProcess.pid);
         expect(parentProcessId(state.hostPid)).toBe(state.ctx.serverProcess.pid);
@@ -137,7 +136,7 @@ describeProtocolTest('Remote view-model Core-launched native CLI', () => {
     });
 });
 
-describeProtocolTest('Remote view-model Core-launched native CLI failure', () => {
+describeProtocolTest('Remote view-model Core-launched Node CLI failure', () => {
     const state = configureCliTest(path.join(temporary, 'failure.pid'));
 
     test('retains the renderer and reports exact accepted-host loss', async () => {

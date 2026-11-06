@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
     ...eslintShared,
     {
-        ignores: ['build-sea.mjs', 'sea-capability.mjs'],
+        ignores: ['build-cli.mjs'],
     },
     {
         languageOptions: {

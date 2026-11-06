@@ -18,7 +18,6 @@ import {
     runStdioRvmHostCli,
 } from '../src/cliMain.js';
 import { RvmHostSession, startRvmHostWithChannel } from '../src/index.js';
-import { assertSeaToolchain, assertSupportedNodeVersion } from '../sea-capability.mjs';
 import {
     STDIO_JOIN_GOLDEN,
     STDIO_JOIN_PACKAGE,
@@ -108,18 +107,6 @@ test('CLI grammar selects exact /Cli and rejects mixed, duplicate, and Core-only
     ]) {
         expect(() => parseRvmHostArguments(arguments_)).toThrow();
     }
-});
-
-test('native launcher capability checks fail actionably before publishing an artifact', () => {
-    expect(() => assertSupportedNodeVersion('v22.19.9')).toThrow(/requires Node >=22\.20/u);
-    expect(() => assertSupportedNodeVersion('v23.1.0')).toThrow(/requires Node/u);
-    expect(() => assertSupportedNodeVersion('v25.1.0')).toThrow(/requires Node/u);
-    expect(() => assertSupportedNodeVersion('v27.1.0')).toThrow(/requires Node/u);
-    expect(() => assertSupportedNodeVersion('not-node')).toThrow(/cannot parse/u);
-    expect(() => assertSeaToolchain('v24.0.0', false, () => undefined)).toThrow(/experimental-sea-config is unavailable/u);
-    expect(() => assertSeaToolchain('v24.0.0', true, undefined)).toThrow(/postject tool is unavailable/u);
-    expect(() => assertSeaToolchain('v22.20.0', true, () => undefined)).not.toThrow();
-    expect(() => assertSeaToolchain('v26.0.0', true, () => undefined)).not.toThrow();
 });
 
 test('stdio codec is canonical, strict UTF-8, and rejects lone surrogates', () => {
@@ -479,79 +466,73 @@ interface TranscriptProcess {
     readonly name: string;
 }
 
-test('Node ESM CLI and native SEA reject network admission without a runtime assertion', async () => {
+test('Node ESM CLI rejects network admission without a runtime assertion', async () => {
     const packageRoot = path.resolve(import.meta.dirname, '..');
-    const executable = path.join(packageRoot, 'lib', 'bin', process.platform === 'win32' ? 'gacjs-rvmhost.exe' : 'gacjs-rvmhost');
-    const specifications: TranscriptProcess[] = [
-        { name: 'Node CLI', command: process.execPath, arguments: [path.join(packageRoot, 'lib', 'src', 'cli.js')] },
-        { name: 'SEA', command: executable, arguments: [] },
-    ];
-    for (const specification of specifications) {
-        const requests: { readonly method: string | undefined; readonly url: string | undefined; readonly body: string }[] = [];
-        const server = createServer((request, response) => {
-            let body = '';
-            request.setEncoding('utf8');
-            request.on('data', chunk => { body += String(chunk); });
-            request.on('end', () => {
-                requests.push({ method: request.method, url: request.url, body });
-                if (request.method === 'GET' && request.url === '/test/VlppInterProcess/Connect') {
-                    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf8' });
-                    response.end('/VlppInterProcess/Request/rejected;/VlppInterProcess/Response/rejected');
-                } else if (request.method === 'POST' && request.url === '/test/VlppInterProcess/Response/rejected') {
-                    response.writeHead(200, { 'Content-Type': 'application/json; charset=utf8' });
-                    response.end();
-                } else {
-                    response.writeHead(404, 'Connection stopped', { 'Content-Length': '0' });
-                    response.end();
-                }
-            });
-        });
-        server.listen(0, '127.0.0.1');
-        await once(server, 'listening');
-        try {
-            const address = server.address();
-            if (address === null || typeof address === 'string') throw new Error('HTTP test server has no TCP address.');
-            const child = spawn(specification.command, [...specification.arguments,
-                '--origin', `http://127.0.0.1:${String(address.port)}`, '--base-path', '/test', '--service-only'], {
-                cwd: packageRoot,
-                stdio: ['ignore', 'pipe', 'pipe'],
-                windowsHide: true,
-            });
-            let stdout = '';
-            let stderr = '';
-            child.stdout.on('data', chunk => { stdout += String(chunk); });
-            child.stderr.on('data', chunk => { stderr += String(chunk); });
-            let timedOut = false;
-            const timeout = setTimeout(() => {
-                timedOut = true;
-                child.kill('SIGKILL');
-            }, 5000);
-            try {
-                const exit = await new Promise<{ readonly code: number | null; readonly signal: NodeJS.Signals | null }>((resolve, reject) => {
-                    child.once('error', reject);
-                    child.once('close', (code, signal) => resolve({ code, signal }));
-                });
-                expect(timedOut, `${specification.name} did not exit after network rejection`).toBe(false);
-                expect(exit, `${specification.name}: ${stderr}`).toEqual({ code: 1, signal: null });
-                expect(stdout).toBe('');
-                expect(stderr).toBe('gacjs-rvmhost: HTTP channel closed before client assignment.\n');
-                expect(requests).toEqual([
-                    { method: 'GET', url: '/test/VlppInterProcess/Connect', body: '' },
-                    { method: 'POST', url: '/test/VlppInterProcess/Response/rejected', body: ';;ViewModelChannel!ViewModelReadyChannel' },
-                    { method: 'POST', url: '/test/VlppInterProcess/Request/rejected', body: '' },
-                ]);
-            } finally {
-                clearTimeout(timeout);
-                if (child.exitCode === null && child.signalCode === null) {
-                    const closed = once(child, 'close');
-                    child.kill('SIGKILL');
-                    await closed;
-                }
+    const specification: TranscriptProcess = { name: 'Node CLI', command: 'node', arguments: [path.join(packageRoot, 'lib', 'src', 'cli.js')] };
+    const requests: { readonly method: string | undefined; readonly url: string | undefined; readonly body: string }[] = [];
+    const server = createServer((request, response) => {
+        let body = '';
+        request.setEncoding('utf8');
+        request.on('data', chunk => { body += String(chunk); });
+        request.on('end', () => {
+            requests.push({ method: request.method, url: request.url, body });
+            if (request.method === 'GET' && request.url === '/test/VlppInterProcess/Connect') {
+                response.writeHead(200, { 'Content-Type': 'application/json; charset=utf8' });
+                response.end('/VlppInterProcess/Request/rejected;/VlppInterProcess/Response/rejected');
+            } else if (request.method === 'POST' && request.url === '/test/VlppInterProcess/Response/rejected') {
+                response.writeHead(200, { 'Content-Type': 'application/json; charset=utf8' });
+                response.end();
+            } else {
+                response.writeHead(404, 'Connection stopped', { 'Content-Length': '0' });
+                response.end();
             }
+        });
+    });
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    try {
+        const address = server.address();
+        if (address === null || typeof address === 'string') throw new Error('HTTP test server has no TCP address.');
+        const child = spawn(specification.command, [...specification.arguments,
+            '--origin', `http://127.0.0.1:${String(address.port)}`, '--base-path', '/test', '--service-only'], {
+            cwd: packageRoot,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true,
+        });
+        let stdout = '';
+        let stderr = '';
+        child.stdout.on('data', chunk => { stdout += String(chunk); });
+        child.stderr.on('data', chunk => { stderr += String(chunk); });
+        let timedOut = false;
+        const timeout = setTimeout(() => {
+            timedOut = true;
+            child.kill('SIGKILL');
+        }, 5000);
+        try {
+            const exit = await new Promise<{ readonly code: number | null; readonly signal: NodeJS.Signals | null }>((resolve, reject) => {
+                child.once('error', reject);
+                child.once('close', (code, signal) => resolve({ code, signal }));
+            });
+            expect(timedOut, `${specification.name} did not exit after network rejection`).toBe(false);
+            expect(exit, `${specification.name}: ${stderr}`).toEqual({ code: 1, signal: null });
+            expect(stdout).toBe('');
+            expect(stderr).toBe('gacjs-rvmhost: HTTP channel closed before client assignment.\n');
+            expect(requests).toEqual([
+                { method: 'GET', url: '/test/VlppInterProcess/Connect', body: '' },
+                { method: 'POST', url: '/test/VlppInterProcess/Response/rejected', body: ';;ViewModelChannel!ViewModelReadyChannel' },
+                { method: 'POST', url: '/test/VlppInterProcess/Request/rejected', body: '' },
+            ]);
         } finally {
-            server.closeAllConnections();
-            await new Promise<void>(resolve => { server.close(() => resolve()); });
+            clearTimeout(timeout);
+            if (child.exitCode === null && child.signalCode === null) {
+                const closed = once(child, 'close');
+                child.kill('SIGKILL');
+                await closed;
+            }
         }
+    } finally {
+        server.closeAllConnections();
+        await new Promise<void>(resolve => { server.close(() => resolve()); });
     }
 }, 15000);
 
@@ -705,43 +686,39 @@ async function runUnexpectedEof(specification: TranscriptProcess): Promise<void>
     }
 }
 
-test('Node ESM CLI and native SEA both match the Core stdio transcript and exit 1 on !Exit', async () => {
+test('Node ESM CLI matches the Core stdio transcript, including a script path containing spaces', async () => {
     const packageRoot = path.resolve(import.meta.dirname, '..');
-    const executable = path.join(packageRoot, 'lib', 'bin', process.platform === 'win32' ? 'gacjs-rvmhost.exe' : 'gacjs-rvmhost');
+    const script = path.join(packageRoot, 'lib', 'src', 'cli.js');
     await runTranscript({
         name: 'Node CLI',
-        command: process.execPath,
-        arguments: [path.join(packageRoot, 'lib', 'src', 'cli.js'), '/Cli'],
+        command: 'node',
+        arguments: [script, '/Cli'],
     });
-    await runTranscript({ name: 'SEA', command: executable, arguments: ['/Cli'] });
 
     const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'gacjs rvmhost path '));
     try {
-        const copiedExecutable = path.join(temporary, process.platform === 'win32' ? 'native launcher.exe' : 'native launcher');
-        fs.copyFileSync(executable, copiedExecutable);
-        if (process.platform !== 'win32') fs.chmodSync(copiedExecutable, 0o755);
-        await runTranscript({ name: 'SEA in path containing spaces', command: copiedExecutable, arguments: ['/Cli'] });
+        const copiedScript = path.join(temporary, 'host script.mjs');
+        fs.copyFileSync(script, copiedScript);
+        await runTranscript({ name: 'Node CLI in path containing spaces', command: 'node', arguments: [copiedScript, '/Cli'] });
     } finally {
         fs.rmSync(temporary, { recursive: true, force: true });
     }
 });
 
-test('Node ESM CLI and native SEA both exit 1 on unexpected stdin EOF', async () => {
+test('Node ESM CLI exits 1 on unexpected stdin EOF', async () => {
     const packageRoot = path.resolve(import.meta.dirname, '..');
-    const executable = path.join(packageRoot, 'lib', 'bin', process.platform === 'win32' ? 'gacjs-rvmhost.exe' : 'gacjs-rvmhost');
     await runUnexpectedEof({
         name: 'Node CLI',
-        command: process.execPath,
+        command: 'node',
         arguments: [path.join(packageRoot, 'lib', 'src', 'cli.js'), '/Cli'],
     });
-    await runUnexpectedEof({ name: 'SEA', command: executable, arguments: ['/Cli'] });
 });
 
-test('native SEA accepts exact /Cli exclusively', async () => {
+test('Node ESM CLI accepts exact /Cli exclusively', async () => {
     const packageRoot = path.resolve(import.meta.dirname, '..');
-    const executable = path.join(packageRoot, 'lib', 'bin', process.platform === 'win32' ? 'gacjs-rvmhost.exe' : 'gacjs-rvmhost');
+    const script = path.join(packageRoot, 'lib', 'src', 'cli.js');
     const result = await new Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string }>((resolve, reject) => {
-        const child = spawn(executable, ['/Cli', '--service-only'], {
+        const child = spawn('node', [script, '/Cli', '--service-only'], {
             cwd: packageRoot,
             stdio: ['ignore', 'pipe', 'pipe'],
             windowsHide: true,

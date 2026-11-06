@@ -396,7 +396,7 @@ transport, owns this correlation.
 
 ## RVM Host over Stdio (/Cli)
 
-`/Cli:<host-executable>` replaces only the RVM host transport. The Core still
+`/Cli:<host-command>` replaces only the RVM host transport. The Core still
 uses `/Http` or `/MiniHttp` for a separate renderer connection. Conceptually:
 
 ```text
@@ -407,9 +407,12 @@ Core ── stdin/stdout ──> child rvmhost /Cli
 The child opens no RVM HTTP connection or admission probe; stdio is its entire
 host transport.
 
-The Core launches the specified executable with one child argument, exactly
-`/Cli`. The child's stdout must contain protocol frames only; write diagnostics
-to stderr.
+Core and `CppTest_Rvm` preserve the complete command after `/Cli:` and append
+exact ` /Cli`. Pass the option as one argument, using shell quoting such as
+`/Cli:"node script.js"`. To preserve a script path containing spaces, the actual
+option value must contain `node "<absolute script path>"`. Native hosts use a
+quoted executable path as their command. The child's stdout must contain
+protocol frames only; write diagnostics to stderr.
 
 ### Line framing
 

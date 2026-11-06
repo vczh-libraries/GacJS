@@ -104,9 +104,9 @@ whenever documented behavior changes.
     - Generated RemoteViewModelTest binding owned by `@gaclib/codegen-workflow-rpc` and exported through a stable handwritten package entry.
     - Commit `src/generated/generated.ts` and its manifest; regenerate them through the root `codegen` phase.
   - `(repo-root)/Gaclib/website/rvmhost`:
-    - Browser-safe RVM host composition plus the Node network CLI, strict stdio `/Cli` adapter, and platform-native SEA launcher.
+    - Browser-safe RVM host composition plus the bundled Node network CLI and strict stdio `/Cli` adapter.
     - It has `build` and `test` phases only. Node-only files must stay outside the public browser-safe `.` dependency graph.
-    - The normal Node CLI is `lib/src/cli.js`; Core `/Cli:<path>` requires the exact native `lib/bin/gacjs-rvmhost(.exe)` path, never the JavaScript file or npm bin shim.
+    - The Node CLI is `lib/src/cli.js`. Core `/Cli:<command>` accepts a complete child command such as `node "<absolute script path>"` and appends ` /Cli`. Assume `node` is available on PATH; quote script paths containing spaces.
   - `(repo-root)/Gaclib/website/entry`:
     - The website for testing.
   - `(repo-root)/Gaclib/website/remote-protocol-http`:
