@@ -260,6 +260,91 @@ test('WasmRPT renders, cancels Exit, and reloads fresh state after Exit and Forc
     await stopped();
 });
 
+test('WasmFCT read-only editors disable hyperlink and ribbon style mutations', async () => {
+    await open('fct', 'Complete Control Showcase');
+    await clickText('Control');
+    const screen = page.locator('#gacui-screen');
+    const send = await touchDriver(page);
+    const marker = 'ReadOnlyDocument';
+    // Read the real painter's paragraph geometry and effective formatting;
+    // all selection, mode changes and command activation go through input.
+    const paragraph = () => page.evaluate(marker => {
+        const renderer = window.__gacui_wasm_session.renderer;
+        for (const [id, element] of renderer._paragraphElements) {
+            const { layout } = renderer._getParagraphLayout(id);
+            const rect = element.textDiv.getBoundingClientRect();
+            if (layout.paragraph.text === marker && rect.width > 0 && rect.height > 0) {
+                return { ...layout.paragraph, units: layout.units, x: rect.x, y: rect.y };
+            }
+        }
+        return null;
+    }, marker);
+    const font = async () => (await paragraph()).runsDiff[0].props[1].fontProperties;
+    const selectRange = async () => {
+        const p = await paragraph();
+        const first = p.units[0];
+        const last = p.units.at(-1);
+        const start = { id: 801, x: p.x + first.frontCaretBaseline.x + 0.1, y: p.y + first.frontCaretBaseline.y - first.caretHeight / 2 };
+        const end = { ...start, x: p.x + last.backCaretBaseline.x + 0.1 };
+        await send('touchStart', [start]); await send('touchEnd', []);
+        await send('touchStart', [end]);
+        await page.waitForTimeout(550);
+        await send('touchEnd', []);
+        await expect.poll(async () => (await paragraph()).runsDiff.filter(run => run.props[1].backgroundColor !== '#00000000')
+            .map(run => marker.slice(run.begin, run.end)).join('')).toBe(marker);
+        return start;
+    };
+    const color = label => screen.getByText(label, { exact: true }).last().evaluate(node => getComputedStyle(node).color);
+    for (const ribbon of [true, false]) {
+        await clickText(`Document Editor (${ribbon ? 'Ribbon' : 'Toolstrip'})`);
+        const point = await editorPoint();
+        await clickAt(page, point.x, point.y);
+        await page.keyboard.type(marker);
+        await expect.poll(paragraph).not.toBeNull();
+        const original = await font();
+        const setMode = async mode => {
+            await clickText(ribbon ? 'Edit Mode' : 'View');
+            await screen.getByText(mode, { exact: true }).last().click();
+            await expectUI(screen.getByText(mode, { exact: true })).toHaveCount(0);
+        };
+        for (const mode of ['Selectable', 'Preview']) {
+            await selectRange();
+            await setMode(mode);
+            const p = await paragraph();
+            await page.mouse.click(p.x + 5, p.y + 5, { button: 'right' });
+            await expectUI(screen.getByText('Set Font ...', { exact: true })).toBeVisible();
+            for (const label of ['Edit Hyperlink ...', 'Remove Hyperlink']) {
+                await expect.poll(() => color(label)).toBe(await color('Cut'));
+                await screen.getByText(label, { exact: true }).last().click();
+                await expectUI(screen.getByText('Hyperlink', { exact: true })).toHaveCount(0);
+                await expectUI(screen.getByText('Set Font ...', { exact: true })).toBeVisible();
+            }
+            if (mode === 'Selectable') expect(await color('Copy')).not.toBe(await color('Cut'));
+            await page.keyboard.press('Escape');
+            // Synthetic Escape may not dismiss a nonactivating browser popup.
+            // Clicking the title preserves the document selection.
+            await screen.getByText('Complete Control Showcase', { exact: true }).click();
+            await expectUI(screen.getByText('Set Font ...', { exact: true })).toHaveCount(0);
+            if (ribbon) await screen.getByText('Header 1', { exact: true }).click();
+            await setMode('Editable');
+            expect(await font()).toEqual(original);
+        }
+        const start = await selectRange();
+        await page.mouse.click(start.x, start.y, { button: 'right' });
+        await expectUI(screen.getByText('Set Font ...', { exact: true })).toBeVisible();
+        expect(await color('Edit Hyperlink ...')).toBe(await color('Copy'));
+        await clickText('Edit Hyperlink ...');
+        await expectUI(screen.getByText('Hyperlink', { exact: true })).toBeVisible();
+        await clickText('Cancel');
+        if (ribbon) {
+            await clickText('Header 1');
+            await expect.poll(font).toMatchObject({ size: 24 });
+        }
+    }
+    await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
+    await stopped();
+});
+
 test('WasmFCT renders its merged skin and reloads with fresh editors and palette', async () => {
     await open('fct', 'Complete Control Showcase');
     await clickText('Add 10 items');
