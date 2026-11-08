@@ -97,6 +97,7 @@ async function exercise(app, marker) {
     }
 }
 
+// FCT repeats the complete touch/momentum exercise before and after both reloads.
 test.each([
     ['fct', 'Complete Control Showcase'],
     ['rpt', 'Remote Protocol Test'],
@@ -136,4 +137,4 @@ test.each([
     await page.getByRole('button', { name: 'Force Exit', exact: true }).click();
     await expectUI(page.locator('#gacui-success-mask')).toBeVisible();
     await expect.poll(() => page.workers().length).toBe(0);
-});
+}, 180000);

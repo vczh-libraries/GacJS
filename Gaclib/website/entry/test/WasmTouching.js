@@ -421,16 +421,27 @@ export async function checkDocumentTouch(page, send) {
     await send('touchEnd', []);
     await poll(selected).not.toBe('');
     const firstSelection = await selected();
-    for (const duration of [0, 550]) {
-        const before = await counters();
-        await send('touchStart', [endpoint]);
-        if (duration) await page.waitForTimeout(duration);
-        await send('touchEnd', []);
-        await poll(selected).toBe(firstSelection);
-        await poll(counters).toEqual(duration
-            ? [before[0], before[1] + 1, before[2] + 1]
-            : [before[0] + 1, before[1], before[2]]);
-    }
+    const beforeLong = await counters();
+    await send('touchStart', [endpoint]);
+    await page.waitForTimeout(550);
+    expect(await selected()).toBe(firstSelection);
+    expect(await counters()).toEqual(beforeLong); // Holding alone does not activate a press.
+    await send('touchEnd', []);
+    await poll(selected).toBe(firstSelection);
+    await poll(counters).toEqual([beforeLong[0], beforeLong[1] + 1, beforeLong[2] + 1]);
+
+    // An unmodified short press positions the caret, including at an existing
+    // selection endpoint. Recreate the range before checking scroll preservation.
+    const beforeShort = await counters();
+    await send('touchStart', [endpoint]); await send('touchEnd', []);
+    await poll(selected).toBe('');
+    await poll(counters).toEqual([beforeShort[0] + 1, beforeShort[1], beforeShort[2]]);
+    await send('touchStart', [text]); await send('touchEnd', []);
+    await send('touchStart', [endpoint]);
+    await page.waitForTimeout(550);
+    expect(await selected()).toBe('');
+    await send('touchEnd', []);
+    await poll(selected).toBe(firstSelection);
     // A middle paragraph stays visible while the viewport moves and reverses.
     const drag = { ...endpoint, y: endpoint.y + 60 };
     await send('touchStart', [drag]);
