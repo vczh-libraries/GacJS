@@ -86,6 +86,38 @@ export const Snapshot: SnapshotEntry = {
                 'Dialog_File': {
                     'type': 'Folder',
                     'content': {
+                        'CreateAndDelete': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_10.json': 'File',
+                                'frame_11.json': 'File',
+                                'frame_12.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File',
+                                'frame_9.json': 'File'
+                            }
+                        },
+                        'CreateAndDelete.json': 'File',
+                        'DeleteFailures': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File'
+                            }
+                        },
+                        'DeleteFailures.json': 'File',
                         'FilterExtensions_AllFiles_DefaultExtension': {
                             'type': 'Folder',
                             'content': {
@@ -284,6 +316,16 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'MultipleSelection_Root_TextFiles.json': 'File',
+                        'MutationCommands': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File'
+                            }
+                        },
+                        'MutationCommands.json': 'File',
                         'Navigation_Listing_Root_A_AA': {
                             'type': 'Folder',
                             'content': {
@@ -319,6 +361,19 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'OpenAndSelect.json': 'File',
+                        'PendingNavigation': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File'
+                            }
+                        },
+                        'PendingNavigation.json': 'File',
                         'SavePromptCreateFile_OpenAndClose': {
                             'type': 'Folder',
                             'content': {
@@ -495,6 +550,17 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'EditingAndScroll.json': 'File',
+                        'HiddenListScroll': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'HiddenListScroll.json': 'File',
                         'OverridesAndWindows': {
                             'type': 'Folder',
                             'content': {
