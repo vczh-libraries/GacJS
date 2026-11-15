@@ -80,7 +80,7 @@ function createSession(settings, alreadyStarted) {
         describe(rawId, data) {
             send('RendererBeginRendering', {
                 frameId: ++frameId,
-                updatedElements: [['ElementDesc_Raw', { id: 1, rawId, data }]],
+                updatedElements: [['ElementDesc_Raw', { id: 1, rawId, interpretor: '', data }]],
             });
             send('RendererIdle');
         },

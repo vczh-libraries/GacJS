@@ -63,7 +63,7 @@ describe('ElementManager', () => {
 
         manager.create(id, type);
 
-        expect(manager.getDesc(id)).toEqual({ type, desc: { id, rawId: '', data: '' } });
+        expect(manager.getDesc(id)).toEqual({ type, desc: { id, rawId: '', interpretor: '', data: '' } });
     });
 
     it('should update element desc with matching type', () => {
@@ -100,7 +100,7 @@ describe('ElementManager', () => {
 
         const desc: TypedElementDesc = {
             type: SCHEMA.RendererType.Raw,
-            desc: { id, rawId: 'Raw', data: 'data' }
+            desc: { id, rawId: 'Raw', interpretor: '', data: 'data' }
         };
 
         manager.updateDesc(id, desc);
@@ -129,7 +129,7 @@ describe('ElementManager', () => {
 
         const desc: TypedElementDesc = {
             type: SCHEMA.RendererType.Raw,
-            desc: { id: 999, rawId: '', data: '' }
+            desc: { id: 999, rawId: '', interpretor: '', data: '' }
         };
 
         expect(() => manager.updateDesc(999, desc)).toThrow('Element with id 999 does not exist');
@@ -144,7 +144,7 @@ describe('ElementManager', () => {
 
         const desc: TypedElementDesc = {
             type: SCHEMA.RendererType.Raw, // Different type
-            desc: { id, rawId: '', data: '' }
+            desc: { id, rawId: '', interpretor: '', data: '' }
         };
 
         expect(() => manager.updateDesc(id, desc)).toThrow('Element type mismatch: expected SolidBorder, got Raw');
@@ -179,7 +179,7 @@ describe('ElementManager', () => {
 
         const desc2: TypedElementDesc = {
             type: SCHEMA.RendererType.Raw,
-            desc: { id: 2, rawId: '', data: '' }
+            desc: { id: 2, rawId: '', interpretor: '', data: '' }
         };
 
         manager.updateDesc(1, desc1);

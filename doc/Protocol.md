@@ -272,10 +272,11 @@ does not support it.
 |-------|------|-------------|
 | `id` | `int` | Numeric renderer ownership ID |
 | `rawId` | `string` | Application ID, exposed as the raw record's string `id` |
+| `interpretor` | `string` | Native renderer factory name; browser painters continue to use `rawId` and `data` |
 | `data` | `string` | Application drawing data |
 
-Each descriptor sends both strings together. A newly created browser record has
-empty strings until its first descriptor arrives. Empty or duplicate `rawId`
+Each descriptor sends all three strings together. A newly created browser record
+has empty `id` and `data` strings until its first descriptor arrives. Empty or duplicate `rawId`
 values do not change ownership. The descriptor belongs to both
 `OrdinaryElementDescVariant` and `UnitTest_ElementDescVariant`; only
 FocusRectangle remains descriptor-free. Snapshot playback consumes the recorded

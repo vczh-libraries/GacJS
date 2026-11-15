@@ -101,7 +101,7 @@ test('createVirtualDomFromRenderingDom - multiple clipped elements with same Cli
     
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', data: '' } };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', interpretor: '', data: '' } };
     const elements: ElementManager = new ElementManager();
     elements.createWithDesc(101, focusRectangleDesc);
     elements.createWithDesc(102, rawDesc);
@@ -382,7 +382,7 @@ test('createVirtualDomFromRenderingDom - four children in corners', () => {
 
     const provider = new VirtualDomProviderMock();
     const focusRectangleDesc: TypedElementDesc = { type: SCHEMA.RendererType.FocusRectangle };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', data: '' } };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 102, rawId: '', interpretor: '', data: '' } };
     const solidBorderDesc1: TypedElementDesc = {
         type: SCHEMA.RendererType.SolidBorder,
         desc: {
@@ -526,7 +526,7 @@ test('createVirtualDomFromRenderingDom - three nested elements with same y2', ()
             shape: { shapeType: SCHEMA.ElementShapeType.Rectangle, radiusX: 0, radiusY: 0 }
         }
     };
-    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 105, rawId: '', data: '' } };
+    const rawDesc: TypedElementDesc = { type: SCHEMA.RendererType.Raw, desc: { id: 105, rawId: '', interpretor: '', data: '' } };
 
     const elements: ElementManager = new ElementManager();
     elements.createWithDesc(104, focusRectangleDesc);

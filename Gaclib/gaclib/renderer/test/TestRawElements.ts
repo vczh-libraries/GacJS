@@ -32,7 +32,7 @@ function update(renderer: RawTestRenderer, id: number, rawId: string, data: stri
         name: 'RendererBeginRendering',
         arguments: {
             frameId: 1,
-            updatedElements: [['ElementDesc_Raw', { id, rawId, data }]]
+            updatedElements: [['ElementDesc_Raw', { id, rawId, interpretor: '', data }]]
         }
     };
     SCHEMA.jsonToRequest(JSON.parse(JSON.stringify(invocation)) as SCHEMA.ProtocolInvoking, renderer.requests);

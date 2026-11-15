@@ -72,7 +72,7 @@ export class ElementManager {
             throw new Error(`Element with id ${id} already exists`);
         }
         this._elements.set(id, type === SCHEMA.RendererType.Raw
-            ? { type, desc: { type, desc: { id, rawId: '', data: '' } } }
+            ? { type, desc: { type, desc: { id, rawId: '', interpretor: '', data: '' } } }
             : { type });
     }
 
