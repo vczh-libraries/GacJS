@@ -81,7 +81,7 @@ The real Wasm FCT suite also selects Misc / Raw Clock and checks received
 `FullControlTest.Clock` state, nonempty canvas pixels and changing hands without
 input. It verifies record/canvas identity across tab hide/show, pixel-buffer
 resizing, palette refresh and fresh drawing after both Exit and Force Exit followed
-by Reload. Fixed-time and ID-transition cases remain in the controlled Raw browser
+by Reload. Fixed-time and interpretor-transition cases remain in the controlled Raw browser
 suite; live wall-clock values are not snapshot baselines.
 
 The Wasm touch suite observes the real worker channel without a native HTTP Core. Chromium CDP drives acquisition, overlapping/reused contacts, cancellation, capture across resize, manipulation pixels and identity-safe list swipes. Firefox uses explicitly synthetic PointerEvents with capture stubs, so it verifies adapter/Core/rendering behavior without claiming native browser capture. The portable Wasm channel test separately preserves full-width decimal sequence, timestamp and frame fields.
@@ -297,7 +297,7 @@ renderer signal instead of polling or delaying the test.
 
 ## Point input verification
 
-The controlled RawBrowser suite distinguishes synthetic PointerEvent adapter checks from Chromium CDP touch injection. It checks sparse slots, normal Up/lostcapture ordering, reused pointer IDs, cancellation draining, stable capture across child replacement, descendant touch-action, mouse suppression and independent mouse input. The Touching painter test checks actual rectangle/contact pixels, changed transforms and Clock/Touching ID transitions.
+The controlled RawBrowser suite distinguishes synthetic PointerEvent adapter checks from Chromium CDP touch injection. It checks sparse slots, normal Up/lostcapture ordering, reused pointer IDs, cancellation draining, stable capture across child replacement, descendant touch-action, mouse suppression and independent mouse input. Clock tests select `FullControlTest::Clock` independently of ID and verify replacement/cleanup on name changes; renderer lifecycle tests cover independent factory instances, unknown names, atomic updates, and finalization on destruction/stop. The Touching painter test checks actual rectangle/contact pixels, changed transforms and transitions between manual Touching and factory-selected Clock.
 
 `<GacJS repo>/Gaclib/website/entry/test/Testing_Protocol_Touching.js` drives browser input against real /Http and /MiniHttp FCT Core processes. It compares Core raw state with browser drawing for one/two/three contacts, membership rebasing, cancellation, and rejected-tab fallback. Post-rebase translation checks allow the gesture contract's half-logical-pixel residual while checking that pure translation preserves rotation and scale. It uses the ordinary protocol lifecycle and its existing server. Run from `<GacJS repo>/Gaclib`: yarn run import, yarn codegen, yarn build, yarn test. Repeated codegen must leave generated output unchanged. The native counterpart uses the GacUI JSON/filter harness and Win32/x64 decimal round trips.
 

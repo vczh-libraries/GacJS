@@ -362,7 +362,29 @@ test('built HTTP page draws protocol time, updates without a DOM diff, and prese
     })).toEqual({ same: true, count: 1, pointerEvents: 'none' });
 });
 
-test('clock redraws after zero-size layout, resize, high DPI, hide/show, and ID changes', async () => {
+test('fixed data draws only when the clock factory is selected and preserves independent content', async () => {
+    const page = await open();
+    await page.evaluate(() => {
+        const t = (window as any).rawTest;
+        t.describe('FullControlTest.Clock', '03:15:45', '');
+        t.layout();
+        const manual = document.createElement('span');
+        manual.id = 'manual-raw-content';
+        t.renderer.getRawElements()[0].element.appendChild(manual);
+    });
+    expect(await page.locator('canvas').count()).toBe(0);
+    for (const missing of ['', 'Missing.Clock']) {
+        await page.evaluate(() => (window as any).rawTest.describe('FullControlTest.Clock', '03:15:45', 'FullControlTest::Clock'));
+        await waitForCanvas(page, 240, 240);
+        await expectHands(page, '03:15:45');
+        await page.evaluate(missing => (window as any).rawTest.describe('FullControlTest.Clock', '03:15:45', missing), missing);
+        expect(await page.locator('canvas').count()).toBe(0);
+        expect(await page.locator('#manual-raw-content').count()).toBe(1);
+    }
+    expect(await page.evaluate(() => (window as any).rawObserved.size)).toBe(1); // Renderer only.
+});
+
+test('clock redraws after zero-size layout, resize, high DPI, hide/show, and interpretor changes', async () => {
     const page = await open();
     await page.evaluate(() => {
         const t = (window as any).rawTest;
@@ -390,7 +412,12 @@ test('clock redraws after zero-size layout, resize, high DPI, hide/show, and ID 
         const t = (window as any).rawTest;
         return t.savedCanvas === t.renderer.getRawElements()[0].element.querySelector('canvas');
     })).toBe(true);
-    await page.evaluate(() => (window as any).rawTest.describe('Other.Raw', '03:15:45'));
+    await page.evaluate(() => (window as any).rawTest.describe('Other.Raw', '03:15:45', 'FullControlTest::Clock'));
+    expect(await page.evaluate(() => {
+        const t = (window as any).rawTest;
+        return t.savedCanvas === t.renderer.getRawElements()[0].element.querySelector('canvas');
+    })).toBe(true);
+    await page.evaluate(() => (window as any).rawTest.describe('Other.Raw', '03:15:45', 'Missing.Clock'));
     expect(await page.locator('canvas').count()).toBe(0);
     expect(await page.evaluate(() => {
         const t = (window as any).rawTest;
@@ -408,12 +435,13 @@ test('clock redraws after zero-size layout, resize, high DPI, hide/show, and ID 
     }))).toEqual({ raws: 0, listeners: 1, observed: 0 });
 });
 
-test('already-started rvmhost enumeration installs exactly one clock and reuses it on updates', async () => {
+test('already-started rvmhost enumeration installs the manual Touching painter', async () => {
     const page = await open('?rvmhost');
     await waitForCanvas(page, 240, 240);
-    await expectHands(page, '10:20:30');
+    expect((await picture(page)).painted).toBeGreaterThan(15000);
     await page.evaluate(() => {
         const t = (window as any).rawTest;
+        // Factory registration precedes this first selection of the clock interpretor.
         t.describe('FullControlTest.Clock', '10:20:30');
         t.describe('FullControlTest.Clock', '03:15:45');
     });

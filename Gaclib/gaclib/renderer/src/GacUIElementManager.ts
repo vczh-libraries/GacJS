@@ -100,6 +100,7 @@ export class ElementManager {
             raw = Object.freeze({
                 element,
                 get id(): string { return record.desc?.type === SCHEMA.RendererType.Raw ? record.desc.desc.rawId : ''; },
+                get interpretor(): string { return record.desc?.type === SCHEMA.RendererType.Raw ? record.desc.desc.interpretor : ''; },
                 get data(): string { return record.desc?.type === SCHEMA.RendererType.Raw ? record.desc.desc.data : ''; }
             });
             this._rawElements.set(id, raw);

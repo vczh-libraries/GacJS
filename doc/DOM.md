@@ -153,12 +153,13 @@ overflow: hidden;
 ### Raw
 
 An application drawing surface with a persistent `HTMLDivElement`. The protocol
-descriptor supplies an application string ID and data; the page decides how to
-draw them. The reusable renderer does not interpret these strings.
+descriptor supplies an application string ID, an interpretor name and data.
+The renderer selects a registered page-provided factory by interpretor name;
+the painter interprets the data. Manual event-based drawing remains supported.
 
 `<Raw/>` is the standard, recommended GacUI owner-drawing element, both locally
-and over the remote protocol. Its reflected `GuiRawElementBase` exposes `Id` and
-`Data`; native clients select Direct2D, GDI, Cairo or CoreGraphics through their
+and over the remote protocol. Its reflected `GuiRawElementBase` exposes `Id`,
+`Interpretor` and `Data`; native clients select Direct2D, GDI, Cairo or CoreGraphics through their
 resource manager, while GacJS supplies the div below. Native drawing callbacks
 do not run in the browser: provide the corresponding page-owned painter. The
 protocol carries drawing state, not native graphics handles or rendered pixels.
@@ -172,19 +173,35 @@ GacUI's TUI backend does not support `<Raw/>`.
 ```
 
 `IGacUIRenderer.getRawElements()` returns read-only records with
-`{ element: HTMLDivElement, id: string, data: string }`. The public `id` is the
+`{ element: HTMLDivElement, id: string, interpretor: string, data: string }`. The public `id` is the
 descriptor's `rawId`, not its numeric renderer ID or an HTML document ID. Empty
 and duplicate strings are valid. Records and divs remain stable until protocol
 destruction, including while hidden or detached from the rendering DOM.
 
 `rawElementInstalled`, `rawElementUninstalled` and `rawElementUpdated` register
-synchronous listeners and return unsubscribe functions. Creation inserts the
+synchronous listeners and return `IGacUIEventSubscription` objects with an
+idempotent `unsubscribe()` method. Creation inserts the
 record before installed listeners run, with empty strings. A descriptor applies
-both strings before one updated notification, only when a value changes.
+all three strings before one updated notification, only when a value changes.
 Uninstalled listeners can still enumerate the record; removal follows their
 callbacks. Destroying and recreating the same numeric ID creates a new record.
 Subscribe to updates as well as installation when selecting by string ID, then
 enumerate existing records to support late attachment.
+
+`registerRawElementInterpretorFactory(name, factory)` registers an
+`IRawElementInterpretorFactory`; duplicate names throw. Lookup through
+`getRawElementInterpretorFactory(name)` returns that factory or `undefined`.
+Register before consuming elements receive descriptors. Registration does not
+retry existing unknown names. Empty and unknown names install no interpretor
+and leave manual drawing handlers active.
+
+Each raw element owns a separate `factory.create()` result. When its name changes,
+the renderer finalizes the old instance, initializes the replacement with the
+fully updated raw record, then emits `rawElementUpdated`. The interpretor can
+subscribe to that event for data changes. ID-only and data-only changes do not
+recreate it; DOM detachment, reparenting and resizing also preserve it. On protocol
+destruction, uninstalled listeners run first, then the record is removed from
+enumeration and the interpretor is finalized exactly once.
 
 The renderer retains the drawing div across full DOM rebuilds, clipping wrapper
 changes, reparenting and bounds updates. Its page-owned children are separate
@@ -195,15 +212,19 @@ sizing a canvas: descriptors may arrive before layout, including at zero bounds.
 Give the owning GacUI composition explicit bounds or a minimum size; canvas
 content does not supply a minimum size to the Core layout engine.
 
-Changing `Data` on the Core requests repaint; changing `Id` only marks state
+Changing `Interpretor` or `Data` on the Core requests repaint; changing `Id` only marks state
 dirty for the next otherwise-required frame. Equal assignments do nothing.
 Several setters can coalesce into one applied descriptor, so use the latest
 record state instead of treating update callbacks as an application event log.
 
 Protocol destruction ends the element lifetime. Transport loss and `stop()`
-retain the last picture and do not synthesize uninstallation. A page must dispose
-its subscriptions and drawing observers on session completion, errors and
-teardown, without clearing the retained canvas. Cleanup must be idempotent.
+retain the last picture and do not synthesize uninstallation. `stop()` finalizes
+owned interpretors while keeping records enumerable and their names unchanged.
+Interpretors release their subscriptions and observers in `finalize()`; manual
+painters need page-owned cleanup on completion, errors and teardown. The clock
+retains its canvas when finalized with its name and enumerable record unchanged,
+and removes only its own canvas on name changes or destruction. Cleanup must be
+idempotent and preserve independently attached content.
 
 ---
 
@@ -656,4 +677,4 @@ The renderer installs touch-action none on its stable target and every descendan
 
 Down-order contact slots are never reused within an overlapping sequence. Normal Up followed by lostpointercapture is cleanup, not cancellation of remaining contacts. Unexpected capture loss ends once, then drains physical Up/Cancel; pointercancel retires its own contact immediately. Connected disposal sends one Canceled_WindowDestroyed End before detaching listeners/captures. After transport loss, stop(true) performs silent cleanup and Core owns its disconnect cancellation. Touch compatibility mouse/boundary/activation events are suppressed locally and synchronously while real mouse/pen and non-touch activation retain their path.
 
-The page-owned painter in `<GacJS repo>/Gaclib/website/entry/assets/fullControlTestRaw.js` handles Clock and Touching for both HTTP and the WASM FCT entry. Touching data is centerX,centerY,axisX,axisY,count followed by count pointId,x,y triples. It draws Core's transformed sky-blue rectangle and yellow radius-16 contact circles. Raw hooks retain one canvas, track resize/DPR, redraw data changes and release observers on removal/disposal. The painter never computes gestures. Core's Misc > Touching page owns translation, rotation, scaling, three-contact pause and membership rebasing.
+Both HTTP and Wasm FCT call `installRawClock` from `<GacJS repo>/Gaclib/website/entry/assets/rawClock.js` to register `FullControlTest::Clock`, and `installRawTouching` from `<GacJS repo>/Gaclib/website/entry/assets/rawTouching.js` for manual ID-based Touching attachment. They share canvas sizing and observer cleanup in `<GacJS repo>/Gaclib/website/entry/assets/rawCanvas.js`. Touching has an empty interpretor. Its data is centerX,centerY,axisX,axisY,count followed by count pointId,x,y triples. It draws Core's transformed sky-blue rectangle and yellow radius-16 contact circles. Raw hooks retain one canvas, track resize/DPR, redraw data changes and release observers on removal/disposal. The painter never computes gestures. Core's Misc > Touching page owns translation, rotation, scaling, three-contact pause and membership rebasing.

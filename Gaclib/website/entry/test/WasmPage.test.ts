@@ -221,14 +221,18 @@ test('page teardown during RVMT host startup stops that host and prevents render
     expect(h.events).toEqual(['application', 'host-connect', 'host-start', 'application-stop', 'host-stop']);
 });
 
-test('all built Wasm pages explicitly start, and FCT shares the page-owned raw painter', () => {
+test('all built Wasm pages explicitly start, and FCT installs the clock factory and manual Touching painter', () => {
     const http = readFileSync(new URL('../lib/dist/index.html', import.meta.url), 'utf8');
-    const painterImport = "import { installFullControlTestRawElements } from '/fullControlTestRaw.js'";
-    expect(http).toContain(painterImport);
+    const painterImports = ["import { installRawClock } from '/rawClock.js'", "import { installRawTouching } from '/rawTouching.js'"];
+    for (const painterImport of painterImports) expect(http).toContain(painterImport);
     for (const app of ['fct', 'rpt', 'rvmt']) {
         const html = readFileSync(new URL(`../lib/dist/wasm-${app}/index.html`, import.meta.url), 'utf8');
         expect(html).toContain("import { startWasmPage } from '/wasm-page.js'");
-        expect(html).toContain(app === 'fct' ? 'void startWasmPage(installFullControlTestRawElements)' : 'void startWasmPage()');
-        if (app === 'fct') expect(html).toContain(painterImport);
+        expect(html).toContain(app === 'fct' ? 'void startWasmPage(renderer => {' : 'void startWasmPage()');
+        if (app === 'fct') {
+            for (const painterImport of painterImports) expect(html).toContain(painterImport);
+            expect(html).toContain('installRawClock(renderer);');
+            expect(html).toContain('return installRawTouching(renderer);');
+        }
     }
 });

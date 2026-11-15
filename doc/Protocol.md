@@ -272,25 +272,26 @@ does not support it.
 |-------|------|-------------|
 | `id` | `int` | Numeric renderer ownership ID |
 | `rawId` | `string` | Application ID, exposed as the raw record's string `id` |
-| `interpretor` | `string` | Native renderer factory name; browser painters continue to use `rawId` and `data` |
+| `interpretor` | `string` | Renderer factory name, exposed as the raw record's `interpretor`; empty or unknown names have no factory painter |
 | `data` | `string` | Application drawing data |
 
 Each descriptor sends all three strings together. A newly created browser record
-has empty `id` and `data` strings until its first descriptor arrives. Empty or duplicate `rawId`
+has empty `id`, `interpretor` and `data` strings until its first descriptor arrives. Empty or duplicate `rawId`
 values do not change ownership. The descriptor belongs to both
 `OrdinaryElementDescVariant` and `UnitTest_ElementDescVariant`; only
 FocusRectangle remains descriptor-free. Snapshot playback consumes the recorded
 Raw descriptor without installing the FullControlTest painter.
 
 The Raw descriptor contains neither a native drawing context nor an image frame.
-A browser page must attach its own painter to the Raw div, and a native remote
-renderer must attach drawing handlers to its platform element. These local
+A browser page supplies a named interpretor factory or manually attaches a
+painter to the Raw div; a native remote renderer similarly uses factories or
+manual drawing handlers on its platform element. These local
 subscriptions are not additional messages in the protocol. For snapshot
 inspection, the native GacUI viewer substitutes an ellipsized `Id: Data` label;
 the browser snapshot viewer retains the descriptor and empty drawing surface
 unless a painter is explicitly installed.
 
-The core batches dirty state into frames. A data change requests a frame; an
+The core batches dirty state into frames. An interpretor or data change requests a frame; an
 isolated ID change may arrive on a later independently requested frame. Browser
 listeners report applied state, including descriptors for currently hidden
 elements. There are no additional raw-element wire messages or browser polling.

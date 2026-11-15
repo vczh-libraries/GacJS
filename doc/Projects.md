@@ -227,15 +227,18 @@ See [DOM.md](DOM.md) for detailed rendering documentation.
 
 Main export: `createHtmlRenderer(settings: GacUISettings): IGacUIRenderer`
 
-The exported `GacUIRawElement` type exposes read-only `element`, `id` and `data`
+The exported `GacUIRawElement` type exposes read-only `element`, `id`, `interpretor` and `data`
 properties. `IGacUIRenderer.getRawElements()` enumerates current Raw elements;
 `rawElementInstalled`, `rawElementUninstalled` and `rawElementUpdated` register
-synchronous listeners returning unsubscribe functions. Pages own drawing inside
-the persistent div. See [Raw DOM rendering](DOM.md#raw) for lifetime and cleanup.
+synchronous listeners returning `IGacUIEventSubscription` objects with
+`unsubscribe()`. Pages register named `IRawElementInterpretorFactory` instances
+through `registerRawElementInterpretorFactory`; the renderer owns each created
+interpretor's initialization and finalization. Manual drawing inside the
+persistent div remains supported. See [Raw DOM rendering](DOM.md#raw) for lifetime and cleanup.
 
 The XML `<Raw/>` element is the recommended owner-drawing entry point across
-GacUI's graphical backends, including remote rendering. The Core owns `Id` and
-`Data`; browser pages supply their own canvas/SVG/DOM painter. Direct2D, GDI,
+GacUI's graphical backends, including remote rendering. The Core owns `Id`,
+`Interpretor` and `Data`; browser pages supply their own canvas/SVG/DOM painter. Direct2D, GDI,
 Cairo and CoreGraphics drawing handlers belong to native renderers and are not
 transported to a browser. TUI does not support this element.
 
@@ -445,9 +448,10 @@ these library bundles so renderer classes and feature flags keep one identity.
 There is no standalone browser bundle for `rvmhost`; its browser-safe helpers are
 included in the demo composition, and its CLI build is unchanged.
 
-`GacUIHtmlRenderer.runGacUI` returns `[renderer, client]`. The HTTP page attaches
-raw listeners and enumerates existing records before `client.start()`; the
-already-started `?rvmhost` session uses the same idempotent late attachment.
+`GacUIHtmlRenderer.runGacUI` returns `[renderer, client]`. The HTTP page registers
+the clock factory and attaches manual Touching listeners before `client.start()`.
+Manual attachment enumerates existing records, including an already-started
+`?rvmhost` session. That RVMT application does not consume the clock factory.
 When another renderer takes over, the HTTP page disposes its renderer and clock
 subscriptions while keeping its accepted view-model host available to Core.
 Host completion, page teardown and fatal failure stop the whole page session.
@@ -456,17 +460,21 @@ it cannot establish that Core has finished using the host.
 The Wasm pages explicitly call `startWasmPage`; its optional renderer-setup
 callback runs before renderer protocol delivery and can return a cleanup function
 retained until completion, error or page teardown. RPT and RVMT call it without
-a painter; FCT supplies its clock setup. Worker ownership, RVMT host shutdown,
+a painter; FCT registers the clock factory and returns the manual Touching cleanup. Worker ownership, RVMT host shutdown,
 Exit/Force Exit and fresh Reload remain part of the shared page composition.
 
-The clock code lives in `<GacJS repo>/Gaclib/website/entry/assets/index.html` and
-`<GacJS repo>/Gaclib/website/entry/assets/wasm-fct/index.html`. Each matching raw
-record (`FullControlTest.Clock`) gets one canvas. It parses only received
+`<GacJS repo>/Gaclib/website/entry/assets/index.html` and
+`<GacJS repo>/Gaclib/website/entry/assets/wasm-fct/index.html` both import
+`installRawClock` from `<GacJS repo>/Gaclib/website/entry/assets/rawClock.js` and
+`installRawTouching` from `<GacJS repo>/Gaclib/website/entry/assets/rawTouching.js`.
+Each raw element selecting `FullControlTest::Clock` gets one factory-created
+canvas painter regardless of its application ID. It parses only received
 `HH:mm:ss` data (hours 00–23, minutes/seconds 00–59), leaving empty or invalid
 state blank. Data updates, host resizing, visibility changes and device pixel
 ratio changes redraw the last received time; no browser clock or ticking timer
-advances it. ID changes attach/detach the painter, and session cleanup disconnects
-subscriptions and observers while preserving the final picture.
+advances it. Interpretor changes attach/detach the clock painter; Touching keeps
+its manual `FullControlTest.Touching` ID selection. Renderer and page cleanup
+disconnect subscriptions and observers while preserving the final picture.
 
 | Script | Action |
 |--------|--------|

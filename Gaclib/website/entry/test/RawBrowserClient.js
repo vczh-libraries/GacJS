@@ -44,14 +44,14 @@ function createSession(settings, alreadyStarted) {
         original(() => { counts[kind]++; });
         renderer[name] = listener => {
             listeners[kind]++;
-            const unsubscribe = original(listener);
+            const subscription = original(listener);
             let active = true;
-            return () => {
+            return { unsubscribe() {
                 if (!active) return;
                 active = false;
                 listeners[kind]--;
-                unsubscribe();
-            };
+                subscription.unsubscribe();
+            } };
         };
     }
     const rect = (x, y, width, height) => ({ x1: x, y1: y, x2: x + width, y2: y + height });
@@ -77,10 +77,10 @@ function createSession(settings, alreadyStarted) {
         },
         started: false,
         clientStops: 0,
-        describe(rawId, data) {
+        describe(rawId, data, interpretor = rawId === 'FullControlTest.Clock' ? 'FullControlTest::Clock' : '') {
             send('RendererBeginRendering', {
                 frameId: ++frameId,
-                updatedElements: [['ElementDesc_Raw', { id: 1, rawId, interpretor: '', data }]],
+                updatedElements: [['ElementDesc_Raw', { id: 1, rawId, interpretor, data }]],
             });
             send('RendererIdle');
         },
@@ -109,7 +109,7 @@ function createSession(settings, alreadyStarted) {
                 state.started = true;
                 send('RendererCreated', [{ id: 1, type: 'Raw' }]);
                 if (alreadyStarted) {
-                    state.describe('FullControlTest.Clock', '10:20:30');
+                    state.describe('FullControlTest.Touching', '120,120,1,0,0');
                     state.layout();
                 }
             }

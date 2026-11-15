@@ -22,8 +22,12 @@
     </div>
     <script type="module">
         import { startWasmPage } from '/wasm-page.js';
-        import { installFullControlTestRawElements } from '/fullControlTestRaw.js';
-        void startWasmPage(installFullControlTestRawElements);
+        import { installRawClock } from '/rawClock.js';
+        import { installRawTouching } from '/rawTouching.js';
+        void startWasmPage(renderer => {
+            installRawClock(renderer);
+            return installRawTouching(renderer);
+        });
     </script>
 </body>
 </html>

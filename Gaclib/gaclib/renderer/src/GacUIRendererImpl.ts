@@ -3,7 +3,7 @@ import { injectLocalToUtc, injectUtcToLocal } from './injections/injectDateTime'
 import { injectLocale } from './injections/injectLocale';
 import { FileSystemInjection } from './injections/injectFileSystem';
 import { getImageContentType, getImageDataUrl, getImageFormatType } from './domRenderer/elementStyles_Image';
-import { GacUIRawElement, GacUISettings, IGacUIRenderer } from './interfaces';
+import { GacUIRawElement, GacUISettings, IGacUIEventSubscription, IGacUIRenderer, IRawElementInterpretor, IRawElementInterpretorFactory } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
 import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
@@ -65,6 +65,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _rawInstalledListeners = new Set<(element: GacUIRawElement) => void>();
     private _rawUninstalledListeners = new Set<(element: GacUIRawElement) => void>();
     private _rawUpdatedListeners = new Set<(element: GacUIRawElement) => void>();
+    private _rawInterpretorFactories = new Map<string, IRawElementInterpretorFactory>();
+    private _rawInterpretors = new Map<SCHEMA.TYPES.Integer, IRawElementInterpretor>();
 
     private _screenConfig: SCHEMA.ScreenConfig;
     private _windowConfig: SCHEMA.WindowSizingConfig;
@@ -181,19 +183,36 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         return Object.freeze([...this._rawElements.values()]);
     }
 
-    rawElementInstalled(listener: (element: GacUIRawElement) => void): () => void {
+    rawElementInstalled(listener: (element: GacUIRawElement) => void): IGacUIEventSubscription {
         this._rawInstalledListeners.add(listener);
-        return () => { this._rawInstalledListeners.delete(listener); };
+        return { unsubscribe: () => { this._rawInstalledListeners.delete(listener); } };
     }
 
-    rawElementUninstalled(listener: (element: GacUIRawElement) => void): () => void {
+    rawElementUninstalled(listener: (element: GacUIRawElement) => void): IGacUIEventSubscription {
         this._rawUninstalledListeners.add(listener);
-        return () => { this._rawUninstalledListeners.delete(listener); };
+        return { unsubscribe: () => { this._rawUninstalledListeners.delete(listener); } };
     }
 
-    rawElementUpdated(listener: (element: GacUIRawElement) => void): () => void {
+    rawElementUpdated(listener: (element: GacUIRawElement) => void): IGacUIEventSubscription {
         this._rawUpdatedListeners.add(listener);
-        return () => { this._rawUpdatedListeners.delete(listener); };
+        return { unsubscribe: () => { this._rawUpdatedListeners.delete(listener); } };
+    }
+
+    registerRawElementInterpretorFactory(name: string, factory: IRawElementInterpretorFactory): void {
+        if (this._rawInterpretorFactories.has(name)) {
+            throw new Error(`Raw element interpretor factory ${name} is already registered`);
+        }
+        this._rawInterpretorFactories.set(name, factory);
+    }
+
+    getRawElementInterpretorFactory(name: string): IRawElementInterpretorFactory | undefined {
+        return this._rawInterpretorFactories.get(name);
+    }
+
+    private _finalizeRawInterpretor(id: SCHEMA.TYPES.Integer): void {
+        const interpretor = this._rawInterpretors.get(id);
+        this._rawInterpretors.delete(id);
+        interpretor?.finalize();
     }
 
     abstract start(responses: SCHEMA.IRemoteProtocolResponses, events: SCHEMA.IRemoteProtocolEvents): void;
@@ -240,6 +259,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._stopCaretBlink();
         this._resizeObserver.disconnect();
         this._uninstallEvents();
+        // Keep records and drawing surfaces for the last picture, but release painters.
+        for (const id of this._rawInterpretors.keys()) this._finalizeRawInterpretor(id);
     }
 
     private _stopCaretBlink(): void {
@@ -1067,14 +1088,25 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }
 
         const raw = this._rawElements.get(id);
+        const interpretorChanged = raw !== undefined && typedDesc.type === SCHEMA.RendererType.Raw &&
+            raw.interpretor !== typedDesc.desc.interpretor;
         const rawChanged = raw !== undefined && typedDesc.type === SCHEMA.RendererType.Raw &&
-            (raw.id !== typedDesc.desc.rawId || raw.data !== typedDesc.desc.data);
+            (raw.id !== typedDesc.desc.rawId || interpretorChanged || raw.data !== typedDesc.desc.data);
         this._renderingRecord.elements.updateDesc(id, typedDesc);
         const virtualDom = this._renderingRecord.elementToDoms.get(id);
         if (virtualDom) {
             virtualDom.updateTypedDesc(id, typedDesc);
         }
         if (raw !== undefined && rawChanged) {
+            if (interpretorChanged) {
+                this._finalizeRawInterpretor(id);
+                const factory = raw.interpretor === '' ? undefined : this.getRawElementInterpretorFactory(raw.interpretor);
+                if (factory !== undefined) {
+                    const interpretor = factory.create();
+                    this._rawInterpretors.set(id, interpretor);
+                    interpretor.initialize(raw);
+                }
+            }
             for (const listener of [...this._rawUpdatedListeners]) {
                 listener(raw);
             }
@@ -1122,7 +1154,11 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                 }
             } finally {
                 this._rawElements.delete(id);
-                this._renderingRecord.elements.destroy(id);
+                try {
+                    this._finalizeRawInterpretor(id);
+                } finally {
+                    this._renderingRecord.elements.destroy(id);
+                }
             }
         }
     }

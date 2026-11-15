@@ -57,7 +57,8 @@
         document.getElementById('gacui-exit').onclick = () => gacuiRenderer?.requestStopToCore(false);
         document.getElementById('gacui-force-exit').onclick = () => gacuiRenderer?.requestStopToCore(true);
 
-        import { installFullControlTestRawElements } from '/fullControlTestRaw.js';
+        import { installRawClock } from '/rawClock.js';
+        import { installRawTouching } from '/rawTouching.js';
 
         // Event bridges for Playwright tests.
         // idle: fires when the server sends RequestRendererIdle (UI is stable).
@@ -123,12 +124,12 @@
             let renderer;
             let client;
             let session;
-            let disposeClocks;
+            let disposeTouching;
             let pageHidden = false;
             let keepRvmHost = false;
             window.addEventListener('pagehide', () => {
                 pageHidden = true;
-                disposeClocks?.();
+                disposeTouching?.();
                 if (session) {
                     session.stop();
                 } else {
@@ -151,7 +152,8 @@
                 }
                 if (pageHidden) return;
                 gacuiRenderer = renderer;
-                disposeClocks = installFullControlTestRawElements(renderer);
+                installRawClock(renderer);
+                disposeTouching = installRawTouching(renderer);
                 settings.suggestMinSize(0, 0);
                 if (session) {
                     await session.completion;
@@ -171,7 +173,7 @@
                 }
 
             } finally {
-                disposeClocks?.();
+                disposeTouching?.();
                 if (session && (!keepRvmHost || pageHidden)) session.stop();
                 else {
                     client?.stop();
