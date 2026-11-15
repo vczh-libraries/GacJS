@@ -453,6 +453,7 @@ export interface ElementShape {
 export interface ElementDesc_Raw {
     id: TYPES.Integer;
     rawId: TYPES.String;
+    interpretor: TYPES.String;
     data: TYPES.String;
 }
 
