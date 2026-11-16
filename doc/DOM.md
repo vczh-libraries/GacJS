@@ -621,8 +621,8 @@ Auto-repeat detection:
 - On `blur`, clear the set to avoid stuck keys
 
 Cross-platform modifier handling:
-- `IOKeyInfo.ctrl` is set for both `Ctrl` (Windows/Linux) and `Cmd` (macOS)
-- This provides a unified interface for GacUI application shortcuts
+- `IOKeyInfo.ctrl` tracks Ctrl independently of Command/Meta.
+- `IOKeyInfo.osSuper` tracks Command on macOS, Super on Linux and Win on Windows.
 
 ---
 
@@ -633,12 +633,17 @@ Mouse4, and Mouse5. Consumed Mouse4/Mouse5 down and up events prevent their
 browser defaults so Back/Forward navigation cannot disconnect the renderer.
 Both events still reach Core and update application controls normally.
 
+A mouse press immediately acquires browser pointer capture until release,
+covering the round trip before Core can request capture. A rapid drag and release
+outside the surface therefore still reach Core in order. Stopping the renderer
+also releases any mouse pointer it still owns.
+
 Core's `IORequireCapture` keeps mouse down, movement and release events flowing
 when a drag leaves the renderer surface but remains in the browser document.
 Document listeners forward only events originating outside the surface, so
 ordinary events from rendered children are delivered once. Coordinates remain
 relative to the renderer and can fall outside its bounds. `IOReleaseCapture`
-ends this forwarding; stopping the renderer also clears capture and removes
+ends this explicit forwarding; stopping the renderer also clears capture and removes
 the document listeners. This prevents a modal resize from remaining active
 after its mouse release occurs outside the rendered surface.
 

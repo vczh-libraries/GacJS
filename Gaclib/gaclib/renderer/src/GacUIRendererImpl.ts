@@ -1493,6 +1493,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _pointContacts = new Map<number, number>();
     private _pointCanceled = false;
     private _lastPointerType = '';
+    private _mousePointerId: number | undefined;
     private _pointStyle: HTMLStyleElement;
 
     private _drainPoint = (event: PointerEvent): void => {
@@ -1542,7 +1543,19 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     private _onPoint(event: PointerEvent): void {
         this._lastPointerType = event.pointerType;
-        if (event.pointerType !== 'touch' || this._stopping) return;
+        if (this._stopping) return;
+        if (event.pointerType === 'mouse') {
+            if (event.type === 'pointerdown') {
+                // Keep the press until release while Core's capture request is in flight.
+                this._settings.target.setPointerCapture(event.pointerId);
+                this._mousePointerId = event.pointerId;
+            } else if (this._mousePointerId === event.pointerId &&
+                ['pointerup', 'pointercancel', 'lostpointercapture'].includes(event.type)) {
+                this._mousePointerId = undefined;
+            }
+            return;
+        }
+        if (event.pointerType !== 'touch') return;
         this._textInput?.point(event);
         if (event.cancelable) event.preventDefault();
         const target = this._settings.target;
@@ -1794,6 +1807,12 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     private _uninstallEvents(): void {
         this._mouseCaptured = false;
+        if (this._mousePointerId !== undefined) {
+            if (this._settings.target.hasPointerCapture(this._mousePointerId)) {
+                this._settings.target.releasePointerCapture(this._mousePointerId);
+            }
+            this._mousePointerId = undefined;
+        }
         for (const name of ['mousedown', 'mousemove', 'mouseup']) {
             document.removeEventListener(name, this._capturedMouseEvent);
         }

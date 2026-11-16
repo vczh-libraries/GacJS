@@ -46,6 +46,45 @@ test('keyboard input preserves supplementary UTF-16 units and modifiers', async 
     }
 });
 
+test('Mouse presses capture outside release before Core replies and release ownership on stop', async () => {
+    const current = await open();
+    await paint(current);
+    const target = current.locator('#gacui-screen');
+    const bounds = (await target.boundingBox())!;
+    await target.evaluate(element => element.addEventListener('pointerdown', event => {
+        (window as any).rawMousePointerId = (event as PointerEvent).pointerId;
+    }));
+    await current.mouse.move(bounds.x + 50, bounds.y + 60);
+    await current.evaluate(() => { (window as any).rawTest.sent.length = 0; });
+    await current.mouse.down();
+    await current.mouse.move(bounds.x + bounds.width + 10, bounds.y + 60);
+    await current.mouse.up();
+    const events = () => current.evaluate(async () => {
+        const t = (window as any).rawTest;
+        await t.request('ControllerGetFontConfig');
+        return t.sent.filter((event: any) =>
+            ['IOButtonDown', 'IOMouseMoving', 'IOButtonUp'].includes(event.name));
+    });
+    // No IORequireCapture was sent: the browser must cover that round trip.
+    await expect.poll(async () => (await events()).map((event: any) => event.name))
+        .toEqual(['IOButtonDown', 'IOMouseMoving', 'IOButtonUp']);
+    expect((await events())[2].arguments.info).toMatchObject({
+        left: false, x: { value: bounds.width + 10 }, y: { value: 60 },
+    });
+    await current.mouse.move(bounds.x + bounds.width + 20, bounds.y + 60);
+    expect(await events()).toHaveLength(3);
+
+    await current.mouse.move(bounds.x + 50, bounds.y + 60);
+    await current.mouse.down();
+    expect(await target.evaluate(element => element.hasPointerCapture((window as any).rawMousePointerId))).toBe(true);
+    const beforeStop = (await events()).length;
+    await current.evaluate(() => (window as any).rawTest.renderer.stop());
+    expect(await target.evaluate(element => element.hasPointerCapture((window as any).rawMousePointerId))).toBe(false);
+    await current.mouse.move(bounds.x + bounds.width + 10, bounds.y + 60);
+    await current.mouse.up();
+    expect(await events()).toHaveLength(beforeStop);
+});
+
 test('Core mouse capture delivers outside release once and stops on release or disposal', async () => {
     const current = await open();
     await paint(current);
