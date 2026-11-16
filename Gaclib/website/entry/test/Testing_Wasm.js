@@ -291,7 +291,7 @@ test('WasmFCT read-only editors disable hyperlink and ribbon style mutations', a
         await page.waitForTimeout(550);
         await send('touchEnd', []);
         await expect.poll(async () => (await paragraph()).runsDiff.filter(run => run.props[1].backgroundColor !== '#00000000')
-            .map(run => marker.slice(run.begin, run.end)).join('')).toBe(marker);
+            .map(run => marker.slice(run.caretBegin, run.caretEnd)).join('')).toBe(marker);
         return start;
     };
     const color = label => screen.getByText(label, { exact: true }).last().evaluate(node => getComputedStyle(node).color);

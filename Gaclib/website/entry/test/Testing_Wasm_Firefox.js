@@ -86,13 +86,9 @@ async function exercise(app, marker) {
         await clickAt(page, point.x, point.y);
         await page.keyboard.type(marker);
         await expectUI(page.locator('#gacui-screen')).toContainText(`Hello, ${marker}!`);
-        // Firefox has no CDP; inject Unicode keyboard events into the real input surface.
-        for (const key of '你好🙂') {
-            await page.evaluate(key => {
-                const screen = document.getElementById('gacui-screen');
-                for (const type of ['keydown', 'keyup']) screen.dispatchEvent(new KeyboardEvent(type, { key, code: 'KeyA', keyCode: 65, bubbles: true }));
-            }, key);
-        }
+        // Use the browser's text insertion path so the active input adapter
+        // receives text input, including the supplementary Unicode character.
+        await page.keyboard.insertText('你好🙂');
         await expectUI(page.locator('#gacui-screen')).toContainText(`Hello, ${marker}你好🙂!`);
     }
 }
