@@ -50,13 +50,18 @@ Chromium, WebKit and Firefox, with both detected and forced contenteditable
 adapters in Chromium. It checks UTF-16 commits, complete-tree focus invariants,
 stable hosts, delayed focus confirmation, composition, commands, teardown,
 VirtualKeyboard ownership and passive `InlineObjectWithCaret` playback.
+Clipboard shortcuts must reach Core without a second browser edit; a separate
+paste-event payload checks the plaintext transaction. The live editing suite
+checks Copy/Cut/Paste and Undo against Core's clipboard in both adapters.
 `RawBrowser.test.ts` retains keyboard, raw element, clipping and touch regressions.
 Entry unit files run sequentially with bounded 30-second test timeouts.
 
-The shared document-touch momentum check arms a fresh renderer-idle observer
-before the stopping contact. It rejects a missing notification instead of
-accepting an idle cached during the preceding flick, then requires the exact
-paragraph position to remain unchanged during the existing hold check.
+The shared document-touch momentum check observes a button's hover-color change
+after the stopping contact before sampling the paragraph position. A stationary
+Down stops momentum without necessarily requesting a repaint, and an idle can
+belong to a preceding frame. The subsequent visible hover repaint drains that
+work before requiring the exact paragraph position to remain unchanged during
+the existing hold check.
 
 Run `yarn test-e2e` in that directory for the Windows live Core suites, including
 `Testing_Protocol_BrowserEditing.js`, existing SimpleTyping/caret/image suites
@@ -133,7 +138,7 @@ suite; live wall-clock values are not snapshot baselines.
 
 The Wasm touch suite observes the real worker channel without a native HTTP Core. Chromium CDP drives acquisition, overlapping/reused contacts, cancellation, capture across resize, manipulation pixels and identity-safe list swipes. Firefox uses explicitly synthetic PointerEvents with capture stubs, so it verifies adapter/Core/rendering behavior without claiming native browser capture. The portable Wasm channel test separately preserves full-width decimal sequence, timestamp and frame fields.
 
-Document touch checks use unmodified short presses to position a collapsed caret, including at an existing selection endpoint, and End-time long presses to extend a collapsed range. A long press on a selected range preserves its endpoints and must emit one long offer and one right click, with no short offer; reaching the hold threshold alone activates neither. Document drags scroll the viewport; reversing the drag restores the same selection rendering. The optional momentum continues after Up in Selectable and Editable modes, stops at a fresh contact, and preserves the range after returning to the original viewport. Consume the flick's pending renderer idle before the stopping contact, then wait for the contact's render before capturing the stationary position; Core can already be stationary while the browser still displays an older frame. These checks require a freshly rebuilt FCT Core, including for Wasm.
+Document touch checks use unmodified short presses to position a collapsed caret, including at an existing selection endpoint, and End-time long presses to extend a collapsed range. A long press on a selected range preserves its endpoints and must emit one long offer and one right click, with no short offer; reaching the hold threshold alone activates neither. Document drags scroll the viewport; reversing the drag restores the same selection rendering. The optional momentum continues after Up in Selectable and Editable modes, stops at a fresh contact, and preserves the range after returning to the original viewport. Observe a subsequent visible hover repaint before capturing the stationary position; Core can already be stationary while the browser still displays an older frame, and the stopping contact need not repaint. These checks require a freshly rebuilt FCT Core, including for Wasm.
 
 The Chromium FCT document regression selects real text through touch input in both editors. Selectable and Preview must disable hyperlink changes and the ribbon style gallery; returning to Editable must enable them again. It checks rendered command colors, dialog activation and effective paragraph formatting against the running Wasm Core.
 
@@ -171,6 +176,10 @@ The live Playwright suite files are:
 - `Testing_Protocol_RemoteViewModel_Cli.js`
 - `Testing_Protocol_RemoteViewModel_Cpp.js`
 - `Testing_Protocol_RawClock.js`
+
+The inline-image suite also clicks the leading side of a large image and
+requires a valid object boundary, followed by an insertion and exact Undo.
+This exercises Core hit testing against renderer-provided caret bounds.
 
 The portable unit suites include `RvmQuerySession.test.ts`,
 `RawBrowser.test.ts` and the controlled Wasm page composition tests. The Raw

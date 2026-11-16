@@ -129,6 +129,31 @@ for (const adapter of ['auto', 'contenteditable']) {
             expect(pageErrors).toEqual([]);
         });
 
+        test('clipboard shortcuts share Core clipboard with Copy and Cut', async () => {
+            const page = ctx.page;
+            const editor = await findEditorCenter(page);
+            await clickAt(page, editor.cx, editor.cy);
+            await page.keyboard.press('Control+Home');
+            await page.keyboard.press('Control+Shift+End');
+            const text = 'Clipboard🙂';
+            await page.keyboard.insertText(text);
+            await expect.poll(async () => (await coreEditors(page))[1]).toBe(text);
+            await page.keyboard.press('Control+a');
+            await page.keyboard.press('Control+c');
+            await page.keyboard.press('ArrowRight');
+            await page.keyboard.press('Control+v');
+            await expect.poll(async () => (await coreEditors(page))[1]).toBe(text + text);
+            await page.keyboard.press('Control+z');
+            await expect.poll(async () => (await coreEditors(page))[1]).toBe(text);
+            await page.keyboard.press('Control+a');
+            await page.keyboard.press('Control+x');
+            await expect.poll(async () => (await coreEditors(page))[1]).toBe('');
+            await page.keyboard.press('Control+v');
+            await expect.poll(async () => (await coreEditors(page))[1]).toBe(text);
+            expected[1] = text;
+            expect(pageErrors).toEqual([]);
+        });
+
         test('multi-paragraph selection, undo/redo and Toolstrip edit modes keep Core authoritative', async () => {
             const page = ctx.page;
             const cdp = await page.context().newCDPSession(page);

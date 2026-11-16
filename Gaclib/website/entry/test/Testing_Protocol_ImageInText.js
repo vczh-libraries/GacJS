@@ -32,7 +32,8 @@ import {
     describeProtocolTest,
     GACUI_ROOT,
     UI_TEXT,
-    findTextPosition
+    findTextPosition,
+    CORE_AUTOMATION_CONTROLS_URL
 } from './Testing_Protocol.js';
 
 const TYPED_TEXT = 'ABC';
@@ -95,6 +96,8 @@ async function getEditorContent(page) {
             }
             images.push({
                 hasSrc: img.src !== '' && img.src !== 'about:blank',
+                x: img.getBoundingClientRect().x,
+                y: img.getBoundingClientRect().y,
                 width: img.getBoundingClientRect().width,
                 height: img.getBoundingClientRect().height,
                 hasSelectionOverlay
@@ -296,5 +299,32 @@ describeProtocolTest('ImageInText', () => {
             expect.soft(content.images[0].hasSrc, 'Image should be visible after Ctrl+A').toBe(true);
             expect.soft(content.images[0].hasSelectionOverlay, 'Image should have selection indicator').toBe(true);
         }
+    });
+
+    test('clicking the leading side of an image keeps a valid caret and undoable insertion', async () => {
+        const page = ctx.page;
+        const image = (await getEditorContent(page)).images[0];
+        const documentState = async () => {
+            const response = await fetch(CORE_AUTOMATION_CONTROLS_URL, { signal: AbortSignal.timeout(10000) });
+            if (!response.ok) throw new Error(`Core controls HTTP ${response.status}`);
+            const walk = node => [node, ...(node.children ?? []).flatMap(walk)];
+            const state = await response.json();
+            const editor = walk(state.MainWindow.composition).find(node => node.control === 'DocumentViewer');
+            return walk(editor).find(node => node.elementDocument !== undefined);
+        };
+        await page.keyboard.press('Control+End');
+        await waitForIdle(page);
+        const original = (await documentState()).elementDocument;
+        const end = Number(/Selection\(0,(\d+)\)/.exec((await documentState()).element)[1]);
+        await clickAt(page, image.x + Math.min(50, image.width / 4), image.y + image.height / 2);
+        const selection = /Selection\(0,(\d+)\)-\(0,(\d+)\)/.exec((await documentState()).element);
+        expect(Number(selection[1])).toBe(Number(selection[2]));
+        expect(Number(selection[1])).toBe(4);
+        expect(end).toBeGreaterThan(4);
+        await page.keyboard.type('Z');
+        await expect.poll(async () => (await getEditorContent(page)).text).toContain('Z');
+        await page.keyboard.press('Control+z');
+        await expect.poll(async () => (await documentState()).elementDocument).toBe(original);
+        expect((await getEditorContent(page)).images).toHaveLength(1);
     });
 });

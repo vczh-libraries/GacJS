@@ -458,21 +458,20 @@ export async function checkDocumentTouch(page, send) {
         await send('touchEnd', []);
         const released = (await paragraphBox.boundingBox()).y;
         await poll(async () => (await paragraphBox.boundingBox()).y).toBeLessThan(released);
-        // Arm a fresh idle observation before the stopping contact. An idle
-        // cached during the flick is not evidence that this Down was rendered.
-        const idle = page.__idleState;
-        idle.pending = false;
-        let timeout;
-        const stoppedFrame = new Promise((resolve, reject) => {
-            timeout = setTimeout(() => reject(new Error('Stopping touch produced no fresh renderer idle.')), 5000);
-            idle.resolve = resolve;
+        // A stationary Down stops momentum without invalidating the document.
+        // Observe a subsequent hover repaint, rather than an uncorrelated idle
+        // that might belong to a momentum frame already in flight.
+        const button = page.locator('#gacui-screen').getByText('Make Font Larger', { exact: true });
+        const background = () => button.evaluate(element => {
+            for (; element !== null; element = element.parentElement) {
+                if (element.style.backgroundColor !== '') return element.style.backgroundColor;
+            }
+            return '';
         });
-        try {
-            await Promise.all([stoppedFrame, send('touchStart', [drag])]);
-        } finally {
-            clearTimeout(timeout);
-            idle.resolve = null;
-        }
+        const beforeHover = await background();
+        await send('touchStart', [drag]);
+        await button.hover();
+        await poll(background).not.toBe(beforeHover);
         const stopped = (await paragraphBox.boundingBox()).y;
         await page.waitForTimeout(250);
         expect((await paragraphBox.boundingBox()).y).toBe(stopped);

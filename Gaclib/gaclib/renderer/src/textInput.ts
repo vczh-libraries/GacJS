@@ -435,7 +435,6 @@ export class TextInputCoordinator {
         if (this.stopped) return true;
         this.modifiers = { ctrl: event.ctrlKey, shift: event.shiftKey, alt: event.altKey, osSuper: event.metaKey, capslock: event.getModifierState('CapsLock') };
         if (this.session === null) return false;
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') return true;
         if (event.isComposing || event.keyCode === 229 || event.key === 'Process' || this.session.composition !== null) return true;
         this.physical.add(event.key);
         return false;

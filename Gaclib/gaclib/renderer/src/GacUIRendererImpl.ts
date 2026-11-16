@@ -1758,8 +1758,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             }
 
             // Systematically prevent default behavior except for critical browser shortcuts
-            const browserText = this._textInput?.active === true && ([...keyEvent.key].length === 1 && !keyEvent.ctrlKey && !keyEvent.metaKey ||
-                (keyEvent.ctrlKey || keyEvent.metaKey) && keyEvent.key.toLowerCase() === 'v');
+            const browserText = this._textInput?.active === true && [...keyEvent.key].length === 1 && !keyEvent.ctrlKey && !keyEvent.metaKey;
             if (!browserText && !this._settings.isShortcutReservedForBrowser(keyEvent)) {
                 keyEvent.preventDefault();
             }

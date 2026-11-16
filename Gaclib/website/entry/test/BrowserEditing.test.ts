@@ -198,6 +198,9 @@ for (const [engine, adapter] of [['chromium', 'auto'], ['chromium', 'contentedit
             const current = await open(engine, adapter);
             await current.keyboard.press('Backspace');
             await current.keyboard.press('Enter');
+            await current.keyboard.press('Control+c');
+            await current.keyboard.press('Control+x');
+            await current.keyboard.press('Control+v');
             await current.evaluate(() => {
                 const host = document.activeElement!;
                 for (const inputType of ['deleteContentBackward', 'deleteContentForward', 'insertParagraph', 'insertReplacementText']) {
@@ -211,7 +214,7 @@ for (const [engine, adapter] of [['chromium', 'auto'], ['chromium', 'contentedit
             });
             expect(await codes(current)).toEqual('\r\rPaste🙂'.split(''));
             const keyDowns = await current.evaluate(() => (window as any).rawTest.sent.filter((v: any) => v.name === 'IOKeyDown').map((v: any) => v.arguments.code));
-            expect(keyDowns).toEqual([8, 13, 8, 46, 13]);
+            expect(keyDowns).toEqual([8, 13, 162, 67, 162, 88, 162, 86, 8, 46, 13]);
             expect(await current.locator('[data-gacui-input="10"]').textContent()).toBe('Core');
         });
     });

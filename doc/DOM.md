@@ -745,7 +745,10 @@ the structure. Composition revisions never produce `IOChar`. Final commits use
 the shared UTF-16 helper exactly once; repeated identical commits remain valid.
 
 Soft backward/forward deletion and line breaks translate to Core commands.
-Physical-key ownership prevents duplicate commands. Plaintext paste is one
+Physical-key ownership prevents duplicate commands. Clipboard keyboard shortcuts,
+including Ctrl+V, go to Core so Copy, Cut and Paste share Core's rich clipboard
+with menu and toolbar commands. They suppress the browser default; they do not
+read the OS clipboard. A browser-originated paste event supplies plaintext in one
 transaction. Spelling/autocorrection is disabled where supported; unsupported
 replacement ranges, rich formatting and drops are rejected and reconciled.
 There is no document-range editing protocol: arbitrary reconversion cannot be
