@@ -650,10 +650,16 @@ export interface ElementRendering {
     areaClippedByParent: Rect;
 }
 
+export interface ElementEditableAttribute {
+    focused: TYPES.Boolean;
+    editable: TYPES.Boolean;
+}
+
 export interface ElementBoundary {
     id: TYPES.Integer;
     hitTestResult: TYPES.Nullable<WindowHitTestResult>;
     cursor: TYPES.Nullable<WindowSystemCursorType>;
+    editableAttribute: TYPES.Nullable<ElementEditableAttribute>;
     bounds: Rect;
     areaClippedBySelf: Rect;
 }
@@ -688,6 +694,7 @@ export interface RenderingDomContent {
     element: TYPES.Nullable<TYPES.Integer>;
     bounds: Rect;
     validArea: Rect;
+    editableAttribute: TYPES.Nullable<ElementEditableAttribute>;
 }
 
 export interface RenderingDom {
