@@ -196,3 +196,21 @@ Playwright is installed as a dev dependency (`@playwright/test`) in the Gaclib w
 | `#filesTreeView` | The snapshot files tree container |
 | `#frameList` | The frames list container |
 | `#gacuiScreen` | The rendering target div |
+
+### Editing metadata and passive paragraph playback
+
+Imported full/diff frames contain nullable `editableAttribute` values with
+`focused` and `editable`; non-null presence marks the owner, not each paragraph.
+Inspect the completed recovered tree, including unchanged IDs, when comparing
+focus transitions. Do not edit copied snapshots to manufacture tags: refresh
+them with root `yarn run import` and `yarn codegen` after upstream generation.
+
+Playback uses virtual-DOM rendering without starting an interactive input
+coordinator. Even recorded focused/editable tags must not focus a div, set
+contenteditable, attach EditContext or open a keyboard. The controlled
+`BrowserEditing.test.ts` case renders every frame of
+`Controls/Editor/Features/InlineObjectWithCaret`, checks embedded images and
+requires passive focus/structure. Retain the live caret, selection, wrapping and
+inline-image suites described in
+[<GacJS repo>/doc/Testing_Protocol.md](Testing_Protocol.md#browser-text-input)
+when changing paragraph construction or reconciliation.

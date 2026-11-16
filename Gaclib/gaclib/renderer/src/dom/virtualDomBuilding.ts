@@ -68,6 +68,8 @@ function fillVirtualDom(
     // Create props for the virtual DOM
     const props = {
         globalBounds: content.bounds,
+        validArea: provider.nativeClipping === true ? content.validArea : undefined,
+        editableAttribute: content.editableAttribute,
         hitTestResult: content.hitTestResult !== null ? content.hitTestResult : undefined,
         cursor: content.cursor !== null ? content.cursor : undefined,
         typedDesc,
@@ -99,7 +101,7 @@ function createVirtualDom(id: SCHEMA.TYPES.Integer, content: SCHEMA.RenderingDom
     const naturalValidArea = parentValidArea ? intersectRects(content.bounds, parentValidArea) : content.bounds;
 
     // Check if validArea does not provide new information
-    if (areRectsEqual(content.validArea, naturalValidArea)) {
+    if (provider.nativeClipping === true || areRectsEqual(content.validArea, naturalValidArea)) {
         // validArea equals natural intersection, create single virtual DOM
         const virtualDom = fillVirtualDom(
             content,
@@ -152,12 +154,13 @@ function createVirtualDomTree(renderingDom: SCHEMA.RenderingDom, record: Virtual
     return outerVirtualDom;
 }
 
-export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, provider: IVirtualDomProvider): VirtualDomRecord {
+function validateRoot(renderingDom: SCHEMA.RenderingDom): void {
     // Verify that this is the screen (root) element
     if (renderingDom.id !== RootVirtualDomId ||
         renderingDom.content.hitTestResult !== null ||
         renderingDom.content.cursor !== null ||
         renderingDom.content.element !== null ||
+        renderingDom.content.editableAttribute !== null ||
         renderingDom.content.bounds.x1 !== 0 ||
         renderingDom.content.bounds.y1 !== 0 ||
         renderingDom.content.bounds.x2 !== 0 ||
@@ -168,6 +171,10 @@ export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingD
         renderingDom.content.validArea.y2 !== 0) {
         throw new Error('Root RenderingDom does not match expected screen format');
     }
+}
+
+export function createVirtualDomFromRenderingDom(renderingDom: SCHEMA.RenderingDom, elements: ElementManager, provider: IVirtualDomProvider): VirtualDomRecord {
+    validateRoot(renderingDom);
 
     // Create the VirtualDomRecord with all required maps
     const record: VirtualDomRecord = {
@@ -216,7 +223,7 @@ function collectPropsBeforeDiff(
         }
 
         const naturalValidArea = parentValidArea ? intersectRects(parentValidArea, innerDom.props.globalBounds) : innerDom.props.globalBounds;
-        validArea = isValidAreaDom ? outerDom.props.globalBounds : naturalValidArea;
+        validArea = innerDom.props.validArea ?? (isValidAreaDom ? outerDom.props.globalBounds : naturalValidArea);
 
         props.set(outerDom.id, {
             bounds: innerDom.props.globalBounds,
@@ -329,6 +336,10 @@ function ensureClippedHierarchy(
     provider: IVirtualDomProvider
 ): IVirtualDom {
     const currentProps = props.get(virtualDom.id)!;
+    if (provider.nativeClipping === true) {
+        ensureChildrenClippedHierarchy(virtualDom, currentProps.validArea, props, record, provider);
+        return virtualDom;
+    }
     const naturalValidArea = validArea ? intersectRects(validArea, currentProps.bounds) : currentProps.bounds;
     const expectedClipped = !areRectsEqual(currentProps.validArea, naturalValidArea);
     const actualClipped = currentProps.outerDom !== currentProps.innerDom;
@@ -383,15 +394,17 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
             case SCHEMA.RenderingDom_DiffType.Modified:
                 if (diff.children) {
                     if (diff.id === RootVirtualDomId) {
-                        record.screen.updateChildren([]);
+                        record.screen.updateChildren(record.screen.children.filter(child => diff.children!.includes(child.id)));
                     } else {
-                        self.innerDom!.updateChildren([]);
+                        self.innerDom!.updateChildren(self.innerDom!.children.filter(child => diff.children!.includes(child.id)));
                     }
                 }
 
                 if (diff.content) {
                     const newProps = {
                         globalBounds: diff.content.bounds,
+                        validArea: provider.nativeClipping === true ? diff.content.validArea : undefined,
+                        editableAttribute: diff.content.editableAttribute,
                         hitTestResult: diff.content.hitTestResult !== null ? diff.content.hitTestResult : undefined,
                         cursor: diff.content.cursor !== null ? diff.content.cursor : undefined,
                         typedDesc: diff.content.element !== null ? record.elements.getDescEnsured(diff.content.element) : undefined,
@@ -436,4 +449,27 @@ export function updateVirtualDomWithRenderingDomDiff(diffsInOrder: SCHEMA.Render
     }
 
     ensureChildrenClippedHierarchy(record.screen, undefined, props, record, provider);
+}
+
+/** A full refresh keeps visible logical boundaries and their native editing state. */
+export function replaceVirtualDomFromRenderingDom(tree: SCHEMA.RenderingDom, record: VirtualDomRecord, provider: IVirtualDomProvider, pendingElements?: Map<number, HTMLElement>): void {
+    validateRoot(tree);
+    const ids = new Set<number>();
+    const diffsInOrder: SCHEMA.RenderingDom_Diff[] = [];
+    const visit = (node: SCHEMA.RenderingDom): void => {
+        if (ids.has(node.id)) throw new Error(`Duplicate RenderingDom ID found: ${node.id}`);
+        ids.add(node.id);
+        diffsInOrder.push({ id: node.id,
+            diffType: node.id === RootVirtualDomId || record.doms.has(node.id) ? SCHEMA.RenderingDom_DiffType.Modified : SCHEMA.RenderingDom_DiffType.Created,
+            content: node.id === RootVirtualDomId ? null : node.content,
+            children: (node.children ?? []).filter(child => child !== null).map(child => child.id) });
+        for (const child of node.children ?? []) if (child !== null) visit(child);
+    };
+    visit(tree);
+    for (const id of record.doms.keys()) {
+        if (!ids.has(id)) diffsInOrder.push({ id, diffType: SCHEMA.RenderingDom_DiffType.Deleted, content: null, children: null });
+    }
+    const removed = diffsInOrder.filter(diff => diff.diffType === SCHEMA.RenderingDom_DiffType.Deleted);
+    const retained = diffsInOrder.filter(diff => diff.diffType !== SCHEMA.RenderingDom_DiffType.Deleted);
+    updateVirtualDomWithRenderingDomDiff({ diffsInOrder: [...removed, ...retained] }, record, provider, pendingElements);
 }

@@ -458,10 +458,21 @@ export async function checkDocumentTouch(page, send) {
         await send('touchEnd', []);
         const released = (await paragraphBox.boundingBox()).y;
         await poll(async () => (await paragraphBox.boundingBox()).y).toBeLessThan(released);
-        // Consume the flick's idle before waiting for the stopping contact's render.
-        await waitForIdle(page);
-        await send('touchStart', [drag]);
-        await waitForIdle(page);
+        // Arm a fresh idle observation before the stopping contact. An idle
+        // cached during the flick is not evidence that this Down was rendered.
+        const idle = page.__idleState;
+        idle.pending = false;
+        let timeout;
+        const stoppedFrame = new Promise((resolve, reject) => {
+            timeout = setTimeout(() => reject(new Error('Stopping touch produced no fresh renderer idle.')), 5000);
+            idle.resolve = resolve;
+        });
+        try {
+            await Promise.all([stoppedFrame, send('touchStart', [drag])]);
+        } finally {
+            clearTimeout(timeout);
+            idle.resolve = null;
+        }
         const stopped = (await paragraphBox.boundingBox()).y;
         await page.waitForTimeout(250);
         expect((await paragraphBox.boundingBox()).y).toBe(stopped);

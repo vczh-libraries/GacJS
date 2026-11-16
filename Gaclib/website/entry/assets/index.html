@@ -80,6 +80,7 @@
 
             const settings = {
                 target: gacuiScreen,
+                textInput: window.__gacui_text_input_options,
                 isShortcutReservedForBrowser: GacUIHtmlRenderer.isShortcutReservedForBrowser,
                 suggestMinSize: (x, y) => {
                     if (x < 320) x = 320;
@@ -114,7 +115,7 @@
                 const target = event.target;
                 const tagName = target.tagName.toLowerCase();
                 const isFocusableElement = ['input', 'button', 'select', 'textarea', 'a'].includes(tagName) ||
-                    target.hasAttribute('tabindex');
+                    target.closest('[tabindex], [data-gacui-input]') !== null;
 
                 if (!isFocusableElement) {
                     gacuiScreen.focus();

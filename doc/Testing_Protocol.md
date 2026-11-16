@@ -15,11 +15,11 @@ handshakes, see [NetworkProtocol.md](NetworkProtocol.md).
 
 ## Running the Tests
 
-Install the Playwright Chromium build once:
+Install the Playwright engines used by the controlled browser suites once:
 
 ```powershell
 Set-Location Gaclib
-npx playwright install chromium
+npx playwright install chromium webkit firefox
 ```
 
 Build GacJS and run all Vitest suites:
@@ -40,6 +40,53 @@ test; use the platform commands in the operating guide for those checks.
 
 Protocol test files execute sequentially (`fileParallelism: false`) because
 they share a stateful server and fixed ports.
+
+### Browser text input
+
+After a successful root build, run `yarn test-unit BrowserEditing.test.ts
+RawBrowser.test.ts` from `<GacJS repo>/Gaclib/website/entry` for controlled
+transport tests. `BrowserEditing.test.ts` drives the actual renderer bundle in
+Chromium, WebKit and Firefox, with both detected and forced contenteditable
+adapters in Chromium. It checks UTF-16 commits, complete-tree focus invariants,
+stable hosts, delayed focus confirmation, composition, commands, teardown,
+VirtualKeyboard ownership and passive `InlineObjectWithCaret` playback.
+`RawBrowser.test.ts` retains keyboard, raw element, clipping and touch regressions.
+Entry unit files run sequentially with bounded 30-second test timeouts.
+
+The shared document-touch momentum check arms a fresh renderer-idle observer
+before the stopping contact. It rejects a missing notification instead of
+accepting an idle cached during the preceding flick, then requires the exact
+paragraph position to remain unchanged during the existing hold check.
+
+Run `yarn test-e2e` in that directory for the Windows live Core suites, including
+`Testing_Protocol_BrowserEditing.js`, existing SimpleTyping/caret/image suites
+and transport/touch coverage. Serve the freshly built site at localhost:8896 as
+described above; the lifecycle harness builds and owns Core processes. The
+editing suite reads Core's automation document XML as well as browser state,
+so a browser-only mutation cannot count as a successful edit. It verifies
+Search, Ribbon and Toolstrip editor operations and selection behavior. Root
+`yarn test --concurrency 1` runs all package suites sequentially when simultaneous
+native Workflow compilation would contend with browser tests.
+
+`GacUISettings.textInput` selects adapters without replacing browser globals.
+The test website accepts private `window.__gacui_text_input_options` before page
+startup; controlled transport tests also accept `text-adapter` in their local
+fixture URL. Neither is a new transport option. Capture `textInputState`, browser
+version/capabilities, active host/ID, event order, emitted protocol input, page
+errors, error mask and final Core text on failure. VirtualKeyboard API exposure
+and callable methods are separate from EditContext support. The injected keyboard
+test double verifies calls and ownership only, not physical keyboard display.
+
+`page.keyboard.insertText()` verifies native engine insertion without printable
+keydown synthesis. Chromium CDP `Input.imeSetComposition` followed by
+`Input.insertText` verifies engine preedit revision, cancellation and commit.
+Additional synthetic noncancelable event-order tests deliberately model sequences
+that those automation APIs cannot request. None establishes an actual OS IME
+candidate window or an iPhone/Android keyboard. Use the operations in
+[<GacUI repo>/.github/Jobs/DebugRemoteProtocolSop.md](../../GacUI/.github/Jobs/DebugRemoteProtocolSop.md#3-type-and-preserve-text-in-two-editors)
+for physical verification and record the actual browser, IME, device and any
+unavailable coverage. For Wasm, stage newly built matching artifacts after the
+website build; an older public demo does not verify current editing metadata.
 
 ### Linux WebAssembly apps
 

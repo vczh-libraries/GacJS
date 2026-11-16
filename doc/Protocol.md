@@ -538,12 +538,34 @@ struct RenderingDomContent {
     hitTestResult?: WindowHitTestResult
     cursor?: WindowSystemCursorType
     element?: int          // The element ID to render here (refers to RendererCreated IDs)
+    editableAttribute: ElementEditableAttribute? // null means no editing boundary
     bounds: Rect           // Global coordinates
     validArea: Rect        // Visible portion (for clipping)
 }
 ```
 
 The root node always has `id = -1` with `bounds = {0, 0, 0, 0}`.
+
+`ElementEditableAttribute` contains only `focused: boolean` and `editable:
+boolean`. Non-null presence represents Core's featured editing boundary; there
+is no wire `featured` field. Its `RenderingDom.id` identifies the owner of one
+or several paragraphs while visible, independently of renderer element IDs.
+Full and diff construction preserve the nullable value, including explicit null
+removal. A children-only diff preserves existing content.
+
+After a complete tree or ordered diff batch, inspect all visible tagged IDs,
+including unchanged nodes. More than one focused tag is a fatal renderer error
+listing the conflicting IDs, before filtering read-only regions. The input
+target is the unique focused tag only when editable. Intermediate focus-transfer
+diff ordering does not decide focus, and untagged caret rendering is not input
+metadata. The browser preserves each visible owner's actual div and connected
+ancestors through ordinary bounds, clipping and child updates.
+
+Browser composition state and session generations are local, not protocol
+fields. Core keeps the authoritative selection. Committed input uses one
+UTF-16 code unit per `IOChar`, including both surrogate units in order; preedit
+revisions send no character events. The current protocol cannot express
+arbitrary browser replacement ranges or identify a text event's target control.
 
 ### RenderingDom_DiffsInOrder
 

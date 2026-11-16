@@ -33,6 +33,7 @@ See [Protocol.md](Protocol.md) for the full protocol reference.
 - [Mouse Input](#mouse-input)
 - [Rendering Flow](#rendering-flow)
 - [Feature Gates](#feature-gates)
+- [Responding to IME and Virtual Keyboard](#responding-to-ime-and-virtual-keyboard)
 
 ---
 
@@ -98,7 +99,8 @@ HTML elements use `position: absolute` with `left`, `top`, `width`, `height` set
 
 ## Virtual DOM
 
-Each `RenderingDom` node maps to one or two `IVirtualDom` nodes:
+The HTML provider maps each `RenderingDom` ID to one persistent `IVirtualDom`
+and HTML div. Providers without native clipping retain the two-node representation:
 
 | VirtualDom type | ID | Purpose |
 |----------------|----|---------|
@@ -116,6 +118,8 @@ Each `RenderingDom` node maps to one or two `IVirtualDom` nodes:
     cursor?: WindowSystemCursorType;
     typedDesc?: TypedElementDesc; // Element rendering description (SolidBorder, SolidLabel, etc.)
     elementId?: number;           // Reference into ElementManager
+    validArea?: Rect;             // Global clipping rectangle for the HTML provider
+    editableAttribute?: ElementEditableAttribute | null;
 }
 ```
 
@@ -123,18 +127,21 @@ Each `RenderingDom` node maps to one or two `IVirtualDom` nodes:
 
 ## Clipping (ValidArea)
 
-When a `RenderingDom` node's `validArea` is smaller than the natural intersection
-of its bounds with the parent's visible area, a **two-node structure** is created:
+The HTML provider applies `clip-path: inset(...)` to the existing div, deriving
+the insets from global bounds and `validArea`. Clipping changes do not insert or
+remove ancestors. Full-tree replacement also reuses retained logical IDs.
+
+Other providers, including the virtual-DOM mock tests, retain a **two-node
+structure** when `validArea` is smaller than the natural intersection:
 
 ```
   Outer (id = original, bounds = validArea)     ← overflow: hidden
     └── Inner (id = -2, bounds = original)      ← actual content + element
 ```
 
-The outer `<div>` clips rendering via `overflow: hidden`. The inner `<div>` holds
-the element content and can extend beyond the outer div's edges.
-
-This structure is automatically added/removed as bounds change during diff updates.
+The outer virtual node represents the visible rectangle and the inner node the
+element's original bounds. This compatibility representation is not used for HTML
+editing hosts.
 
 ---
 
@@ -599,11 +606,14 @@ JavaScript `KeyboardEvent` is converted to GacUI key codes using a three-tier st
 2. **`event.key`** (logical character) — fallback
 3. **`event.keyCode`** (legacy numeric code) — last resort
 
-Character input accepts a single Unicode code point in `event.key`, including
-supplementary characters. `IOChar` carries one UTF-16 code unit per event; a pair
-is sent in order with the same modifier flags. UTF-32 Core input combines the
-pair before delivering the character to controls. Enter and Tab retain their
-character mappings; named keys do not emit character events.
+With an active browser text adapter, committed browser input supplies characters
+and printable `keydown` does not synthesize them. Ordinary Core key events,
+navigation, shortcuts, Enter and Tab keep their mappings. IME-owned keys pass to
+the browser without also editing Core. Reserved browser shortcuts remain reserved.
+Without an adapter, the legacy route accepts one Unicode code point in
+`event.key`. Both routes use one helper that sends one UTF-16 code unit per
+`IOChar`, preserving surrogate order and modifier flags. UTF-32 Core input joins
+the pair before delivering the character to controls.
 
 Auto-repeat detection:
 - Track currently-pressed keys in a `Set`
@@ -658,7 +668,7 @@ after its mouse release occurs outside the rendered surface.
 After building/updating the tree:
 1. Set root dimensions from window sizing config
 2. Recursively apply CSS `left/top/width/height` to all nodes
-3. Replace the target element's children with the root element
+3. Reconcile the target/root child order, leaving retained nodes and ancestors connected
 4. Recalculate SolidLabel `-webkit-line-clamp` values for resized labels
 
 ---
@@ -678,3 +688,90 @@ The renderer installs touch-action none on its stable target and every descendan
 Down-order contact slots are never reused within an overlapping sequence. Normal Up followed by lostpointercapture is cleanup, not cancellation of remaining contacts. Unexpected capture loss ends once, then drains physical Up/Cancel; pointercancel retires its own contact immediately. Connected disposal sends one Canceled_WindowDestroyed End before detaching listeners/captures. After transport loss, stop(true) performs silent cleanup and Core owns its disconnect cancellation. Touch compatibility mouse/boundary/activation events are suppressed locally and synchronously while real mouse/pen and non-touch activation retain their path.
 
 Both HTTP and Wasm FCT call `installRawClock` from `<GacJS repo>/Gaclib/website/entry/assets/rawClock.js` to register `FullControlTest::Clock`, and `installRawTouching` from `<GacJS repo>/Gaclib/website/entry/assets/rawTouching.js` for manual ID-based Touching attachment. They share canvas sizing and observer cleanup in `<GacJS repo>/Gaclib/website/entry/assets/rawCanvas.js`. Touching has an empty interpretor. Its data is centerX,centerY,axisX,axisY,count followed by count pointId,x,y triples. It draws Core's transformed sky-blue rectangle and yellow radius-16 contact circles. Raw hooks retain one canvas, track resize/DPR, redraw data changes and release observers on removal/disposal. The painter never computes gestures. Core's Misc > Touching page owns translation, rotation, scaling, three-contact pause and membership rebasing.
+
+## Responding to IME and Virtual Keyboard
+
+`TextInputCoordinator` in `<GacJS repo>/Gaclib/gaclib/renderer/src/textInput.ts`
+is shared by HTTP and Wasm. Core owns document text, selection, commands and
+committed rendering. The coordinator registers visible tagged boundaries by
+logical DOM ID after each complete full/diff batch, including unchanged nodes.
+Two focused tags are fatal even if one is read-only. Only the unique focused,
+editable tag is a confirmed input target. Caret painting alone never activates
+editing. Passive snapshot playback does not construct this coordinator.
+
+The host is the existing boundary div, which can contain several paragraphs.
+There is no proxy input, textarea or replacement editor subtree. Ordered child
+reconciliation, full-tree reuse and CSS clipping preserve its identity and
+connected ancestors. Removal, ancestor hiding, lost metadata/editability,
+disconnect and renderer replacement invalidate the session generation. Late
+callbacks cannot commit into a new session with the same ID. Bridge attributes
+are restored when a host becomes ineligible.
+
+Every visible eligible host is prepared before a gesture. A trusted mouse press
+or qualified short touch release focuses it synchronously before Core's pointer
+response. A candidate holds text until completed render/idle confirms its ID;
+unchanged authoritative focus can reject it. Same-target taps need no additional
+confirmation. Movement over eight CSS pixels, a hold of at least 500 ms,
+overlapping contacts or cancellation disqualify a touch tap. Existing touch
+capture and compatibility-mouse suppression remain in effect. Page-level focus
+handlers respect editing descendants. External page focus suspends automatic
+refocusing until a new Core target or gesture.
+
+The browser contracts are defined by the [EditContext draft](https://www.w3.org/TR/edit-context/),
+[Input Events Level 2](https://www.w3.org/TR/input-events-2/) and the
+[VirtualKeyboard draft](https://www.w3.org/TR/virtual-keyboard/).
+[WebKit's programmatic-focus issue](https://bugs.webkit.org/show_bug.cgi?id=195884)
+explains why asynchronous webpage focus and native embedding privileges must be
+distinguished when verifying keyboard activation.
+
+Runtime fallback order is EditContext, contenteditable, then legacy physical
+keyboard characters. `GacUISettings.textInput.adapter` accepts `auto`,
+`edit-context`, `contenteditable` or `legacy` for controlled coverage without
+replacing browser globals. EditContext requires its constructor, HTMLElement
+attachment and all used update methods; a recognized unsupported attachment can
+fall back, while unexpected errors remain fatal. Contenteditable requires
+`contentEditable`, `onbeforeinput` and `InputEvent`, preferring reflected
+`plaintext-only`. Without these input capabilities the legacy route cannot
+promise IME or software-keyboard text input.
+
+EditContext owns only a guarded JavaScript capture buffer at Core's current
+selection. Replacement and selection offsets belong to that buffer. Preedit is
+presented through a host pseudo-element; bounds use client CSS pixels and the
+Core paragraph caret. Contenteditable places a collapsed browser capture
+selection inside the existing paragraph, independently of Core's selected range.
+Cancelable ordinary input is intercepted; noncancelable composition mutations
+remain local until the transaction ends, then current Core descriptors restore
+the structure. Composition revisions never produce `IOChar`. Final commits use
+the shared UTF-16 helper exactly once; repeated identical commits remain valid.
+
+Soft backward/forward deletion and line breaks translate to Core commands.
+Physical-key ownership prevents duplicate commands. Plaintext paste is one
+transaction. Spelling/autocorrection is disabled where supported; unsupported
+replacement ranges, rich formatting and drops are rejected and reconciled.
+There is no document-range editing protocol: arbitrary reconversion cannot be
+implemented by appending text at an unrelated Core caret. Local ownership also
+cannot detect an as-yet-unobserved Core focus change; transport ordering matters.
+
+VirtualKeyboard is detected independently. Automatic browser policy is the
+default. Optional `keyboardPolicy: 'manual'` calls `show()` only during a trusted
+gesture on an eligible contenteditable host in a secure context with the required
+API and policy property. EditContext exposure alone does not prove that
+manual-show condition. Teardown hides only a keyboard owned by this session
+while its host still has focus; external inputs keep their keyboard. Geometry,
+viewport and scroll notifications refresh input bounds without setting global
+`overlaysContent` or adding a second viewport inset. Core focus updates can focus
+a host but cannot create user activation or promise a phone keyboard will open.
+
+Use the controlled and live suites in
+[<GacJS repo>/doc/Testing_Protocol.md](Testing_Protocol.md#browser-text-input).
+They exercise detected adapters and forced contenteditable, ordinary Unicode,
+engine composition, selection replacement/cancellation, lifecycle and structure.
+The implementation run detected EditContext in Chromium 145.0.7632.6 and
+contenteditable in WebKit 26.0 and Firefox 146.0.1; these are observations, not
+permanent support rules. Follow the authoritative operations in
+[<GacUI repo>/.github/Jobs/DebugRemoteProtocolSop.md](../../GacUI/.github/Jobs/DebugRemoteProtocolSop.md#3-type-and-preserve-text-in-two-editors):
+in both Search and the central editor, compose at a collapsed caret, replace a
+selected range, cancel without changing the range, then verify persistence.
+CDP composition and synthetic ordering tests do not establish an OS candidate
+window or physical software keyboard. Record actual browser/IME/device coverage
+separately; a mobile viewport descriptor is not iOS Safari.

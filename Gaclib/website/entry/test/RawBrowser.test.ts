@@ -625,7 +625,8 @@ test('persistent raw div and page children survive full/diff DOM replacement and
         while (parent !== null) {
             const bounds = parent.getBoundingClientRect();
             const style = getComputedStyle(parent);
-            if (style.overflow === 'hidden' && style.position === 'absolute' && bounds.width === 100 && bounds.height === 90) return true;
+            if (style.overflow === 'hidden' && style.position === 'absolute' && bounds.width === 260 && bounds.height === 250 &&
+                style.clipPath === 'inset(15px 145px 145px 15px)') return true;
             parent = parent.parentElement;
         }
         return false;

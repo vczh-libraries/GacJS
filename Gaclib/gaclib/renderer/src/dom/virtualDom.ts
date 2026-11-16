@@ -49,6 +49,8 @@ import { TypedElementDesc } from '../GacUIElementManager';
 
 export interface VirtualDomProperties {
     readonly globalBounds: SCHEMA.Rect;
+    readonly validArea?: SCHEMA.Rect;
+    readonly editableAttribute?: SCHEMA.ElementEditableAttribute | null;
     readonly hitTestResult?: SCHEMA.WindowHitTestResult;
     readonly cursor?: SCHEMA.WindowSystemCursorType;
     readonly typedDesc?: TypedElementDesc;
@@ -68,6 +70,8 @@ export interface IVirtualDom {
 }
 
 export interface IVirtualDomProvider {
+    /** HTML uses CSS clipping so a changed clip cannot replace an editing host. */
+    readonly nativeClipping?: boolean;
     createDom(
         id: SCHEMA.TYPES.Integer,
         props: VirtualDomProperties,
@@ -253,7 +257,9 @@ export abstract class VirtualDomBaseOrdinary<T extends VirtualDomBase<T>> extend
     }
 
     updateProps(props: VirtualDomProperties): void {
-        this.updateTypedDesc(props.elementId, props.typedDesc);
+        if (this._props.elementId !== props.elementId || this._props.typedDesc !== props.typedDesc) {
+            this.updateTypedDesc(props.elementId, props.typedDesc);
+        }
         this._props = {
             ...props
         };

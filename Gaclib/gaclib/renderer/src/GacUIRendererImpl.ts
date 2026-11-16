@@ -5,7 +5,8 @@ import { FileSystemInjection } from './injections/injectFileSystem';
 import { getImageContentType, getImageDataUrl, getImageFormatType } from './domRenderer/elementStyles_Image';
 import { GacUIRawElement, GacUISettings, IGacUIEventSubscription, IGacUIRenderer, IRawElementInterpretor, IRawElementInterpretorFactory } from './interfaces';
 import { ElementManager, TypedElementDesc } from './GacUIElementManager';
-import { createVirtualDomFromRenderingDom, IElementMeasurer, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
+import { createVirtualDomFromRenderingDom, IElementMeasurer, replaceVirtualDomFromRenderingDom, updateVirtualDomWithRenderingDomDiff, VirtualDomRecord } from './dom/virtualDomBuilding';
+import { sendCommittedText, TextInputCoordinator } from './textInput';
 import { IVirtualDomProvider, RootVirtualDomId } from './dom/virtualDom';
 import { mapJavaScriptKeyToGacUIKey } from './keyMapping';
 import { applyTypedStyle, fillParagraphMeasurements, getExtraBorder, getParagraphLayout, ParagraphEditUnit, ParagraphLayout, ParagraphLine, setCaretVisible, updateParagraphInlineImages } from './domRenderer/elementStyles';
@@ -55,6 +56,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _responses: SCHEMA.IRemoteProtocolResponses;
     private _events: SCHEMA.IRemoteProtocolEvents;
     private _stopping = false;
+    private _textInput: TextInputCoordinator | undefined;
+
+    get textInputState() { return this._textInput?.state; }
 
     private _provider: IVirtualDomProvider;
     private _measurer: IElementMeasurer;
@@ -136,6 +140,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._windowConfig.clientBounds = bounds;
         this._events.OnControllerScreenUpdated(this._screenConfig);
         this._events.OnWindowBoundsUpdated(this._windowConfig);
+        this._textInput?.updateBounds();
     }
 
     /****************************************************************************************
@@ -237,6 +242,10 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             },
             children: null
         }, elements, this._provider);
+        if ('htmlElement' in this._renderingRecord.screen) {
+            this._textInput = new TextInputCoordinator(this._settings.target, this._settings.textInput ?? {}, events,
+                host => this._restoreInputHost(host), () => this._releasePressedKeys());
+        }
         this._installEvents();
 
         this._resizeObserver = new ResizeObserver(() => this._onSizeChanged());
@@ -246,6 +255,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     stop(disconnected = false): void {
         if (this._stopping) return;
         this._stopping = true;
+        this._textInput?.stop();
         if (!disconnected && this._pointContacts.size !== 0) {
             this._endPoints(SCHEMA.IOPointEndReason.Canceled_WindowDestroyed, performance.now());
         }
@@ -383,9 +393,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._settings.suggestMinSize(requestArgs.x.value, requestArgs.y.value);
     }
 
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     RequestWindowNotifySetCaret(requestArgs: SCHEMA.NativePoint): void {
-        // to be implemented
+        this._textInput?.setCaret(requestArgs);
     }
 
     /****************************************************************************************
@@ -584,6 +593,30 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     // Map from element ID to paragraph tracking data
     private _paragraphElements: Map<number, { htmlElement: HTMLElement; textDiv: HTMLElement }> = new Map();
     private _paragraphCarets: Map<number, SCHEMA.OpenCaretRequest | null> = new Map();
+    private _paragraphSizes = new Map<number, SCHEMA.Size>();
+
+    private _restoreInputHost(host: HTMLElement): void {
+        const visit = (node: import('./dom/virtualDom').IVirtualDom, inside: boolean): void => {
+            if (!('htmlElement' in node)) return;
+            const element = node.htmlElement as HTMLElement;
+            inside = inside || element === host;
+            if (inside) {
+                if (node.props.typedDesc?.type === SCHEMA.RendererType.DocumentParagraph) {
+                    applyTypedStyle(element, node.props.typedDesc, this._renderingRecord.elements);
+                    const textDiv = getExtraBorder(element)!;
+                    this._paragraphElements.set(node.props.elementId!, { htmlElement: element, textDiv });
+                    this._measureParagraphDocumentSize(element, textDiv, getParagraphLayout(element)!);
+                    this._applyStoredParagraphCaret(node.props.elementId!);
+                }
+                node.updateChildren([...node.children]);
+            }
+            for (const child of node.children) visit(child, inside);
+        };
+        visit(this._renderingRecord.screen, false);
+        this._provider.fixBounds(this._renderingRecord.screen, this._settings.target,
+            this._windowConfig.bounds.x2.value - this._windowConfig.bounds.x1.value,
+            this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value);
+    }
 
     private _reconcileParagraphElements(): void {
         for (const [elementId, data] of this._paragraphElements) {
@@ -661,6 +694,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     private _measureParagraphDocumentSize(htmlElement: HTMLElement, textDiv: HTMLElement, layout: ParagraphLayout): SCHEMA.Size {
+        if (layout.browserComposition === true) return this._paragraphSizes.get(layout.paragraph.id)!;
         const isInDom = htmlElement.isConnected;
         let savedHtmlStyle: string | undefined;
 
@@ -699,6 +733,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             htmlElement.style.cssText = savedHtmlStyle!;
         }
 
+        this._paragraphSizes.set(layout.paragraph.id, documentSize);
         return documentSize;
     }
 
@@ -744,7 +779,13 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
         // Update via _updateElement which triggers applyTypedStyle → initializeParagraph
         const typedDesc: TypedElementDesc = { type: SCHEMA.RendererType.DocumentParagraph, desc: fullDesc };
-        this._updateElement(elementId, typedDesc);
+        const previous = this._paragraphElements.get(elementId);
+        const unchanged = existingTypedDesc?.type === SCHEMA.RendererType.DocumentParagraph &&
+            JSON.stringify(existingTypedDesc.desc.paragraph) === JSON.stringify(fullDesc.paragraph);
+        if (!unchanged) {
+            if (previous !== undefined) this._textInput?.changing(previous.htmlElement);
+            this._updateElement(elementId, typedDesc);
+        }
 
         // After _updateElement, find the htmlElement from the virtual DOM
         const virtualDom = this._renderingRecord.elementToDoms.get(elementId);
@@ -1070,11 +1111,17 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     RequestDocumentParagraph_OpenCaret(requestArgs: SCHEMA.OpenCaretRequest): void {
+        const previous = this._getStoredParagraphCaret(requestArgs.id);
+        const paragraph = this._paragraphElements.get(requestArgs.id);
+        if (paragraph !== undefined && previous?.caret !== requestArgs.caret) this._textInput?.changing(paragraph.htmlElement, true);
         this._setStoredParagraphCaret(requestArgs.id, requestArgs);
         this._applyStoredParagraphCaret(requestArgs.id);
+        this._textInput?.updateBounds();
     }
 
     RequestDocumentParagraph_CloseCaret(requestArgs: SCHEMA.TYPES.Integer): void {
+        const paragraph = this._paragraphElements.get(requestArgs);
+        if (paragraph !== undefined) this._textInput?.changing(paragraph.htmlElement);
         this._setStoredParagraphCaret(requestArgs, null);
         this._applyStoredParagraphCaret(requestArgs);
     }
@@ -1146,6 +1193,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             }
             this._paragraphElements.delete(id);
             this._paragraphCarets.delete(id);
+            this._paragraphSizes.delete(id);
             try {
                 const raw = this._rawElements.get(id);
                 if (raw !== undefined) {
@@ -1165,6 +1213,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     }
 
     RequestRendererIdle(): void {
+        this._textInput?.reconcile(this._renderingRecord, true);
         this._settings.idle?.();
     }
 
@@ -1224,7 +1273,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             return;
         }
         if (requestArgs) {
-            this._renderingRecord = createVirtualDomFromRenderingDom(requestArgs, this._renderingRecord.elements, this._provider);
+            replaceVirtualDomFromRenderingDom(requestArgs, this._renderingRecord, this._provider, this._pendingElements);
             this._provider.fixBounds(
                 this._renderingRecord.screen,
                 this._settings.target,
@@ -1232,6 +1281,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
                 this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value
             );
             this._reconcileParagraphElements();
+            this._textInput?.reconcile(this._renderingRecord);
         }
     }
 
@@ -1249,6 +1299,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             this._windowConfig.bounds.y2.value - this._windowConfig.bounds.y1.value
         );
         this._reconcileParagraphElements();
+        this._textInput?.reconcile(this._renderingRecord);
     }
 
     /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -1352,6 +1403,13 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
     // Key state tracking
     private _pressedKeys: Set<SCHEMA.TYPES.Key> = new Set();
+
+    private _releasePressedKeys(): void {
+        if (!this._stopping) for (const code of this._pressedKeys) {
+            this._events.OnIOKeyUp({ code, ctrl: false, shift: false, alt: false, osSuper: false, capslock: false, autoRepeatKeyDown: false });
+        }
+        this._pressedKeys.clear();
+    }
 
     // Double-click tracking: when mousedown has detail===2, we need to send
     // dblclick before the subsequent mouseup to match GacUI's expected order:
@@ -1485,6 +1543,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     private _onPoint(event: PointerEvent): void {
         this._lastPointerType = event.pointerType;
         if (event.pointerType !== 'touch' || this._stopping) return;
+        this._textInput?.point(event);
         if (event.cancelable) event.preventDefault();
         const target = this._settings.target;
         if (event.type === 'pointerdown') {
@@ -1562,6 +1621,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         // Mouse down handler
         this._ioHookEvent('mousedown', (event: Event) => {
             const mouseEvent = event as MouseEvent;
+            this._textInput?.mouseDown(mouseEvent);
             const button = this._ioGetMouseButton(mouseEvent);
             if (this._events !== undefined && button !== undefined) {
                 if (button === SCHEMA.IOMouseButton.Mouse4 || button === SCHEMA.IOMouseButton.Mouse5) {
@@ -1645,6 +1705,8 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         // Key down handler
         this._ioHookEvent('keydown', (event: Event) => {
             const keyEvent = event as KeyboardEvent;
+            if (this._textInput?.active === true && this._settings.isShortcutReservedForBrowser(keyEvent)) return;
+            if (this._textInput?.keyDown(keyEvent) === true) return;
             const keyCode = mapJavaScriptKeyToGacUIKey(keyEvent);
             if (this._events !== undefined && keyCode !== null) {
                 // Check if this is an auto-repeat
@@ -1677,16 +1739,15 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             if (this._events !== undefined) {
                 const key = keyEvent.key;
                 let charCode: string | undefined;
-                if ([...key].length === 1) {
+                if ([...key].length === 1 && this._textInput?.active !== true) {
                     charCode = key;
                 } else if (key === 'Enter') {
                     charCode = '\r';
                 } else if (key === 'Tab') {
                     charCode = '\t';
                 }
-                for (const code of charCode?.split('') ?? []) {
-                    this._events.OnIOChar({
-                        code,
+                if (charCode !== undefined) {
+                    sendCommittedText(this._events, charCode, {
                         ctrl: keyEvent.ctrlKey,
                         shift: keyEvent.shiftKey,
                         alt: keyEvent.altKey,
@@ -1697,7 +1758,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
             }
 
             // Systematically prevent default behavior except for critical browser shortcuts
-            if (!this._settings.isShortcutReservedForBrowser(keyEvent)) {
+            const browserText = this._textInput?.active === true && ([...keyEvent.key].length === 1 && !keyEvent.ctrlKey && !keyEvent.metaKey ||
+                (keyEvent.ctrlKey || keyEvent.metaKey) && keyEvent.key.toLowerCase() === 'v');
+            if (!browserText && !this._settings.isShortcutReservedForBrowser(keyEvent)) {
                 keyEvent.preventDefault();
             }
         });
@@ -1705,8 +1768,9 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         // Key up handler
         this._ioHookEvent('keyup', (event: Event) => {
             const keyEvent = event as KeyboardEvent;
+            if (this._textInput?.keyUp(keyEvent) === true) return;
             const keyCode = mapJavaScriptKeyToGacUIKey(keyEvent);
-            if (this._events !== undefined && keyCode !== null) {
+            if (this._events !== undefined && keyCode !== null && this._pressedKeys.has(keyCode)) {
                 // Remove from pressed keys set
                 this._pressedKeys.delete(keyCode);
 
@@ -1725,7 +1789,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
 
         // Focus lost handler - clear pressed keys to avoid stuck keys
         this._ioHookEvent('blur', () => {
-            this._pressedKeys.clear();
+            this._releasePressedKeys();
         });
     }
 

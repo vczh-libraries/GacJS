@@ -80,6 +80,8 @@ export interface ParagraphLayout {
     caretVisible: boolean;
     lines: ParagraphLine[];
     defaultFontSize: number;
+    /** A native composition may temporarily change text nodes; retain Core measurements. */
+    browserComposition?: boolean;
 
     // All following members will be completed in fillParagraphMeasurements
     units: ParagraphEditUnit[];
@@ -361,6 +363,7 @@ function getLineEdgePosition(line: ParagraphLine, atEnd: boolean, divRect: DOMRe
  **********************************************************************/
 
 export function fillParagraphMeasurements(textDiv: HTMLElement, layout: ParagraphLayout): void {
+    if (layout.browserComposition === true) return;
     const units: ParagraphEditUnit[] = [];
     const inlineObjectBounds: SCHEMA.ElementMeasuring_InlineObjectBounds[] = [];
     const runs = layout.paragraph.runsDiff ?? [];

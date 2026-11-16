@@ -16,6 +16,7 @@ declare global {
         __gacui_wasm_session?: WasmSession;
         __gacui_playwright_idle?: () => void;
         __gacui_playwright_blink?: () => void;
+        __gacui_text_input_options?: GacUISettings['textInput'];
     }
 }
 
@@ -28,6 +29,7 @@ export async function startWasmPage(setupRenderer?: WasmRendererSetup): Promise<
     const reload = document.getElementById('gacui-reload') as HTMLButtonElement;
     const settings: GacUISettings = {
         target: screen,
+        textInput: window.__gacui_text_input_options,
         isShortcutReservedForBrowser,
         suggestMinSize(x, y): void {
             screen.style.width = `clamp(${String(Math.max(x, 320))}px, calc(100vw - 40px), 1280px)`;

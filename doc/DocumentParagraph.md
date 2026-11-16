@@ -344,6 +344,40 @@ Scans `ParagraphEditUnit[]`:
 
 ---
 
+## Browser Capture Selection and Composition
+
+Browser text input is coordinated at the tagged owner, not at individual spans.
+See [<GacJS repo>/doc/DOM.md](DOM.md#responding-to-ime-and-virtual-keyboard).
+
+The input coordinator finds the owner's paragraph with an authoritative caret,
+then maps its text offset through `ParagraphLine.blocks` to an existing text node.
+Empty paragraphs and inline-object/line boundaries use existing element child
+positions. The browser selection is collapsed for capture without sending a Core
+selection change; Core's forward, reversed or multi-paragraph selected range is
+still replaced by the next committed character. Native caret painting is
+suppressed while Core's caret remains visible and can blink normally.
+
+Unchanged full paragraph descriptors do not reconstruct text nodes. During a
+contenteditable composition, `ParagraphLayout.browserComposition` freezes DOM
+measurement and the renderer returns its cached authoritative paragraph size.
+Browser-created text nodes are never measured as committed content. A changed
+Core descriptor for the composing paragraph or a changed caret anchor cancels
+the affected local composition before the update and its protocol response
+continue. Updates in another paragraph do not cancel it, including another
+paragraph in the same owner. Completion/cancellation rebuilds dirty content from
+the latest Core descriptor, reapplies caret state and clipping, and restores
+browser capture selection. It does not restore saved `innerHTML` or cloned stale
+nodes.
+
+EditContext leaves the paragraph tree untouched. Its preedit pseudo-element uses
+the Core caret's font/color and local composition text; format notifications
+control its underline. Control, selection and requested character rectangles use
+client CSS pixels. Capture-buffer selection offsets place the selection within
+preedit; character offsets never refer to another Core paragraph. Scroll,
+viewport movement, keyboard geometry, renderer resize and caret updates refresh
+the bounds. `WindowNotifySetCaret` supplies a fallback when paragraph caret data
+is unavailable. Neither local preedit nor its guard characters enter Core text.
+
 ## Known Limitations
 
 1. **No separate modules**: The plan originally proposed extracting caret navigation,

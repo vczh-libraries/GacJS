@@ -82,6 +82,7 @@ test('diffRenderingDom - created element should generate Created diff', () => {
         id: 1,
         diffType: SCHEMA.RenderingDom_DiffType.Created,
         content: {
+            editableAttribute: null,
             hitTestResult: null,
             cursor: null,
             element: null,
@@ -179,6 +180,7 @@ test('diffRenderingDom - modified content should generate Modified diff', () => 
         id: 1,
         diffType: SCHEMA.RenderingDom_DiffType.Modified,
         content: {
+            editableAttribute: null,
             hitTestResult: null,
             cursor: null,
             element: null,
@@ -292,6 +294,7 @@ test('diffRenderingDom - complex mixed changes', () => {
         id: 1,
         diffType: SCHEMA.RenderingDom_DiffType.Modified,
         content: {
+            editableAttribute: null,
             hitTestResult: null,
             cursor: null,
             element: null,
@@ -314,6 +317,7 @@ test('diffRenderingDom - complex mixed changes', () => {
         id: 4,
         diffType: SCHEMA.RenderingDom_DiffType.Created,
         content: {
+            editableAttribute: null,
             hitTestResult: null,
             cursor: null,
             element: null,

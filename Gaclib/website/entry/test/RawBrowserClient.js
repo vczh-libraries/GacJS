@@ -5,6 +5,9 @@ import { GacUIHtmlRendererExitError, RemoteProtocolHttpDisconnectError } from '/
 export * from '/entry-real.js';
 
 function createSession(settings, alreadyStarted) {
+    const query = new URLSearchParams(location.search);
+    if (query.has('text-adapter')) settings.textInput = { adapter: query.get('text-adapter'),
+        keyboardPolicy: query.get('keyboard-policy') ?? 'auto', virtualKeyboard: window.editingKeyboard };
     const renderer = createHtmlRenderer(settings);
     const sent = [];
     let nextRequest = 1;
@@ -64,7 +67,7 @@ function createSession(settings, alreadyStarted) {
     const root = children => node(-1, null, rect(0, 0, 0, 0), children);
     let frameId = 0;
     const state = {
-        renderer, counts, listeners, rect, content, node, root, sent,
+        renderer, counts, listeners, rect, content, node, root, sent, message: send,
         request(name, args) {
             const id = nextRequest++;
             return new Promise(resolve => {

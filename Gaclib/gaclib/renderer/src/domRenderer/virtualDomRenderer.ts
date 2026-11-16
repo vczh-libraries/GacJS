@@ -61,6 +61,34 @@ function mapHitTestToCSS(hitTestResult: SCHEMA.WindowHitTestResult): string | un
 
 type VirtualDomHtmlTypes = VirtualDomHtmlRoot | VirtualDomHtmlValidArea | VirtualDomHtmlOrdinary;
 
+function reconcileChildren(parent: HTMLElement, children: HTMLElement[]): void {
+    const expected = new Set(children);
+    for (const child of Array.from(parent.childNodes)) {
+        if (!expected.has(child as HTMLElement)) child.remove();
+    }
+    const focused = children.find(child => child.parentNode === parent && child.contains(document.activeElement));
+    const focusedIndex = focused === undefined ? -1 : children.indexOf(focused);
+    // insertBefore disconnects a moved node. Reorder its siblings instead when
+    // that node contains the browser editing host (including at the root).
+    let before: Node | undefined = focused;
+    for (let i = focusedIndex - 1; i >= 0; i--) {
+        const child = children[i];
+        if (child.nextSibling !== before) parent.insertBefore(child, before!);
+        before = child;
+    }
+    let next = focused === undefined ? parent.firstChild : focused.nextSibling;
+    for (const child of children.slice(focusedIndex + 1)) {
+        if (child !== next) parent.insertBefore(child, next);
+        next = child.nextSibling;
+    }
+}
+
+function reconcileRenderingChildren(parent: HTMLElement, children: HTMLElement[]): void {
+    const border = getExtraBorder(parent);
+    if (border !== undefined) children.unshift(border);
+    reconcileChildren(parent, children);
+}
+
 class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlTypes> {
     public readonly htmlElement: HTMLElement;
 
@@ -81,11 +109,7 @@ class VirtualDomHtmlRoot extends VirtualDomBaseRoot<VirtualDomHtmlTypes> {
     protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
         // Update HTML element children
         const htmlChildren = children.map(child => child.htmlElement);
-        this.htmlElement.replaceChildren(...htmlChildren);
-        const border = getExtraBorder(this.htmlElement)
-        if (border) {
-            this.htmlElement.insertBefore(border, this.htmlElement.firstChild);
-        }
+        reconcileRenderingChildren(this.htmlElement, htmlChildren);
     }
 }
 
@@ -113,11 +137,7 @@ class VirtualDomHtmlValidArea extends VirtualDomBaseValidArea<VirtualDomHtmlType
     protected onUpdateChildren(children: VirtualDomHtmlTypes[]): void {
         // Update HTML element children
         const htmlChildren = children.map(child => child.htmlElement);
-        this.htmlElement.replaceChildren(...htmlChildren);
-        const border = getExtraBorder(this.htmlElement)
-        if (border) {
-            this.htmlElement.insertBefore(border, this.htmlElement.firstChild);
-        }
+        reconcileRenderingChildren(this.htmlElement, htmlChildren);
     }
 }
 
@@ -207,15 +227,12 @@ class VirtualDomHtmlOrdinary extends VirtualDomBaseOrdinary<VirtualDomHtmlTypes>
         if (this._rawElement !== undefined) {
             htmlChildren.unshift(this._rawElement);
         }
-        this.htmlElement.replaceChildren(...htmlChildren);
-        const border = getExtraBorder(this.htmlElement)
-        if (border) {
-            this.htmlElement.insertBefore(border, this.htmlElement.firstChild);
-        }
+        reconcileRenderingChildren(this.htmlElement, htmlChildren);
     }
 }
 
 export class VirtualDomHtmlProvider implements IVirtualDomProvider {
+    readonly nativeClipping = true;
     constructor(private readonly elements: ElementManager) {
     }
 
@@ -255,7 +272,7 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
         virtualDom.htmlElement.style.boxSizing = 'border-box';
         virtualDom.htmlElement.style.width = `${width}px`;
         virtualDom.htmlElement.style.height = `${height}px`;
-        target.replaceChildren(virtualDom.htmlElement);
+        reconcileChildren(target, [virtualDom.htmlElement]);
 
         // Apply bounds after mounting so getBoundingClientRect works for measurements
         this.fixBoundsRecursive(virtualDom);
@@ -268,6 +285,10 @@ export class VirtualDomHtmlProvider implements IVirtualDomProvider {
                 child instanceof VirtualDomHtmlValidArea ||
                 child instanceof VirtualDomHtmlOrdinary) {
                 applyBounds(child.htmlElement, child.bounds);
+                const area = child.props.validArea;
+                const bounds = child.props.globalBounds;
+                child.htmlElement.style.clipPath = area === undefined ? '' :
+                    `inset(${Math.max(0, area.y1 - bounds.y1)}px ${Math.max(0, bounds.x2 - area.x2)}px ${Math.max(0, bounds.y2 - area.y2)}px ${Math.max(0, area.x1 - bounds.x1)}px)`;
                 if (this.elements.renderDebugInfo) {
                     renderDebugInfo(child.htmlElement);
                 }
