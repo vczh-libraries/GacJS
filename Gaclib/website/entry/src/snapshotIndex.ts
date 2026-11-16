@@ -1362,17 +1362,17 @@ export const Snapshot: SnapshotEntry = {
                         'GuiLabel': {
                             'type': 'Folder',
                             'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
                                 'RefreshThemes': {
                                     'type': 'Folder',
                                     'content': {
                                         'frame_0.json': 'File'
                                     }
-                                },
-                                'frame_0.json': 'File',
-                                'frame_1.json': 'File',
-                                'frame_2.json': 'File',
-                                'frame_3.json': 'File',
-                                'frame_4.json': 'File'
+                                }
                             }
                         },
                         'GuiLabel.json': 'File',
@@ -1416,6 +1416,139 @@ export const Snapshot: SnapshotEntry = {
                 'Editor': {
                     'type': 'Folder',
                     'content': {
+                        'EditableLeaves': {
+                            'type': 'Folder',
+                            'content': {
+                                'Diff': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_3.json': 'File'
+                                    }
+                                },
+                                'Diff.json': 'File',
+                                'Raw': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_3.json': 'File'
+                                    }
+                                },
+                                'Raw.json': 'File'
+                            }
+                        },
+                        'EditableMetadata': {
+                            'type': 'Folder',
+                            'content': {
+                                'Diff': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_10.json': 'File',
+                                        'frame_11.json': 'File',
+                                        'frame_12.json': 'File',
+                                        'frame_13.json': 'File',
+                                        'frame_14.json': 'File',
+                                        'frame_15.json': 'File',
+                                        'frame_16.json': 'File',
+                                        'frame_17.json': 'File',
+                                        'frame_18.json': 'File',
+                                        'frame_19.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_20.json': 'File',
+                                        'frame_21.json': 'File',
+                                        'frame_22.json': 'File',
+                                        'frame_23.json': 'File',
+                                        'frame_24.json': 'File',
+                                        'frame_25.json': 'File',
+                                        'frame_26.json': 'File',
+                                        'frame_27.json': 'File',
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File',
+                                        'frame_8.json': 'File',
+                                        'frame_9.json': 'File'
+                                    }
+                                },
+                                'Diff.json': 'File',
+                                'Raw': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_10.json': 'File',
+                                        'frame_11.json': 'File',
+                                        'frame_12.json': 'File',
+                                        'frame_13.json': 'File',
+                                        'frame_14.json': 'File',
+                                        'frame_15.json': 'File',
+                                        'frame_16.json': 'File',
+                                        'frame_17.json': 'File',
+                                        'frame_18.json': 'File',
+                                        'frame_19.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_20.json': 'File',
+                                        'frame_21.json': 'File',
+                                        'frame_22.json': 'File',
+                                        'frame_23.json': 'File',
+                                        'frame_24.json': 'File',
+                                        'frame_25.json': 'File',
+                                        'frame_26.json': 'File',
+                                        'frame_27.json': 'File',
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File',
+                                        'frame_8.json': 'File',
+                                        'frame_9.json': 'File'
+                                    }
+                                },
+                                'Raw.json': 'File'
+                            }
+                        },
+                        'EditableWindows': {
+                            'type': 'Folder',
+                            'content': {
+                                'Diff': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File',
+                                        'frame_8.json': 'File'
+                                    }
+                                },
+                                'Diff.json': 'File',
+                                'Raw': {
+                                    'type': 'Folder',
+                                    'content': {
+                                        'frame_0.json': 'File',
+                                        'frame_1.json': 'File',
+                                        'frame_2.json': 'File',
+                                        'frame_3.json': 'File',
+                                        'frame_4.json': 'File',
+                                        'frame_5.json': 'File',
+                                        'frame_6.json': 'File',
+                                        'frame_7.json': 'File',
+                                        'frame_8.json': 'File'
+                                    }
+                                },
+                                'Raw.json': 'File'
+                            }
+                        },
                         'Features': {
                             'type': 'Folder',
                             'content': {
