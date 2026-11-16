@@ -228,6 +228,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         this._renderingRecord = createVirtualDomFromRenderingDom({
             id: RootVirtualDomId,
             content: {
+                editableAttribute: null,
                 hitTestResult: null,
                 cursor: null,
                 element: null,

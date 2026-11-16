@@ -244,6 +244,7 @@ export function createRootRenderingDom(): SCHEMA.RenderingDom {
     return {
         id: RootVirtualDomId,
         content: {
+            editableAttribute: null,
             hitTestResult: null,
             cursor: null,
             element: null,
@@ -263,6 +264,7 @@ export function createRenderingDomContent(
     validArea?: SCHEMA.Rect
 ): SCHEMA.RenderingDomContent {
     return {
+        editableAttribute: null,
         hitTestResult,
         cursor,
         element,

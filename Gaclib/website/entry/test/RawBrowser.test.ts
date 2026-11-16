@@ -4,6 +4,28 @@ import { createServer, Server } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 
+test('focused editing metadata activates an existing host for browser text input', async () => {
+    const current = await open();
+    const ready = await current.evaluate(async () => {
+        const t = (window as any).rawTest;
+        const editor = t.node(10, null, t.rect(20, 20, 300, 100));
+        editor.content.editableAttribute = { focused: true, editable: true };
+        t.full(t.root([editor]));
+        await t.request('ControllerGetFontConfig');
+        const host = document.getElementById('gacui-screen')!.firstElementChild!.firstElementChild as HTMLElement;
+        t.editingHost = host;
+        return document.activeElement === host && (host.isContentEditable || (host as any).editContext !== null && (host as any).editContext !== undefined);
+    });
+    expect(ready).toBe(true);
+    await current.keyboard.insertText('中🙂');
+    const codes = await current.evaluate(async () => {
+        const t = (window as any).rawTest;
+        await t.request('ControllerGetFontConfig');
+        return t.sent.filter((v: any) => v.name === 'IOChar').map((v: any) => v.arguments.code);
+    });
+    expect(codes).toEqual('中🙂'.split(''));
+});
+
 test('keyboard input preserves supplementary UTF-16 units and modifiers', async () => {
     const page = await open();
     const events = await page.evaluate(async () => {

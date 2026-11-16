@@ -56,7 +56,7 @@ function createSession(settings, alreadyStarted) {
     }
     const rect = (x, y, width, height) => ({ x1: x, y1: y, x2: x + width, y2: y + height });
     const content = (element, bounds, validArea = bounds) => ({
-        element, bounds, validArea, hitTestResult: null, cursor: null,
+        element, bounds, validArea, hitTestResult: null, cursor: null, editableAttribute: null,
     });
     const node = (id, element, bounds, children = [], validArea = bounds) => ({
         id, content: content(element, bounds, validArea), children,
