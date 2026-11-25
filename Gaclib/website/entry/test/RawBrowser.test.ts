@@ -369,28 +369,36 @@ async function picture(page: Page) {
     });
 }
 
-async function expectHands(page: Page, time: string): Promise<void> {
+async function expectClock(page: Page, time: string): Promise<void> {
     const samples = await page.evaluate(time => {
         const [hour, minute, second] = time.split(':').map(Number);
         const canvas = (window as any).rawTest.renderer.getRawElements()[0].element.querySelector('canvas') as HTMLCanvasElement;
         const bounds = canvas.getBoundingClientRect();
         const ratio = canvas.width / bounds.width;
         const radius = Math.min(bounds.width, bounds.height) / 2 - 10;
-        const angles = [(hour + minute / 60 + second / 3600) * Math.PI / 6 - Math.PI / 2,
-            (minute + second / 60) * Math.PI / 30 - Math.PI / 2, second * Math.PI / 30 - Math.PI / 2];
-        const lengths = [90 / 160, 110 / 160, 130 / 160];
-        const colors = [[0, 255, 255], [0, 255, 0], [255, 255, 0]];
-        return angles.map((angle, i) => {
-            const x = Math.round((bounds.width / 2 + Math.cos(angle) * radius * lengths[i] * 0.75) * ratio);
-            const y = Math.round((bounds.height / 2 + Math.sin(angle) * radius * lengths[i] * 0.75) * ratio);
-            const pixels = canvas.getContext('2d')!.getImageData(x - 2, y - 2, 5, 5).data;
+        const sample = (angle: number, distance: number, color: number[]) => {
+            const x = Math.round((bounds.width / 2 + Math.cos(angle) * radius * distance) * ratio);
+            const y = Math.round((bounds.height / 2 + Math.sin(angle) * radius * distance) * ratio);
+            const pad = Math.ceil(2 * ratio);
+            const pixels = canvas.getContext('2d')!.getImageData(x - pad, y - pad, 2 * pad + 1, 2 * pad + 1).data;
+            let foreground = false, outline = false;
             for (let p = 0; p < pixels.length; p += 4) {
-                if (pixels[p + 3] > 128 && colors[i].every((value, channel) => Math.abs(value - pixels[p + channel]) < 20)) return true;
+                if (pixels[p + 3] > 128 && color.every((value, channel) => Math.abs(value - pixels[p + channel]) < 20)) foreground = true;
+                if (pixels[p + 3] > 32 && Math.max(pixels[p], pixels[p + 1], pixels[p + 2]) < 32) outline = true;
             }
-            return false;
-        });
+            return { foreground, outline };
+        };
+        return {
+            rim: sample(Math.PI / 12, 1, [255, 255, 255]),
+            tick: sample(0, 0.97, [255, 255, 255]),
+            hour: sample((hour + minute / 60 + second / 3600) * Math.PI / 6 - Math.PI / 2, 0.75 * 90 / 160, [0, 255, 255]),
+            minute: sample((minute + second / 60) * Math.PI / 30 - Math.PI / 2, 0.75 * 110 / 160, [0, 255, 0]),
+            second: sample(second * Math.PI / 30 - Math.PI / 2, 0.75 * 130 / 160, [255, 255, 0]),
+        };
     }, time);
-    expect(samples).toEqual([true, true, true]);
+    for (const [stroke, sample] of Object.entries(samples)) {
+        expect(sample, stroke).toEqual({ foreground: true, outline: true });
+    }
 }
 
 test('built HTTP page draws protocol time, updates without a DOM diff, and preserves fixed hand angles', async () => {
@@ -401,7 +409,7 @@ test('built HTTP page draws protocol time, updates without a DOM diff, and prese
     await waitForCanvas(page, 240, 240);
     expect((await picture(page)).painted).toBe(0);
     await paint(page);
-    await expectHands(page, '10:20:30');
+    await expectClock(page, '10:20:30');
     const first = await picture(page);
     expect(first.painted).toBeGreaterThan(1000);
     await page.evaluate(() => {
@@ -409,7 +417,7 @@ test('built HTTP page draws protocol time, updates without a DOM diff, and prese
         t.savedCanvas = t.renderer.getRawElements()[0].element.querySelector('canvas');
         t.describe('FullControlTest.Clock', '03:15:45');
     });
-    await expectHands(page, '03:15:45');
+    await expectClock(page, '03:15:45');
     const changed = await picture(page);
     expect(changed.hash).not.toBe(first.hash);
     await page.clock.install({ time: new Date('2040-01-01T00:00:00Z') });
@@ -437,7 +445,7 @@ test('fixed data draws only when the clock factory is selected and preserves ind
     for (const missing of ['', 'Missing.Clock']) {
         await page.evaluate(() => (window as any).rawTest.describe('FullControlTest.Clock', '03:15:45', 'FullControlTest::Clock'));
         await waitForCanvas(page, 240, 240);
-        await expectHands(page, '03:15:45');
+        await expectClock(page, '03:15:45');
         await page.evaluate(missing => (window as any).rawTest.describe('FullControlTest.Clock', '03:15:45', missing), missing);
         expect(await page.locator('canvas').count()).toBe(0);
         expect(await page.locator('#manual-raw-content').count()).toBe(1);
@@ -454,11 +462,11 @@ test('clock redraws after zero-size layout, resize, high DPI, hide/show, and int
     });
     await page.evaluate(() => (window as any).rawTest.layout(300, 260));
     await waitForCanvas(page, 300, 260);
-    await expectHands(page, '10:20:30');
+    await expectClock(page, '10:20:30');
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setDeviceMetricsOverride', { width: 900, height: 700, deviceScaleFactor: 2, mobile: false });
     await waitForCanvas(page, 300, 260, 2);
-    await expectHands(page, '10:20:30');
+    await expectClock(page, '10:20:30');
     await page.evaluate(() => {
         const t = (window as any).rawTest;
         t.savedCanvas = t.renderer.getRawElements()[0].element.querySelector('canvas');
@@ -468,7 +476,7 @@ test('clock redraws after zero-size layout, resize, high DPI, hide/show, and int
     expect(await page.locator('#gacui-screen canvas').count()).toBe(0);
     await page.evaluate(() => (window as any).rawTest.layout(280, 280));
     await waitForCanvas(page, 280, 280, 2);
-    await expectHands(page, '03:15:45');
+    await expectClock(page, '03:15:45');
     expect(await page.evaluate(() => {
         const t = (window as any).rawTest;
         return t.savedCanvas === t.renderer.getRawElements()[0].element.querySelector('canvas');
@@ -486,7 +494,7 @@ test('clock redraws after zero-size layout, resize, high DPI, hide/show, and int
     })).toBe(false);
     await page.evaluate(() => (window as any).rawTest.describe('FullControlTest.Clock', '03:15:45'));
     await waitForCanvas(page, 280, 280, 2);
-    await expectHands(page, '03:15:45');
+    await expectClock(page, '03:15:45');
     expect(await page.locator('canvas').count()).toBe(1);
     await page.evaluate(() => (window as any).rawTest.renderer.requests.RequestRendererDestroyed([1]));
     expect(await page.evaluate(() => ({
@@ -506,7 +514,7 @@ test('already-started rvmhost enumeration installs the manual Touching painter',
         t.describe('FullControlTest.Clock', '10:20:30');
         t.describe('FullControlTest.Clock', '03:15:45');
     });
-    await expectHands(page, '03:15:45');
+    await expectClock(page, '03:15:45');
     expect(await page.locator('canvas').count()).toBe(1);
     expect(await page.evaluate(() => (window as any).rawTest.counts.installed)).toBe(1);
 });
@@ -522,7 +530,7 @@ test('a detached descriptor update redraws after same-frame reattachment at the 
         t.layout();
         await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     });
-    await expectHands(page, '03:15:45');
+    await expectClock(page, '03:15:45');
     expect(await page.evaluate(() => {
         const t = (window as any).rawTest;
         return t.savedCanvas === t.renderer.getRawElements()[0].element.querySelector('canvas');
@@ -773,14 +781,16 @@ test('Touching painter draws Core rectangle and contact markers, updates and cha
     const samples = await current.evaluate(() => {
         const canvas = (window as any).rawTest.renderer.getRawElements()[0].element.querySelector('canvas');
         const context = canvas.getContext('2d');
-        return [Array.from(context.getImageData(120,120,1,1).data), Array.from(context.getImageData(55,40,1,1).data)];
+        const pixel = (x: number, y: number) => Array.from(context.getImageData(x, y, 1, 1).data);
+        return { fill: pixel(120, 120), border: pixel(40, 120), contact: pixel(55, 40), insideRing: pixel(40, 40) };
     });
-    expect(samples[0]).toEqual([135,206,235,255]);
-    expect(samples[1][0]).toBeGreaterThan(200);
+    expect(samples).toEqual({
+        fill: [135, 206, 235, 255], border: [0, 0, 0, 255], contact: [255, 136, 0, 255], insideRing: [0, 0, 0, 0],
+    });
     await current.evaluate(() => (window as any).rawTest.describe('FullControlTest.Touching', '160,140,0.8,0.4,0'));
     await expect.poll(async () => (await picture(current)).hash).not.toBe(before.hash);
     await paint(current);
-    await expectHands(current, '10:20:30');
+    await expectClock(current, '10:20:30');
 });
 
 test('Browser touch injection owns the surface, orders overlapping contacts and suppresses mouse compatibility', async () => {
