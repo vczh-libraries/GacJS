@@ -14,8 +14,10 @@ function paintTouching(context, _bounds, data) {
     }
     context.closePath();
     context.fill();
-    context.strokeStyle = '#ffff00';
     context.lineWidth = 2;
+    context.strokeStyle = '#000000';
+    context.stroke();
+    context.strokeStyle = '#ff8800';
     for (let i = 5; i < values.length; i += 3) {
         context.beginPath();
         context.arc(values[i + 1], values[i + 2], 16, 0, Math.PI * 2);

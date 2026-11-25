@@ -4,6 +4,7 @@ import {
     describeProtocolTest,
     getLeafTextPositions,
     setupProtocolTest,
+    waitForIdle,
 } from './Testing_Protocol.js';
 
 // The portable RawElements suite verifies fixed protocol data and DOM ownership.
@@ -11,18 +12,7 @@ import {
 describeProtocolTest('FullControlTest Raw Clock', () => {
     const errors = [];
     const ctx = setupProtocolTest({
-        setupPage: async page => {
-            page.on('pageerror', error => errors.push(error.message));
-            await page.addInitScript(() => {
-                const stroke = CanvasRenderingContext2D.prototype.stroke;
-                CanvasRenderingContext2D.prototype.stroke = function (...args) {
-                    const result = stroke.apply(this, args);
-                    this.canvas.__clockStrokes = (this.canvas.__clockStrokes ?? 0) + 1;
-                    this.canvas.dispatchEvent(new Event('clock-stroke'));
-                    return result;
-                };
-            });
-        },
+        setupPage: async page => { page.on('pageerror', error => errors.push(error.message)); },
     });
 
     test('draws received times, ticks without input, and retains its canvas across hide/show', async () => {
@@ -35,29 +25,21 @@ describeProtocolTest('FullControlTest Raw Clock', () => {
         await clickAt(ctx.page, clockTab.cx, clockTab.cy);
         await ctx.page.waitForFunction(() => {
             const canvas = document.querySelector('#gacui-screen canvas');
-            return canvas !== null && canvas.width > 0 && canvas.__clockStrokes >= 16;
+            if (canvas === null || canvas.width === 0 || canvas.height === 0) return false;
+            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] === 255 && pixels[i + 1] === 255 && pixels[i + 2] === 0 && pixels[i + 3] === 255) {
+                    window.__rawClockCanvas = canvas;
+                    window.__rawClockPicture = canvas.toDataURL();
+                    return true;
+                }
+            }
+            return false;
         });
-
-        const drawing = await ctx.page.evaluate(async () => {
-            const canvas = document.querySelector('#gacui-screen canvas');
-            window.__rawClockCanvas = canvas;
-            const before = canvas.toDataURL();
-            const context = canvas.getContext('2d');
-            const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-            const hasDrawing = pixels.some((value, index) => index % 4 === 3 && value !== 0);
-            const strokes = canvas.__clockStrokes;
-            await new Promise(resolve => {
-                const onStroke = () => {
-                    // The painter completes one face and fifteen lines per draw.
-                    if (canvas.__clockStrokes < strokes + 16 || canvas.__clockStrokes % 16 !== 0 || canvas.toDataURL() === before) return;
-                    canvas.removeEventListener('clock-stroke', onStroke);
-                    resolve();
-                };
-                canvas.addEventListener('clock-stroke', onStroke);
-            });
-            return { hasDrawing, changed: canvas.toDataURL() !== before };
-        });
-        expect(drawing).toEqual({ hasDrawing: true, changed: true });
+        await expect.poll(async () => {
+            await waitForIdle(ctx.page);
+            return ctx.page.evaluate(() => window.__rawClockCanvas.toDataURL() !== window.__rawClockPicture);
+        }, { timeout: 15000 }).toBe(true);
 
         const elementsTab = (await getLeafTextPositions(ctx.page)).find(position => position.text === 'Elements');
         expect(elementsTab).toBeDefined();

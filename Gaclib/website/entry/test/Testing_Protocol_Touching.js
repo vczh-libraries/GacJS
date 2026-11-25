@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 import { clickAt, describeProtocolTest, getLeafTextPositions, setupProtocolTest, observeProtocolEvents, waitForIdle,
     CORE_AUTOMATION_CONTROLS_URL } from './Testing_Protocol.js';
-import { checkDocumentTouch } from './WasmTouching.js';
+import { checkDocumentTouch, touchingPixels } from './WasmTouching.js';
 
 function findRaw(value, id) {
     if (value === null || typeof value !== 'object') return undefined;
@@ -84,17 +84,10 @@ for (const transport of ['/Http', '/MiniHttp']) describeProtocolTest('Touching b
         expect(translated[3]).toBeCloseTo(transformed[3], 10);
         await send('touchEnd', []);
         await poll(async () => (await state())[4]).toBe(0);
-        const picture = () => canvas.evaluate(element => {
-            const bytes = element.getContext('2d').getImageData(0,0,element.width,element.height).data;
-            let sky = 0, yellow = 0;
-            for (let i=0; i<bytes.length; i+=4) {
-                if (bytes[i] === 135 && bytes[i+1] === 206 && bytes[i+2] === 235) sky++;
-                if (bytes[i] === 255 && bytes[i+1] === 255 && bytes[i+2] === 0) yellow++;
-            }
-            return { sky, yellow };
-        });
+        const picture = () => touchingPixels(page);
         await poll(async () => (await picture()).sky).toBeGreaterThan(1000);
-        await poll(async () => (await picture()).yellow).toBe(0);
+        expect((await picture()).border).toBeGreaterThan(100);
+        await poll(async () => (await picture()).orange).toBe(0);
         const pointEvents = events.filter(e => e.name.startsWith('IOPoint'));
         expect(pointEvents.filter(e => e.name === 'IOPointStarted')).toHaveLength(1);
         expect(pointEvents.filter(e => e.name === 'IOPointEnded')).toHaveLength(1);
@@ -102,7 +95,7 @@ for (const transport of ['/Http', '/MiniHttp']) describeProtocolTest('Touching b
         expect(events.filter(e => /^IOButton|^IOMouse/.test(e.name))).toEqual([]);
         await send('touchStart', [a]);
         await poll(async () => (await state())[4]).toBe(1);
-        await poll(async () => (await picture()).yellow).toBeGreaterThan(20);
+        await poll(async () => (await picture()).orange).toBeGreaterThan(20);
         await send('touchCancel', []);
         await poll(async () => (await state())[4]).toBe(0);
         expect(events.filter(e => e.name === 'IOPointEnded').at(-1).arguments.reason).toBe('Canceled_PlatformCanceled');

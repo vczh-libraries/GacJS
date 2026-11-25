@@ -113,16 +113,17 @@ export async function touchDriver(page, native = true) {
     }, { type, fingers });
 }
 
-async function pixels(page) {
+export async function touchingPixels(page) {
     return page.locator('#gacui-screen canvas').evaluate(canvas => {
         const bytes = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
-        let sky = 0, yellow = 0, hash = 0;
+        let sky = 0, border = 0, orange = 0, hash = 0;
         for (let i = 0; i < bytes.length; i += 4) {
             if (bytes[i] === 135 && bytes[i + 1] === 206 && bytes[i + 2] === 235) sky++;
-            if (bytes[i] === 255 && bytes[i + 1] === 255 && bytes[i + 2] === 0) yellow++;
+            if (bytes[i] === 0 && bytes[i + 1] === 0 && bytes[i + 2] === 0 && bytes[i + 3] === 255) border++;
+            if (bytes[i] === 255 && bytes[i + 1] === 136 && bytes[i + 2] === 0) orange++;
             hash = (Math.imul(hash, 31) + bytes[i] + bytes[i + 1] + bytes[i + 2]) | 0;
         }
-        return { sky, yellow, hash };
+        return { sky, border, orange, hash };
     });
 }
 
@@ -147,8 +148,9 @@ export async function checkTouching(page, send, native = true) {
     await poll(() => rawData(page)).toBeDefined();
     const bounds = await page.locator('#gacui-screen canvas').boundingBox();
     const initial = await state(page);
-    const picture = await pixels(page);
+    const picture = await touchingPixels(page);
     expect(picture.sky).toBeGreaterThan(1000);
+    expect(picture.border).toBeGreaterThan(100);
     let a = { id: 10, x: bounds.x + 140, y: bounds.y + 120, radiusX: 6, radiusY: 8, force: 0.7 };
     let b = { id: 20, x: a.x + 100, y: a.y };
     await clearEvents(page);
@@ -157,8 +159,8 @@ export async function checkTouching(page, send, native = true) {
     a = { ...a, x: a.x + 30, y: a.y + 20 };
     await send('touchMove', [a]);
     await poll(async () => (await state(page)).slice(0, 2)).toEqual([initial[0] + 30, initial[1] + 20]);
-    await poll(async () => (await pixels(page)).yellow).toBeGreaterThan(20);
-    expect((await pixels(page)).hash).not.toBe(picture.hash);
+    await poll(async () => (await touchingPixels(page)).orange).toBeGreaterThan(20);
+    expect((await touchingPixels(page)).hash).not.toBe(picture.hash);
     b = { ...b, x: a.x + 100, y: a.y };
     await send('touchStart', [a, b]);
     await poll(async () => (await state(page))[4]).toBe(2);
@@ -181,7 +183,7 @@ export async function checkTouching(page, send, native = true) {
     await poll(async () => (await state(page))[0]).toBeCloseTo(transformed[0] + 10, 0);
     await send('touchEnd', []);
     await poll(async () => (await state(page))[4]).toBe(0);
-    await poll(async () => (await pixels(page)).yellow).toBe(0);
+    await poll(async () => (await touchingPixels(page)).orange).toBe(0);
     sequence(await wireEvents(page), [0, 1, 2]);
 
     await clearEvents(page);

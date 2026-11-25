@@ -11,22 +11,35 @@ function paintClock(context, bounds, data) {
     const cy = bounds.height / 2;
     const radius = Math.min(bounds.width, bounds.height) / 2 - 10;
     if (radius <= 0) return;
-    context.lineWidth = 2;
-    context.strokeStyle = '#ffffff';
-    context.beginPath();
-    context.arc(cx, cy, radius, 0, Math.PI * 2);
-    context.stroke();
-    const line = (angle, start, end, color) => {
-        context.strokeStyle = color;
-        context.beginPath();
-        context.moveTo(cx + Math.cos(angle) * radius * start, cy + Math.sin(angle) * radius * start);
-        context.lineTo(cx + Math.cos(angle) * radius * end, cy + Math.sin(angle) * radius * end);
-        context.stroke();
+
+    const addLine = (path, angle, start, end) => {
+        path.moveTo(cx + Math.cos(angle) * radius * start, cy + Math.sin(angle) * radius * start);
+        path.lineTo(cx + Math.cos(angle) * radius * end, cy + Math.sin(angle) * radius * end);
     };
-    for (let i = 0; i < 12; i++) line(i * Math.PI / 6, 0.94, 1, '#ffffff');
-    line((hour + minute / 60 + second / 3600) * Math.PI / 6 - Math.PI / 2, 0, 90 / 160, '#00ffff');
-    line((minute + second / 60) * Math.PI / 30 - Math.PI / 2, 0, 110 / 160, '#00ff00');
-    line(second * Math.PI / 30 - Math.PI / 2, 0, 130 / 160, '#ffff00');
+    const face = new Path2D();
+    face.arc(cx, cy, radius, 0, Math.PI * 2);
+    for (let i = 0; i < 12; i++) addLine(face, i * Math.PI / 6, 0.94, 1);
+    const hand = (angle, length) => {
+        const path = new Path2D();
+        addLine(path, angle - Math.PI / 2, 0, length);
+        return path;
+    };
+    const strokes = [
+        [face, '#ffffff'],
+        [hand((hour + minute / 60 + second / 3600) * Math.PI / 6, 90 / 160), '#00ffff'],
+        [hand((minute + second / 60) * Math.PI / 30, 110 / 160), '#00ff00'],
+        [hand(second * Math.PI / 30, 130 / 160), '#ffff00'],
+    ];
+    const outline = new Path2D();
+    for (const [path] of strokes) outline.addPath(path);
+    context.lineWidth = 3;
+    context.strokeStyle = '#000000';
+    context.stroke(outline);
+    context.lineWidth = 2;
+    for (const [path, color] of strokes) {
+        context.strokeStyle = color;
+        context.stroke(path);
+    }
 }
 
 // Register before protocol delivery. Each raw element gets an independent painter.
