@@ -568,7 +568,18 @@ export const Snapshot: SnapshotEntry = {
                                 'frame_1.json': 'File'
                             }
                         },
-                        'OverridesAndWindows.json': 'File'
+                        'OverridesAndWindows.json': 'File',
+                        'SubMenuTemplates': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File'
+                            }
+                        },
+                        'SubMenuTemplates.json': 'File'
                     }
                 },
                 'TabNavigate': {
@@ -636,6 +647,21 @@ export const Snapshot: SnapshotEntry = {
                             }
                         },
                         'HideWindowOwner.json': 'File',
+                        'RefreshVisibleTooltip': {
+                            'type': 'Folder',
+                            'content': {
+                                'frame_0.json': 'File',
+                                'frame_1.json': 'File',
+                                'frame_2.json': 'File',
+                                'frame_3.json': 'File',
+                                'frame_4.json': 'File',
+                                'frame_5.json': 'File',
+                                'frame_6.json': 'File',
+                                'frame_7.json': 'File',
+                                'frame_8.json': 'File'
+                            }
+                        },
+                        'RefreshVisibleTooltip.json': 'File',
                         'ShowTooltipAndLeave': {
                             'type': 'Folder',
                             'content': {
