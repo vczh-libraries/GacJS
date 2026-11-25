@@ -194,6 +194,7 @@ for (const adapter of ['auto', 'contenteditable']) {
             expect(await page.evaluate(() => document.activeElement.hasAttribute('data-gacui-input'))).toBe(true);
             for (const mode of ['Selectable', 'Preview', 'Editable']) {
                 expect(await findAndClick(page, 'View', await getLeafTextPositions(page))).toBe(true);
+                await page.locator('#gacui-screen').getByText(mode, { exact: true }).waitFor({ state: 'visible' });
                 expect(await findAndClick(page, mode, await getLeafTextPositions(page))).toBe(true);
                 await clickAt(page, toolstrip.cx, toolstrip.cy);
                 expect(await page.evaluate(() => document.activeElement.hasAttribute('data-gacui-input'))).toBe(mode === 'Editable');

@@ -73,6 +73,10 @@ Search, Ribbon and Toolstrip editor operations and selection behavior. Root
 `yarn test --concurrency 1` runs all package suites sequentially when simultaneous
 native Workflow compilation would contend with browser tests.
 
+The live Toolstrip mode check waits for its popup option to become visible before
+choosing it. An idle from the preceding pointer move does not establish that the
+menu has rendered.
+
 `GacUISettings.textInput` selects adapters without replacing browser globals.
 The test website accepts private `window.__gacui_text_input_options` before page
 startup; controlled transport tests also accept `text-adapter` in their local
