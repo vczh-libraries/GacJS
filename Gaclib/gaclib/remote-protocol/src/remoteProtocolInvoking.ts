@@ -18,6 +18,9 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
             case 'ControllerConnectionStopped':
                 receiver.RequestControllerConnectionStopped();
                 break;
+            case 'InjectionRequestClipboard':
+                receiver.RequestInjectionRequestClipboard();
+                break;
             case 'WindowNotifySetTitle':
                 if (pi.arguments === undefined) {
                     throw new Error('Missing arguments for request: ' + pi.name);
@@ -232,6 +235,12 @@ export function jsonToRequest(pi: ProtocolInvoking, receiver: SCHEMA.IRemoteProt
                 }
                 receiver.RequestInjectionFileSystem(pi.id, (<SCHEMA.InjectionFileRequest>pi.arguments));
                 break;
+            case 'InjectionUpdateClipboardFromCore':
+                if (pi.arguments === undefined) {
+                    throw new Error('Missing arguments for request: ' + pi.name);
+                }
+                receiver.RequestInjectionUpdateClipboardFromCore(pi.id, (<SCHEMA.InjectionClipboard>pi.arguments));
+                break;
             case 'WindowGetBounds':
                 receiver.RequestWindowGetBounds(pi.id);
                 break;
@@ -358,6 +367,15 @@ export class ResponseToJson implements SCHEMA.IRemoteProtocolResponses {
             semantic: 'Response',
             id,
             name: 'InjectionFileSystem',
+            arguments: responseArgs,
+        });
+    }
+
+    RespondInjectionUpdateClipboardFromCore(id: number, responseArgs: SCHEMA.TYPES.Boolean): void {
+        this.callback({
+            semantic: 'Response',
+            id,
+            name: 'InjectionUpdateClipboardFromCore',
             arguments: responseArgs,
         });
     }
@@ -507,6 +525,14 @@ export class EventToJson implements SCHEMA.IRemoteProtocolEvents {
         this.callback({
             semantic: 'Event',
             name: 'ControllerScreenUpdated',
+            arguments: eventArgs,
+        });
+    }
+
+    OnInjectionUpdateClipboardFromRenderer(eventArgs: SCHEMA.InjectionClipboard): void {
+        this.callback({
+            semantic: 'Event',
+            name: 'InjectionUpdateClipboardFromRenderer',
             arguments: eventArgs,
         });
     }

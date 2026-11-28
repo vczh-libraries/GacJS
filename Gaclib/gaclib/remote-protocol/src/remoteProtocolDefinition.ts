@@ -294,6 +294,7 @@ export interface ControllerGlobalConfig {
     injectDateTime: TYPES.Boolean;
     injectLocale: TYPES.Boolean;
     injectFileSystem: TYPES.Boolean;
+    injectClipboard: TYPES.Boolean;
 }
 
 export interface InjectionDateTime {
@@ -353,6 +354,12 @@ export interface InjectionFileResponse {
     paths: TYPES.List<TYPES.String>;
     info: TYPES.Nullable<InjectionFileInfo>;
     content: TYPES.Binary;
+}
+
+export interface InjectionClipboard {
+    text: TYPES.Nullable<TYPES.String>;
+    document: TYPES.Binary;
+    image: TYPES.Binary;
 }
 
 export interface WindowSizingConfig {
@@ -743,6 +750,8 @@ export interface IRemoteProtocolRequests {
     RequestInjectionUtcToLocal(id: number, requestArgs: InjectionDateTime): void;
     RequestInjectionLocale(id: number, requestArgs: InjectionLocaleRequest): void;
     RequestInjectionFileSystem(id: number, requestArgs: InjectionFileRequest): void;
+    RequestInjectionRequestClipboard(): void;
+    RequestInjectionUpdateClipboardFromCore(id: number, requestArgs: InjectionClipboard): void;
     RequestWindowGetBounds(id: number): void;
     RequestWindowNotifySetTitle(requestArgs: TYPES.String): void;
     RequestWindowNotifySetEnabled(requestArgs: TYPES.Boolean): void;
@@ -796,6 +805,7 @@ export interface IRemoteProtocolResponses {
     RespondInjectionUtcToLocal(id: number, responseArgs: InjectionDateTime): void;
     RespondInjectionLocale(id: number, responseArgs: TYPES.List<TYPES.String>): void;
     RespondInjectionFileSystem(id: number, responseArgs: InjectionFileResponse): void;
+    RespondInjectionUpdateClipboardFromCore(id: number, responseArgs: TYPES.Boolean): void;
     RespondWindowGetBounds(id: number, responseArgs: WindowSizingConfig): void;
     RespondIOIsKeyPressing(id: number, responseArgs: TYPES.Boolean): void;
     RespondIOIsKeyToggled(id: number, responseArgs: TYPES.Boolean): void;
@@ -816,6 +826,7 @@ export interface IRemoteProtocolEvents {
     OnControllerRequestExit(): void;
     OnControllerForceExit(): void;
     OnControllerScreenUpdated(eventArgs: ScreenConfig): void;
+    OnInjectionUpdateClipboardFromRenderer(eventArgs: InjectionClipboard): void;
     OnWindowBoundsUpdated(eventArgs: WindowSizingConfig): void;
     OnWindowActivatedUpdated(eventArgs: TYPES.Boolean): void;
     OnIOGlobalShortcutKey(eventArgs: TYPES.Integer): void;
