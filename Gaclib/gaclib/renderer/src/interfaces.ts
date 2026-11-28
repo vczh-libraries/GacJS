@@ -45,6 +45,7 @@ export interface GacUISettings {
     idle?: () => void;
     blink?: () => void;
     textInput?: TextInputOptions;
+    clipboardSharing?: boolean;
 }
 
 export interface VirtualKeyboardController extends EventTarget {

@@ -1,7 +1,7 @@
 import { GACUI_REMOTE_PROTOCOL_CHANNEL_NAME, IRemoteProtocolClient } from '@gaclib-website/remote-protocol-http';
 import { connectWasmServer, WasmApplication } from '@gaclib-website/remote-protocol-wasm';
 import { RvmHostSession, startRvmHostWithChannel, RVM_CHANNEL_NAME, RVM_READY_CHANNEL_NAME } from '@gaclib-website/rvmhost';
-import { createHtmlRenderer, GacUIHtmlRendererExitError, GacUISettings, IGacUIRenderer } from '@gaclib/renderer';
+import { browserClipboardAvailable, createHtmlRenderer, GacUIHtmlRendererExitError, GacUISettings, IGacUIRenderer } from '@gaclib/renderer';
 import { isShortcutReservedForBrowser } from '@gaclib/renderer';
 
 interface WasmSession {
@@ -26,6 +26,17 @@ export type WasmRendererSetup = (renderer: IGacUIRenderer) => (() => void) | voi
 export async function startWasmPage(setupRenderer?: WasmRendererSetup): Promise<void> {
     const screen = document.getElementById('gacui-screen') as HTMLElement;
     const buttons = Array.from(document.querySelectorAll('button'));
+    const pageUrl = new URL(globalThis.location?.href ?? 'http://localhost/');
+    const shareClipboard = pageUrl.searchParams.get('remoteClipboard')?.toLowerCase() !== 'false';
+    const clipboardOption = document.getElementById('option-remoteClipboard') as HTMLInputElement | null;
+    if (clipboardOption) {
+        clipboardOption.checked = shareClipboard;
+        clipboardOption.onchange = () => {
+            if (clipboardOption.checked) pageUrl.searchParams.delete('remoteClipboard');
+            else pageUrl.searchParams.set('remoteClipboard', 'false');
+            location.assign(pageUrl.href);
+        };
+    }
     const reload = document.getElementById('gacui-reload') as HTMLButtonElement;
     const settings: GacUISettings = {
         target: screen,
@@ -125,10 +136,11 @@ export async function startWasmPage(setupRenderer?: WasmRendererSetup): Promise<
         }
         if (pageHidden) return;
         screen.replaceChildren();
-        const renderer = createHtmlRenderer(settings);
+        const enabled = shareClipboard && browserClipboardAvailable();
+        const renderer = createHtmlRenderer({ ...settings, clipboardSharing: enabled });
         session.renderer = renderer;
         disposeSetup = setupRenderer?.(renderer) ?? undefined;
-        const client = await connectWasmServer(application, renderer.requests);
+        const client = await connectWasmServer(application, renderer.requests, enabled);
         session.client = client;
         if (pageHidden) {
             client.stop();

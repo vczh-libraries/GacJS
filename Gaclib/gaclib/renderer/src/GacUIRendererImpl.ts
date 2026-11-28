@@ -1,6 +1,7 @@
 import * as SCHEMA from '@gaclib/remote-protocol';
 import { injectLocalToUtc, injectUtcToLocal } from './injections/injectDateTime';
 import { injectLocale } from './injections/injectLocale';
+import { BrowserClipboard } from './injections/injectClipboard';
 import { FileSystemInjection } from './injections/injectFileSystem';
 import { getImageContentType, getImageDataUrl, getImageFormatType } from './domRenderer/elementStyles_Image';
 import { GacUIRawElement, GacUISettings, IGacUIEventSubscription, IGacUIRenderer, IRawElementInterpretor, IRawElementInterpretorFactory } from './interfaces';
@@ -244,7 +245,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
         }, elements, this._provider);
         if ('htmlElement' in this._renderingRecord.screen) {
             this._textInput = new TextInputCoordinator(this._settings.target, this._settings.textInput ?? {}, events,
-                host => this._restoreInputHost(host), () => this._releasePressedKeys());
+                host => this._restoreInputHost(host), () => this._releasePressedKeys(), () => this._clipboard.active);
         }
         this._installEvents();
 
@@ -255,6 +256,7 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
     stop(disconnected = false): void {
         if (this._stopping) return;
         this._stopping = true;
+        this._clipboard.stop();
         this._textInput?.stop();
         if (!disconnected && this._pointContacts.size !== 0) {
             this._endPoints(SCHEMA.IOPointEndReason.Canceled_WindowDestroyed, performance.now());
@@ -346,6 +348,18 @@ export abstract class GacUIRendererImpl implements IGacUIRenderer, SCHEMA.IRemot
      ***************************************************************************************/
 
     private _fileSystemInjection = new FileSystemInjection();
+    private _clipboard = new BrowserClipboard();
+
+    RequestInjectionRequestClipboard(): void {
+        if (this._settings.clipboardSharing === true && !this._stopping) {
+            this._clipboard.start(value => this._events.OnInjectionUpdateClipboardFromRenderer(value));
+        }
+    }
+
+    RequestInjectionUpdateClipboardFromCore(id: number, value: SCHEMA.InjectionClipboard): void {
+        if (this._stopping) return;
+        this._clipboard.write(value, success => this._responses.RespondInjectionUpdateClipboardFromCore(id, success));
+    }
 
     RequestInjectionLocalToUtc(id: number, requestArgs: SCHEMA.InjectionDateTime): void {
         this._responses.RespondInjectionLocalToUtc(id, injectLocalToUtc(requestArgs));

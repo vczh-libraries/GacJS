@@ -74,7 +74,8 @@ export class TextInputCoordinator {
         private options: TextInputOptions,
         private events: SCHEMA.IRemoteProtocolEvents,
         private restore: (host: HTMLElement) => void,
-        private releaseKeys: () => void
+        private releaseKeys: () => void,
+        private sharedClipboard: () => boolean = () => false
     ) {
         this.keyboard = options.virtualKeyboard !== undefined ? options.virtualKeyboard :
             (navigator as Navigator & { virtualKeyboard?: VirtualKeyboardController }).virtualKeyboard ?? null;
@@ -294,7 +295,7 @@ export class TextInputCoordinator {
         this.listen(session, host, 'paste', event => {
             const paste = event as ClipboardEvent;
             paste.preventDefault();
-            if (session.composition === null) this.commit(session, paste.clipboardData?.getData('text/plain') ?? '');
+            if (!this.sharedClipboard() && session.composition === null) this.commit(session, paste.clipboardData?.getData('text/plain') ?? '');
         });
         this.listen(session, host, 'drop', event => { event.preventDefault(); });
         host.focus({ preventScroll: true });
@@ -344,6 +345,11 @@ export class TextInputCoordinator {
 
     private beforeInput(session: Session, event: InputEvent): void {
         const type = event.inputType;
+        if (type === 'insertFromPaste' && this.sharedClipboard()) {
+            if (event.cancelable) event.preventDefault();
+            session.ordinary = { text: null, handled: true, before: session.boundary.host.textContent ?? '' };
+            return;
+        }
         if (session.composition !== null || event.isComposing || type === 'insertCompositionText' || type === 'deleteCompositionText') {
             if (session.composition === null) return; // Late input from a canceled generation.
             if (event.data !== null) session.composition.text = event.data;

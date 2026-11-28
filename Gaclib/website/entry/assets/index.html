@@ -14,6 +14,7 @@
         <label><input type="checkbox" id="option-remoteDT">remoteDT</label>
         <label><input type="checkbox" id="option-remoteLocale">remoteLocale</label>
         <label><input type="checkbox" id="option-remoteFS">remoteFS</label>
+        <label><input type="checkbox" id="option-remoteClipboard" checked>remoteClipboard</label>
         <label><input type="checkbox" id="option-corehost">corehost</label>
         <input id="option-host" aria-label="Core host" value="localhost" disabled>
         <button type="submit">REFRESH</button>
@@ -36,7 +37,7 @@
     <script type="module">
         import * as GacUIHtmlRenderer from "/entry.js";
         const connection = GacUIHtmlRenderer.parseConnectionOptions(location.href);
-        const optionNames = ['rvmhost', 'remoteDT', 'remoteLocale', 'remoteFS', 'corehost'];
+        const optionNames = ['rvmhost', 'remoteDT', 'remoteLocale', 'remoteFS', 'remoteClipboard', 'corehost'];
         const hostInput = document.getElementById('option-host');
         for (const name of optionNames) document.getElementById(`option-${name}`).checked = connection[name];
         hostInput.value = connection.host;

@@ -16,6 +16,7 @@ export function createHtmlRenderer(settings: GacUISettings): IGacUIRenderer {
     return new GacUIHtmlRendererImpl(settings);
 }
 
+export { browserClipboardAvailable } from './injections/injectClipboard';
 export * from './interfaces';
 export * from './featureGates';
 export * from './GacUIElementManager';

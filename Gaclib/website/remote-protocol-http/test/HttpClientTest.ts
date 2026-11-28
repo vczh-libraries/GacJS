@@ -65,7 +65,7 @@ afterEach(() => {
 
 test('renderer handshake defaults capabilities off and advertises each selected capability', async () => {
     vi.stubGlobal('navigator', { platform: 'Win32' });
-    for (let mask = 0; mask < 8; mask++) {
+    for (let mask = 0; mask < 16; mask++) {
         const sent: { name: string; arguments: Record<string, unknown> }[] = [];
         const channel = {
             clientId: 2,
@@ -75,13 +75,13 @@ test('renderer handshake defaults capabilities off and advertises each selected 
             stop: () => undefined,
         } as unknown as IChannelClient;
         const options = mask === 0 ? undefined : {
-            injectDateTime: (mask & 1) !== 0, injectLocale: (mask & 2) !== 0, injectFileSystem: (mask & 4) !== 0,
+            injectDateTime: (mask & 1) !== 0, injectLocale: (mask & 2) !== 0, injectFileSystem: (mask & 4) !== 0, injectClipboard: (mask & 8) !== 0,
         };
         const client = createRemoteProtocolClient({} as IRemoteProtocolRequests, channel, options);
         await client.start();
         expect(sent[0].name).toBe('ControllerConnect');
         expect(sent[0].arguments).toMatchObject({
-            injectDateTime: (mask & 1) !== 0, injectLocale: (mask & 2) !== 0, injectFileSystem: (mask & 4) !== 0,
+            injectDateTime: (mask & 1) !== 0, injectLocale: (mask & 2) !== 0, injectFileSystem: (mask & 4) !== 0, injectClipboard: (mask & 8) !== 0,
         });
         client.stop();
         client.responses.RespondInjectionLocale(42, ['late response']);

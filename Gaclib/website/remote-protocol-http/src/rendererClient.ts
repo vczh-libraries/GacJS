@@ -39,6 +39,7 @@ export interface RendererInjectionOptions {
     readonly injectDateTime?: boolean;
     readonly injectLocale?: boolean;
     readonly injectFileSystem?: boolean;
+    readonly injectClipboard?: boolean;
 }
 
 class RemoteProtocolClient implements IRemoteProtocolClient {
@@ -84,6 +85,7 @@ class RemoteProtocolClient implements IRemoteProtocolClient {
             injectDateTime: this.injections.injectDateTime ?? false,
             injectLocale: this.injections.injectLocale ?? false,
             injectFileSystem: this.injections.injectFileSystem ?? false,
+            injectClipboard: this.injections.injectClipboard ?? false,
         });
         await this.channelClient.start();
     }

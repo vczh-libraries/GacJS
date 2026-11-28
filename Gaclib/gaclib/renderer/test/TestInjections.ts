@@ -1,3 +1,5 @@
+import type { InjectionClipboard } from '@gaclib/remote-protocol';
+import { BrowserClipboard } from '../src/injections/injectClipboard';
 import { expect, test, vi } from 'vitest';
 import { injectLocalToUtc, injectUtcToLocal } from '../src/injections/injectDateTime';
 import { injectLocale } from '../src/injections/injectLocale';
@@ -74,4 +76,38 @@ test('an asynchronous filesystem completion cannot respond after its owner stops
         });
         expect(respond).not.toHaveBeenCalled();
     } finally { vi.unstubAllGlobals(); }
+});
+
+test('clipboard observations preserve order, distinguish denied reads and discard a stopped session', async () => {
+    const clipboard = Object.assign(new EventTarget(), { read: vi.fn(), write: vi.fn() });
+    vi.stubGlobal('navigator', { clipboard });
+    vi.stubGlobal('window', new EventTarget());
+    vi.stubGlobal('isSecureContext', true);
+    vi.stubGlobal('ClipboardItem', class {});
+    const read = (text: string) => [{ types: ['text/plain'], getType: () => Promise.resolve(new Blob([text])) }];
+    let first!: (items: unknown) => void;
+    const pending = new Promise(resolve => { first = resolve; });
+    clipboard.read.mockReturnValueOnce(pending).mockResolvedValueOnce(read('second'));
+    const values: InjectionClipboard[] = [];
+    const service = new BrowserClipboard();
+    try {
+        service.start(value => values.push(value));
+        clipboard.dispatchEvent(new Event('clipboardchange'));
+        first(read(''));
+        await vi.waitFor(() => expect(values.map(item => item.text)).toEqual(['', 'second']));
+        clipboard.read.mockRejectedValueOnce(new DOMException('Denied', 'NotAllowedError')).mockResolvedValueOnce([]);
+        clipboard.dispatchEvent(new Event('clipboardchange'));
+        clipboard.dispatchEvent(new Event('clipboardchange'));
+        await vi.waitFor(() => expect(values).toHaveLength(3));
+        expect(values[2]).toEqual({ text: null, document: null, image: null });
+        clipboard.read.mockResolvedValueOnce(read('old session'));
+        clipboard.dispatchEvent(new Event('clipboardchange'));
+        service.stop();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(values).toHaveLength(3);
+        const rejected = vi.fn();
+        service.write({ text: 'ignored', document: null, image: null }, rejected);
+        expect(rejected).toHaveBeenCalledWith(false);
+        expect(clipboard.write).not.toHaveBeenCalled();
+    } finally { service.stop(); vi.unstubAllGlobals(); }
 });

@@ -3,11 +3,12 @@ export interface ConnectionOptions {
     remoteDT: boolean;
     remoteLocale: boolean;
     remoteFS: boolean;
+    remoteClipboard: boolean;
     corehost: boolean;
     host: string;
 }
 
-const optionNames = ['rvmhost', 'remotedt', 'remotelocale', 'remotefs', 'corehost'];
+const optionNames = ['rvmhost', 'remotedt', 'remotelocale', 'remotefs', 'remoteclipboard', 'corehost'];
 
 export function coreOrigin(value: string): string {
     let host = value;
@@ -36,6 +37,7 @@ export function parseConnectionOptions(url: string): ConnectionOptions {
     return {
         rvmhost: values.has('rvmhost'), remoteDT: values.has('remotedt'),
         remoteLocale: values.has('remotelocale'), remoteFS: values.has('remotefs'),
+        remoteClipboard: values.get('remoteclipboard')?.toLowerCase() !== 'false',
         corehost: values.has('corehost'), host: values.get('corehost') ?? 'localhost',
     };
 }
@@ -44,6 +46,7 @@ export function connectionOptionsUrl(current: string, options: ConnectionOptions
     const url = new URL(current);
     for (const name of [...url.searchParams.keys()]) if (optionNames.includes(name.toLowerCase())) url.searchParams.delete(name);
     for (const name of ['rvmhost', 'remoteDT', 'remoteLocale', 'remoteFS'] as const) if (options[name]) url.searchParams.set(name, '');
+    if (!options.remoteClipboard) url.searchParams.set('remoteClipboard', 'false');
     if (options.corehost) {
         coreOrigin(options.host);
         url.searchParams.set('corehost', options.host);

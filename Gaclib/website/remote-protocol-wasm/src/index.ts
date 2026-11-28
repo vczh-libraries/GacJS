@@ -223,7 +223,7 @@ export class WasmChannelClient implements IChannelClient {
     }
 }
 
-export async function connectWasmServer(application: WasmApplication, requests: IRemoteProtocolRequests): Promise<IRemoteProtocolClient> {
+export async function connectWasmServer(application: WasmApplication, requests: IRemoteProtocolRequests, injectClipboard = false): Promise<IRemoteProtocolClient> {
     await application.rendererReady;
     const channel = application.channels[0];
     await channel.connect();
@@ -231,5 +231,6 @@ export async function connectWasmServer(application: WasmApplication, requests: 
         injectDateTime: false,
         injectLocale: false,
         injectFileSystem: false,
+        injectClipboard,
     });
 }

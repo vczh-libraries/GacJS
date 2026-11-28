@@ -6,16 +6,27 @@ import {
     IRemoteProtocolHttpClient
 } from '@gaclib-website/remote-protocol-http';
 import { IChannelClient } from '@gaclib-website/remote-protocol-http/channel';
-import { createHtmlRenderer, IGacUIRenderer, GacUISettings } from '@gaclib/renderer'
+import { browserClipboardAvailable, createHtmlRenderer, IGacUIRenderer, GacUISettings } from '@gaclib/renderer'
 import { RvmHostSession, startBrowserRvmHost } from '@gaclib-website/rvmhost';
 import { ConnectionOptions, coreOrigin } from './connectionOptions';
 export { parseConnectionOptions, connectionOptionsUrl, coreOrigin } from './connectionOptions';
 
 export { isShortcutReservedForBrowser } from '@gaclib/renderer';
 
+function shareClipboard(options: ConnectionOptions | undefined, origin: string): boolean {
+    if (options?.remoteClipboard === false || !browserClipboardAvailable()) return false;
+    const destination = new URL(origin);
+    const localPage = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+    if (window.top === window && (destination.origin === location.origin || (localPage && destination.hostname === location.hostname))) return true;
+    return window.confirm('Share your system clipboard with ' + destination.origin + ' for this session? Items copied in other apps will be available to this Core.');
+}
+
 export async function runGacUI(settings: GacUISettings, options?: ConnectionOptions): Promise<[IGacUIRenderer, IRemoteProtocolHttpClient]> {
-    const renderer = createHtmlRenderer(settings);
-    const client = await connectHttpServer(coreOrigin(options?.corehost === true ? options.host : 'localhost'), renderer.requests, undefined, {
+    const origin = coreOrigin(options?.corehost === true ? options.host : 'localhost');
+    const injectClipboard = shareClipboard(options, origin);
+    const renderer = createHtmlRenderer({ ...settings, clipboardSharing: injectClipboard });
+    const client = await connectHttpServer(origin, renderer.requests, undefined, {
+        injectClipboard,
         injectDateTime: options?.remoteDT, injectLocale: options?.remoteLocale, injectFileSystem: options?.remoteFS,
     });
     renderer.start(client.responses, client.events);
@@ -48,7 +59,8 @@ function normalizeError(error: unknown): Error {
 export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = {}): RvmGacUISession {
     const connection = options.connection;
     const origin = coreOrigin(connection?.corehost === true ? connection.host : 'localhost');
-    const renderer = (options.createRenderer ?? createHtmlRenderer)(settings);
+    const injectClipboard = shareClipboard(connection, origin);
+    const renderer = (options.createRenderer ?? createHtmlRenderer)({ ...settings, clipboardSharing: injectClipboard });
     const startHost: () => RvmHostSession = options.startHost
         ?? (() => startBrowserRvmHost({ origin }));
     const host = startHost();
@@ -111,6 +123,7 @@ export function runRvmGacUI(settings: GacUISettings, options: RvmGacUIOptions = 
                         throw new Error('The RVM host stopped before renderer assignment.');
                     }
                     rendererClient = createRendererClient(renderer.requests, channel, {
+                        injectClipboard,
                         injectDateTime: connection?.remoteDT, injectLocale: connection?.remoteLocale, injectFileSystem: connection?.remoteFS,
                     });
                     renderer.start(rendererClient.responses, rendererClient.events);

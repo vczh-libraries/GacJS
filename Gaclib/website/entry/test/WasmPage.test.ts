@@ -17,6 +17,7 @@ vi.mock('@gaclib-website/rvmhost', () => ({
     startRvmHostWithChannel: () => controlled.startHost!(),
 }));
 vi.mock('@gaclib/renderer', () => ({
+    browserClipboardAvailable: () => false,
     createHtmlRenderer: () => controlled.createRenderer!(),
     GacUIHtmlRendererExitError: class extends Error {},
     isShortcutReservedForBrowser: () => false,

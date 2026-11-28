@@ -334,9 +334,10 @@ Main export: `connectHttpServer(host, requests): Promise<IRemoteProtocolHttpClie
 The corresponding C++ source project is
 `..\GacUI\Test\GacUISrc\RemotingTest_Core`. The Windows Debug executable is
 `..\GacUI\Test\GacUISrc\x64\Debug\RemotingTest_Core.exe` and accepts `/Http` or
-`/MiniHttp`. The Linux/macOS output is
-`..\GacUI\Test\Linux\RemotingTest_Core\Bin\RemotingTest_Core` and uses
-`/MiniHttp`.
+`/MiniHttp`. The Linux and macOS Core executables are
+`<wGac repo>/build/RemotingTest_Core/bin/RemotingTest_Core` and
+`<iGac repo>/build/RemotingTest_Core/bin/RemotingTest_Core`. Both launchers accept
+`test.sh --app:core /FCT` and use `/MiniHttp`.
 
 | Script | Action |
 |--------|--------|
