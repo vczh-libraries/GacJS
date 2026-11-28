@@ -6,6 +6,7 @@ import { TextInputOptions, TextInputState, VirtualKeyboardController } from './i
 
 type Modifiers = Omit<SCHEMA.IOCharInfo, 'code'>;
 const noModifiers: Modifiers = { ctrl: false, shift: false, alt: false, osSuper: false, capslock: false };
+const editingKeys = { Backspace: SCHEMA.TYPES.Key.KEY_BACK, Delete: SCHEMA.TYPES.Key.KEY_DELETE, Enter: SCHEMA.TYPES.Key.KEY_RETURN, Paste: SCHEMA.TYPES.Key.KEY_V };
 const captureGuards = '\u200b\u200b';
 
 export function sendCommittedText(events: SCHEMA.IRemoteProtocolEvents, text: string, modifiers: Modifiers): void {
@@ -295,7 +296,9 @@ export class TextInputCoordinator {
         this.listen(session, host, 'paste', event => {
             const paste = event as ClipboardEvent;
             paste.preventDefault();
-            if (!this.sharedClipboard() && session.composition === null) this.commit(session, paste.clipboardData?.getData('text/plain') ?? '');
+            if (session.composition !== null) return;
+            if (this.sharedClipboard()) this.command(session, 'Paste');
+            else this.commit(session, paste.clipboardData?.getData('text/plain') ?? '');
         });
         this.listen(session, host, 'drop', event => { event.preventDefault(); });
         host.focus({ preventScroll: true });
@@ -422,13 +425,14 @@ export class TextInputCoordinator {
         if (session.pending) session.queue.push(action); else action();
     }
 
-    private command(session: Session, key: 'Backspace' | 'Delete' | 'Enter'): void {
+    private command(session: Session, key: keyof typeof editingKeys): void {
         if (this.physical.has(key)) return;
-        const modifiers = { ...this.modifiers };
+        // A physical Ctrl+V already reached Core. A browser menu paste has no key event.
+        if (key === 'Paste' && this.modifiers.ctrl && (this.physical.has('v') || this.physical.has('V'))) return;
+        const modifiers = key === 'Paste' ? { ...noModifiers, ctrl: true } : { ...this.modifiers };
         const action = (): void => {
             if (!this.alive(session)) return;
-            const code = key === 'Backspace' ? SCHEMA.TYPES.Key.KEY_BACK : key === 'Delete' ? SCHEMA.TYPES.Key.KEY_DELETE : SCHEMA.TYPES.Key.KEY_RETURN;
-            const info = { code, ...modifiers, autoRepeatKeyDown: false };
+            const info = { code: editingKeys[key], ...modifiers, autoRepeatKeyDown: false };
             this.events.OnIOKeyDown(info);
             if (key === 'Enter') this.events.OnIOChar({ code: '\r', ...modifiers });
             this.events.OnIOKeyUp(info);
