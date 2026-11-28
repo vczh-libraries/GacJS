@@ -20,6 +20,7 @@ export class BrowserClipboard {
     private reads = Promise.resolve();
     private writes = Promise.resolve();
     private previous?: InjectionClipboard;
+    private retryRead = true;
 
     get active(): boolean { return this.subscription !== undefined; }
 
@@ -30,11 +31,19 @@ export class BrowserClipboard {
         const options = { signal: listeners.signal };
         navigator.clipboard.addEventListener('clipboardchange', () => this.refresh(true), options);
         window.addEventListener('focus', () => this.refresh(false), options);
-        if (!('onclipboardchange' in navigator.clipboard)) {
-            const onGesture = (event: Event) => { if (event.isTrusted) this.refresh(false); };
-            window.addEventListener('pointerup', onGesture, options);
-            window.addEventListener('keyup', onGesture, options);
-        }
+        const onGesture = (event: Event) => {
+            if (event.isTrusted && (this.retryRead || !('onclipboardchange' in navigator.clipboard))) this.refresh(false);
+        };
+        window.addEventListener('pointerup', onGesture, options);
+        window.addEventListener('keyup', onGesture, options);
+        const onVisible = () => { if (document.visibilityState === 'visible') this.refresh(false); };
+        globalThis.document?.addEventListener('visibilitychange', onVisible, options);
+        // A user can grant read access while the renderer already has focus.
+        void navigator.permissions?.query({ name: 'clipboard-read' as PermissionName }).then(permission => {
+            if (listeners.signal.aborted) return;
+            const onGrant = () => { if (permission.state === 'granted') this.refresh(false); };
+            permission.addEventListener('change', onGrant, options);
+        }).catch(() => {});
         this.refresh(true);
     }
 
@@ -42,6 +51,8 @@ export class BrowserClipboard {
         this.subscription?.listeners.abort();
         this.subscription = undefined;
         this.previous = undefined;
+        this.retryRead = true;
+        this.reads = Promise.resolve();
     }
 
     private async read(): Promise<InjectionClipboard | undefined> {
@@ -68,7 +79,9 @@ export class BrowserClipboard {
         const observation = this.read();
         this.reads = this.reads.then(async () => {
             const value = await observation;
-            if (!value || session !== this.subscription) return;
+            if (session !== this.subscription) return;
+            this.retryRead = !value;
+            if (!value) return;
             if (observedChange || !this.previous || this.previous.text !== value.text ||
                 this.previous.document !== value.document || this.previous.image !== value.image) {
                 this.previous = value;

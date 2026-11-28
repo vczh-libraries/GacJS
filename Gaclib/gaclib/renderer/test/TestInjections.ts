@@ -111,3 +111,36 @@ test('clipboard observations preserve order, distinguish denied reads and discar
         expect(clipboard.write).not.toHaveBeenCalled();
     } finally { service.stop(); vi.unstubAllGlobals(); }
 });
+
+test('clipboard resumes on a permission grant and a new owner does not wait for a stopped read', async () => {
+    const permission = Object.assign(new EventTarget(), { state: 'denied' });
+    const clipboard = Object.assign(new EventTarget(), { read: vi.fn(), write: vi.fn() });
+    vi.stubGlobal('navigator', { clipboard, permissions: { query: () => Promise.resolve(permission) } });
+    vi.stubGlobal('window', new EventTarget());
+    vi.stubGlobal('isSecureContext', true);
+    vi.stubGlobal('ClipboardItem', class {});
+    const read = (text: string) => [{ types: ['text/plain'], getType: () => Promise.resolve(new Blob([text])) }];
+    const service = new BrowserClipboard();
+    const first = vi.fn(), second = vi.fn();
+    try {
+        clipboard.read.mockRejectedValueOnce(new Error('denied')).mockResolvedValueOnce(read('granted'));
+        service.start(first);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(first).not.toHaveBeenCalled();
+        permission.state = 'granted';
+        permission.dispatchEvent(new Event('change'));
+        await vi.waitFor(() => expect(first).toHaveBeenCalledWith({ text: 'granted', document: null, image: null }));
+
+        let finish!: (items: unknown) => void;
+        clipboard.read.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
+        clipboard.dispatchEvent(new Event('clipboardchange'));
+        service.stop();
+        clipboard.read.mockResolvedValueOnce(read('new owner'));
+        service.start(second);
+        await vi.waitFor(() => expect(second).toHaveBeenCalledWith({ text: 'new owner', document: null, image: null }));
+        finish(read('old owner'));
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(first).toHaveBeenCalledTimes(1);
+        expect(second).toHaveBeenCalledTimes(1);
+    } finally { service.stop(); vi.unstubAllGlobals(); }
+});
