@@ -3,10 +3,10 @@ import { coreOrigin, parseConnectionOptions, connectionOptionsUrl } from '../src
 
 test('query defaults, presence, mixed case, and duplicate replacement preserve other URL fields', () => {
     const defaults = parseConnectionOptions('http://localhost/index.html');
-    expect(defaults).toEqual({ rvmhost: false, remoteDT: false, remoteLocale: false, remoteFS: false, corehost: false, host: 'localhost' });
+    expect(defaults).toEqual({ rvmhost: false, remoteDT: false, remoteLocale: false, remoteFS: false, remoteClipboard: true, corehost: false, host: 'localhost' });
     const current = 'http://localhost/index.html?RVMHOST&REMOTEdt=false&remoteDT&RemoteLocale&REMOTeFS&CoreHost=MyHost&x=1#end';
     const options = parseConnectionOptions(current);
-    expect(options).toEqual({ rvmhost: true, remoteDT: true, remoteLocale: true, remoteFS: true, corehost: true, host: 'MyHost' });
+    expect(options).toEqual({ rvmhost: true, remoteDT: true, remoteLocale: true, remoteFS: true, remoteClipboard: true, corehost: true, host: 'MyHost' });
     const updated = connectionOptionsUrl(current, { ...options, remoteDT: false });
     expect(updated).toBe(connectionOptionsUrl(updated, { ...options, remoteDT: false }));
     const url = new URL(updated);
@@ -24,4 +24,14 @@ test('Core destinations accept DNS IPv4 and IPv6 while rejecting schemes paths a
     for (const host of ['', 'http://localhost', 'localhost:8888', 'localhost/a', 'a@b', '[localhost]', '::xyz', '1.2.3.999', 'a b', '-bad', 'a..b']) {
         expect(() => coreOrigin(host)).toThrow();
     }
+});
+
+test('clipboard is enabled by default and an explicit denial survives refresh', () => {
+    const base = 'http://localhost/index.html';
+    for (const query of ['', '?remoteClipboard', '?remoteClipboard=true']) {
+        expect(parseConnectionOptions(base + query).remoteClipboard).toBe(true);
+    }
+    const off = connectionOptionsUrl(base, { ...parseConnectionOptions(base), remoteClipboard: false });
+    expect(new URL(off).searchParams.get('remoteClipboard')).toBe('false');
+    expect(parseConnectionOptions(off).remoteClipboard).toBe(false);
 });
